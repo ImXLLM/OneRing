@@ -15,9 +15,13 @@ members = [
 ]
 # پوشه‌های خام مرجع گنجینه (پوشهٔ ۰۷) — بسته‌های مستقل با libfuzzer/nightly؛
 # هرگز عضو workspace نمی‌شوند و فقط به‌عنوان مرجع حفظ می‌شوند.
+# گنجینهٔ CopilotKit/OpenBot (Wave 2) هم زیر docs/vault/ سوار می‌شود — کریت‌های
+# مرجع خام ag-ui-core/ag-ui-client با Cargo.toml مستقل؛ cargo هرگز آن‌ها را
+# کامپایل نمی‌کند.
 exclude = [
     "crates/tooling/fuzz_suite",
     "crates/tooling/vault_pro",
+    "docs/vault/**",
 ]
 
 [workspace.package]

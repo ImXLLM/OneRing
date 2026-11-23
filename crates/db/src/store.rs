@@ -521,7 +521,7 @@ impl V3Store {
         let without_file = url.strip_prefix("file:").unwrap_or(url);
         let without_scheme = without_file
             .strip_prefix("sqlite:")
-            .and_then(|rest| if rest == ":memory:" { None } else { Some(rest) })
+            .filter(|&rest| rest != ":memory:")
             .unwrap_or(without_file);
         let normalized = without_scheme.split('?').next().unwrap_or(without_scheme);
         let in_memory = normalized == ":memory:" || normalized == "sqlite::memory:";

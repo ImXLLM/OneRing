@@ -13,6 +13,8 @@
 //! - [`token_saver`] — فشرده‌ساز خروجی ابزار با حفظ رازها (پورت `token_saver.py`)
 #![forbid(unsafe_code)]
 
+pub mod ag_ui;
+pub mod approvals;
 pub mod builder;
 pub mod engine;
 pub mod faq;
@@ -29,6 +31,11 @@ pub const NAME: &str = "kian-hermes";
 /// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub use ag_ui::{AgUiEvent, AgUiEventType};
+pub use approvals::{
+    deterministic_subagent_thread_id, simulate_approval_policy, ApprovalCategory, ApprovalContext,
+    ApprovalOutcome, FireDecision, PolicyVerdict, RoutineFatigueGuard,
+};
 pub use builder::{
     build_preview_html, build_system_prompt, extract_html_and_metadata,
     sanitize_and_wrap_user_message, BuilderEngine, BuilderTurnOutcome, ExtractedArtifact,

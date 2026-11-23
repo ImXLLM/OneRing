@@ -9,7 +9,7 @@
  * ۳) قیمت‌گذاری، پورسانت رفرال و انتشار یک‌کلیکه + لینک وایرال تلگرام
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "@kian/ui";
 import {
@@ -29,6 +29,7 @@ import { HtmlPreviewFrame } from "@/components/kian/html-preview-frame";
 import { GuestGate, PreviewBanner } from "@/components/kian/guest-gate";
 import { useSession } from "@/components/kian/session";
 import { friendlyError, friendlyErrorTitle } from "@/lib/friendly";
+import { sanitizePartialStudioHtml } from "@/lib/studio-html-guard";
 import {
   api,
   ApiError,
@@ -397,6 +398,12 @@ export default function BuilderPage() {
   };
 
   const hasHtml = Boolean(active?.generatedHtml.trim());
+  // گارد zero-flicker (پورت OpenIntelligentUI): پیش‌نمایش هرگز HTML نیمه‌راهِ
+  // تگ باز/اسکریپت باز/موجودیت ناقص نمی‌بیند؛ نسخهٔ دانلود همیشه سند کامل است.
+  const previewHtml = useMemo(
+    () => sanitizePartialStudioHtml(active?.generatedHtml ?? ""),
+    [active?.generatedHtml],
+  );
   const currentStep: 1 | 2 | 3 = viralProductId ? 3 : hasHtml ? 2 : 1;
 
   return (
@@ -595,7 +602,8 @@ export default function BuilderPage() {
               پیش‌نمایش زندهٔ محصول — مرحلهٔ ۲ از ۳
             </h2>
             <HtmlPreviewFrame
-              html={active.generatedHtml}
+              html={previewHtml}
+              downloadHtml={active.generatedHtml}
               title={title || "پیش‌نمایش زندهٔ محصول"}
               allowDownload
               downloadFilename={`${title || active.id}.html`}

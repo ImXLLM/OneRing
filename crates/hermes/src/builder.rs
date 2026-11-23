@@ -167,9 +167,7 @@ fn extract_fenced_block(raw: &str, lang: &str) -> Option<(String, (usize, usize)
         let content_start = raw[after_marker..]
             .find('\n')
             .map_or(raw.len(), |nl| after_marker + nl + 1);
-        let Some(end_rel) = raw[content_start..].find("```") else {
-            return None;
-        };
+        let end_rel = raw[content_start..].find("```")?;
         let content_end = content_start + end_rel;
         let block_end = content_end + 3;
         return Some((raw[content_start..content_end].trim().to_owned(), (start, block_end)));

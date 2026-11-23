@@ -15,6 +15,9 @@ import { Download, Maximize2, RotateCw, ShieldCheck, X } from "lucide-react";
 export type HtmlPreviewFrameProps = {
   /** سند کامل HTML برای رندر داخل `iframe` ایزوله */
   html: string;
+  /** نسخهٔ دانلودی سند — پیش‌فرض همان `html`؛ برای پیش‌نمایش گاردخورده و
+   *  دانلود سند کاملِ دست‌نخورده فرق می‌کنند. */
+  downloadHtml?: string;
   /** عنوان نمایشی قاب و فایل دانلودی */
   title?: string;
   /** نمایش دکمهٔ دانلود فایل `.html` مستقل (مناسب حالت تحویل پس از خرید) */
@@ -38,6 +41,7 @@ function sanitizeFilename(name: string): string {
 
 export function HtmlPreviewFrame({
   html,
+  downloadHtml,
   title = "پیش‌نمایش زنده HTML",
   allowDownload = false,
   downloadFilename,
@@ -57,8 +61,10 @@ export function HtmlPreviewFrame({
   }, [fullscreen]);
 
   const handleDownload = () => {
-    if (!html) return;
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    // نسخهٔ دانلودی سند کامل است — گارد پیش‌نمایش (`html`) به فایل محصول نشت نمی‌کند.
+    const artifact = downloadHtml ?? html;
+    if (!artifact) return;
+    const blob = new Blob([artifact], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

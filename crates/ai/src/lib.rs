@@ -19,6 +19,7 @@
 pub mod budget;
 pub mod client;
 pub mod gateway;
+pub mod history_repair;
 pub mod redaction;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
@@ -28,6 +29,11 @@ pub const NAME: &str = "kian-ai";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use budget::{BudgetDecision, BudgetEnvelope};
+pub use history_repair::{
+    is_settled_stream_arg, is_valid_studio_output, repair_unanswered_tool_calls, studio_defects,
+    unanswered_tool_calls, validate_and_build_self_healing_feedback, MAX_A2UI_ATTEMPTS, RepairedMessage,
+    StudioDefect, ToolCallDecl, ToolCallTurn, UNANSWERED,
+};
 pub use gateway::{
     expand_models_times_keys, looks_broken, persian_char_count, strip_fenced_code_blocks,
     AiConfig, AiGateway, AttemptFailure, ChatPacket, ChatResult, CompletionPacket, GatewayError,

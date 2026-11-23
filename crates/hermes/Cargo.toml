@@ -12,7 +12,9 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+sha2 = { workspace = true }
 kian-ai = { path = "../ai" }
+kian-domain = { path = "../domain" }
 kian-db = { path = "../db" }
 tokio = { workspace = true }
 

@@ -85,7 +85,9 @@ pub struct UserFeatures {
 }
 
 /// مرزهای سبد — عیناً `_BUCKETS` پایتون.
-const BUCKETS: [(&str, u32, fn(&UserFeatures) -> u32); 7] = [
+type FeatureExtractor = fn(&UserFeatures) -> u32;
+
+const BUCKETS: [(&str, u32, FeatureExtractor); 7] = [
     ("visits", 4, |f| f.visits),
     ("purchases", 4, |f| f.purchases),
     ("tasks", 4, |f| f.tasks),
