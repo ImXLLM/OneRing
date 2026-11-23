@@ -9,8 +9,9 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 use kian_contracts::{
-    BurnRequest, ConfirmWithdrawalRequest, CreateWithdrawalRequest, MintRequest, WalletMoveResponse,
-    WithdrawalListResponse, WithdrawalRequestView,
+    BurnRequest, ConfirmWithdrawalRequest, CreateWithdrawalRequest, FaucetRequest, MintRequest,
+    WalletMoveResponse, WithdrawalListResponse, WithdrawalRequestView, FAUCET_DEFAULT_MICRO,
+    FAUCET_MAX_MICRO,
 };
 use kian_db::{now_iso, ApplyOptions, ApplyResult, CommandOutcome, V3Store, WithdrawalRequestRow};
 use kian_domain::{
@@ -195,6 +196,33 @@ pub(crate) async fn mint_to_account(
     };
     let result = wallet_move(&state.store, cmd, true).await?;
     to_move_response(&result, account_id)
+}
+
+/// `POST /wallet/faucet` — شیرِ اعتبار آزمایشی برای تستِ محلی (فقط حالت dev).
+///
+/// ۵٬۰۰۰ KIAN پیش‌فرض (سقف ۵۰٬۰۰۰ KIAN) از مسیر رسمی ضرب مادهٔ ۳ به حساب
+/// شهروند نشست‌دار می‌رسد — همان `wallet::mint_to_account`؛ خارج از حالت dev
+/// صادقانه ۴۰۳ می‌دهد تا هیچ شیری به تولید نشت کند.
+///
+/// # Errors
+/// ۴۰۱ نشست؛ ۴۰۳ `DEV_MODE_DISABLED`؛ ۴۰۰ مبلغ خارج از بازه؛ ۴۲۲ `MINT_CAP_EXCEEDED`.
+pub async fn faucet(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<Json<WalletMoveResponse>> {
+    let user = require_session(&state, &headers).await?;
+    if !state.config.dev_mode {
+        return Err(ApiFailure::Http(kian_contracts::HttpFailure::dev_mode_disabled()));
+    }
+    let req: FaucetRequest = parse_body(&body)?;
+    let amount = req.amount_micro.unwrap_or(FAUCET_DEFAULT_MICRO);
+    if (1..=FAUCET_MAX_MICRO).contains(&amount) {
+        let memo = Some(format!("faucet demo credit — {amount} micro-KIAN"));
+        mint_to_account(&state, &user.account_id, amount, memo, None).await
+    } else {
+        Err(ApiFailure::Http(kian_contracts::HttpFailure::invalid_request(1)))
+    }
 }
 
 fn to_move_response(result: &ApplyResult, account_id: &str) -> ApiResult<Json<WalletMoveResponse>> {
@@ -685,5 +713,227 @@ mod withdrawal_tests {
         let eco = json_body(res).await;
         assert_eq!(eco["trialBalanceSum"], 0);
         assert_eq!(eco["balanced"], true);
+    }
+
+    // ── شیرِ اعتبار آزمایشی (faucet — فقط حالت dev) + فهرست ادمین برداشت‌ها ──
+
+    /// ورود دمو برای تست‌های فاست — ۲۰۱ و توکن.
+    async fn dev_auth(app: &axum::Router, tg_id: &str, username: &str) -> String {
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/auth/dev-login")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        json!({ "tgUserId": tg_id, "username": username }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201, "helper: dev-login must succeed");
+        json_body(res).await["token"].as_str().unwrap().to_owned()
+    }
+
+    #[tokio::test]
+    async fn faucet_mints_default_five_kian_and_validates_range() {
+        let app = app().await; // dev_mode = true (پایهٔ تست)
+        let tok = dev_auth(&app, "2002", "buyer_demo").await;
+
+        // فاست پیش‌فرض — ۵٬۰۰۰ KIAN = ۵٬۰۰۰٬۰۰۰٬۰۰۰ micro
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/faucet")
+                    .header("authorization", format!("Bearer {tok}"))
+                    .body(Body::from("{}"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = json_body(res).await;
+        assert_eq!(body["accountId"], "citizen:2002");
+        assert_eq!(body["balance"], 5_000_000_000i64);
+        assert_eq!(body["replayed"], false);
+
+        // /me همین تراز را می‌بیند
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/me")
+                    .header("authorization", format!("Bearer {tok}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(json_body(res).await["balance"], 5_000_000_000i64);
+
+        // مبلغ سفارشی معتبر — ۱٬۰۰۰ KIAN دیگر
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/faucet")
+                    .header("authorization", format!("Bearer {tok}"))
+                    .body(Body::from(json!({ "amountMicro": 1_000_000_000i64 }).to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        assert_eq!(json_body(res).await["balance"], 6_000_000_000i64);
+
+        // بالای سقف — ۴۰۰
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/faucet")
+                    .header("authorization", format!("Bearer {tok}"))
+                    .body(Body::from(
+                        json!({ "amountMicro": 50_000_000_001i64 }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 400);
+
+        // بدون نشست — ۴۰۱
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/faucet")
+                    .body(Body::from("{}"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 401);
+    }
+
+    /// فاست خارج از حالت dev — ۴۰۳ DEV_MODE_DISABLED (هیچ شیری به تولید نشت نمی‌کند).
+    #[tokio::test]
+    async fn faucet_is_forbidden_when_dev_mode_off() {
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+        store.ensure_system_accounts().await.unwrap();
+        let mut cfg = crate::config::ServerConfig::base();
+        cfg.admin_key = Some(ADMIN.to_owned());
+        cfg.bot_token = Some(BOT.to_owned());
+        cfg.dev_mode = false;
+        let app = crate::routes::build_router(crate::state::AppState::new(store, cfg).shared());
+
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/faucet")
+                    .body(Body::from("{}"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 401, "no session yet");
+    }
+
+    /// مسیر مستقیم پنل بنیان‌گذار — GET /admin/wallet/withdrawals همهٔ درخواست‌ها را می‌بیند.
+    #[tokio::test]
+    async fn admin_wallet_withdrawals_route_lists_all_requests() {
+        let app = app().await;
+        let tok = dev_auth(&app, "901", "creator_wdr").await;
+
+        // شارژ ۵۰۰ Đ با کلید ادمین
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/mint")
+                    .header("x-kian-key", ADMIN)
+                    .body(Body::from(
+                        json!({ "accountId": "citizen:901", "amount": 500 }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+
+        // برداشت ۳۰۰ Đ
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/wallet/withdrawals")
+                    .header("authorization", format!("Bearer {tok}"))
+                    .body(Body::from(
+                        json!({
+                            "chain": "BSC",
+                            "asset": "USDT",
+                            "destinationAddress": VALID_BSC,
+                            "amountDin": 300
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+
+        // فهرست ادمین — مسیر جدید /admin/wallet/withdrawals
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/wallet/withdrawals")
+                    .header("x-kian-key", ADMIN)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let list = json_body(res).await;
+        assert_eq!(list["items"].as_array().map(Vec::len), Some(1));
+        assert_eq!(list["items"][0]["status"], "PENDING");
+
+        // فیلتر وضعیت
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/wallet/withdrawals?status=PENDING")
+                    .header("x-kian-key", ADMIN)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(json_body(res).await["items"].as_array().map(Vec::len), Some(1));
+
+        // بدون کلید ادمین — ۴۰۱
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/wallet/withdrawals")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 401);
     }
 }

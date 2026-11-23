@@ -25,8 +25,10 @@ impl Charter {
     pub const TAX_BPS: i64 = 1_000;
     /// ماده ۷ — آستانه تأیید انسانی: عملیات ≥ ۵۰,۰۰۰ Đ نیاز به تأیید مالک دارد
     pub const HITL_THRESHOLD_DIN: Din = Din(50_000);
-    /// ماده ۳ — سقف ضرب سالانه
-    pub const YEARLY_MINT_CAP_DIN: Din = Din(1_000_000);
+    /// ماده ۳ — سقف ضرب سالانه: ۶۰٬۰۰۰ KIAN (۶۰ میلیارد micro) — با شیرِ
+    /// آزمایشی dev (پیش‌فرض ۵٬۰۰۰ KIAN، سقف ۵۰٬۰۰۰ KIAN) خوانا می‌ماند؛ در
+    /// استقرار واقعی، ضرب با واریز تأییدشده و این سقف کنترل می‌شود.
+    pub const YEARLY_MINT_CAP_DIN: Din = Din(60_000_000_000);
     /// عرضه اندازه‌گیری‌شده‌ی genesis (ممیزی مهر ۱۴۰۵: Σ = 187,672 Đ، گپ −۶۳ Đ توضیح‌داده‌شده)
     pub const GENESIS_SUPPLY_DIN: Din = Din(187_672);
 }
@@ -240,7 +242,7 @@ mod tests {
     #[test]
     fn enforces_the_yearly_mint_cap_article_3() {
         assert!(assert_mint_within_cap(d(500_000), d(500_000)).is_ok());
-        let r = assert_mint_within_cap(d(999_000), d(2_000));
+        let r = assert_mint_within_cap(d(59_999_000_000), d(2_000_000));
         assert_eq!(r.unwrap_err().code, DomainErrorCode::MintCapExceeded);
     }
 

@@ -32,8 +32,9 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use accounts::{AccountListResponse, AccountView, BalanceResponse, CreateAccountRequest};
 pub use auth::{
-    AuthResponse, MeResponse, SetTonAddressRequest, TelegramAuthRequest, TonDepositCreateRequest,
-    TonDepositListResponse, TonDepositView, UserView, WalletTxView,
+    AuthResponse, DevLoginRequest, FaucetRequest, MeResponse, SetTonAddressRequest,
+    TelegramAuthRequest, TonDepositCreateRequest, TonDepositListResponse, TonDepositView, UserView,
+    WalletTxView, FAUCET_DEFAULT_MICRO, FAUCET_MAX_MICRO,
 };
 pub use brain::{
     A2aInboxResponse, A2aMessageView, A2aSendRequest, AdminAuditEntry, AdminAuditListResponse,

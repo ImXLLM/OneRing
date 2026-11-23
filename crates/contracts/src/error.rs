@@ -191,6 +191,16 @@ impl HttpFailure {
         )
     }
 
+    /// اندپوینت‌های دمو/توسعه (`dev-login`، `faucet`) خارج از حالت dev — ۴۰۳.
+    #[must_use]
+    pub fn dev_mode_disabled() -> Self {
+        Self::new(
+            403,
+            "DEV_MODE_DISABLED",
+            "Dev/demo endpoints are disabled — enable KIAN_DEV_MODE=1 (or run without a bot token) for local testing.",
+        )
+    }
+
     /// لایحهٔ پارلمان ناشناخته — M5 حاکمیت.
     #[must_use]
     pub fn bill_not_found(id: impl std::fmt::Display) -> Self {

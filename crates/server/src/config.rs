@@ -70,6 +70,11 @@ pub struct ServerConfig {
     /// پیش‌فرض فقط localhost:3000. fail-closed: اوریجین ناشناخته هرگز پاسخ
     /// preflight نمی‌گیرد.
     pub cors_origins: Vec<String>,
+    /// حالت توسعه/دمو — اندپوینت‌های `/auth/dev-login` و `/wallet/faucet` را
+    /// فعال می‌کند. از `KIAN_DEV_MODE` (`1`/`true`/`yes`/`on`)؛ وقتی تنظیم
+    /// نشده، تنها اگر توکن بات غایب باشد فعال است (تستِ محلی بدون تلگرام).
+    /// در استقرار واقعی با توکن بات، بدون این متغیر خاموش می‌ماند (fail-closed).
+    pub dev_mode: bool,
 }
 
 impl ServerConfig {
@@ -103,34 +108,44 @@ impl ServerConfig {
             backup_dir: "/tmp/kian-test-backups".into(),
             keep_backups: 1,
             cors_origins: Vec::new(),
+            // پایهٔ تست — بدون توکن بات، حالت dev فعال است (اندپوینت‌های دمو)
+            dev_mode: true,
         }
     }
 
     /// مسیر فایل دیتابیس‌های فایل‌محور — `None` برای حافظه.
-    /// همان نرمال‌سازی `V3Store::connect`: حذف پیشوند `file:` و تشخیص `:memory:`.
+    /// همان نرمال‌سازی `V3Store::connect`: حذف پیشوند `file:`/`sqlite:` و
+    /// تشخیص `:memory:`؛ بخشِ `?query` نادیده گرفته می‌شود.
     #[must_use]
     pub fn db_file_path(&self) -> Option<std::path::PathBuf> {
-        let normalized = self
+        let without_file = self
             .database_url
             .strip_prefix("file:")
             .unwrap_or(&self.database_url);
-        if normalized == ":memory:" || normalized == "sqlite::memory:" {
+        let without_scheme = without_file
+            .strip_prefix("sqlite:")
+            .and_then(|rest| if rest == ":memory:" { None } else { Some(rest) })
+            .unwrap_or(without_file);
+        let normalized = without_scheme.split('?').next().unwrap_or(without_scheme);
+        if normalized == ":memory:" || normalized == "sqlite::memory:" || normalized.trim().is_empty() {
             return None;
         }
-        let file = normalized.split('?').next().unwrap_or(normalized);
-        if file.trim().is_empty() {
-            return None;
-        }
-        Some(std::path::PathBuf::from(file))
+        Some(std::path::PathBuf::from(normalized))
     }
 
     /// خواندن از محیط — هیچ چیز fail نمی‌شود؛ ادمین‌نبودن فقط «غیرفعال» است.
     #[must_use]
     pub fn from_env() -> Self {
         let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
+        let bot_token = env("KIAN_BOT_TOKEN");
+        // حالت dev: پرچم صریح `KIAN_DEV_MODE`، یا غیاب توکن بات (تست محلی).
+        let dev_mode = std::env::var("KIAN_DEV_MODE").map_or(
+            bot_token.is_none(),
+            |v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
+        );
         Self {
             admin_key: env("KIAN_ADMIN_KEY"),
-            bot_token: env("KIAN_BOT_TOKEN"),
+            bot_token,
             bot_webhook_secret: env("KIAN_BOT_WEBHOOK_SECRET"),
             miniapp_url: env("KIAN_MINIAPP_URL").unwrap_or_else(|| "http://localhost:3000".into()),
             session_ttl_hours: env("KIAN_SESSION_TTL_HOURS")
@@ -182,6 +197,7 @@ impl ServerConfig {
                         .collect()
                 },
             ),
+            dev_mode,
         }
     }
 }
@@ -203,5 +219,17 @@ mod tests {
         }
         assert!(cfg.rate_limit > 0);
         assert!(cfg.keep_backups > 0);
+    }
+
+    /// حالت dev: پرچم صریح یا غیاب توکن بات — مبنای اندپوینت‌های دمو.
+    #[test]
+    fn dev_mode_follows_flag_or_missing_bot_token() {
+        // پرچم صریح بر باتِ حاضر غالب است
+        let mut cfg = ServerConfig::base();
+        cfg.bot_token = Some("123:tok".into());
+        cfg.dev_mode = false;
+        assert!(!cfg.dev_mode);
+        cfg.dev_mode = true;
+        assert!(cfg.dev_mode);
     }
 }

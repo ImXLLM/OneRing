@@ -84,6 +84,55 @@ pub struct SetTonAddressRequest {
     pub address: String,
 }
 
+/// درخواست ورود دمو/توسعه‌دهنده — فقط در حالت dev (`POST /auth/dev-login`).
+///
+/// جایگزین تلگرام نیست؛ فقط برای تستِ محلیِ حلقهٔ کامل (سازنده → انتشار →
+/// رفرال → خرید → اسکرو → برداشت) در مرورگر بدون تلگرام. همهٔ فیلدها غیر از
+/// `tgUserId` اختیاری‌اند با پیش‌فرض‌های معقول؛ `firstName` فقط نمایشی است و
+/// ذخیره نمی‌شود (هویت = `citizen:{tgUserId}`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DevLoginRequest {
+    /// شناسهٔ عددی تلگرام آزمایشی — فقط ارقام (۱..=۲۰ رقم)؛ پیش‌فرض پرسونای سازنده
+    pub tg_user_id: String,
+    /// یوزرنیم آزمایشی اختیاری — بدون `@`
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub username: Option<String>,
+    /// نام نمایشی اختیاری — فقط برای نمایش؛ روی هویت ذخیره نمی‌شود
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_name: Option<String>,
+    /// پارامتر شروع وایرال اختیاری (`p_<productId>_r_<referrer>`)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_param: Option<String>,
+}
+
+/// پیش‌فرض `DevLoginRequest` — پرسونای سازندهٔ دمو (۱۰۰۱).
+impl Default for DevLoginRequest {
+    fn default() -> Self {
+        Self {
+            tg_user_id: "1001".to_owned(),
+            username: None,
+            first_name: None,
+            start_param: None,
+        }
+    }
+}
+
+/// مقدار پیش‌فرض شیرِ اعتبار آزمایشی — ۵٬۰۰۰ KIAN به micro.
+pub const FAUCET_DEFAULT_MICRO: i64 = 5_000_000_000;
+
+/// سقف هر برداشت از شیر آزمایشی — ۵۰٬۰۰۰ KIAN به micro.
+pub const FAUCET_MAX_MICRO: i64 = 50_000_000_000;
+
+/// درخواست شیرِ اعتبار آزمایشی (`POST /wallet/faucet`) — فقط حالت dev.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase", default)]
+pub struct FaucetRequest {
+    /// مبلغ به micro-KIAN — پیش‌فرض ۵٬۰۰۰ KIAN؛ سقف ۵۰٬۰۰۰ KIAN
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub amount_micro: Option<i64>,
+}
+
 /// درخواست ثبت واریز TON — اثبات انتقال از سمت کاربر.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -147,6 +196,35 @@ mod tests {
         let json = to_string(&me).unwrap();
         assert!(json.contains("\"tonAddress\":null"), "explicit null — {json}");
         assert!(!json.contains("username"), "optional absent — {json}");
+    }
+
+    #[test]
+    fn dev_login_request_defaults_and_camel_case() {
+        // بدنهٔ خالی → پرسونای پیش‌فرض سازنده
+        let req: DevLoginRequest = from_str("{}").unwrap();
+        assert_eq!(req.tg_user_id, "1001");
+        assert_eq!(req.username, None);
+        // شکل سیمی camelCase + فیلدهای غایب
+        let full = DevLoginRequest {
+            tg_user_id: "2002".into(),
+            username: Some("buyer_demo".into()),
+            first_name: Some("خریدار (Buyer)".into()),
+            start_param: Some("p_prod1_r_3003".into()),
+        };
+        let json = to_string(&full).unwrap();
+        assert!(json.contains("\"tgUserId\""), "{json}");
+        assert!(json.contains("\"firstName\""), "{json}");
+        assert!(json.contains("\"startParam\""), "{json}");
+        assert!(json.contains("\"username\""), "{json}");
+    }
+
+    #[test]
+    fn faucet_request_defaults_to_five_kian() {
+        let req: FaucetRequest = from_str("{}").unwrap();
+        assert_eq!(req.amount_micro, None);
+        let parsed: FaucetRequest =
+            from_str(r#"{"amountMicro":5000000000}"#).unwrap();
+        assert_eq!(parsed.amount_micro, Some(5_000_000_000));
     }
 
     #[test]

@@ -21,13 +21,18 @@ use subtle::ConstantTimeEq;
 
 /// بررسی کلید ادمین — مقایسهٔ زمان‌ثابت.
 ///
-/// * کلید سرور `None` یا کوتاه‌تر از ۱۶ کاراکتر → `false` (ادمین غیرفعال).
+/// * کلید سرور `None` یا کوتاه‌تر از حداقل (۱۶ کاراکتر؛ ۸ برای کلیدهای
+///   دمو با پیشوند صریح `dev-`) → `false` (ادمین غیرفعال).
 /// * هدر غایب/خالی → `false`.
 /// * طول‌های متفاوت → `false` (بدون مقایسهٔ بایت‌به‌بایت — نشت زمانی ندارد).
 #[must_use]
 pub fn verify_kian_key(header_value: Option<&str>, server_key: Option<&str>) -> bool {
     let Some(server_key) = server_key else { return false };
-    if server_key.len() < 16 {
+    // کلید ادمین تولیدی حداقل ۱۶ کاراکتر؛ پیشوند `dev-` صریحاً کلید دمو/توسعه
+    // اعلام می‌کند (مثل `dev-admin-key`) و با حداقل ۸ کاراکتر پذیرفته می‌شود —
+    // فقط برای تستِ محلی؛ در استقرار واقعی کلید بلند تولید کنید.
+    let min_len = if server_key.starts_with("dev-") { 8 } else { 16 };
+    if server_key.len() < min_len {
         return false;
     }
     let Some(header) = header_value else { return false };
@@ -413,6 +418,12 @@ mod tests {
         assert!(verify_kian_key(Some(KEY), Some(KEY)));
         assert!(!verify_kian_key(Some("kia-admin-key-0123456788"), Some(KEY)));
         assert!(!verify_kian_key(Some(KEY), Some(&KEY[..15])));
+
+        // کلید دمو با پیشوند صریح `dev-` — حداقل ۸ کاراکتر (تست محلی امشب)
+        const DEV: &str = "dev-admin-key"; // ۱۳ کاراکتر
+        assert!(verify_kian_key(Some(DEV), Some(DEV)));
+        assert!(!verify_kian_key(Some("dev-admin-keY"), Some(DEV))); // هم‌طول اما متفاوت
+        assert!(!verify_kian_key(Some(DEV), Some("dev-adm"))); // < ۸ کاراکتر دمو
     }
 
     #[test]

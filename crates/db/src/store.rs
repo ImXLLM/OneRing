@@ -516,7 +516,14 @@ impl V3Store {
     /// # Errors
     /// مسیر/URL نامعتبر یا خطای باز شدن SQLite.
     pub async fn connect(url: &str) -> DbResult<Self> {
-        let normalized = url.strip_prefix("file:").unwrap_or(url);
+        // نرمال‌سازی: اسکیمهٔ `file:` یا `sqlite:` حذف می‌شود؛ بخشِ `?query`
+        // (مثل `?mode=rwc`) نادیده گرفته می‌شود — sqlx خودش فایل را می‌سازد.
+        let without_file = url.strip_prefix("file:").unwrap_or(url);
+        let without_scheme = without_file
+            .strip_prefix("sqlite:")
+            .and_then(|rest| if rest == ":memory:" { None } else { Some(rest) })
+            .unwrap_or(without_file);
+        let normalized = without_scheme.split('?').next().unwrap_or(without_scheme);
         let in_memory = normalized == ":memory:" || normalized == "sqlite::memory:";
         let mut opts = if in_memory {
             // درون‌حافظه‌ای + اشتراک حافظه پنهان — با تک‌اتصالِ زیر، دیتابیس

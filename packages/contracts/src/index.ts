@@ -396,6 +396,44 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponseT = z.infer<typeof authResponseSchema>;
 
+// ── حالت توسعه/دمو — ورود یک‌کلیکی و شیر اعتبار (فقط KIAN_DEV_MODE=1) ──────
+
+/**
+ * درخواست ورود دمو/توسعه‌دهنده — قرینهٔ `DevLoginRequest` در crates/contracts/src/auth.rs.
+ * همهٔ فیلدها غیر از tgUserId اختیاری با پیش‌فرض‌های معقول؛ tgUserId فقط ارقام.
+ */
+export const devLoginRequestSchema = z.object({
+  tgUserId: z.string().regex(/^[0-9]{1,20}$/),
+  username: z.string().min(1).max(64).optional(),
+  firstName: z.string().min(1).max(120).optional(),
+  startParam: z.string().max(160).nullable().optional(),
+});
+export type DevLoginRequestT = z.infer<typeof devLoginRequestSchema>;
+
+/** پرسوناهای آمادهٔ تستِ امشب — هم‌تراز با loginAsDemoPersona در مینی‌اپ. */
+export const DEMO_PERSONAS = {
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "سازنده (Creator)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "خریدار (Buyer)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "بازاریاب (Affiliate)" },
+} as const;
+export type DemoPersona = keyof typeof DEMO_PERSONAS;
+
+/** شناسه‌های تلگرامی پرسوناهای دمو — برای بارِ پرسونای فعال در UI. */
+export const DEMO_PERSONA_TG_IDS: readonly string[] = Object.values(DEMO_PERSONAS).map(
+  (p) => p.tgUserId,
+);
+
+/** مقدار پیش‌فرض شیرِ اعتبار — ۵٬۰۰۰ KIAN به micro. */
+export const FAUCET_DEFAULT_MICRO = 5_000_000_000;
+/** سقف هر برداشت شیر — ۵۰٬۰۰۰ KIAN به micro. */
+export const FAUCET_MAX_MICRO = 50_000_000_000;
+
+/** درخواست شیرِ اعتبار آزمایشی — قرینهٔ `FaucetRequest` در crates/contracts. */
+export const faucetRequestSchema = z.object({
+  amountMicro: z.number().int().min(1).max(FAUCET_MAX_MICRO).optional(),
+});
+export type FaucetRequestT = z.infer<typeof faucetRequestSchema>;
+
 /** ردیف تاریخچهٔ کیف — `memo` همیشه روی سیم است (null صریح). */
 export const walletTxViewSchema = z.object({
   txId: z.string(),

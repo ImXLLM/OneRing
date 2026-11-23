@@ -56,12 +56,14 @@ const TonConnectSection = dynamic(
 );
 
 export default function WalletPage() {
-  const { state, refresh } = useSession();
+  const { state, refresh, activePersona } = useSession();
   const [deposits, setDeposits] = useState<TonDepositView[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequestView[]>([]);
   const [registering, setRegistering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  // شیر اعتبار آزمایشی — فقط برای پرسوناهای دمو نمایش داده می‌شود
+  const [claimingFaucet, setClaimingFaucet] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [amountTon, setAmountTon] = useState("");
@@ -114,6 +116,28 @@ export default function WalletPage() {
   }
 
   const { me, token } = state;
+
+  // شیر اعتبار آزمایشی (faucet) — ۵٬۰۰۰ KIAN رایگان؛ فقط در حالت devِ سرور
+  const claimFaucet = async () => {
+    setClaimingFaucet(true);
+    try {
+      const res = await api.claimDemoFaucet(token);
+      toast({
+        title: "🎁 اعتبار تست اضافه شد",
+        description: `${formatDin(res.balance)} در کیف‌پول تو آمادهٔ خرید و تست است.`,
+        variant: "success",
+      });
+      await refresh();
+    } catch (err) {
+      toast({
+        title: "دریافت اعتبار تست ناموفق",
+        description: friendlyError(err),
+        variant: "destructive",
+      });
+    } finally {
+      setClaimingFaucet(false);
+    }
+  };
 
   const registerAddress = async (address: string) => {
     setRegistering(true);
@@ -230,6 +254,25 @@ export default function WalletPage() {
               <span className="text-zinc-600">هنوز وصل نشده</span>
             )}
           </p>
+
+          {/* شیر اعتبار آزمایشی — فقط پرسوناهای دمو (۱۰۰۱/۲۰۰۲/۳۰۰۳) */}
+          {activePersona && (
+            <div className="mt-4 flex flex-col gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3">
+              <p className="text-xs font-bold leading-5 text-emerald-300">
+                حالت تست فعال است — برای امتحانِ کاملِ خرید و برداشت، اعتبار رایگان بگیر:
+              </p>
+              <button
+                type="button"
+                disabled={claimingFaucet}
+                onClick={() => void claimFaucet()}
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-600/25 ring-1 ring-emerald-400/50 transition hover:opacity-90 disabled:opacity-50"
+              >
+                {claimingFaucet
+                  ? "در حال دریافت…"
+                  : "🎁 دریافت ۵٬۰۰۰ KIAN اعتبار تست رایگان (Faucet)"}
+              </button>
+            </div>
+          )}
         </section>
 
         {/* TON Connect */}

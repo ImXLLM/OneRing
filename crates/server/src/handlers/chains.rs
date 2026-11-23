@@ -722,7 +722,8 @@ mod tests {
         let app = app().await;
         let token = login(&app, "42", "whale_usdt").await;
 
-        // ۲۰۰۰ USDT × ۱۰۰۰ Đ/USDT = ۲٬۰۰۰٬۰۰۰ Đ > سقف سالانه ۱٬۰۰۰٬۰۰۰ Đ
+        // ۲۰۰۰ USDT × ۱۰۰۰ Đ/USDT = ۲٬۰۰۰٬۰۰۰ Đ؛ برای عبور از سقف سالانهٔ ۶۰ میلیارد Đ:
+        // ۷۰٬۰۰۰٬۰۰۰ USDT × ۱۰۰۰ = ۷۰ میلیارد Đ > سقف
         let res = app
             .clone()
             .oneshot(
@@ -735,7 +736,7 @@ mod tests {
                             "chain": "TON",
                             "txHash": "usdtcapfail12345",
                             "fromAddress": "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
-                            "amountUsdt": "2000"
+                            "amountUsdt": "70000000"
                         })
                         .to_string(),
                     ))

@@ -43,6 +43,26 @@ type McpTool = { name: string; description: string; args: string[]; adminOnly: b
 type Fleet = { agents: Agent[]; a2aEnabled: boolean; mcpTools: McpTool[] };
 type A2aMsg = { id: string; fromAgent: string; toAgent: string; kind: string; body: string; at: string };
 type AuditEntry = { id: string; actor: string; action: string; target?: string; meta?: string; at: string };
+/** درخواست برداشت کریپتو — قرینهٔ WithdrawalRequestView در crates/contracts. */
+type Wdr = {
+  id: string; accountId: string; chain: string; asset: string; destinationAddress: string;
+  amountDin: number; txHash: string | null; status: string;
+  createdAt: number; resolvedAt: number | null;
+};
+/** ردیف امانت برای داوری ادمین — قرینهٔ EscrowView. */
+type EscrowRow = {
+  id: string; buyerId: string; sellerId: string; amount: number; productRef: string | null;
+  status: string; createdAt: string; disputeReason: string | null;
+};
+/** خلاصهٔ اقتصاد ملی — GET /economy (عمومی، مادهٔ ۶). */
+type Economy = {
+  currency: string; symbol: string;
+  circulatingSupply: number; treasuryBalance: number; escrowLocked: number;
+  mintedAllTime: number; burnedAllTime: number; mintedThisYear: number;
+  yearlyMintCap: number; genesisSupply: number;
+  trialBalanceSum: number; balanced: boolean;
+  accountCount: number; openEscrows: number;
+};
 type Bill = {
   id: string; kind: "escrowRelease" | "treasuryMove"; subject: string; amountDin: number;
   resolution?: "release" | "refund"; title: string; status: string;
@@ -66,14 +86,20 @@ const LEGACY_COVERAGE: { group: string; count: number; kian: string; status: "do
 ];
 
 const din = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
-const TABS = ["overview", "hitl", "parliament", "deposits", "market", "brain", "fleet", "audit", "legacy"] as const;
+const TABS = [
+  "overview", "withdrawals", "arbitration", "hitl", "deposits",
+  "parliament", "market", "mint", "brain", "fleet", "audit", "legacy",
+] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABELS: Record<Tab, string> = {
-  overview: "نمای کلی",
+  overview: "آمار اقتصاد",
+  withdrawals: "برداشت‌های کریپتو",
+  arbitration: "داوری اسکرو",
   hitl: "صف HITL",
-  parliament: "پارلمان",
   deposits: "واریزهای TON",
+  parliament: "پارلمان",
   market: "بازار",
+  mint: "شارژ حساب",
   brain: "مغز",
   fleet: "ناوگان",
   audit: "ممیزی",
@@ -81,11 +107,15 @@ const TAB_LABELS: Record<Tab, string> = {
 };
 
 export default function AdminPage() {
-  const [keyInput, setKeyInput] = useState("");
+  // پیش‌فرضِ دمو — کلید رسمی از env کرنل (KIAN_ADMIN_KEY) می‌آید؛ در تستِ امشب
+  // «dev-admin-key» از پیش پر می‌شود تا بنیان‌گذار بدون اصطکاک وارد شود.
+  const [keyInput, setKeyInput] = useState("dev-admin-key");
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(false);
+  // تیکِ بروزرسانی — با هر کلیک، تبِ فعال remount می‌شود و همهٔ داده‌ها تازه می‌شوند
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const refreshHealth = useCallback(() => {
     publicGet<Health>("/health").then(setHealth).catch(() => setHealth(null));
@@ -129,10 +159,10 @@ export default function AdminPage() {
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">
-            پنل عملیات <span className="text-gold-400">KIAN</span>
+            اتاق فرمان بنیان‌گذار <span className="text-gold-400">KIAN</span>
           </h1>
           <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            جانشین ۷۱ اندپوینت legacy · احراز فقط X-KIAN-Key · fail-closed
+            اقتصاد، برداشت‌های کریپتو، داوری اسکرو و شارژ حساب — همه در یک پنل
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -190,23 +220,38 @@ export default function AdminPage() {
         </section>
       ) : (
         <>
-          {/* نوار تب‌ها */}
-          <nav className="flex flex-wrap gap-2">
+          {/* نوار تب‌ها + بروزرسانی سراسری */}
+          <nav className="flex flex-wrap items-center gap-2">
             {TABS.map((t) => (
               <Button key={t} size="sm" variant={tab === t ? "default" : "ghost"} onClick={() => setTab(t)}>
                 {TAB_LABELS[t]}
               </Button>
             ))}
+            <Button
+              size="sm"
+              variant="outline"
+              className="mr-auto"
+              onClick={() => {
+                setRefreshTick((t) => t + 1);
+                refreshHealth();
+              }}
+            >
+              🔄 بروزرسانی داده‌ها
+            </Button>
           </nav>
           {loading && <p className="text-xs text-[var(--color-muted-foreground)]">در حال بارگذاری…</p>}
-          {tab === "overview" && <OverviewTab safe={safe} refreshHealth={refreshHealth} />}
-          {tab === "hitl" && <HitlTab safe={safe} />}
-          {tab === "parliament" && <ParliamentTab safe={safe} />}
-          {tab === "deposits" && <DepositsTab safe={safe} />}
-          {tab === "market" && <MarketTab safe={safe} />}
-          {tab === "brain" && <BrainTab safe={safe} />}
-          {tab === "fleet" && <FleetTab safe={safe} />}
-          {tab === "audit" && <AuditTab safe={safe} />}
+          {/* key={refreshTick} — remount تب فعال با هر «بروزرسانی» = بارگیری مجدد داده */}
+          {tab === "overview" && <OverviewTab key={refreshTick} safe={safe} refreshHealth={refreshHealth} />}
+          {tab === "withdrawals" && <WithdrawalsTab key={refreshTick} safe={safe} />}
+          {tab === "arbitration" && <EscrowArbitrationTab key={refreshTick} safe={safe} />}
+          {tab === "hitl" && <HitlTab key={refreshTick} safe={safe} />}
+          {tab === "deposits" && <DepositsTab key={refreshTick} safe={safe} />}
+          {tab === "parliament" && <ParliamentTab key={refreshTick} safe={safe} />}
+          {tab === "market" && <MarketTab key={refreshTick} safe={safe} />}
+          {tab === "mint" && <MintTab safe={safe} />}
+          {tab === "brain" && <BrainTab key={refreshTick} safe={safe} />}
+          {tab === "fleet" && <FleetTab key={refreshTick} safe={safe} />}
+          {tab === "audit" && <AuditTab key={refreshTick} safe={safe} />}
           {tab === "legacy" && <LegacyTab />}
         </>
       )}
@@ -231,6 +276,8 @@ function StatusBadge({ status }: { status: string }) {
     PENDING: "warning", APPROVED: "success", REJECTED: "destructive", EXPIRED: "secondary",
     CONFIRMED: "success", active: "success", registered: "secondary", disabled: "destructive",
     OPEN: "warning", PASSED: "success", EXECUTED: "success",
+    RELEASED: "success", DISPUTED: "warning", REFUNDED: "secondary", FUNDED: "warning",
+    DELIVERED: "warning", CREATED: "secondary", CANCELLED: "secondary",
   };
   return <Badge variant={map[status] ?? "secondary"}>{status}</Badge>;
 }
@@ -241,12 +288,17 @@ type SafeFn = <T,>(fn: () => Promise<T>) => Promise<T | null>;
 
 function OverviewTab({ safe, refreshHealth }: { safe: SafeFn; refreshHealth: () => void }) {
   const [data, setData] = useState<Overview | null>(null);
+  const [eco, setEco] = useState<Economy | null>(null);
 
   const load = useCallback(() => {
     safe(async () => {
       setData(await adminGet<Overview>("/admin/overview"));
       return true;
     });
+    // اقتصاد ملی عمومی است — حتی با کلیدِ نادرست کار می‌کند (مادهٔ ۶)
+    publicGet<Economy>("/economy")
+      .then(setEco)
+      .catch(() => setEco(null));
   }, [safe]);
 
   useEffect(() => {
@@ -259,15 +311,45 @@ function OverviewTab({ safe, refreshHealth }: { safe: SafeFn; refreshHealth: () 
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card title="شهروندان تلگرام" value={din(data.users)} />
-        <Card title="حساب‌های دفتر" value={din(data.accounts)} />
-        <Card title="امانت‌ها" value={din(data.escrows)} />
-        <Card title="HITL در انتظار" value={din(data.hitlPending)} hint={data.hitlPending > 0 ? "نیاز به تصمیم" : undefined} />
-        <Card title="کل ضرب (مادهٔ ۳)" value={`${din(data.mintedAllTime)} Đ`} />
-        <Card title="کل سوزانده" value={`${din(data.burnedAllTime)} Đ`} />
-        <Card title="فراخوانی‌های مغز" value={din(data.aiCalls)} />
-        <Card title="درآمد بازار ۱۴روزه" value={`${din(data.revenueSeries.reduce((a, r) => a + r.din, 0))} Đ`} />
+      {/* بخش ۱ — آمار اقتصاد و خزانه (مادهٔ ۶) */}
+      {eco && (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-bold text-[var(--color-royal-400)]">
+            آمار اقتصاد و خزانه (Economy &amp; Overview)
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card title="عرضه در گردش" value={`${din(eco.circulatingSupply)} Đ`} hint="مادهٔ ۶" />
+            <Card
+              title="خزانهٔ ملی (مالیات انباشته)"
+              value={`${din(eco.treasuryBalance)} Đ`}
+              hint="۱۰٪ هر تسویه (مادهٔ ۲)"
+            />
+            <Card title="قفل‌شده در اسکرو" value={`${din(eco.escrowLocked)} Đ`} />
+            <Card title="اسکروهای باز" value={din(eco.openEscrows)} />
+            <Card title="ضرب امسال / سقف (مادهٔ ۳)" value={`${din(eco.mintedThisYear)} / ${din(eco.yearlyMintCap)} Đ`} />
+            <Card title="حساب‌های دفتر" value={din(eco.accountCount)} />
+            <Card
+              title="توازن دفتر دوطرفه"
+              value={eco.balanced ? "متوازن ✓" : "نامتوازن!"}
+              hint={`Σ=${din(eco.trialBalanceSum)} Đ`}
+            />
+            <Card title="عرضهٔ آغازین (genesis)" value={`${din(eco.genesisSupply)} Đ`} />
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-bold text-[var(--color-royal-400)]">آمار عملیات (داخل کرنل)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card title="شهروندان تلگرام" value={din(data.users)} />
+          <Card title="حساب‌های دفتر" value={din(data.accounts)} />
+          <Card title="امانت‌ها" value={din(data.escrows)} />
+          <Card title="HITL در انتظار" value={din(data.hitlPending)} hint={data.hitlPending > 0 ? "نیاز به تصمیم" : undefined} />
+          <Card title="کل ضرب (مادهٔ ۳)" value={`${din(data.mintedAllTime)} Đ`} />
+          <Card title="کل سوزانده" value={`${din(data.burnedAllTime)} Đ`} />
+          <Card title="فراخوانی‌های مغز" value={din(data.aiCalls)} />
+          <Card title="درآمد بازار ۱۴روزه" value={`${din(data.revenueSeries.reduce((a, r) => a + r.din, 0))} Đ`} />
+        </div>
       </div>
 
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
@@ -316,6 +398,280 @@ function OverviewTab({ safe, refreshHealth }: { safe: SafeFn; refreshHealth: () 
           </ul>
         </div>
       </div>
+    </section>
+  );
+}
+
+/* ── بخش ۲ — مدیریت درخواست‌های برداشت کریپتو ─────────────────────────── */
+
+function WithdrawalsTab({ safe }: { safe: SafeFn }) {
+  const [items, setItems] = useState<Wdr[] | null>(null);
+  const [filter, setFilter] = useState("ALL");
+  const [txHash, setTxHash] = useState<Record<string, string>>({});
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    safe(async () => {
+      const res = await adminGet<{ items: Wdr[] }>(
+        filter === "ALL"
+          ? "/admin/wallet/withdrawals"
+          : `/admin/wallet/withdrawals?status=${filter}`,
+      );
+      setItems(res.items);
+      return true;
+    });
+  }, [safe, filter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const confirm = async (id: string) => {
+    const hash = (txHash[id] ?? "").trim();
+    if (hash.length < 8) {
+      toast({ title: "TxHash را وارد کنید (حداقل ۸ کاراکتر)", variant: "destructive" });
+      return;
+    }
+    setBusyId(id);
+    try {
+      await adminPost(`/wallet/withdrawals/${id}/confirm`, { txHash: hash });
+      toast({ title: "برداشت تأیید شد — پرداخت روی زنجیره ثبت شد", variant: "success" });
+      load();
+    } catch (e) {
+      toast({
+        title: "تأیید ناموفق",
+        description: e instanceof Error ? e.message : "خطای شبکه",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const reject = async (id: string) => {
+    setBusyId(id);
+    try {
+      await adminPost(`/wallet/withdrawals/${id}/reject`, {});
+      toast({ title: "درخواست رد شد — وجه به کیف شهروند برگشت خورد", variant: "success" });
+      load();
+    } catch (e) {
+      toast({
+        title: "رد ناموفق",
+        description: e instanceof Error ? e.message : "خطای شبکه",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {["ALL", "PENDING", "CONFIRMED", "REJECTED"].map((f) => (
+          <Button key={f} size="sm" variant={filter === f ? "default" : "ghost"} onClick={() => setFilter(f)}>
+            {f === "ALL" ? "همه" : f}
+          </Button>
+        ))}
+        <Button size="sm" variant="outline" className="mr-auto" onClick={() => load()}>
+          🔄 بروزرسانی
+        </Button>
+      </div>
+
+      {!items ? (
+        <p className="text-sm text-[var(--color-muted-foreground)]">در حال بارگذاری…</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted-foreground)]">هیچ درخواست برداشتی در این وضعیت نیست.</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {items.map((w) => (
+            <li key={w.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <StatusBadge status={w.status} />
+                <span className="font-bold" dir="ltr">{din(w.amountDin)} Đ</span>
+                <span className="text-[var(--color-muted-foreground)]" dir="ltr">
+                  {w.asset} · {w.chain}
+                </span>
+                <span className="text-[var(--color-muted-foreground)]" dir="ltr">{w.id}</span>
+                <span className="text-[var(--color-muted-foreground)]" dir="ltr">{w.accountId}</span>
+              </div>
+              <p className="text-xs text-[var(--color-muted-foreground)] truncate" dir="ltr">
+                → {w.destinationAddress}
+              </p>
+              {w.txHash && (
+                <p className="text-xs text-emerald-400 truncate" dir="ltr">tx: {w.txHash}</p>
+              )}
+              {w.status === "PENDING" && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <Input
+                    dir="ltr"
+                    placeholder="TxHash پرداخت روی زنجیره (0x…)"
+                    value={txHash[w.id] ?? ""}
+                    onChange={(e) => setTxHash((prev) => ({ ...prev, [w.id]: e.target.value }))}
+                    className="max-w-xs"
+                  />
+                  <Button size="sm" disabled={busyId === w.id} onClick={() => void confirm(w.id)}>
+                    ✅ تایید و ثبت TxHash
+                  </Button>
+                  <Button size="sm" variant="destructive" disabled={busyId === w.id} onClick={() => void reject(w.id)}>
+                    ❌ رد درخواست و بازگشت وجه به کیف‌پول
+                  </Button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* ── بخش ۳ — داوری اسکرو (آزادسازی/بازپرداخت ادمین) ───────────────────── */
+
+function EscrowArbitrationTab({ safe }: { safe: SafeFn }) {
+  const [items, setItems] = useState<EscrowRow[] | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    safe(async () => {
+      const res = await adminGet<{ items: EscrowRow[] }>("/escrows?status=DISPUTED");
+      setItems(res.items);
+      return true;
+    });
+  }, [safe]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const act = async (id: string, kind: "release" | "refund") => {
+    setBusyId(id);
+    try {
+      await adminPost(`/escrows/${id}/${kind}`, {});
+      toast({
+        title: kind === "release" ? "وجه برای فروشنده آزاد شد" : "وجه به خریدار بازگشت خورد",
+        variant: "success",
+      });
+      load();
+    } catch (e) {
+      toast({
+        title: "اقدام داوری ناموفق",
+        description: e instanceof Error ? e.message : "خطای شبکه",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-4">
+      <p className="text-xs leading-5 text-[var(--color-muted-foreground)]">
+        اسکروهای در وضعیت DISPUTED — وجه تا حل اختلاف قفل است. «آزادسازی» =
+        تسویهٔ مادهٔ ۲ (مالیات + پورسانت معرف + سهم فروشنده)؛ «بازپرداخت» =
+        برگشت کامل به خریدار. صف تأیید انسانی مادهٔ ۷ در تب «صف HITL» است.
+      </p>
+      <div className="flex justify-end">
+        <Button size="sm" variant="outline" onClick={() => load()}>🔄 بروزرسانی</Button>
+      </div>
+      {!items ? (
+        <p className="text-sm text-[var(--color-muted-foreground)]">در حال بارگذاری…</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted-foreground)]">هیچ اختلاف بازی در صف داوری نیست. ✅</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {items.map((e) => (
+            <li key={e.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <StatusBadge status={e.status} />
+                <span className="font-bold" dir="ltr">{din(e.amount)} Đ</span>
+                <span className="text-[var(--color-muted-foreground)]" dir="ltr">{e.id}</span>
+                <span className="text-[var(--color-muted-foreground)]">خریدار: {e.buyerId}</span>
+                <span className="text-[var(--color-muted-foreground)]">فروشنده: {e.sellerId}</span>
+              </div>
+              {e.disputeReason && (
+                <p className="text-xs text-amber-400 leading-5">دلیل اختلاف: {e.disputeReason}</p>
+              )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button size="sm" disabled={busyId === e.id} onClick={() => void act(e.id, "release")}>
+                  آزادسازی وجه برای فروشنده (RELEASE_TO_SELLER)
+                </Button>
+                <Button size="sm" variant="destructive" disabled={busyId === e.id} onClick={() => void act(e.id, "refund")}>
+                  بازپرداخت به خریدار (REFUND_TO_BUYER)
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* ── بخش ۴ — شارژ دستی حساب (Direct Admin Mint) ───────────────────────── */
+
+function MintTab({ safe }: { safe: SafeFn }) {
+  const [accountId, setAccountId] = useState("citizen:1001");
+  const [amount, setAmount] = useState("");
+  const [memo, setMemo] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const amt = Number.parseInt(amount.trim(), 10);
+    if (!Number.isFinite(amt) || amt < 1) {
+      toast({ title: "مبلغ نامعتبر", description: "مبلغ باید عدد صحیح بزرگ‌تر از صفر باشد (Đ).", variant: "destructive" });
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await adminPost<{ accountId: string; balance: number; txId: string }>("/wallet/mint", {
+        accountId: accountId.trim(),
+        amount: amt,
+        ...(memo.trim() ? { memo: memo.trim() } : {}),
+      });
+      toast({
+        title: "حساب شارژ شد",
+        description: `تراز جدید ${res.accountId}: ${din(res.balance)} Đ`,
+        variant: "success",
+      });
+      setAmount("");
+      setMemo("");
+    } catch (e) {
+      toast({
+        title: "ضرب ناموفق",
+        description: e instanceof Error ? e.message : "خطای شبکه",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="max-w-xl flex flex-col gap-4">
+      <p className="text-xs leading-5 text-[var(--color-muted-foreground)]">
+        ضرب مستقیم دیین به یک حساب دفتر (مادهٔ ۳ — سقف سالانه اعمال می‌شود).
+        حساب شهروند به شکل <code dir="ltr">citizen:1001</code> است؛ خروجی تراکنش
+        در ممیزی ثبت می‌شود.
+      </p>
+      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="m-acct">شناسهٔ حساب</Label>
+          <Input id="m-acct" dir="ltr" value={accountId} onChange={(e) => setAccountId(e.target.value)} required placeholder="citizen:1001" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="m-amt">مبلغ (Đ / micro-KIAN)</Label>
+          <Input id="m-amt" dir="ltr" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} required placeholder="5000" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="m-memo">یادداشت (اختیاری)</Label>
+          <Input id="m-memo" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="شارژ دستی بنیان‌گذار" />
+        </div>
+        <Button type="submit" disabled={busy}>
+          {busy ? "در حال ضرب…" : "ضرب و شارژ حساب"}
+        </Button>
+      </form>
     </section>
   );
 }

@@ -64,6 +64,36 @@ export type CreateWithdrawalInput = {
   amountDin: number;
 };
 
+/** پاسخ جابه‌جایی کیف — قرینهٔ WalletMoveResponse در crates/contracts. */
+export type WalletMoveResponse = {
+  txId: string;
+  accountId: string;
+  balance: number;
+  replayed: boolean;
+};
+
+/** درخواست ورود دمو/توسعه — فقط وقتی کرنل با KIAN_DEV_MODE=1 بالا آمده باشد. */
+export type DevLoginInput = {
+  tgUserId: string;
+  username?: string;
+  firstName?: string;
+  startParam?: string | null;
+};
+
+/** پرسوناهای آمادهٔ تستِ امشب — هم‌تراز با DEMO_PERSONAS در @kian/contracts. */
+export const DEMO_PERSONAS = {
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "سازنده (Creator)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "خریدار (Buyer)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "بازاریاب (Affiliate)" },
+} as const;
+
+export type DemoPersona = keyof typeof DEMO_PERSONAS;
+
+/** شناسه‌های تلگرامی پرسوناهای دمو — برای تشخیص «کاربرِ دمو» در UI. */
+export const DEMO_PERSONA_TG_IDS: readonly string[] = Object.values(DEMO_PERSONAS).map(
+  (p) => p.tgUserId,
+);
+
 export type ProductView = {
   id: string;
   sellerId: string;
@@ -292,6 +322,23 @@ export function createKianClient(options: KianClientOptions = {}) {
       request<AuthResponse>(base, "/auth/telegram", {
         method: "POST",
         body: JSON.stringify({ initData }),
+      }),
+
+    // حالت dev — ورود یک‌کلیکی پرسونا برای تستِ کامل در مرورگر (۴۰۳ در تولید)
+    devLogin: (input: DevLoginInput) =>
+      request<AuthResponse>(base, "/auth/dev-login", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+
+    // حالت dev — شیر اعتبار آزمایشی (۵٬۰۰۰ KIAN پیش‌فرض؛ سقف ۵۰٬۰۰۰ KIAN)
+    claimDemoFaucet: (token: string, amountMicro?: number) =>
+      request<WalletMoveResponse>(base, "/wallet/faucet", {
+        method: "POST",
+        token,
+        body: JSON.stringify(
+          amountMicro && amountMicro > 0 ? { amountMicro } : {},
+        ),
       }),
 
     me: (token: string) => request<MeResponse>(base, "/me", { token }),

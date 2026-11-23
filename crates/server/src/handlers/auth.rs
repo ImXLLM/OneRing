@@ -12,7 +12,7 @@ use axum::Json;
 use std::sync::Arc;
 
 use kian_contracts::{
-    AuthResponse, MeResponse, TelegramAuthRequest, UserView, WalletTxView,
+    AuthResponse, DevLoginRequest, MeResponse, TelegramAuthRequest, UserView, WalletTxView,
 };
 use kian_db::UserRow;
 
@@ -74,6 +74,53 @@ pub async fn auth_telegram(
     let expires_at = session_expires_at(state.config.session_ttl_hours);
     state.store.create_session(&token, &user.id, &expires_at).await.map_err(ApiFailure::from)?;
     tracing::info!(user = %user.id, "telegram identity authenticated");
+    Ok((StatusCode::CREATED, Json(AuthResponse { token, expires_at, user: user_view(&user) })))
+}
+
+/// گارد حالت توسعه — اندپوینت‌های دمو فقط وقتی `KIAN_DEV_MODE`/غیابِ توکن
+/// بات حالت dev را فعال کرده باشد — وگرنه ۴۰۳ صادقانه.
+fn require_dev_mode(state: &AppState) -> Result<(), ApiFailure> {
+    if state.config.dev_mode {
+        Ok(())
+    } else {
+        Err(ApiFailure::Http(kian_contracts::HttpFailure::dev_mode_disabled()))
+    }
+}
+
+/// اعتبارسنجی شناسهٔ عددی تلگرام آزمایشی — فقط ارقام، ۱..=۲۰ رقم.
+fn valid_demo_tg_id(raw: &str) -> bool {
+    (1..=20).contains(&raw.len()) && raw.chars().all(|c| c.is_ascii_digit())
+}
+
+/// `POST /auth/dev-login` — ورود دمو/توسعه‌دهنده برای تستِ محلیِ کامل — ۲۰۱.
+///
+/// فقط در حالت dev فعال است (`KIAN_DEV_MODE=1` یا غیابِ توکن بات)؛ در غیر این
+/// صورت ۴۰۳ `DEV_MODE_DISABLED`. همان مسیر رسمیِ upsert کاربر، حساب دفتر
+/// `citizen:{tg}` و نشست bearer را طی می‌کند — فقط منشأ هویت بدنهٔ دمو است،
+/// نه HMAC تلگرام؛ برای همین کل اندپوینت پشت گارد dev قفل شده است.
+///
+/// # Errors
+/// 403 `DEV_MODE_DISABLED` خارج از حالت dev؛ ۴۰۰ `tgUserId` بدشکل؛ 500 خطای SQL.
+pub async fn auth_dev_login(
+    State(state): State<Arc<AppState>>,
+    body: axum::body::Bytes,
+) -> ApiResult<(StatusCode, Json<AuthResponse>)> {
+    require_dev_mode(&state)?;
+    let req: DevLoginRequest = crate::handlers::parse_body(&body)?;
+    let tg = req.tg_user_id.trim();
+    if !valid_demo_tg_id(tg) {
+        return Err(ApiFailure::Http(kian_contracts::HttpFailure::invalid_request(1)));
+    }
+    let username = req.username.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let user = state
+        .store
+        .ensure_telegram_user(tg, username)
+        .await
+        .map_err(ApiFailure::from)?;
+    let token = new_session_token();
+    let expires_at = session_expires_at(state.config.session_ttl_hours);
+    state.store.create_session(&token, &user.id, &expires_at).await.map_err(ApiFailure::from)?;
+    tracing::info!(user = %user.id, "dev/demo identity authenticated (dev mode)");
     Ok((StatusCode::CREATED, Json(AuthResponse { token, expires_at, user: user_view(&user) })))
 }
 
@@ -424,5 +471,91 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["user"]["telegramId"], "99", "identity comes from initData only");
         assert_eq!(body["user"]["accountId"], "citizen:99");
+    }
+
+    // ── ورود دمو/توسعه (فقط حالت dev) ─────────────────────────────────────────
+
+    /// اپ با پیکربندی dev صریح — برای ماتریس باز/بستهٔ اندپوینت‌های دمو.
+    async fn app_dev(dev_mode: bool) -> axum::Router {
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+        store.ensure_system_accounts().await.unwrap();
+        let mut cfg = test_config(Some(BOT.into()));
+        cfg.dev_mode = dev_mode;
+        crate::routes::build_router(crate::state::AppState::new(store, cfg).shared())
+    }
+
+    async fn dev_login(app: &axum::Router, body: &str) -> axum::response::Response {
+        app.clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/auth/dev-login")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_owned()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap()
+    }
+
+    /// ورود دمو همان مسیر رسمی upsert + نشست را طی می‌کند — و /me کار می‌کند.
+    #[tokio::test]
+    async fn dev_login_creates_session_and_me_works() {
+        let app = app_dev(true).await;
+        let res = dev_login(
+            &app,
+            r#"{"tgUserId":"1001","username":"creator_demo","firstName":"سازنده (Creator)"}"#,
+        )
+        .await;
+        assert_eq!(res.status(), 201, "dev login must succeed in dev mode");
+        let body = json_body(res).await;
+        assert_eq!(body["user"]["telegramId"], "1001");
+        assert_eq!(body["user"]["accountId"], "citizen:1001");
+        assert_eq!(body["user"]["username"], "creator_demo");
+        let token = body["token"].as_str().unwrap().to_owned();
+
+        // /me با توکن دمو — تراز صفر (بدون فاست)
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/me")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        assert_eq!(json_body(res).await["balance"], 0);
+    }
+
+    /// بدنهٔ خالی JSON ({}) → پرسونای پیش‌فرض سازندهٔ ۱۰۰۱.
+    #[tokio::test]
+    async fn dev_login_defaults_to_creator_persona() {
+        let app = app_dev(true).await;
+        let res = dev_login(&app, "{}").await;
+        assert_eq!(res.status(), 201);
+        assert_eq!(json_body(res).await["user"]["telegramId"], "1001");
+    }
+
+    /// خارج از حالت dev — ۴۰۳ DEV_MODE_DISABLED (fail-closed).
+    #[tokio::test]
+    async fn dev_login_is_forbidden_when_dev_mode_off() {
+        let app = app_dev(false).await;
+        let res = dev_login(&app, r#"{"tgUserId":"1001"}"#).await;
+        assert_eq!(res.status(), 403);
+        assert_eq!(json_body(res).await["error"]["code"], "DEV_MODE_DISABLED");
+    }
+
+    /// شناسهٔ بدشکل (غیر عددی/خیلی بلند) — ۴۰۰.
+    #[tokio::test]
+    async fn dev_login_rejects_malformed_tg_id() {
+        let app = app_dev(true).await;
+        let res = dev_login(&app, r#"{"tgUserId":"evil;DROP"}"#).await;
+        assert_eq!(res.status(), 400);
+        let long = "9".repeat(21);
+        let res = dev_login(&app, &format!(r#"{{"tgUserId":"{long}"}}"#)).await;
+        assert_eq!(res.status(), 400);
     }
 }

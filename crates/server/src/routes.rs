@@ -86,8 +86,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/escrows/{id}/cancel", post(escrows::cancel))
         .route("/escrows/{id}/expire", post(escrows::expire))
         // wallet — اولیه‌های ضرب/سوزاندن Din + درخواست‌های برداشت کریپتو (فاز ۶)
+        // faucet — شیر اعتبار آزمایشی (فقط حالت dev؛ KIAN_DEV_MODE=1)
         .route("/wallet/mint", post(wallet::mint))
         .route("/wallet/burn", post(wallet::burn))
+        .route("/wallet/faucet", post(wallet::faucet))
         .route(
             "/wallet/withdrawals",
             post(wallet::create_withdrawal).get(wallet::list_my_withdrawals),
@@ -95,8 +97,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/wallet/withdrawals/{id}/confirm", post(wallet::confirm_withdrawal))
         .route("/wallet/withdrawals/{id}/reject", post(wallet::reject_withdrawal))
         .route("/admin/withdrawals", get(wallet::admin_list_withdrawals))
-        // auth — M3: هویت تلگرام (HMAC رسمی) + نشست bearer apax
+        .route("/admin/wallet/withdrawals", get(wallet::admin_list_withdrawals))
+        // auth — M3: هویت تلگرام (HMAC رسمی) + نشست bearer apax؛ dev-login فقط حالت dev
         .route("/auth/telegram", post(auth::auth_telegram))
+        .route("/auth/dev-login", post(auth::auth_dev_login))
         .route("/auth/logout", post(auth::logout))
         .route("/me", get(auth::me))
         .route("/me/ton-address", post(auth::set_ton_address))

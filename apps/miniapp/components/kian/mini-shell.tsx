@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, LogOut, Sparkles, Store, Wallet } from "lucide-react";
 import { useSession } from "@/components/kian/session";
+import { DemoPersonaBar } from "@/components/kian/guest-gate";
 import { formatDin } from "@/lib/format";
 import {
   captureInboundViralLink,
@@ -70,6 +71,11 @@ export function MiniShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+
+      {/* نوار تعویض پرسونای دمو — فقط برای نشست‌های تستِ (۱۰۰۱/۲۰۰۲/۳۰۰۳) */}
+      <div className="mx-auto w-full max-w-3xl px-4 pt-3">
+        <DemoPersonaBar />
+      </div>
 
       {/* فاصلهٔ پایین به‌اندازهٔ تب‌بار + safe-area — هیچ دکمه‌ای زیر نوار نمی‌رود */}
       <main

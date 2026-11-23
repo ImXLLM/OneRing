@@ -136,11 +136,14 @@ function EscrowTimeline({ status }: { status: string }) {
 }
 
 export default function MarketPage() {
-  const { state, refresh } = useSession();
+  const { state, refresh, activePersona } = useSession();
   const [products, setProducts] = useState<ProductView[]>([]);
   const [orders, setOrders] = useState<EscrowView[]>([]);
   const [myProducts, setMyProducts] = useState<ProductView[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // شیر اعتبار آزمایشی — برای پرسوناهای دمو داخل بنرِ موجودی ناکافی
+  const [claimingFaucet, setClaimingFaucet] = useState(false);
 
   // رفرال فعال + محصول هدفِ لینک مستقیم وایرال
   const [activeReferrer, setActiveReferrer] = useState<string | null>(null);
@@ -260,6 +263,29 @@ export default function MarketPage() {
   }
 
   const { me, token } = state;
+
+  // شیر اعتبار آزمایشی — فقط برای پرسوناهای دمو (در تولید سرور صادقانه ۴۰۳ می‌دهد)
+  const claimFaucet = async () => {
+    setClaimingFaucet(true);
+    try {
+      const res = await api.claimDemoFaucet(token);
+      toast({
+        title: "🎁 اعتبار تست اضافه شد",
+        description: `${formatDin(res.balance)} در کیف‌پول تو آمادهٔ خرید است.`,
+        variant: "success",
+      });
+      setNeedFunds(null);
+      await refresh();
+    } catch (err) {
+      toast({
+        title: "دریافت اعتبار تست ناموفق",
+        description: friendlyError(err),
+        variant: "destructive",
+      });
+    } finally {
+      setClaimingFaucet(false);
+    }
+  };
 
   const purchase = async (p: ProductView) => {
     const refNote =
@@ -493,6 +519,16 @@ export default function MarketPage() {
               است. دو راه سریع داری:
             </p>
             <div className="flex flex-wrap gap-2">
+              {activePersona && (
+                <button
+                  type="button"
+                  disabled={claimingFaucet}
+                  onClick={() => void claimFaucet()}
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3.5 py-2.5 text-xs font-black text-white shadow-lg shadow-emerald-600/25 ring-1 ring-emerald-400/50 transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {claimingFaucet ? "در حال دریافت…" : "🎁 دریافت ۵٬۰۰۰ KIAN اعتبار تست رایگان (Faucet)"}
+                </button>
+              )}
               <Link
                 href="/wallet"
                 onClick={() => setNeedFunds(null)}

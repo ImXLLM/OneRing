@@ -24,14 +24,28 @@ import {
 import {
   api,
   clearToken,
+  DEMO_PERSONAS,
   extractInitData,
   loadToken,
   saveToken,
   setupTelegramWebApp,
+  type DemoPersona,
   type MeResponse,
 } from "@kian/sdk";
+import {
+  parseViralStartParam,
+  saveActiveReferrer,
+} from "@/lib/referral";
 
 const PREVIEW_KEY = "kian.browser.preview";
+
+/** پرسونای دموی فعال را از شناسهٔ تلگرامی می‌سازد — خارج از پرسوناها null. */
+function personaFromTgId(tgId: string): DemoPersona | null {
+  const entry = (Object.entries(DEMO_PERSONAS) as [DemoPersona, { tgUserId: string }][]).find(
+    ([, seed]) => seed.tgUserId === tgId,
+  );
+  return entry?.[0] ?? null;
+}
 
 type SessionState =
   | { phase: "loading" }
@@ -47,6 +61,14 @@ type SessionContextValue = {
   enterPreview: () => void;
   /** خروج از حالت مرورگر و تلاش دوباره برای احراز تلگرام. */
   exitPreview: () => void;
+  /**
+   * ورود یک‌کلیکی با پرسونای دمو — فقط وقتی کرنل در حالت dev است (وگرنه
+   * ۴۰۳ صادقانه). لینک رفرال مرورگر (`?startapp=p_..._r_...`) هم همین‌جا
+   * گرفته و ذخیره می‌شود تا خریدِ بعدی با معرف ثبت شود.
+   */
+  loginAsDemoPersona: (persona: DemoPersona, startParam?: string | null) => Promise<void>;
+  /** پرسونای دموی فعال — وقتی کاربرِ نشست‌دار یکی از سه پرسونای دمو باشد. */
+  activePersona: DemoPersona | null;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -151,9 +173,63 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     void authenticate();
   }, []);
 
+  const loginAsDemoPersona = useCallback(
+    async (persona: DemoPersona, startParam?: string | null) => {
+      const seed = DEMO_PERSONAS[persona];
+      // گرفتن لینک رفرال مرورگر: پارامتر صریح، وگرنه `?startapp=` همین صفحه
+      const raw =
+        startParam?.trim() ||
+        (typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("startapp")
+          : null);
+      const viral = parseViralStartParam(raw);
+      if (viral.referrer) saveActiveReferrer(viral.referrer);
+      writePreviewFlag(false);
+      setState({ phase: "loading" });
+      try {
+        const auth = await api.devLogin({
+          tgUserId: seed.tgUserId,
+          username: seed.username,
+          firstName: seed.firstName,
+          startParam: raw ?? null,
+        });
+        saveToken(auth.token);
+        const me = await api.me(auth.token);
+        setState({ phase: "ready", me, token: auth.token });
+      } catch (err) {
+        setState({
+          phase: "guest",
+          reason: "auth-failed",
+          detail:
+            err instanceof Error
+              ? err.message
+              : "ورود آزمایشی در این سرور فعال نیست",
+        });
+        throw err;
+      }
+    },
+    [],
+  );
+
+  const activePersona = useMemo<DemoPersona | null>(
+    () =>
+      state.phase === "ready"
+        ? personaFromTgId(state.me.user.telegramId)
+        : null,
+    [state],
+  );
+
   const value = useMemo(
-    () => ({ state, refresh, signOut, enterPreview, exitPreview }),
-    [state, refresh, signOut, enterPreview, exitPreview],
+    () => ({
+      state,
+      refresh,
+      signOut,
+      enterPreview,
+      exitPreview,
+      loginAsDemoPersona,
+      activePersona,
+    }),
+    [state, refresh, signOut, enterPreview, exitPreview, loginAsDemoPersona, activePersona],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
