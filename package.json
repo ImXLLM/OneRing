@@ -1,0 +1,23 @@
+{
+  "name": "kian",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "kernel:build": "cargo build --workspace --release",
+    "kernel:test": "cargo test --workspace",
+    "kernel:audit": "cargo clippy --workspace --all-targets -- -D warnings && cargo deny check",
+    "dna": "make dna",
+    "rea:gate": "node tools/rea/release-exposure.mjs"
+  },
+  "devDependencies": {
+    "turbo": "2.11.13"
+  }
+}

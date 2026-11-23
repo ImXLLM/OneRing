@@ -1,0 +1,17 @@
+# Keep the Railway/Railpack build context lean
+target/
+node_modules/
+data/
+.git/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.next/
+dist/
+coverage/
+.turbo/
+*.log
+.DS_Store

@@ -1,0 +1,19 @@
+{
+  "name": "@kian/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./src": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../openapi.json -o src/generated/",
+    "lint": "true"
+  },
+  "dependencies": {
+    "@kian/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2"
+  }
+}

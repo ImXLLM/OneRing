@@ -1,0 +1,15 @@
+node_modules/
+.next/
+dist/
+target/
+.turbo/
+coverage/
+.venv/
+__pycache__/
+.env
+.env.*
+!.env.example
+*.map
+.DS_Store
+*.tsbuildinfo
+data/

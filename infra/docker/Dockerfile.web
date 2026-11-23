@@ -1,0 +1,21 @@
+# KIAN web — multi-stage, standalone (Next 16)
+FROM node:24-alpine AS deps
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+RUN corepack enable && pnpm install --frozen-lockfile
+
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN corepack enable && pnpm build
+
+FROM node:24-alpine AS run
+WORKDIR /app
+COPY --from=build /app/apps/web/.next/standalone ./
+COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /app/apps/web/public ./apps/web/public
+RUN mkdir -p /app/apps/web/.next/cache && chown -R node:node /app/apps/web/.next
+USER node
+EXPOSE 3000
+CMD ["node", "apps/web/server.js"]

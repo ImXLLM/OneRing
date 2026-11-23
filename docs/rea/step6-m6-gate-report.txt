@@ -1,0 +1,180 @@
+# KIAN REA gate — step 6 (M6 telegram bot — teloxide 0.17 pure orchestrator — 10/10)
+# date: 2026-11-20T22:28:36.858Z
+# kernel: target/release/kian-server — audit-release-exposure --fail_on low
+# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on low
+# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low
+
+════ 1) bot orchestrator — pure, offline-testable ════
+  PASS  orchestrator has zero I/O — no reqwest/teloxide/std::net in the core
+  PASS  rate limit uses injected clock (now_ms) — no Instant/now in core
+  PASS  commands wired (start/help/id/link/economy/balance/me + fallback)
+  PASS  reply truncation at char boundary (policy cap ≤ telegram 4096)
+  PASS  rate-limit warns once per window (no spam amplification)
+  PASS  both shells share one parse path (from_parts/from_json)
+  PASS  kian-bot wired into workspace (lib + bin kian-bot)
+  PASS  kian-bot tests green (pure core offline) — 15 passed
+
+════ 2) identity — single official path (mint → verify HMAC) ════
+  PASS  official minter exists in contracts (single source)
+  PASS  mint→verify roundtrip test present (official scheme)
+  PASS  minter escapes hostile usernames (JSON-safe)
+  PASS  polling shell uses POST /auth/telegram (same path as miniapp)
+  PASS  webhook shell verifies minted initData through official verify
+  PASS  no X-KIAN-Key / admin path anywhere in kian-bot
+  PASS  no new identity endpoint on the kernel (only /auth/telegram)
+
+════ 3) webhook fail-closed — BOT_DISABLED / BOT_UNAUTHORIZED ════
+  PASS  BOT_DISABLED 503 + BOT_UNAUTHORIZED 401 exist in contracts (phase-5 contract)
+  PASS  guard uses constant-time compare on the official secret header
+  PASS  runtime builds only with both secrets (token + webhook secret ≥ 16)
+  PASS  webhook route wired
+  PASS  non-text updates answered 200 handled:false (no reply to unknown)
+  PASS  health reports bot honestly from runtime presence
+  PASS  reply execution behind TelegramSender port (tests record, prod sends)
+  PASS  kian-server webhook tests green (guard matrix + full flow offline) — 6 passed
+
+════ 4) whole-workspace tests green ════
+  PASS  cargo test --workspace — 244 tests passed, 0 failing suites
+  PASS  server integration surface covers M6 flows — kian-server lib = 48 tests
+
+════ 5) clippy -D warnings = 0 errors ════
+  PASS  clippy clean — 0 error(s)
+
+════ 6) no credential markers in source ════
+  PASS  no literal keys/tokens in M6 sources and frontends — 0 hits
+
+════ 7) audit-release-exposure (fail_on low) ════
+── kernel: target/release/kian-server
+evidence_id: ev_a2829c81bc2871aff6c4e94b1ef1d69c66f1864e9937b57a89e52f9dd71ce8e2
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: 653d4b37fb1afb187e33b7626fad4b746d4acb873d95097027a0c810899e38b0
+    selection: null
+    format: elf
+    architecture: null
+  name: kian-server
+  local_path: /home/z/my-project/kian/target/release/kian-server
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/target/release/kian-server
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/target/release/kian-server
+    kind: executable
+    format: elf
+    sha256: 653d4b37fb1afb187e33b7626fad4b746d4acb873d95097027a0c810899e38b0
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: not_observed
+      severity: null
+      confidence: observed
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 0
+        samples: []
+  PASS  kernel audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_a2829c81bc2871aff6c4e94b1ef1d69c66f1864e9937b57a89e52f9dd71ce8e2
+  filters: not_observed×5 monitored×0 exposed×1
+── admin: apps/admin/.next/standalone
+evidence_id: ev_0734079fbb51296df3b0359b443bb1f800a95800c836fa281279802553303edc
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: beb473c2530ff6a6fae69baa78eb026f4662fdda4f813fd8e78d5e791a058427
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/admin/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/admin/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/admin/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1012
+        samples: []
+  PASS  admin audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_0734079fbb51296df3b0359b443bb1f800a95800c836fa281279802553303edc
+  filters: not_observed×3 monitored×0 exposed×1
+── web: apps/web/.next/standalone
+evidence_id: ev_fc91f08395f7c42b00e417015de8248ef3dc6ea32c9f977130f586b3e640ef9d
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: 824b3e9c3b607d6836885bbfce7fb170471b5f1a63fd860c655bfed035a07f4b
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/web/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/web/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/web/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1039
+        samples: []
+  PASS  web audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_fc91f08395f7c42b00e417015de8248ef3dc6ea32c9f977130f586b3e640ef9d
+  filters: not_observed×3 monitored×0 exposed×1
+
+════ verdict: PASS — M6 gate 10/10 green (exit 0) ════
