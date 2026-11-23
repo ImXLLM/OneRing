@@ -25,12 +25,17 @@ impl Charter {
     pub const TAX_BPS: i64 = 1_000;
     /// ماده ۷ — آستانه تأیید انسانی: عملیات ≥ ۵۰,۰۰۰ Đ نیاز به تأیید مالک دارد
     pub const HITL_THRESHOLD_DIN: Din = Din(50_000);
-    /// ماده ۳ — سقف ضرب سالانه: ۶۰٬۰۰۰ KIAN (۶۰ میلیارد micro) — با شیرِ
-    /// آزمایشی dev (پیش‌فرض ۵٬۰۰۰ KIAN، سقف ۵۰٬۰۰۰ KIAN) خوانا می‌ماند؛ در
-    /// استقرار واقعی، ضرب با واریز تأییدشده و این سقف کنترل می‌شود.
-    pub const YEARLY_MINT_CAP_DIN: Din = Din(60_000_000_000);
-    /// عرضه اندازه‌گیری‌شده‌ی genesis (ممیزی مهر ۱۴۰۵: Σ = 187,672 Đ، گپ −۶۳ Đ توضیح‌داده‌شده)
-    pub const GENESIS_SUPPLY_DIN: Din = Din(187_672);
+    /// ماده ۳ — سقف ضرب سالانه: ۵۰۰٬۰۰۰ KIAN (۵۰۰ میلیارد micro) — پس از
+    /// مهاجرت جامعهٔ لگاسی dropagent (genesis پاک‌سازی‌شدهٔ ۵۸٬۷۰۰.۲ KIAN در
+    /// سال ۲۰۲۶) سقف قبلی ۶۰٬۰۰۰ KIAN تقریباً پر بود و شیر dev و واریزهای
+    /// واقعی جا نداشتند؛ سقف جدید سرریز فراوان برای رشد می‌دهد و ضرب با
+    /// واریز تأییدشده و همین سقف کنترل می‌شود.
+    pub const YEARLY_MINT_CAP_DIN: Din = Din(500_000_000_000);
+    /// عرضهٔ genesis مهاجرت لگاسی — ممیزی پایگاه ۳۰روزهٔ dropagent:
+    /// ۴۶۶ شهروند، ۴۳۵ حساب با تراز مثبت، Σ = ۵۸٬۷۰۰٬۲۰۰٬۰۰۰ micro
+    /// (۵۸٬۷۰۰.۲ KIAN) — پاک‌سازی‌شده: کاربران عادی ≤ ۱٬۰۰۰ KIAN،
+    /// @ImXsi ۱٬۰۰۰ KIAN (اصلاح واریز دوبارِ #3)، @ImXforevr ۵٬۰۰۰ KIAN.
+    pub const GENESIS_SUPPLY_DIN: Din = Din(58_700_200_000);
 }
 
 /// یک ماده از منشور — به‌صورت داده (برای UI و داشبورد).
@@ -57,7 +62,7 @@ pub const CHARTER_ARTICLES: [CharterArticle; 10] = [
         value: "۱۰٪ هر تسویه اسکرو به خزانه می‌رود",
     },
     CharterArticle {
-        article: 3, title: "سقف ضرب", value: "حداکثر ۱٬۰۰۰٬۰۰۰ Đ ضرب در سال"
+        article: 3, title: "سقف ضرب", value: "حداکثر ۵۰۰٬۰۰۰ KIAN ضرب در سال"
     },
     CharterArticle {
         article: 4,
@@ -203,8 +208,11 @@ mod tests {
     }
 
     #[test]
-    fn fixes_the_genesis_supply_measured_in_the_mehr_1405_audit() {
-        assert_eq!(Charter::GENESIS_SUPPLY_DIN.as_i64(), 187_672);
+    fn fixes_the_sanitized_genesis_supply_of_the_legacy_migration() {
+        // ممیزی مهاجرت dropagent: Σ ضربِ پاک‌سازی‌شدهٔ ۴۶۶ شهروند
+        assert_eq!(Charter::GENESIS_SUPPLY_DIN.as_i64(), 58_700_200_000);
+        // genesis باید با سقف مادهٔ ۳ تضمین‌شده فاصلهٔ فراوان داشته باشد
+        assert!(Charter::GENESIS_SUPPLY_DIN.as_i64() * 4 < Charter::YEARLY_MINT_CAP_DIN.as_i64());
     }
 
     #[test]
@@ -242,8 +250,10 @@ mod tests {
     #[test]
     fn enforces_the_yearly_mint_cap_article_3() {
         assert!(assert_mint_within_cap(d(500_000), d(500_000)).is_ok());
-        let r = assert_mint_within_cap(d(59_999_000_000), d(2_000_000));
+        let r = assert_mint_within_cap(d(499_999_000_000), d(2_000_000));
         assert_eq!(r.unwrap_err().code, DomainErrorCode::MintCapExceeded);
+        // genesis مهاجرت‌شده + یک شیر dev کامل باید زیر سقف بماند
+        assert!(assert_mint_within_cap(d(58_700_200_000), d(5_000_000_000)).is_ok());
     }
 
     #[test]

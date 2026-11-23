@@ -449,8 +449,8 @@ mod tests {
             .unwrap();
         let token = json_body(res).await["token"].as_str().unwrap().to_owned();
 
-        // ۲۰۰۰ TON × ۱۰۰۰ Đ/TON = ۲٬۰۰۰٬۰۰۰ Đ؛ برای عبور از سقف سالانهٔ ۶۰ میلیارد Đ:
-        // ۷۰٬۰۰۰٬۰۰۰ TON × ۱۰۰۰ = ۷۰ میلیارد Đ > سقف
+        // ۲۰۰۰ TON × ۱۰۰۰ Đ/TON = ۲٬۰۰۰٬۰۰۰ Đ؛ برای عبور از سقف سالانهٔ ۵۰۰ میلیارد Đ:
+        // ۶۰۰٬۰۰۰٬۰۰۰ TON × ۱۰۰۰ = ۶۰۰ میلیارد Đ > سقف
         let res = app
             .clone()
             .oneshot(
@@ -462,7 +462,7 @@ mod tests {
                         json!({
                             "txHash": "capfail12345678",
                             "walletAddress": "UQ12345678",
-                            "amountTon": "70000000"
+                            "amountTon": "600000000"
                         })
                         .to_string(),
                     ))

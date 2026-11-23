@@ -115,7 +115,8 @@ impl V3Store {
         sqlx::query(
             r#"INSERT INTO "User" ("id","telegramId","username","accountId","createdAt")
                VALUES (?,?,?,?,?)
-               ON CONFLICT("telegramId") DO UPDATE SET "username" = excluded."username""#,
+               ON CONFLICT("telegramId") DO UPDATE SET "username" =
+                   COALESCE(excluded."username", "User"."username")"#,
         )
         .bind(&id)
         .bind(telegram_id)
@@ -346,6 +347,9 @@ mod tests {
         let again = store.ensure_telegram_user("123", Some("ali_new")).await.unwrap();
         assert_eq!(again.created_at, first.created_at, "same row — not duplicated");
         assert_eq!(again.username.as_deref(), Some("ali_new"), "username refreshed");
+        // لاگین بدون یوزرنیم (dev-login خام) هرگز یوزرنیم مهاجرت‌شده را پاک نمی‌کند
+        let anonymous = store.ensure_telegram_user("123", None).await.unwrap();
+        assert_eq!(anonymous.username.as_deref(), Some("ali_new"), "None preserves username");
         // حساب دفتر واقعاً ساخته شده — تراز صفر
         assert_eq!(store.balance_of("citizen:123").await.unwrap(), Some(0));
     }
