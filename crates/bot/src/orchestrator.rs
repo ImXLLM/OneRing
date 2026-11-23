@@ -123,8 +123,16 @@ impl BotCore {
                 update.chat_id,
                 "این دستور را ناشناخته بودم 🤔 — با /help فهرست فرمان‌ها را ببین.",
             )],
-            // پیام متنی عادی = فرصت طلایی معرفی — همان خوش‌آمدِ جذابِ /start
-            None => vec![self.welcome(update.chat_id, Some("پیامت را گرفتم! 👋"))],
+            // پیام متنی عادی = نخست پاسخ‌گر فوری FAQ (صفر توکن — پورت بات هرمس؛
+            // پوشهٔ ۰۳ گنجینه)؛ اگر هیچ قلابی نخورد → فرصت طلایی معرفی همان
+            // خوش‌آمدِ جذابِ /start
+            None => {
+                if let Some(answer) = kian_hermes::match_instant_faq(&update.text) {
+                    vec![Action::text(update.chat_id, answer.to_owned())]
+                } else {
+                    vec![self.welcome(update.chat_id, Some("پیامت را گرفتم! 👋"))]
+                }
+            }
         };
         // ۳) برش روی مرز کاراکتر — سقف سیاست، سقف سخت تلگرام
         actions
@@ -582,5 +590,28 @@ mod tests {
         assert_eq!(num(0), "0");
         assert_eq!(num(999), "999");
         assert_eq!(num(1000), "1,000");
+    }
+
+    /// پیام متنی پرسش FAQ → پاسخ فوری صفرتوکنی؛ پیام بی‌ربط → خوش‌آمد عادی.
+    #[tokio::test]
+    async fn plain_text_questions_get_instant_faq_answers() {
+        let mut core = BotCore::new(BotPolicy::default());
+        // پیام متنی (بدون فرمان) با کلیدواژهٔ اسکرو → پاسخ ثابت فوری
+        let mut u = update("");
+        u.command = None;
+        u.text = "خرید با امنیت اسکرو چطوره؟".to_owned();
+        let out = core.handle(&u, NOW, &FakePort::ok()).await;
+        assert_eq!(out.len(), 1);
+        assert!(out[0].text.contains("اسکرو"), "پاسخ فوری: {}", out[0].text);
+        assert!(out[0].text.contains("پارلمان"));
+        // پیام بی‌ربط → مسیر خوش‌آمد عادی (نه FAQ)
+        let mut u2 = update("");
+        u2.command = None;
+        u2.text = "سلام خوبی؟".to_owned();
+        let out2 = core.handle(&u2, NOW, &FakePort::ok()).await;
+        assert_eq!(out2.len(), 1);
+        assert!(!out2[0].text.contains("اسکرو"), "بی‌ربط نباید FAQ بگیرد");
+        // پاسخ FAQ زیر سقف برش تلگرام می‌ماند
+        assert!(out[0].text.chars().count() <= 4096);
     }
 }

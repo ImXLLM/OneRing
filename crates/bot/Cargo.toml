@@ -9,6 +9,8 @@ description = "آداپتور تلگرام — teloxide 0.17، orchestrator خا
 [dependencies]
 # هستهٔ خالص — فقط قرارداد وایر (initData ضرب/تأیید در kian-contracts است)
 kian-contracts = { path = "../contracts" }
+# پاسخ‌گر فوری FAQ (صفر توکن) — پورت بات هرمس (پوشهٔ ۰۳ گنجینه)
+kian-hermes = { path = "../hermes" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

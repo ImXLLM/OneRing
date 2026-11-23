@@ -7,6 +7,8 @@
 //!   `FakePort` آفلاین تست می‌شوند.
 //! * [`update`] — تجزیهٔ آپدیت تلگرام از `serde_json::Value` خالص؛ **هر دو
 //!   شِل** (طول‌کشی teloxide و وبهوک کرنل) از همین یک مسیر تجزیه می‌روند.
+//! * [`backlog`] — تخلیهٔ عقب‌ماندگی در بوت (پورت `drain_backlog` بات هرمس؛
+//!   `offset = -1, timeout = 0`) — ضد پاسخ دوباره پس از ری‌استارت.
 //! * [`port`] — پورت [`KernelPort`] (async-trait): اقتصاد ملی + نشست شهروند.
 //! * [`kernel_http`] — پیاده‌سازی واقعی پورت روی HTTP کرنل.
 //! * [`shell`] — طول‌کشی teloxide 0.17 (rustls؛ هرگز openssl-system).
@@ -17,12 +19,14 @@
 //! را همان مسیر رسمی مینی‌اپ طی می‌کند — **هیچ مسیر جانبی برای هویت و پول
 //! وجود ندارد**. توکن بات هرگز در لاگ/پاسخ نمی‌آید (تست‌شده).
 
+pub mod backlog;
 pub mod kernel_http;
 pub mod orchestrator;
 pub mod port;
 pub mod shell;
 pub mod update;
 
+pub use backlog::{drain_backlog_offset, next_offset, DrainOutcome};
 pub use orchestrator::{BotAction, BotCore, BotPolicy, LinkButton};
 pub use port::{BotEconomy, BotError, BotMe, KernelPort};
 pub use update::BotUpdate;

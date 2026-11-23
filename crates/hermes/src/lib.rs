@@ -1,19 +1,27 @@
 //! `kian-hermes` — موتور هرمس — مغز تجاری کیان (M4).
 //!
-//! چهار قطعه، همهٔ رفتار قطعی و تست‌شده:
+//! قطعات، همهٔ رفتار قطعی و تست‌شده:
 //! - [`skills`] — ۱۶ مهارت (منبع حقیقت داده؛ seed دیتابیس از همین‌جا)
 //! - [`shield`] — سپر دفاعی: تزریق → BLOCKED، راز → REDACTED (اصل sandbox:
 //!   مهارت‌ها فقط هندلرهای ثبت‌شده را اجرا می‌کنند، ورودی کاربر هرگز «کد» نیست)
 //! - [`memory`] — حافظهٔ ۷لایه با enum بسته
 //! - [`engine`] — موتور: سپر → مهارت (kernel قطعی / llm با پاکت بودجه) → ثبت
 //!   شاهد + حافظه → امتیاز هویتی صادقانه
+//! - [`prompt`] — قفل تایپوگرافی RTL (پورت `ShopifyHermes/bot.py`)
+//! - [`faq`] — پاسخ‌گر فوری FAQ با صفر توکن (پورت الگوی بات هرمس)
+//! - [`identity`] — معمارهٔ کاربر قطعی (پورت `10x/engine/identity_rl.py`)
+//! - [`token_saver`] — فشرده‌ساز خروجی ابزار با حفظ رازها (پورت `token_saver.py`)
 #![forbid(unsafe_code)]
 
 pub mod builder;
 pub mod engine;
+pub mod faq;
+pub mod identity;
 pub mod memory;
+pub mod prompt;
 pub mod shield;
 pub mod skills;
+pub mod token_saver;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-hermes";
@@ -28,9 +36,13 @@ pub use builder::{
     BUILDER_MAX_PREVIEW_BYTES, BUILDER_WELCOME_MESSAGE,
 };
 pub use engine::{auto_route, identity_score, HermesEngine, HermesError, HermesExit, RunOutcome};
+pub use faq::{match_instant_faq, match_instant_faq_key, FaqTopic, FAQ_TOPICS};
+pub use identity::{classify, confidence, hash_state, UserArchetype, UserFeatures};
 pub use memory::MemoryLayer;
+pub use prompt::{apply_rtl_rule, ends_on_bare_latin, RTL_RULE_FA};
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};
+pub use token_saver::compress_tool_output_preserving_secrets;
 
 #[cfg(test)]
 mod tests {

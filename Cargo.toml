@@ -10,7 +10,14 @@ members = [
     "crates/hermes",
     "crates/nation",
     "crates/server",
+    "crates/tooling",
     "crates/wallet",
+]
+# پوشه‌های خام مرجع گنجینه (پوشهٔ ۰۷) — بسته‌های مستقل با libfuzzer/nightly؛
+# هرگز عضو workspace نمی‌شوند و فقط به‌عنوان مرجع حفظ می‌شوند.
+exclude = [
+    "crates/tooling/fuzz_suite",
+    "crates/tooling/vault_pro",
 ]
 
 [workspace.package]

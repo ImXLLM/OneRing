@@ -1225,6 +1225,7 @@ dependencies = [
  "async-trait",
  "futures",
  "kian-contracts",
+ "kian-hermes",
  "reqwest",
  "serde",
  "serde_json",
@@ -1317,6 +1318,16 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+]
+
+[[package]]
+name = "kian-tooling"
+version = "0.1.0"
+dependencies = [
+ "kian-contracts",
+ "kian-domain",
+ "kian-hermes",
+ "serde_json",
 ]
 
 [[package]]
