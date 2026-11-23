@@ -110,7 +110,8 @@ PY
 # ── 4) refresh the delivery zip from the committed tree (secret-free) ─────
 cd /home/z/my-project
 HASH=$(git rev-parse HEAD)
-git archive --format=zip -o /tmp/kian_zip_head.zip HEAD
+# same layout as the original artifact: subtree archive with kian/ prefix
+git archive --format=zip --prefix=kian/ -o /tmp/kian_zip_head.zip HEAD:kian-launch/kian
 python3 - "$HASH" <<'PY'
 import sys, zipfile
 h = sys.argv[1]
