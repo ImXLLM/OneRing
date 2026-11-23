@@ -47,27 +47,62 @@ pub struct AiConfig {
 impl AiConfig {
     /// خواندن از محیط — fail-closed: بدون env فقط اسلات‌های خاموش.
     ///
-    /// `KIAN_AI_PRIMARY_URL` / `KIAN_AI_PRIMARY_KEY` / `KIAN_AI_PRIMARY_MODEL`
-    /// و بعد SECONDARY و TERTIARY؛ سقف روزانه `KIAN_AI_DAILY_TOKENS`
-    /// (پیش‌فرض ۵۰٬۰۰۰).
+    /// اسلات‌ها به ترتیب فال‌بک از `KIAN_AI_{PRIMARY|SECONDARY|TERTIARY}_{URL,KEY,MODEL}`
+    /// ساخته می‌شوند؛ سقف روزانه از `KIAN_AI_DAILY_TOKENS` (پیش‌فرض ۵۰٬۰۰۰).
+    ///
+    /// میان‌برهای «تک‌گیت‌وی» برای روترهای چندمدلی (مثل ۹روتر):
+    /// * `KIAN_AI_BASE_URL` + `KIAN_AI_API_KEY` + `KIAN_AI_MODEL` → اسلات primary
+    /// * `KIAN_AI_FALLBACK_MODEL` (+ اختیاری `KIAN_AI_FALLBACK_URL` / `KIAN_AI_FALLBACK_KEY`)
+    ///   → اسلات secondary روی همان گیت‌وی — شکستِ primary (۴۰۴/۴۲۹/۵xx) خودکار
+    ///   یک‌بار با مدل جایگزین تلاش می‌شود؛ شکست هر دو به سنتز محلی HTML می‌رسد.
     #[must_use]
     pub fn from_env() -> Self {
-        let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
-        let slots = SLOT_NAMES
-            .iter()
-            .map(|name| {
-                let upper = name.to_uppercase();
-                SlotConfig {
-                    name: (*name).to_owned(),
-                    url: env(&format!("KIAN_AI_{upper}_URL")).unwrap_or_default(),
-                    key: env(&format!("KIAN_AI_{upper}_KEY")).unwrap_or_default(),
-                    model: env(&format!("KIAN_AI_{upper}_MODEL")).unwrap_or_default(),
-                }
-            })
-            .collect();
+        Self::from_env_reader(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
+    }
+
+    /// نسخهٔ تزریق‌پذیر [`AiConfig::from_env`] — خوانندهٔ env از بیرون می‌آید تا
+    /// تست‌ها بدون دست‌کاری متغیر سراسری فرایند، ترتیب میان‌برها را اثبات کنند.
+    ///
+    /// اولویت هر فیلد: متغیر اختصاصیِ اسلات ← میان‌بر تک‌گیت‌وی ← خاموش (رشتهٔ خالی).
+    #[must_use]
+    pub fn from_env_reader(get: impl Fn(&str) -> Option<String>) -> Self {
+        let base_url = get("KIAN_AI_BASE_URL");
+        let api_key = get("KIAN_AI_API_KEY");
+        let slot = |name: &str, url: Option<String>, key: Option<String>, model: Option<String>| {
+            SlotConfig {
+                name: name.to_owned(),
+                url: url.unwrap_or_default(),
+                key: key.unwrap_or_default(),
+                model: model.unwrap_or_default(),
+            }
+        };
+        let slots = vec![
+            slot(
+                SLOT_NAMES[0],
+                get("KIAN_AI_PRIMARY_URL").or_else(|| base_url.clone()),
+                get("KIAN_AI_PRIMARY_KEY").or_else(|| api_key.clone()),
+                get("KIAN_AI_PRIMARY_MODEL").or_else(|| get("KIAN_AI_MODEL")),
+            ),
+            slot(
+                SLOT_NAMES[1],
+                get("KIAN_AI_SECONDARY_URL")
+                    .or_else(|| get("KIAN_AI_FALLBACK_URL"))
+                    .or_else(|| base_url.clone()),
+                get("KIAN_AI_SECONDARY_KEY")
+                    .or_else(|| get("KIAN_AI_FALLBACK_KEY"))
+                    .or_else(|| api_key.clone()),
+                get("KIAN_AI_SECONDARY_MODEL").or_else(|| get("KIAN_AI_FALLBACK_MODEL")),
+            ),
+            slot(
+                SLOT_NAMES[2],
+                get("KIAN_AI_TERTIARY_URL"),
+                get("KIAN_AI_TERTIARY_KEY"),
+                get("KIAN_AI_TERTIARY_MODEL"),
+            ),
+        ];
         Self {
             slots,
-            daily_cap_tokens: env("KIAN_AI_DAILY_TOKENS").and_then(|v| v.parse().ok()).unwrap_or(50_000),
+            daily_cap_tokens: get("KIAN_AI_DAILY_TOKENS").and_then(|v| v.parse().ok()).unwrap_or(50_000),
         }
     }
 }

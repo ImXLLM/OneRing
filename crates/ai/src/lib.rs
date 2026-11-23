@@ -34,6 +34,65 @@ pub use redaction::{redact, RedactionFinding, RedactionReport};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+
+    /// میان‌برهای تک‌گیت‌وی: `BASE_URL`/`API_KEY`/`MODEL` + `FALLBACK_MODEL` باید
+    /// اسلات primary و secondary را روی همان گیت‌وی بسازند و tertiary خاموش بماند.
+    #[test]
+    fn single_gateway_aliases_configure_primary_and_secondary() {
+        let mut env: HashMap<&str, String> = HashMap::new();
+        env.insert("KIAN_AI_BASE_URL", "https://router.example/v1".into());
+        env.insert("KIAN_AI_API_KEY", "test-key".into());
+        env.insert("KIAN_AI_MODEL", "alicode/glm-5".into());
+        env.insert("KIAN_AI_FALLBACK_MODEL", "oc/deepseek-v4.1-flash-free".into());
+        let cfg = AiConfig::from_env_reader(|k| env.get(k).cloned());
+
+        let p = &cfg.slots[0];
+        assert_eq!(p.name, "primary");
+        assert_eq!(p.url, "https://router.example/v1");
+        assert_eq!(p.key, "test-key");
+        assert_eq!(p.model, "alicode/glm-5");
+        assert!(p.enabled());
+
+        let s = &cfg.slots[1];
+        assert_eq!(s.name, "secondary");
+        // کلید و URL از میان‌برهای اصلی به ارث می‌رسد — مدل جایگزین از FALLBACK_MODEL
+        assert_eq!(s.url, "https://router.example/v1");
+        assert_eq!(s.key, "test-key");
+        assert_eq!(s.model, "oc/deepseek-v4.1-flash-free");
+        assert!(s.enabled());
+
+        assert!(!cfg.slots[2].enabled(), "tertiary must stay disabled");
+        assert_eq!(cfg.slots.iter().filter(|s| s.enabled()).count(), 2);
+    }
+
+    /// متغیر اختصاصیِ اسلات بر میان‌بر تک‌گیت‌وی مقدم است (اولویت قراردادی).
+    #[test]
+    fn explicit_slot_vars_override_single_gateway_aliases() {
+        let mut env: HashMap<&str, String> = HashMap::new();
+        env.insert("KIAN_AI_BASE_URL", "https://router.example/v1".into());
+        env.insert("KIAN_AI_API_KEY", "alias-key".into());
+        env.insert("KIAN_AI_MODEL", "alias-model".into());
+        env.insert("KIAN_AI_PRIMARY_URL", "https://direct.example/v1".into());
+        env.insert("KIAN_AI_PRIMARY_KEY", "direct-key".into());
+        let cfg = AiConfig::from_env_reader(|k| env.get(k).cloned());
+
+        assert_eq!(cfg.slots[0].url, "https://direct.example/v1");
+        assert_eq!(cfg.slots[0].key, "direct-key");
+        assert_eq!(
+            cfg.slots[0].model, "alias-model",
+            "explicit URL/KEY must not clear alias MODEL"
+        );
+        assert!(!cfg.slots[1].enabled(), "no FALLBACK_MODEL → secondary stays off");
+    }
+
+    /// بدون هیچ متغیری — fail-closed: هر سه اسلات خاموش و سقف پیش‌فرض.
+    #[test]
+    fn empty_env_stays_fail_closed() {
+        let cfg = AiConfig::from_env_reader(|_| None);
+        assert!(cfg.slots.iter().all(|s| !s.enabled()));
+        assert_eq!(cfg.daily_cap_tokens, 50_000);
+    }
 
     /// ترکیب سه لایه: راز redact می‌شود، بودجه سخت است، فال‌بک ترتیبی است —
     /// کل قرارداد گیت‌وی در یک سناریوی سرتاسری.
