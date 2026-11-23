@@ -6,8 +6,11 @@
 //!    نمی‌رسد؛ فقط دستهٔ یافته گزارش می‌شود، نه خودِ راز.
 //! ۲. **budget** — پاکت سخت بودجه: مصرف امروز + برآورد مهارت ≤ سقف روزانه،
 //!    وگرنه ۴۲۹. عدد صحیح، بدون float، بدون سمتِ «حدس».
-//! ۳. **fallback** — سه اسلات مدل به ترتیب؛ اسلاتِ بدون کانفیگ حذف می‌شود و
-//!    شکست هر اسلات تایپ‌شده ثبت می‌شود. پاسخ پاکتِ خراب = شکست اسلات.
+//! ۳. **استخر فال‌بک** — لِین‌های مدل به ترتیب (پورت `brain.py` هرمس): اسلات‌ها و
+//!    تامین‌کننده‌ها با ضرب دکارتیِ «هر مدل × هر کلید» در استخر تخت باز می‌شوند،
+//!    برندهٔ آخر (`last_good`) دفعهٔ بعد اول امتحان می‌شود، گیت کیفیت پاسخ
+//!    خراب/اشتباه‌زبان را رد می‌کند و کم‌ضررترینِ موجود در همه‌جا-شکست نجات می‌یابد.
+//!    پاسخ پاکتِ خراب = شکست لِین.
 //!
 //! این کرِیت هیچ چیز از دیتابیس و HTTP سرور نمی‌داند — بودجه‌ای که خوانده
 //! می‌شود عددی است که سرور از دفتر می‌آورد؛ گیت‌وی فقط ریاضی می‌کند.
@@ -26,8 +29,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use budget::{BudgetDecision, BudgetEnvelope};
 pub use gateway::{
+    expand_models_times_keys, looks_broken, persian_char_count, strip_fenced_code_blocks,
     AiConfig, AiGateway, AttemptFailure, ChatPacket, ChatResult, CompletionPacket, GatewayError,
-    ModelClient, PacketMessage, SlotConfig, BUILDER_MAX_TOKENS, SLOT_NAMES,
+    ModelClient, PacketMessage, SlotConfig, BUILDER_MAX_TOKENS, COARENA_BASE_URL,
+    OPENROUTER_BASE_URL, ROUTER9_BASE_URL, SLOT_NAMES,
 };
 pub use redaction::{redact, RedactionFinding, RedactionReport};
 

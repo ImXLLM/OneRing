@@ -669,9 +669,12 @@ pub struct BuilderEngine;
 impl BuilderEngine {
     /// اجرای یک نوبت گفتگو روی جلسهٔ ساخت محصول.
     ///
-    /// اگر گیت‌وی AI فعال و سالم باشد از مدل خارجی با `BUILDER_MAX_TOKENS` (۴۰۹۶)
-    /// استفاده می‌کند؛ در صورت غیرفعال بودن یا خطای آپ‌استریم، به‌جای شکست ۵۰۳
-    /// به‌صورت خودکار از مولد تعاملی داخلی استفاده می‌کند.
+    /// اگر گیت‌وی AI فعال و سالم باشد از مدل خارجی با `BUILDER_MAX_TOKENS`
+    /// استفاده می‌کند؛ گیت کیفیتِ سازنده (`is_builder = true`) فقط روی نوبت‌های
+    /// تولید/ارتقای آرتیفکت اعمال می‌شود (نوبت‌های discovery چتِ عادی‌اند) —
+    /// پاسخِ خراب لِین بعدی را امتحان می‌کند و در همه‌جا-شکست، به‌جای خطای ۵۰۳
+    /// به‌صورت خودکار از مولد تعاملی داخلی استفاده می‌شود (مگر کم‌ضررترین سند
+    /// HTML قابل استخراج داشته باشد که همان نجات می‌یابد).
     pub async fn run_turn(
         gateway: &AiGateway,
         session: &BuilderSessionRow,
@@ -698,7 +701,9 @@ impl BuilderEngine {
             packets.push(PacketMessage { role: m.role.clone(), content });
         }
 
-        match gateway.chat_with_max_tokens(packets, Some(BUILDER_MAX_TOKENS)).await {
+        // هم‌سو با mode_hint پرامپت سیستمی: تولید/ارتقا = گیت سازنده؛ discovery = گیت چت
+        let is_builder = force_generate || session.stage != "discovery";
+        match gateway.chat_with_quality(packets, Some(BUILDER_MAX_TOKENS), is_builder).await {
             Ok(res) => {
                 let extracted = extract_html_and_metadata(&res.content);
                 let generated_html = extracted
@@ -746,6 +751,8 @@ impl BuilderEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kian_ai::client::ScriptedClient;
+    use kian_ai::gateway::{AiConfig, CompletionPacket, SlotConfig};
 
     fn empty_session() -> BuilderSessionRow {
         BuilderSessionRow {
@@ -812,6 +819,58 @@ mod tests {
         assert!(preview.len() <= BUILDER_MAX_PREVIEW_BYTES);
         assert!(preview.contains("اپ بزرگ"));
         assert!(preview.contains("نسخهٔ پیش‌نمایش زنده در KIAN Market"));
+    }
+
+    /// گیت کیفیتِ سازنده (پورت brain.py): پاسخِ خرابِ بدون سند HTML در همه‌جای
+    /// استخر → خطای تایپ‌شده → سنتز محلیِ تعیینی (usedFallback=true) — همان
+    /// قرارداد "fall through to the deterministic local HTML synthesizer".
+    #[tokio::test]
+    async fn quality_gate_broken_generation_falls_back_to_local_synthesizer() {
+        let s = empty_session();
+        let h = vec![BuilderMessageRow {
+            id: 1,
+            session_id: s.id.clone(),
+            role: "user".into(),
+            content: "یک ماشین حساب سود ارز دیجیتال با تم تیره بساز".into(),
+            created_at: 1,
+        }];
+        // هر دو لِین پاسخِ کوتاهِ بدون HTML می‌دهند — گیت سازنده هر دو را رد می‌کند
+        let scripted = ScriptedClient::new(vec![
+            Ok(CompletionPacket {
+                content: "توضیح کوتاه بدون سند".into(),
+                prompt_tokens: 10,
+                completion_tokens: 4,
+            }),
+            Ok(CompletionPacket {
+                content: "پاسخ دوم هم بدون سند اچ تی ام ال".into(),
+                prompt_tokens: 10,
+                completion_tokens: 5,
+            }),
+        ]);
+        let gw = AiGateway::new(
+            AiConfig {
+                slots: vec![
+                    SlotConfig {
+                        name: "primary".into(),
+                        url: "http://a".into(),
+                        key: "k1".into(),
+                        model: "m1".into(),
+                    },
+                    SlotConfig {
+                        name: "secondary".into(),
+                        url: "http://b".into(),
+                        key: "k2".into(),
+                        model: "m2".into(),
+                    },
+                ],
+                daily_cap_tokens: 10_000,
+            },
+            std::sync::Arc::new(scripted),
+        );
+        let out = BuilderEngine::run_turn(&gw, &s, &h, "یک ماشین حساب بساز", true).await;
+        assert!(out.used_fallback, "broken generation must reach the local synthesizer");
+        assert!(out.generated_html.contains("<!DOCTYPE html>"));
+        assert_eq!(out.stage, "ready");
     }
 
     #[test]

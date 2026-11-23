@@ -39,6 +39,7 @@ pub async fn status(State(state): State<Arc<AppState>>) -> ApiResult<Json<AiStat
         enabled: state.ai.enabled(),
         daily_cap: state.config.ai.daily_cap_tokens,
         slots,
+        pool_size: state.ai.pool_size(),
     }))
 }
 

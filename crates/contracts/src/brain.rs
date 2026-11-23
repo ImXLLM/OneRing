@@ -70,17 +70,17 @@ pub struct AiUsageResponse {
     pub daily_cap: i64,
 }
 
-/// یک اسلات مدل در گیت‌وی — صادقانه: اسلات بدون env کانفیگ `enabled: false`.
+/// یک گروه لِین در استخر گیت‌وی — صادقانه: گروهِ بدون env کانفیگ `enabled: false`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiSlotView {
-    /// شمارهٔ اسلات — ۱ تا ۳
+    /// شمارهٔ گروه در ترتیب استخر (۱ مبنا)
     pub slot: u8,
-    /// نام اسلات (`primary`/`secondary`/`tertiary`)
+    /// نام گروه (`primary`/`secondary`/`tertiary` یا تامین‌کنندهٔ سبک هرمس)
     pub name: String,
-    /// مدل کانفیگ‌شده — بدون env رشتهٔ خالی
+    /// مدل‌های گروه — فهرست جداشده با کاما؛ بدون env رشتهٔ خالی
     pub model: String,
-    /// فعال = URL و KEY هر دو تنظیم شده‌اند
+    /// فعال = حداقل یک عضو گروه url+key+model کامل داشته باشد
     pub enabled: bool,
 }
 
@@ -88,12 +88,14 @@ pub struct AiSlotView {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiStatusResponse {
-    /// گیت‌وی فعال؟ حداقل یک اسلات کانفیگ‌شده
+    /// گیت‌وی فعال؟ حداقل یک عضو استخر کانفیگ‌شده
     pub enabled: bool,
     /// سقف روزانهٔ توکن هر کاربر
     pub daily_cap: i64,
-    /// سه اسلات به ترتیب فال‌بک
+    /// گروه‌های استخر به ترتیب فال‌بک
     pub slots: Vec<AiSlotView>,
+    /// اندازهٔ استخر تخت — تعداد کل ترکیب‌های `(url, key, model)` پس از ضرب دکارتی
+    pub pool_size: usize,
 }
 
 // ── موتور هرمس ──────────────────────────────────────────────────────────────

@@ -37,7 +37,8 @@ pub async fn health(State(state): State<Arc<AppState>>) -> ApiResult<Json<Health
         .slot_statuses()
         .into_iter()
         .find(|s| s.enabled)
-        .map(|s| s.model)
+        // چیپ health کوتاه می‌ماند — فقط اولین مدلِ گروهِ برنده (گروه چندمدلی با کاما می‌آید)
+        .map(|s| s.model.split(',').next().unwrap_or_default().trim().to_owned())
         .filter(|m| !m.is_empty());
     let bot_enabled = state.bot.is_some();
     Ok(Json(HealthResponse {
