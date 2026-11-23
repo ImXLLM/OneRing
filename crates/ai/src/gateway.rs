@@ -12,7 +12,13 @@ use crate::redaction::{redact, RedactionFinding};
 pub const SLOT_NAMES: [&str; 3] = ["primary", "secondary", "tertiary"];
 
 /// سقف توکن خروجی برای تولید آرتیفکت HTML کامل در سازندهٔ محصول.
-pub const BUILDER_MAX_TOKENS: u32 = 4_096;
+///
+/// شواهد بنچمارک زندهٔ OpenRouter (۲۴ نوامبر ۲۰۲۶): مدل‌های reasoning-محورِ
+/// لِین رایگان، سهم `reasoning_tokens` را از همین سقف می‌خورند؛ در ۴۰۹۶ یا
+/// محتوا خالی می‌ماند (`finish_reason=length` روی فکر کردن) یا سند وسط راه
+/// بریده می‌شود. ۱۶۳۸۴ سند کامل + بلوک CAST JSON را با فاصلهٔ امن جا می‌دهد
+/// و روی لِین‌های رایگان هزینهٔ صفر دارد.
+pub const BUILDER_MAX_TOKENS: u32 = 16_384;
 
 /// پیکربندی یک اسلات مدل.
 #[derive(Debug, Clone, PartialEq, Eq)]

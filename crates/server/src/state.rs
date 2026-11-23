@@ -95,10 +95,12 @@ impl AppState {
     }
 
     /// ساخت وضعیت — `started_at` همین‌جا قفل می‌شود؛ کلاینت HTTP تولیدی با
-    /// تایم‌اوت ۳۰ ثانیه. شکست ساخت کلاینت → کلاینت همیشه-رد (گیت‌وی `Disabled`).
+    /// تایم‌اوت ۹۰ ثانیه (سنتز کامل HTML روی لِین‌های رایگان ۲۲ تا ۷۷ ثانیه
+    /// طول می‌کشد — تایم‌اوت ۳۰ ثانیه هر نوبت سازنده را می‌کُشت).
+    /// شکست ساخت کلاینت → کلاینت همیشه-رد (گیت‌وی `Disabled`).
     #[must_use]
     pub fn new(store: V3Store, config: ServerConfig) -> Self {
-        let client: Arc<dyn ModelClient> = match HttpModelClient::new(std::time::Duration::from_secs(30)) {
+        let client: Arc<dyn ModelClient> = match HttpModelClient::new(std::time::Duration::from_secs(90)) {
             Ok(c) => Arc::new(c),
             Err(_) => Arc::new(UnavailableClient),
         };

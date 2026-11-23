@@ -11,6 +11,12 @@ use std::time::Duration;
 
 use crate::gateway::{ChatPacket, CompletionOutcome, CompletionPacket, ModelClient, SlotConfig};
 
+/// سرصفحهٔ `HTTP-Referer` — شناسهٔ اپ روی روترهای attribution-محور (OpenRouter).
+pub const SITE_URL: &str = "https://kian.app";
+
+/// سرصفحهٔ `X-Title` — نام اپ روی روترهای attribution-محور (OpenRouter).
+pub const SITE_TITLE: &str = "KIAN Studio";
+
 /// کلاینت HTTP تولیدی — rustls + webpki-roots، بدون openssl سیستمی.
 #[derive(Debug, Clone)]
 pub struct HttpModelClient {
@@ -53,6 +59,8 @@ impl ModelClient for HttpModelClient {
             .http
             .post(url)
             .bearer_auth(&slot.key)
+            .header("HTTP-Referer", SITE_URL)
+            .header("X-Title", SITE_TITLE)
             .json(&body)
             .send()
             .await
@@ -141,6 +149,72 @@ impl ModelClient for ScriptedClient {
 mod tests {
     use super::*;
     use crate::gateway::PacketMessage;
+
+    /// سرصفحه‌های attribution و Bearer باید روی سیم حاضر باشند — با سرور لوپ‌بک
+    /// محلی اثبات می‌شود (بدون شبکهٔ بیرونی، بدون راز واقعی).
+    #[tokio::test]
+    async fn http_client_sends_attribution_headers() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("loopback bind");
+        let addr = listener.local_addr().expect("local addr");
+        let server = tokio::spawn(async move {
+            let (mut sock, _) = listener.accept().await.expect("accept");
+            let mut buf = vec![0u8; 8192];
+            let mut read = 0usize;
+            loop {
+                let n = sock.read(&mut buf[read..]).await.expect("read");
+                if n == 0 {
+                    break;
+                }
+                read += n;
+                if buf[..read].windows(4).any(|w| w == b"\r\n\r\n") {
+                    break; // پایان سرصفحه‌ها — بدنهٔ JSON مهم نیست
+                }
+            }
+            let head = String::from_utf8_lossy(&buf[..read]).to_lowercase();
+            assert!(
+                head.contains("http-referer: https://kian.app"),
+                "HTTP-Referer must be sent: {head}"
+            );
+            assert!(head.contains("x-title: kian studio"), "X-Title must be sent: {head}");
+            assert!(
+                head.contains("authorization: bearer test-key"),
+                "Bearer key must be sent: {head}"
+            );
+            let payload = serde_json::json!({
+                "choices": [{"message": {"content": "سلام"}}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 2}
+            })
+            .to_string();
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+                payload.len(),
+                payload
+            );
+            sock.write_all(resp.as_bytes()).await.expect("write");
+            sock.shutdown().await.expect("shutdown");
+        });
+
+        let client = HttpModelClient::new(Duration::from_secs(5)).expect("client");
+        let slot = SlotConfig {
+            name: "primary".into(),
+            url: format!("http://{addr}"),
+            key: "test-key".into(),
+            model: "m".into(),
+        };
+        let packet = ChatPacket {
+            model: "m".into(),
+            messages: vec![PacketMessage { role: "user".into(), content: "سلام".into() }],
+            max_tokens: None,
+        };
+        let out = client.complete(&slot, &packet).await.expect("loopback must answer");
+        assert_eq!(out.content, "سلام");
+        assert_eq!((out.prompt_tokens, out.completion_tokens), (1, 2));
+        server.await.expect("server task");
+    }
 
     /// کلاینت HTTP فقط با URL بد — خطای کوتاه، بدون راز.
     #[tokio::test]
