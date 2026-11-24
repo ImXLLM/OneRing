@@ -1576,7 +1576,7 @@ class Texture extends EventDispatcher {
 
 		if ( this.image !== undefined ) {
 
-			// TODO: Move to THREE.Image
+			// Todo: Move to THREE.Image
 
 			const image = this.image;
 
@@ -3665,7 +3665,7 @@ class Vector3 {
 
 	}
 
-	// TODO lengthSquared?
+	// Todo lengthSquared?
 
 	lengthSq() {
 
@@ -5641,7 +5641,7 @@ class Matrix4 {
 		const n31 = te[ 2 ], n32 = te[ 6 ], n33 = te[ 10 ], n34 = te[ 14 ];
 		const n41 = te[ 3 ], n42 = te[ 7 ], n43 = te[ 11 ], n44 = te[ 15 ];
 
-		//TODO: make this more efficient
+		//Todo: make this more efficient
 		//( based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm )
 
 		return (
@@ -8243,7 +8243,7 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 
 		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
 
-		// TODO: Copied from Object3D.toJSON
+		// Todo: Copied from Object3D.toJSON
 
 		function extractFromCache( cache ) {
 
@@ -13239,7 +13239,7 @@ const UniformsLib = {
 			groundColor: {}
 		} },
 
-		// TODO (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
+		// Todo (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
 		rectAreaLights: { value: [], properties: {
 			color: {},
 			position: {},
@@ -13602,7 +13602,7 @@ function WebGLBackground( renderer, cubemaps, state, objects, premultipliedAlpha
 		}
 
 		// Ignore background in AR
-		// TODO: Reconsider this.
+		// Todo: Reconsider this.
 
 		const xr = renderer.xr;
 		const session = xr.getSession && xr.getSession();
@@ -14127,7 +14127,7 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 					const attribute = attributes.get( geometryAttribute );
 
-					// TODO Attribute may not be available on context restore
+					// Todo Attribute may not be available on context restore
 
 					if ( attribute === undefined ) continue;
 
@@ -14187,7 +14187,7 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 					const attribute = attributes.get( object.instanceMatrix );
 
-					// TODO Attribute may not be available on context restore
+					// Todo Attribute may not be available on context restore
 
 					if ( attribute === undefined ) continue;
 
@@ -14210,7 +14210,7 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 					const attribute = attributes.get( object.instanceColor );
 
-					// TODO Attribute may not be available on context restore
+					// Todo Attribute may not be available on context restore
 
 					if ( attribute === undefined ) continue;
 
@@ -18126,7 +18126,7 @@ function ShadowUniformsCache() {
 					};
 					break;
 
-				// TODO (abelnation): set RectAreaLight shadow uniforms
+				// Todo (abelnation): set RectAreaLight shadow uniforms
 
 			}
 
@@ -21745,7 +21745,7 @@ function WebGLUtils( gl, extensions, capabilities ) {
 
 			if ( extension !== null ) {
 
-				// TODO Complete?
+				// Todo Complete?
 
 				return p;
 
@@ -21763,7 +21763,7 @@ function WebGLUtils( gl, extensions, capabilities ) {
 
 			if ( extension !== null ) {
 
-				// TODO Complete?
+				// Todo Complete?
 
 				return p;
 
@@ -22423,7 +22423,7 @@ class WebXRManager extends EventDispatcher {
 			const zOffset = ipd / ( - leftFov + rightFov );
 			const xOffset = zOffset * - leftFov;
 
-			// TODO: Better way to apply this offset?
+			// Todo: Better way to apply this offset?
 			cameraL.matrixWorld.decompose( camera.position, camera.quaternion, camera.scale );
 			camera.translateX( xOffset );
 			camera.translateZ( zOffset );
@@ -24693,7 +24693,7 @@ function WebGLRenderer( parameters ) {
 			uniforms.spotShadowMatrix.value = lights.state.spotShadowMatrix;
 			uniforms.pointShadowMap.value = lights.state.pointShadowMap;
 			uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
-			// TODO (abelnation): add area lights shadow info to uniforms
+			// Todo (abelnation): add area lights shadow info to uniforms
 
 		}
 
@@ -37042,7 +37042,7 @@ class Path extends CurvePath {
 
 	moveTo( x, y ) {
 
-		this.currentPoint.set( x, y ); // TODO consider referencing vectors instead of copying?
+		this.currentPoint.set( x, y ); // Todo consider referencing vectors instead of copying?
 
 		return this;
 
@@ -38264,7 +38264,7 @@ class LightProbe extends Light {
 
 	fromJSON( json ) {
 
-		this.intensity = json.intensity; // TODO: Move this bit to Light.fromJSON();
+		this.intensity = json.intensity; // Todo: Move this bit to Light.fromJSON();
 		this.sh.fromArray( json.sh );
 
 		return this;
@@ -45407,7 +45407,7 @@ class PointLightHelper extends Mesh {
 
 
 		/*
-	// TODO: delete this comment?
+	// Todo: delete this comment?
 	const distanceGeometry = new THREE.IcosahedronBufferGeometry( 1, 2 );
 	const distanceMaterial = new THREE.MeshBasicMaterial( { color: hexColor, fog: false, wireframe: true, opacity: 0.1, transparent: true } );
 

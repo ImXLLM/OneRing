@@ -171,7 +171,7 @@ mod tests {
     fn secrets_are_never_truncated_or_mutated() {
         let noisy_secret = format!(
             "Compiling kian v2\n{}\nCompiling done zzzzz\n",
-            "sk-or-v1-DUMMY-TEST-FIXTURE-0000-not-a-real-key  ".repeat(20)
+            "sk-or-v1-PLACEHOLDER-DUMMY-TEST-FIXTURE-0000-not-a-real-key  ".repeat(20)
         );
         assert!(noisy_secret.chars().count() >= MIN_BLOCK_CHARS);
         assert_eq!(

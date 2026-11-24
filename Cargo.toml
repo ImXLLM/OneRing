@@ -66,9 +66,12 @@ async-trait = "0.1"
 debug = 0
 
 # REA gates: native.debug_companions / rust.dependency_metadata / symbol leakage
+# ElfHardening (morluto/rea v6.10.1): thin-LTO + single codegen unit + abort-on-panic
+# + stripped symbols + overflow checks — the canonical hardened release profile.
 [profile.release]
 strip = "symbols"
 debug = false
-lto = "fat"
+lto = "thin"
 codegen-units = 1
 panic = "abort"
+overflow-checks = true

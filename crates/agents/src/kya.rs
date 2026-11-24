@@ -65,8 +65,14 @@ impl KyaMetadata {
                 .into_iter().map(str::to_owned).collect(),
             "scout" => vec!["quests.run", "referrals.track", "catalog.discover"]
                 .into_iter().map(str::to_owned).collect(),
-            "guardian" => vec!["security.audit", "surface.verify", "stall.enforce"]
-                .into_iter().map(str::to_owned).collect(),
+            "guardian" => vec![
+                "security.audit",
+                "surface.verify",
+                "stall.enforce",
+                "mairon.rea",
+                "product.rate",
+            ]
+            .into_iter().map(str::to_owned).collect(),
             other => vec![format!("{other}.pending")],
         };
         Ok(Self {
@@ -175,6 +181,30 @@ mod tests {
         let g = KyaMetadata::for_role(guardian).expect("guardian is now active");
         assert!(g.scopes.contains(&"security.audit".to_owned()));
         assert!(g.scopes.contains(&"surface.verify".to_owned()));
+    }
+
+    /// یکتایی و گسست قابلیت‌های مایرون — `mairon.rea` / `product.rate` فقط
+    /// روی `guardian` است و ناوگان ۷/۷ دست‌نخورده می‌ماند (Wave 2 Step 6).
+    #[test]
+    fn guardian_dispatches_mairon_rea_capabilities_exclusively() {
+        let fleet = KyaMetadata::for_fleet().expect("fleet");
+        assert_eq!(fleet.len(), 7, "ناوگان ۷/۷ باید حفظ شود");
+        let carriers = fleet
+            .iter()
+            .filter(|m| m.scopes.contains(&"mairon.rea".to_owned()))
+            .map(|m| m.role.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(carriers, vec!["guardian"], "داوری مایرون فقط از نگهبان گسسته می‌شود");
+        let g = fleet.iter().find(|m| m.role == "guardian").expect("guardian kya");
+        assert!(g.scopes.contains(&"mairon.rea".to_owned()));
+        assert!(g.scopes.contains(&"product.rate".to_owned()));
+        // هیچ اسکوپ مایرون‌ای جای دیگر نیست — گسست یکتا.
+        for m in &fleet {
+            if m.role != "guardian" {
+                assert!(!m.scopes.contains(&"mairon.rea".to_owned()));
+                assert!(!m.scopes.contains(&"product.rate".to_owned()));
+            }
+        }
     }
 
     /// اسکوپ‌ها از نقش مشتق می‌شوند و بدون کلید خصوصی‌اند.

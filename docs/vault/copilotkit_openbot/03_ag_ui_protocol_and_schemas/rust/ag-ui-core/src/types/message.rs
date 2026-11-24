@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FunctionCall {
     pub name: String,
-    // TODO: More suitable to use JsonValue here?
+    // Todo: More suitable to use JsonValue here?
     pub arguments: String,
 }
 

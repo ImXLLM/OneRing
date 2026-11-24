@@ -336,7 +336,7 @@ mod tests {
     /// خروجیِ حاوی راز هرگز هرس نمی‌شود — گارد راز کیان بر فشرده‌سازی مقدم است.
     #[test]
     fn secret_bearing_output_is_never_pruned() {
-        let secret_out = format!("{}\n", "sk-or-v1-DUMMY-TEST-FIXTURE-not-real-aaaaaaaa".repeat(30));
+        let secret_out = format!("{}\n", "sk-or-v1-PLACEHOLDER-DUMMY-TEST-FIXTURE-not-real-aaaaaaaa".repeat(30));
         let msgs = vec![
             CompressorMessage::new("user", "قدم اول"),
             CompressorMessage::new("assistant", "اجرا شد"),

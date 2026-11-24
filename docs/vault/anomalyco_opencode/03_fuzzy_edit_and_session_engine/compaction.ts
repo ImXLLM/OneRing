@@ -717,7 +717,7 @@ export const layer = Layer.effect(
             message.content.some((part) => part.type === "compaction"),
         ) + 1
       const summary = previous !== undefined && !SessionHistory.isNativeCompaction(previous) ? previous : undefined
-      // TODO: Read the previous summary from the hooked request once it no longer merges summary and recent into one
+      // Todo: Read the previous summary from the hooked request once it no longer merges summary and recent into one
       // message. Until then it is rebuilt from storage, which drops a compaction hook's edits to that message.
       const lead = summary
         ? toLLMMessages([{ ...summary, metadata: { ...summary.metadata, recent: "" } }], context.model.ref)
@@ -1118,7 +1118,7 @@ export const estimatePrompt = (context: SessionContext.Loaded): Estimate => {
   const anchorIndex = context.messages.findLastIndex((message) => hasMeasuredPrompt(message, context.model.ref))
   const anchor = context.messages[anchorIndex]
   const base = transcript(context, context.messages.slice(Math.max(0, anchorIndex)))
-  // TODO: Pass compaction history the runner has already shaped. This and `recentUserMessages` repeat the
+  // Todo: Pass compaction history the runner has already shaped. This and `recentUserMessages` repeat the
   // runner's unsupported-media and image-budget passes; here the image budget only sees images since the anchor,
   // so image-heavy sessions can estimate high.
   const sent = SessionModelRequest.boundImages(

@@ -140,7 +140,7 @@ impl<StateT> Default for AgentStateMutation<StateT> {
 // Error types
 pub use crate::error::AgUiClientError as AgentError;
 
-// TODO: Expand documentation
+// Todo: Expand documentation
 /// Agent trait
 #[async_trait::async_trait]
 pub trait Agent<StateT = JsonValue, FwdPropsT = JsonValue>: Send + Sync

@@ -78,7 +78,7 @@ pub const ROLES: [AgentRole; 7] = [
         role: "guardian",
         name: "نگهبان",
         status: "active",
-        description: "ایجنت امنیت — هندلر راستی‌آزمایی فعال: رد دیوار چالش antِibot، مدارشکن توقف ساب‌ایجنت و تضعیف یکنواخت قابلیت‌ها (پورت Agent-Reach + starnet)",
+        description: "ایجنت امنیت — هندلر راستی‌آزمایی فعال: رد دیوار چالش antِibot، مدارشکن توقف ساب‌ایجنت، تضعیف یکنواخت قابلیت‌ها و داوری REA مایرون (`mairon.rea`/`product.rate`) روی محصولات بازار (پورت Agent-Reach + starnet + morluto/rea)",
     },
 ];
 

@@ -352,7 +352,7 @@ where
                 // Default behavior
                 let mut state_val = serde_json::to_value(&self.state)?;
 
-                // TODO: This cast to and from JsonValue seems unnecessary
+                // Todo: This cast to and from JsonValue seems unnecessary
                 let patches: Vec<PatchOperation> =
                     serde_json::from_value(serde_json::to_value(e.delta.clone())?)?;
 

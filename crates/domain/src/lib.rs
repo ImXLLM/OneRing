@@ -14,6 +14,8 @@
 //! - [`events`] — رویدادهای دامنه با شناسه دترمینیستیک
 //! - [`viral_ranker`] — رتبه‌سنج وایرال بازار (پورت `xai-org/x-algorithm` ۲۰۲۶)
 //! - [`cas`] — قفل خوش‌بینانهٔ CAS + کلید idempotency امانت (پورت `JavaGuide`)
+//! - [`mairon_rea_and_reviews`] — دروازهٔ داوری زندهٔ محصول `Mairon` + موتور
+//!   ستارهٔ ۵گانهٔ جامعه (`morluto/rea` `v6.10.1` — Wave 2 Step 6)
 #![forbid(unsafe_code)]
 
 pub mod cas;
@@ -22,6 +24,7 @@ pub mod errors;
 pub mod escrow;
 pub mod events;
 pub mod ledger;
+pub mod mairon_rea_and_reviews;
 pub mod money;
 pub mod viral_ranker;
 
@@ -46,6 +49,11 @@ pub use charter::{
 pub use errors::{DomainError, DomainErrorCode, DomainResult, Meta, MetaValue};
 pub use cas::{
     build_cas_update_sql, CasEscrowRecord, CasEscrowState, CasEscrowTransition, CasTransitionOutcome,
+};
+pub use mairon_rea_and_reviews::{
+    confirm_and_publish_product, evaluate_user_product_with_mairon, submit_product_review,
+    summarize_product_ratings, MaironProductVerdict, MaironReaPillarScores, ProductRatingSummary,
+    ProductReview, PublishedProductListing,
 };
 pub use escrow::{
     cancel_escrow, create_escrow, create_escrow_with_affiliate, deliver_escrow, dispute_escrow,
