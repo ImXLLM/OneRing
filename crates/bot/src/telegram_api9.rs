@@ -551,13 +551,13 @@ mod tests {
     }
 
     fn percent_encode(value: &str) -> String {
+        use std::fmt::Write as _;
         let mut out = String::new();
         for byte in value.bytes() {
             if byte.is_ascii_alphanumeric() || b"-_.~".contains(&byte) {
                 out.push(byte as char);
             } else {
-                out.push('%');
-                out.push_str(&format!("{:02X}", byte));
+                let _ = write!(out, "%{byte:02X}");
             }
         }
         out

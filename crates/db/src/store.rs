@@ -980,6 +980,7 @@ mod tests {
     };
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn escrow_referral_fields_persist_and_settle_four_legs_in_sqlite() {
         let store = V3Store::connect_in_memory().await.unwrap();
         store.migrate().await.unwrap();

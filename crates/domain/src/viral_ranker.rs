@@ -332,10 +332,8 @@ mod tests {
     /// غلبهٔ کپی‌لینک: +20.0 و حدود ۲۸ برابرِ favorite=0.708.
     #[test]
     fn copy_link_dominance_is_28x_over_favorite() {
-        let mut copy_sig = ProductSignals::default();
-        copy_sig.share_via_copy_link = 1.0;
-        let mut fav_sig = ProductSignals::default();
-        fav_sig.favorite = 1.0;
+        let copy_sig = ProductSignals { share_via_copy_link: 1.0, ..ProductSignals::default() };
+        let fav_sig = ProductSignals { favorite: 1.0, ..ProductSignals::default() };
 
         let copy = score_with_defaults(&copy_sig);
         let fav = score_with_defaults(&fav_sig);
@@ -347,9 +345,7 @@ mod tests {
             "copy-link must be ~28x favorite, got {ratio}"
         );
         // پاسخ دوسویه (۲۰٫۰) هم‌تراز کپی‌لینک و بالاتر از هر سیگنال تکی دیگر.
-        let mut mutual = ProductSignals::default();
-        mutual.reply = 1.0;
-        mutual.bidirectional_reply = true;
+        let mutual = ProductSignals { reply: 1.0, bidirectional_reply: true, ..ProductSignals::default() };
         assert_eq!(score_with_defaults(&mutual), 20.0);
     }
 
@@ -357,15 +353,16 @@ mod tests {
     /// محصولِ بی‌سیگنالِ تمیز می‌نشاند — حتی اگر لایک و کپی‌لینک هم داشته باشد.
     #[test]
     fn negative_penalty_suppresses_reported_product() {
-        let mut reported = ProductSignals::default();
-        reported.share_via_copy_link = 0.4; // +8.0
-        reported.favorite = 0.5; // +0.354
-        reported.report = 0.05; // -11.7
+        let reported = ProductSignals {
+            share_via_copy_link: 0.4, // +8.0
+            favorite: 0.5, // +0.354
+            report: 0.05, // -11.7
+            ..ProductSignals::default()
+        };
         let s_reported = score_with_defaults(&reported);
         assert!(s_reported < 0.0, "report must drag below zero: {s_reported}");
 
-        let mut clean = ProductSignals::default();
-        clean.favorite = 0.1; // +0.0708
+        let clean = ProductSignals { favorite: 0.1, ..ProductSignals::default() }; // +0.0708
         let s_clean = score_with_defaults(&clean);
         assert!(s_clean > 0.0);
         assert!(
@@ -375,21 +372,11 @@ mod tests {
 
         // ترتیب قاطعیت جریمه‌ها: report(-234) > mute(-58.8) > not_interested(-53.07)
         // > block(-31.2) > not_dwelled(-0.02)
-        let mut base = ProductSignals::default();
-        base.report = 1.0;
-        let r = score_with_defaults(&base);
-        base.report = 0.0;
-        base.mute_creator = 1.0;
-        let m = score_with_defaults(&base);
-        base.mute_creator = 0.0;
-        base.not_interested = 1.0;
-        let ni = score_with_defaults(&base);
-        base.not_interested = 0.0;
-        base.block_creator = 1.0;
-        let b = score_with_defaults(&base);
-        base.block_creator = 0.0;
-        base.not_dwelled = 1.0;
-        let nd = score_with_defaults(&base);
+        let r = score_with_defaults(&ProductSignals { report: 1.0, ..ProductSignals::default() });
+        let m = score_with_defaults(&ProductSignals { mute_creator: 1.0, ..ProductSignals::default() });
+        let ni = score_with_defaults(&ProductSignals { not_interested: 1.0, ..ProductSignals::default() });
+        let b = score_with_defaults(&ProductSignals { block_creator: 1.0, ..ProductSignals::default() });
+        let nd = score_with_defaults(&ProductSignals { not_dwelled: 1.0, ..ProductSignals::default() });
         assert!(r < m && m < ni && ni < b && b < nd);
     }
 
@@ -438,7 +425,7 @@ mod tests {
         let mut distinct = 0;
         for id in 1..64u64 {
             let other = ColdStartCandidate { product_id: id, ..c };
-            if policy.priority_score(&other) != s1 {
+            if (policy.priority_score(&other) - s1).abs() > f64::EPSILON {
                 distinct += 1;
             }
         }
@@ -520,7 +507,7 @@ mod tests {
         assert_eq!(out[1].product_id, 2, "falls to the end when list < slot");
     }
 
-    /// لرزش اکتشافی باید صفر نباشد و در بازهٔ مجاز بماند — اگر SplitMix64
+    /// لرزش اکتشافی باید صفر نباشد و در بازهٔ مجاز بماند — اگر `SplitMix64`
     /// خراب شود، همهٔ کاندیدها مساوی می‌شوند و اکتشاف می‌میرد.
     #[test]
     fn exploration_bonus_is_real_and_bounded() {

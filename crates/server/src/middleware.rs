@@ -61,8 +61,8 @@ fn bucket_key(
     if verify_kian_key(header_value, admin_key) {
         return ADMIN_BUCKET.to_owned();
     }
-    if trust_proxy {
-        if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
+    if trust_proxy
+        && let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
             // اولین ip زنجیره = کلاینت واقعی (پشت proxy)
             if let Some(first) = xff.split(',').next() {
                 let trimmed = first.trim();
@@ -71,7 +71,6 @@ fn bucket_key(
                 }
             }
         }
-    }
     if let Some(addr) = connect_info {
         return format!("ip:{}", addr.ip());
     }
@@ -168,7 +167,7 @@ mod tests {
         );
     }
 
-    /// اصلاح امنیتی (تست بار ۲۰۲۵-۱۱): با trust_proxy=false، XFF جعلی نادیده
+    /// اصلاح امنیتی (تست بار ۲۰۲۵-۱۱): با `trust_proxy=false`، XFF جعلی نادیده
     /// می‌شود — باکت از IP سوکت گرفته می‌شود، نه از هدر کنترل‌شدهٔ کلاینت.
     #[test]
     fn bucket_key_ignores_xff_when_proxy_untrusted() {

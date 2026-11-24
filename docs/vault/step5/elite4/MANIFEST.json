@@ -1,0 +1,4982 @@
+{
+  "vault_name": "elite-skills-and-agents-4repos-gems",
+  "sources": [
+    "https://github.com/anthropics/skills@e4bb5d9",
+    "https://github.com/msitarzewski/agency-agents@8ae6164",
+    "https://github.com/ultraworkers/claw-code@a5c2775",
+    "https://github.com/DietrichGebert/ponytail@ebd8654"
+  ],
+  "total_files_excluding_manifest": 828,
+  "total_bytes_excluding_manifest": 18568909,
+  "total_lines_excluding_manifest": 307707,
+  "files": [
+    {
+      "path": "VAULT_INDEX_FA.md",
+      "bytes": 1781,
+      "lines": 10,
+      "sha256": "76868c2f377226f41220e593cb446e693804f31dc990d3a67f8ba9256b1975ad"
+    },
+    {
+      "path": "01_anthropics_official_skills/_spec/agent-skills-spec.md",
+      "bytes": 87,
+      "lines": 3,
+      "sha256": "ff22f2be775f4b757c9a7a2df0421de4c94021d34d9382cea5dd567ff0cdad2c"
+    },
+    {
+      "path": "01_anthropics_official_skills/_template/SKILL.md",
+      "bytes": 140,
+      "lines": 6,
+      "sha256": "eb685d91de039ed864fbd790cddf31684b017fd4a34ee1a55760d8d7cdbadefa"
+    },
+    {
+      "path": "01_anthropics_official_skills/academy-guide/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/academy-guide/SKILL.md",
+      "bytes": 7755,
+      "lines": 147,
+      "sha256": "f27992510c051355dfe68c92394d509af730da5298094ec86834ee40bbd31376"
+    },
+    {
+      "path": "01_anthropics_official_skills/algorithmic-art/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/algorithmic-art/SKILL.md",
+      "bytes": 19769,
+      "lines": 405,
+      "sha256": "3bc4092c09804853186524c826bc0621b940bb6122c05b84496dff95388e6eef"
+    },
+    {
+      "path": "01_anthropics_official_skills/algorithmic-art/templates/generator_template.js",
+      "bytes": 7826,
+      "lines": 223,
+      "sha256": "9ee0f1da52ef8f7bbfde1917123654880890d43f2d388642d71eab6dd78f94c4"
+    },
+    {
+      "path": "01_anthropics_official_skills/algorithmic-art/templates/viewer.html",
+      "bytes": 20844,
+      "lines": 599,
+      "sha256": "86c79d7ce97d2599ebe4bd9b97fdeb7295c9d3ed61ceeb513cbe1b2bb5d1ce29"
+    },
+    {
+      "path": "01_anthropics_official_skills/brand-guidelines/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/brand-guidelines/SKILL.md",
+      "bytes": 2235,
+      "lines": 73,
+      "sha256": "1120b3769e2985cefb3d25be981b1f914abeba57ae079b83c20c666c164fa9fe"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/SKILL.md",
+      "bytes": 11939,
+      "lines": 130,
+      "sha256": "a1f288079624402f30682753c1d43920b6664785698d21d3e7aa197450a6448b"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/ArsenalSC-OFL.txt",
+      "bytes": 4373,
+      "lines": 93,
+      "sha256": "8ddd61b18ba2c0d0dbe4a691cf5f1a0673f473d02fa0546e67ee88c006aeff6e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/ArsenalSC-Regular.ttf",
+      "bytes": 165848,
+      "lines": 1488,
+      "sha256": "65e6f89df58f68fd905b3add34a79dd6106aa3b3044df0dad9676fff53d504b9"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BigShoulders-Bold.ttf",
+      "bytes": 94528,
+      "lines": 490,
+      "sha256": "b43bcd198b9fdf717dd42aa61a34dba32e01aceaeae659d689afd0ca52c37ea2"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BigShoulders-OFL.txt",
+      "bytes": 4397,
+      "lines": 93,
+      "sha256": "fbc746aabf0eb1847dfd92e2efc4596d79fa897d60b8e64062a22f585508fb3f"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BigShoulders-Regular.ttf",
+      "bytes": 94396,
+      "lines": 367,
+      "sha256": "18a879fc71978a4447150705caf880a9da3860083c259fd29e6dc03057b6842a"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Boldonse-OFL.txt",
+      "bytes": 4390,
+      "lines": 93,
+      "sha256": "45cc82ab4032273c0924025ffcf8f0665a68e1a5955e3f7247e5daf1deeb1326"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Boldonse-Regular.ttf",
+      "bytes": 77168,
+      "lines": 873,
+      "sha256": "cc2e540604565c0f90a7d8d46194a2f42fc9c45512cd2e39bf03b50eb68c35a4"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BricolageGrotesque-Bold.ttf",
+      "bytes": 90952,
+      "lines": 332,
+      "sha256": "a737b146fe0d77ffe8a86e3cd16700dd431d3b1e420d4fd80e142cd68a1cb50d"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BricolageGrotesque-OFL.txt",
+      "bytes": 4403,
+      "lines": 93,
+      "sha256": "0e4f4eb8534bc66a76aca13dd19c1f9731b2008866b29ccff182b764649df9b4"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/BricolageGrotesque-Regular.ttf",
+      "bytes": 90920,
+      "lines": 277,
+      "sha256": "972a6d098c9867ae131d0ea99e221e63976b11a19d4b931c2c7ace525674e4f6"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/CrimsonPro-Bold.ttf",
+      "bytes": 107352,
+      "lines": 477,
+      "sha256": "48f191e38355c8db100eb3ce157c20f9302a3b9a37b44a660f77ecfce3986609"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/CrimsonPro-Italic.ttf",
+      "bytes": 108828,
+      "lines": 764,
+      "sha256": "52318db3526b644e6efa60be0b3ca5a50e40fbe8bd026c261e0aa206f0772267"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/CrimsonPro-OFL.txt",
+      "bytes": 4394,
+      "lines": 93,
+      "sha256": "35680d14547b6748b6f362a052a46d22764ce5eccf96e18b74f567bb2ee58114"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/CrimsonPro-Regular.ttf",
+      "bytes": 106696,
+      "lines": 574,
+      "sha256": "48fad08cb1917a7b2f2c6fe5135d6c07743a6663cf7631ec4481108aaf081422"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/DMMono-OFL.txt",
+      "bytes": 4392,
+      "lines": 93,
+      "sha256": "bfe7842fcb88323e2981e24710c25202677385a8c75fb6a87217b275a0247ae3"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/DMMono-Regular.ttf",
+      "bytes": 48852,
+      "lines": 257,
+      "sha256": "f98ada968dc3b6b2c08d3f5caaf266977df0bfe0929372b93df5a06cf2ace450"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/EricaOne-OFL.txt",
+      "bytes": 4410,
+      "lines": 94,
+      "sha256": "e0de629968b52255548d5fafcf30b24ff9edae0eda362380755a75816404d0fa"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/EricaOne-Regular.ttf",
+      "bytes": 24872,
+      "lines": 136,
+      "sha256": "db1d89e80e33a8a01beaaac7a85df582857d24a43f1e181461aa7ff5d701476a"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/GeistMono-Bold.ttf",
+      "bytes": 78304,
+      "lines": 263,
+      "sha256": "75c0828d5c1ee44b9ef9f4df577bf41595ec362e2ea3f1e558590c9e92c7949d"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/GeistMono-OFL.txt",
+      "bytes": 4388,
+      "lines": 93,
+      "sha256": "6a873c900f584109b13ae0aaf81d6e3cf0a68751a216b03f7b6c68d547057bb4"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/GeistMono-Regular.ttf",
+      "bytes": 78232,
+      "lines": 286,
+      "sha256": "a55c1b51cda4afeab9e471e7947b85a20f7c8831d7e6b1470c1b7fbdc0f0f15e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Gloock-OFL.txt",
+      "bytes": 4381,
+      "lines": 93,
+      "sha256": "c0a3f3125ac491ef3d1f09f401be4834c646562f647e44f2bcbc49f0466c656d"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Gloock-Regular.ttf",
+      "bytes": 95156,
+      "lines": 1376,
+      "sha256": "e86b4ce66dbd3f1f83eee8db99ec96e0da1128c3f53df0e9b3b7472025dfe960"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexMono-Bold.ttf",
+      "bytes": 136008,
+      "lines": 852,
+      "sha256": "dbd2a2fb024579438d6400a84e57579bfd2dbe67c306c8fd9fde92a61e4f2eea"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexMono-OFL.txt",
+      "bytes": 4363,
+      "lines": 93,
+      "sha256": "5294ce778857e1eb02e830b6ab06435537d38f43055327e73d03a2d4d57d5123"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexMono-Regular.ttf",
+      "bytes": 133796,
+      "lines": 823,
+      "sha256": "ab08018ccd276b79fb2c636bb95b9c543598f9d50505fe92506fcb4dae7810cd"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexSerif-Bold.ttf",
+      "bytes": 161000,
+      "lines": 1417,
+      "sha256": "b8d294e9b5c5a0940f167c3ced0f7ef2e3f57082ca3ff096ef30e86e26c1c159"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexSerif-BoldItalic.ttf",
+      "bytes": 169840,
+      "lines": 1716,
+      "sha256": "da64b75f4284f53e7b5c71fa190a35b8bf3494fe19f1804c81c3a53340bca570"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexSerif-Italic.ttf",
+      "bytes": 170004,
+      "lines": 1994,
+      "sha256": "b11f1048745e715a55c9d837b3f10226ca3d78867b7db7251ddad8f98dcf0f38"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/IBMPlexSerif-Regular.ttf",
+      "bytes": 160380,
+      "lines": 1347,
+      "sha256": "77cd233a2af8dc6b1022faea3bb3b01f3c75af68bcf530cb6aeb15982ff3dbb7"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSans-Bold.ttf",
+      "bytes": 68084,
+      "lines": 472,
+      "sha256": "444f85bf1c4b0e1ce1ca624f6be54bcd832207714ccaf4ea99ee531341683bdf"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSans-BoldItalic.ttf",
+      "bytes": 70004,
+      "lines": 421,
+      "sha256": "3762f6cef95d6039489ad5ba5787d4c30f17a1ad01e9ac3c816ed69692722a68"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSans-Italic.ttf",
+      "bytes": 69900,
+      "lines": 399,
+      "sha256": "78e85858e371b2cb4e18f617c10f0f937c0e12a0887ffee98555b24ed305b3a7"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSans-OFL.txt",
+      "bytes": 4403,
+      "lines": 93,
+      "sha256": "bf4dc6d13a8cccd4807133c77a1ee9619a16b92cb23322258725ab6731c2f6e5"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSans-Regular.ttf",
+      "bytes": 68028,
+      "lines": 394,
+      "sha256": "a22cb26e48fd79bcb01bf2fc92d36785474dce36d9c544ab0a8868c2657c4a87"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSerif-Italic.ttf",
+      "bytes": 70868,
+      "lines": 827,
+      "sha256": "9c86e4d5a47b50224a2463a9eca8535835257c8e85c470c2c6b454b1af6f046e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/InstrumentSerif-Regular.ttf",
+      "bytes": 69312,
+      "lines": 827,
+      "sha256": "56ac3be03ac3ba283196b3e77850ab2ffcf56cfb6fd3212c5620109a972f8c99"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Italiana-OFL.txt",
+      "bytes": 4394,
+      "lines": 93,
+      "sha256": "8373b11312ace78c4cec2e8f9f6aa9f2330601107dac7bcf899c6f2dbd40c5a5"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Italiana-Regular.ttf",
+      "bytes": 27184,
+      "lines": 189,
+      "sha256": "15c4dd6ab8cf4a29ba8826f65edcbe2f6c266c557d34d081f25072dfd5605fd2"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/JetBrainsMono-Bold.ttf",
+      "bytes": 114828,
+      "lines": 606,
+      "sha256": "a2349098b9e45419e7bf0e2958d6c4937a049dded37387b08be725be4c7615f3"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/JetBrainsMono-OFL.txt",
+      "bytes": 4399,
+      "lines": 93,
+      "sha256": "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/JetBrainsMono-Regular.ttf",
+      "bytes": 114904,
+      "lines": 610,
+      "sha256": "b6b1ff4ddefe36d7f2a6174e1d001cab374e594519ee9049af028d577b64c5f5"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Jura-Light.ttf",
+      "bytes": 154308,
+      "lines": 455,
+      "sha256": "c891a381df056b2c4dfe85841e911bf45da0890fa21a7b2692cbe5ea1f505e1e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Jura-Medium.ttf",
+      "bytes": 154488,
+      "lines": 318,
+      "sha256": "c72965cb732a92872643819fd1734128238583cc36b116313859137a51d3368a"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Jura-OFL.txt",
+      "bytes": 4380,
+      "lines": 93,
+      "sha256": "eaf9bdb675f6d87e5feb88199ab3ea581d3bd2082f426e384fa9c394576d7260"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/LibreBaskerville-OFL.txt",
+      "bytes": 4449,
+      "lines": 93,
+      "sha256": "55959eef5b0c3b2e3c1c7631b8ff0f9447d75de20f29cfa7db5bcfb026763343"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/LibreBaskerville-Regular.ttf",
+      "bytes": 147584,
+      "lines": 1069,
+      "sha256": "2101302538d9e88adb679031c04623e4578b5745e89566284fd2c508d79acae0"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Lora-Bold.ttf",
+      "bytes": 133828,
+      "lines": 851,
+      "sha256": "7d74015e950c2fb66519c7295b8155621d22200ae2ca2a4c6b43ce3c490cac87"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Lora-BoldItalic.ttf",
+      "bytes": 140332,
+      "lines": 1025,
+      "sha256": "152f87e71f5ddb60d5c57ecd9132807c947e65c42977193c9164e7c5a6690081"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Lora-Italic.ttf",
+      "bytes": 139328,
+      "lines": 668,
+      "sha256": "be627e595184e8afe521f08da0607eee613f1997d423bc8dadc5798995581377"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Lora-OFL.txt",
+      "bytes": 4423,
+      "lines": 93,
+      "sha256": "62e37a82d3f1ef2a70712885fa8b3144b65fd144d8e748d6196b690a354d792c"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Lora-Regular.ttf",
+      "bytes": 133888,
+      "lines": 517,
+      "sha256": "7ed00e7c9cdf16ab7e2fd2361fe45d4f0b61263cd60aae398b27b7ee08108827"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/NationalPark-Bold.ttf",
+      "bytes": 79208,
+      "lines": 612,
+      "sha256": "69ac4c301c4a7233c6e602d12a92c54d7967b575f4449951c45ce773f7acff53"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/NationalPark-OFL.txt",
+      "bytes": 4399,
+      "lines": 93,
+      "sha256": "81c6c71d83b5b45d7344f96df12bb4a2477a5b092a9144757ee1d0f50f855175"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/NationalPark-Regular.ttf",
+      "bytes": 76424,
+      "lines": 602,
+      "sha256": "a477338b7e18308d476650dfe31235ef86a883572665e56ffb5fb80f82009b58"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/NothingYouCouldDo-OFL.txt",
+      "bytes": 4363,
+      "lines": 93,
+      "sha256": "7c2a6970584ddad04919816163746f83b378078015899b18468b40f05e9ce128"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/NothingYouCouldDo-Regular.ttf",
+      "bytes": 32020,
+      "lines": 421,
+      "sha256": "d866f985896d3280f4fce72db7e17302c24a0c1fdb0699b6b5ed3af14f944d57"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Outfit-Bold.ttf",
+      "bytes": 55392,
+      "lines": 189,
+      "sha256": "6654b93d21301ec61887d3cedd6c11d9df1b1dfb63f9cf45ac7995f6e2235ab1"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Outfit-OFL.txt",
+      "bytes": 4389,
+      "lines": 93,
+      "sha256": "1945b62cd76da9a3051a1660dde72afaa64ffc2666d30e7a78356d651653ba2f"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Outfit-Regular.ttf",
+      "bytes": 54912,
+      "lines": 247,
+      "sha256": "f24945365147c9e783e91d8649959b59be6b00c9ee4ecd2f6b33afbb2dd871fe"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/PixelifySans-Medium.ttf",
+      "bytes": 51072,
+      "lines": 107,
+      "sha256": "38397504f71c122b03d234ea6f55118e3d5bdbddffd82bedddbd7755d3b3be82"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/PixelifySans-OFL.txt",
+      "bytes": 4395,
+      "lines": 93,
+      "sha256": "7f54d1d9f1ae1ba9f2722f978145f90324fea34ca3c2304b3a29cfa96ac6037e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/PoiretOne-OFL.txt",
+      "bytes": 4366,
+      "lines": 93,
+      "sha256": "2eaf541f7eb8b512e4c757a5212060abf5b6edfef230e9d7640bf736b315c33a"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/PoiretOne-Regular.ttf",
+      "bytes": 45244,
+      "lines": 104,
+      "sha256": "9cf265b139648b36b6c0afdfeb0bf27f7e66db9a16094bc40f644d8da05bc318"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/RedHatMono-Bold.ttf",
+      "bytes": 34420,
+      "lines": 134,
+      "sha256": "7ef48353f4be5ddb90f000f6fad48f2b62b3e8c27d9818d8d45ff46c201065e0"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/RedHatMono-OFL.txt",
+      "bytes": 4394,
+      "lines": 93,
+      "sha256": "435fbfb7e66988b2a06686a4cb966faec733f35d8fe100a1601573c27f3e0bb8"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/RedHatMono-Regular.ttf",
+      "bytes": 34488,
+      "lines": 124,
+      "sha256": "452fe826871b37539f5212b20c87cf30f82f58dd2741f1c96edd1dcbdc0db6b4"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Silkscreen-OFL.txt",
+      "bytes": 4394,
+      "lines": 93,
+      "sha256": "6b849745119bbe85ec01fd080c9cd50234da9f52ac6e48b55d1a424a0c4d7ca9"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Silkscreen-Regular.ttf",
+      "bytes": 31960,
+      "lines": 271,
+      "sha256": "49567408600809e25147e9225ac4f37f410e2df45a750696c45027531fb65f1b"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/SmoochSans-Medium.ttf",
+      "bytes": 59704,
+      "lines": 251,
+      "sha256": "dd76e6e77cce82f827a8654cd906e9ce58f3aaf78adda63c4a7f655b8ecb41f0"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/SmoochSans-OFL.txt",
+      "bytes": 4396,
+      "lines": 93,
+      "sha256": "74c9c4eb88e891483e1b7bc54780b452cbf4f4df66d4e71881d7569aa2130749"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Tektur-Medium.ttf",
+      "bytes": 76248,
+      "lines": 507,
+      "sha256": "52bbe8c9b057b3d2da4eeace31a524b1ea26a1375ae34319cf6900ccc57a4c82"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Tektur-OFL.txt",
+      "bytes": 4385,
+      "lines": 93,
+      "sha256": "3f1466cb5438f31782eeb6e895f3a655bc4d090e24263e331f555357d1cb734e"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/Tektur-Regular.ttf",
+      "bytes": 75604,
+      "lines": 315,
+      "sha256": "162e1b36c4718c5b051b36c971ad7e50d341944f35618f480422ebbe72988f98"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/WorkSans-Bold.ttf",
+      "bytes": 191304,
+      "lines": 885,
+      "sha256": "240d125fc9f8561363dc1ea3f513501253bd70942f41468f48f0b0cafb0c82e2"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/WorkSans-BoldItalic.ttf",
+      "bytes": 175772,
+      "lines": 731,
+      "sha256": "a5b2cad813df0aaa7d16621f2e93b5117c25e9bc788bc9a3ad218e9d6348ce34"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/WorkSans-Italic.ttf",
+      "bytes": 174280,
+      "lines": 647,
+      "sha256": "6b7f7002e0b0c8b261fe878658ef5551e3e59d9f6b609b04efb90dde1e2c1ada"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/WorkSans-OFL.txt",
+      "bytes": 4397,
+      "lines": 93,
+      "sha256": "ace8c22a3326318b54e67c3691857929634205533f454a70ef5a3473ddb2e2ba"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/WorkSans-Regular.ttf",
+      "bytes": 188916,
+      "lines": 893,
+      "sha256": "e67985a843df0d3cdee51a3d0f329eb1774a344ad9ff0c9ab923751f1577e2a4"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/YoungSerif-OFL.txt",
+      "bytes": 4398,
+      "lines": 93,
+      "sha256": "cdcb8039606b40a027a6d24586ec62d5fe29c701343d82a048c829cb28a3dd28"
+    },
+    {
+      "path": "01_anthropics_official_skills/canvas-design/canvas-fonts/YoungSerif-Regular.ttf",
+      "bytes": 105136,
+      "lines": 1146,
+      "sha256": "f8dc08f77abad753a00670af70756a8ace938e5c3f0b770f4f4c2071c4bd8fc6"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/SKILL.md",
+      "bytes": 105146,
+      "lines": 616,
+      "sha256": "40537cca17c4aa86e4ce83ced39efcbfb1204905e3cf4c4ff98f2eab011e4b7f"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/csharp/claude-api/README.md",
+      "bytes": 18933,
+      "lines": 363,
+      "sha256": "87a2cc5c6e670e0bf34120f9a592d321567eea57c716c06791f6d2dcaba08b00"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/csharp/claude-api/batches.md",
+      "bytes": 413,
+      "lines": 14,
+      "sha256": "ec276fccf21757ed00803dfa4bc35f14f334138629fa53c77a025d718eda96a1"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/csharp/claude-api/files-api.md",
+      "bytes": 900,
+      "lines": 25,
+      "sha256": "766ccf5dca9ef3caba8cefeddde10f6d171a7bd2ff4c97689462fad2d0d18e4b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/csharp/claude-api/streaming.md",
+      "bytes": 787,
+      "lines": 28,
+      "sha256": "bc0100e50b3495e869901bcfb231870cb3483b936534af5fd3dddb5d07e4531e"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/csharp/claude-api/tool-use.md",
+      "bytes": 7623,
+      "lines": 178,
+      "sha256": "18aa857c41e39eedb35815bfd8d50868a1bbc1f1a657f5e7233a3879baebc764"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/curl/examples.md",
+      "bytes": 9714,
+      "lines": 257,
+      "sha256": "4520e447d37924e62fe982923f3eceea5338dbf3b3a0d25d0f914272c16b90a0"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/curl/managed-agents.md",
+      "bytes": 10788,
+      "lines": 417,
+      "sha256": "faa7dd3d83cfd32d1faabb13fee5902e041285579b00256f17fd21681ed3ff2a"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/go/claude-api/README.md",
+      "bytes": 8477,
+      "lines": 190,
+      "sha256": "c73ac644d8efe65a8d149e800267f98b0aa9d1e716ca38a22fd8803d5c35bfae"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/go/claude-api/files-api.md",
+      "bytes": 936,
+      "lines": 23,
+      "sha256": "7bf67ece5e4d18b1fb07085a55b680420cc7bd4de94a1fb2bb73cb23f39c20f0"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/go/claude-api/streaming.md",
+      "bytes": 1026,
+      "lines": 43,
+      "sha256": "a523e992e438309ca1bbc075ded2b652eb257242fd0ce521afd3b8ea024ed94d"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/go/claude-api/tool-use.md",
+      "bytes": 10018,
+      "lines": 234,
+      "sha256": "18c6dc0cec151293b44697c340e0e0759f6081ad711ca34b06570c2450f243e9"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/go/managed-agents/README.md",
+      "bytes": 22460,
+      "lines": 611,
+      "sha256": "0343be8d49f94687fe5e068ad69d9e05253b408e7bcd0e230b39924f6404facc"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/java/claude-api/README.md",
+      "bytes": 11946,
+      "lines": 239,
+      "sha256": "cb6d395dc1d930371f828290132681541eff7f1a7e2739bb4c6655ebbb3b8c7f"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/java/claude-api/files-api.md",
+      "bytes": 1198,
+      "lines": 27,
+      "sha256": "1c792f3421de32f42a56235327f87807a5579340726bba677ec13e05f9b493c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/java/claude-api/streaming.md",
+      "bytes": 655,
+      "lines": 24,
+      "sha256": "de13bc9573b37edb5af69606853c4fde3d494ee10ff47d1a030ecef9cc17463b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/java/claude-api/tool-use.md",
+      "bytes": 11134,
+      "lines": 242,
+      "sha256": "1916b8d4e49b5d319a2d0c7e21b5a3d7a0f225e4a94d82139e769f66eb66f6d1"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/java/managed-agents/README.md",
+      "bytes": 20465,
+      "lines": 487,
+      "sha256": "ba2a845898b302dc78b5354aa8f34ae4fc2c2ea41d12aa7d0440db59ee004e0c"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/claude-api/README.md",
+      "bytes": 6554,
+      "lines": 175,
+      "sha256": "00e2e88f3ea9a6cce812d3e6ae9e035bc36f88828a09e518bb73af91097a9d66"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/claude-api/batches.md",
+      "bytes": 447,
+      "lines": 15,
+      "sha256": "6f82a29f718ff6e6b02aaaee3cfd6cda2feb82aca57d945f11a2c021214a699d"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/claude-api/files-api.md",
+      "bytes": 476,
+      "lines": 13,
+      "sha256": "0715a0d4cce88fd885f57bd33b4654071a9068d5f8a892143b062c78fe51afc9"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/claude-api/streaming.md",
+      "bytes": 682,
+      "lines": 27,
+      "sha256": "3b8ac667b21f17750eb3c1fc7dc166fd7b1f57a1d8b11e74489de4432e21d31d"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/claude-api/tool-use.md",
+      "bytes": 9722,
+      "lines": 267,
+      "sha256": "1d79c316ef608d8327da1ae7495ecc4a0c517bdd761037c886d8fc61a0eca7d0"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/php/managed-agents/README.md",
+      "bytes": 16555,
+      "lines": 490,
+      "sha256": "2f9ada8a85098a7a4a7265c29fadb74d695a33bf19bc6d5df3a2c275b4a535b2"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/README.md",
+      "bytes": 20623,
+      "lines": 568,
+      "sha256": "284fbc6408809afd27288da95c5fb32daa48bd77518cd5fd4e973cc05363eaa8"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/batches.md",
+      "bytes": 5723,
+      "lines": 200,
+      "sha256": "7e4d07173845836617be3db70482c182311ad2d6d5ddf786482ca57c7c45776c"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/files-api.md",
+      "bytes": 4499,
+      "lines": 170,
+      "sha256": "2aa142978660d9ae3200d21a4d333531ca101898706f620834304e8a7d534580"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/sdk-upgrade.md",
+      "bytes": 28760,
+      "lines": 286,
+      "sha256": "f7c5651b21dd6fd5651935415d907fa0a369736f3055d50edb3d236ea016527c"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/streaming.md",
+      "bytes": 11940,
+      "lines": 255,
+      "sha256": "8f73a54dbbb5e82c2c7690d7d866f17ad8c72f662a2be6dd788b5c0956714026"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/claude-api/tool-use.md",
+      "bytes": 21411,
+      "lines": 643,
+      "sha256": "548dcc4bd2a36e8b90cec446f9b0b7917d2d75a085c7c2603b28c840bd621621"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/python/managed-agents/README.md",
+      "bytes": 14823,
+      "lines": 400,
+      "sha256": "82b6e5847027b0ffe5976116e5c249a58e9e2781eb09e914a81ee2f9eb970245"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/ruby/claude-api/README.md",
+      "bytes": 4843,
+      "lines": 135,
+      "sha256": "c7de89d236f22bc0b44a091a45ee186ec057caa021a71acd4d3849599cbf3b36"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/ruby/claude-api/streaming.md",
+      "bytes": 235,
+      "lines": 16,
+      "sha256": "09b784f2ab0a5fd17e0589225408c618d26c6dd3cd601364ff92f409d5b104a0"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/ruby/claude-api/tool-use.md",
+      "bytes": 2688,
+      "lines": 55,
+      "sha256": "80cbb7c7fd4a01b816524eb54e0f8f4e5b4cc7643d393dfce6b9682e0f4d61b6"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/ruby/managed-agents/README.md",
+      "bytes": 12201,
+      "lines": 425,
+      "sha256": "729ba22b8711a09192006d169098f16b933dd124ff36421772e4334d862306ab"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/admin-api.md",
+      "bytes": 11606,
+      "lines": 179,
+      "sha256": "a69c53817391fca50c0a1848f46de9debf71fa3681298fccb0a6435b760bac2d"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/agent-design.md",
+      "bytes": 8736,
+      "lines": 101,
+      "sha256": "9960728faf6976a2ddfceed02ed72af122d3b2558af573a9a0ea207b3adec2bc"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/anthropic-cli.md",
+      "bytes": 23999,
+      "lines": 308,
+      "sha256": "2baa725ea0248ab7d98dcb218f09e5eb22f768006ad28f4d5011b4975b4d500e"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/claude-platform-on-aws.md",
+      "bytes": 4420,
+      "lines": 59,
+      "sha256": "dec03193c61909167846c0526a4feacf011578b5e7ee29f76378141315cf97f5"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/cost-optimization.md",
+      "bytes": 58448,
+      "lines": 245,
+      "sha256": "d0107a954e9059f43c0aaac07ac1f8a9f5aa0a898834d3d983d623e5976e051b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/error-codes.md",
+      "bytes": 20796,
+      "lines": 277,
+      "sha256": "1abf8dcc262732f7ee5e4c58d1909fbb0722ac12e1b957bffdf64f28fde9e4d2"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/live-sources.md",
+      "bytes": 17732,
+      "lines": 167,
+      "sha256": "cc82c88587c861919557598df0421ea7e8cec683f63adead997a0170dc78732b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-api-reference.md",
+      "bytes": 35296,
+      "lines": 462,
+      "sha256": "efd84dc8a17a2842965c775a905b17fa94cf762cc544df81e708f3aa7a89ae7b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-client-patterns.md",
+      "bytes": 12095,
+      "lines": 220,
+      "sha256": "e9cf54ca98a9cdd7dba0f51acfedfc1b0f160bad243e39f338ff39d4bf5bf823"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-core.md",
+      "bytes": 33515,
+      "lines": 375,
+      "sha256": "b1e7f90f644ef3333bc2c8407ba17410cf672314868474c73242ac969e22007f"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-environments.md",
+      "bytes": 14234,
+      "lines": 239,
+      "sha256": "227e52e6a3d1c967c68912738ff184a97d1f4cd019c6a7bc7cd90c9b9857e5a5"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-events.md",
+      "bytes": 26015,
+      "lines": 291,
+      "sha256": "3c5edc1428bc4b9cff1ebf01cecffaff3ef1650c19afa48c616fcd05b9586e03"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-memory.md",
+      "bytes": 11362,
+      "lines": 201,
+      "sha256": "0dec5641630f97629ea75bbbe5c2bced861f9c16b0572a68c901849ea4d00bcb"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-multiagent.md",
+      "bytes": 66616,
+      "lines": 470,
+      "sha256": "f3d03cc910064cf419c80ce79c5fe62abde127467deea55491b447a07953a06b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-onboarding-from-quickstart.md",
+      "bytes": 19798,
+      "lines": 162,
+      "sha256": "e37628c5639786a7868acfed4be0e25678b69b7d13a9aced03d74deebe042342"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-onboarding-from-url.md",
+      "bytes": 32707,
+      "lines": 312,
+      "sha256": "b6c49289186d7cc521c995ba88fa916b65433101b2b3e9bf3c9add94ad87fa34"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-onboarding.md",
+      "bytes": 16787,
+      "lines": 86,
+      "sha256": "025683a9ee3db081d8a6978980349ce68d1df316d0c5aea31ae12438907208c9"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-outcomes.md",
+      "bytes": 8960,
+      "lines": 110,
+      "sha256": "a516c6bf6a6a76f7f5ef83ec80895efd5de718e8f9418b57c705ce151afc5afe"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-overview.md",
+      "bytes": 14571,
+      "lines": 80,
+      "sha256": "abcbdc29435c07be4749e21f005ed51f45942af03fa0bdcdeb18ebfa38c6a6f8"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-scheduled-deployments.md",
+      "bytes": 9561,
+      "lines": 156,
+      "sha256": "3fdf7bd691b4f798149d7ebdb933dcee7d14d5d47dd6bf8196c41b819223175e"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-self-hosted-sandboxes.md",
+      "bytes": 27926,
+      "lines": 282,
+      "sha256": "a0c0d98ee1921ee5856a9fd1c02931d724c7b7ffffe17f72c85bc90190399085"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-tools.md",
+      "bytes": 37869,
+      "lines": 506,
+      "sha256": "9a9fd54ebb5e81eb0c6b7505f1cadc420fed5696cdab3e0080dd00ccf2e37b6f"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-webhooks.md",
+      "bytes": 11321,
+      "lines": 143,
+      "sha256": "38746f77a3ee971f9b1f7d47cec9e753131bf271fd795aed5c3da1764c9a6ac1"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/model-migration.md",
+      "bytes": 346255,
+      "lines": 2420,
+      "sha256": "b4fe96362b865a28726ab877c966624d5bfc2f86ff9b34940a34e3f8b6fc034e"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/models.md",
+      "bytes": 17502,
+      "lines": 153,
+      "sha256": "c1af1f093d46fd58e50ef3e8e28d339650f333059bfc49a63d01d0175675161b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/platform-availability.md",
+      "bytes": 7415,
+      "lines": 54,
+      "sha256": "607997bc16de403970cb32c1dc1fa63e68f7f02328728be59397e7cefb2efed4"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/preserved-thinking-migration.md",
+      "bytes": 64049,
+      "lines": 249,
+      "sha256": "29921d69fa8dc7e450e7bb793c9f59ae755262ccc933a52eb7116c207defb34c"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/prompt-audit.md",
+      "bytes": 49344,
+      "lines": 237,
+      "sha256": "1a50ec950f9c11bb4ad1a5032a26bb20cd52c9d358adf6add2cb1ceb1aaf6cc9"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/prompt-caching.md",
+      "bytes": 33116,
+      "lines": 297,
+      "sha256": "5800f883ff1babe24105e7e0e3fc7e9b03dfcce25bb2ccded4bb40d8c81d8464"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/token-counting.md",
+      "bytes": 1603,
+      "lines": 56,
+      "sha256": "8674e246c165decdc13106a4861a254ededb0421caf7fa4015ed0fb36e6c60dc"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/tool-use-concepts.md",
+      "bytes": 44359,
+      "lines": 577,
+      "sha256": "62293e7bb7763f7ae487d3b98ead6b733689b2fd7089784ad5859dd869a153f5"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/build-eval.md",
+      "bytes": 54835,
+      "lines": 233,
+      "sha256": "c8f6ae960867f6b3b35557aec75361553888ae7168f268365444bf6a4e09a5d7"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/cost-hillclimb.md",
+      "bytes": 31711,
+      "lines": 442,
+      "sha256": "dd46a354fed24d96c7f9acf42f9da64f5cceaa797949662d82374fd2cf7a3515"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/eval-audit.md",
+      "bytes": 27892,
+      "lines": 204,
+      "sha256": "a013f8eb0452c51c5a31860df0fb47219dcdb4da507092fc98867225095026ba"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/eval-hillclimb.md",
+      "bytes": 69153,
+      "lines": 338,
+      "sha256": "315ae8540ebaeb9f1d7de5efa49625e6137ead255dc3a545b63393df89375588"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/report/SCHEMA.md",
+      "bytes": 16121,
+      "lines": 339,
+      "sha256": "9a83404a9b3c413113df39d9bdf08e003ff4d6a75386f4010887da3298766687"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/report/build-report-lite.mjs",
+      "bytes": 27329,
+      "lines": 488,
+      "sha256": "af79ca5fa5f06747dbcaa1d40017c8c8e81e0aa11cb8e32b848043893cdb03c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/evals/report/runner-scaffold.mjs",
+      "bytes": 33142,
+      "lines": 602,
+      "sha256": "c3a87ba4b94b3018b83c075d5148ba7760580aa447699d513d45ab55b82a531a"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/bug-hunter.md",
+      "bytes": 8096,
+      "lines": 106,
+      "sha256": "9afd40ef3e1bca9e1cc4c6655d314127cec0b4dcff0e12f6016508c134954248"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/contract-tracker.md",
+      "bytes": 1806,
+      "lines": 44,
+      "sha256": "312ee5f886de59b6db4603d2df9766d66285db36973656c5b9ff0bcc1ed02279"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/data-analyst.md",
+      "bytes": 1561,
+      "lines": 42,
+      "sha256": "c2116bac43972f2b40311104bd7cd4e084cca806dd40a1ddf8462845d785bd57"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/deep-researcher.md",
+      "bytes": 2430,
+      "lines": 50,
+      "sha256": "a680856d874dff23cd3f016e36d0a58bc4db36c56d790d216743f236ee37a48c"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/explainer-video-maker.md",
+      "bytes": 4886,
+      "lines": 100,
+      "sha256": "c2570c5e14d51c5caa77646ac417d18619d34a27cc94dc72cf020c698f2803f3"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/field-monitor.md",
+      "bytes": 2105,
+      "lines": 66,
+      "sha256": "f17f26eee0109f4172134c5bea5761c52b8459e44ae03608c701cd3492f4a3af"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/incident-commander.md",
+      "bytes": 1723,
+      "lines": 55,
+      "sha256": "badd3622ffab0798ab44a55189f47e95c107107ce57eda9fa5357b1aded8fb2a"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/performance-tuner.md",
+      "bytes": 11394,
+      "lines": 182,
+      "sha256": "922396e14b569bc98a7bdde34d10890cc81c5184e81971e6c9be108d191dd639"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/sprint-retro-facilitator.md",
+      "bytes": 2091,
+      "lines": 73,
+      "sha256": "8b5ed9895feb1ade54578a270493c63d0f57b3bb0fbc2eafcfa2e87d3130fa75"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/structured-extractor.md",
+      "bytes": 1541,
+      "lines": 35,
+      "sha256": "c278074c8c48d35fc6c68ed32eaa8704cae73a8e74035fd1d4a6abdcb9bd0fbd"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/support-agent.md",
+      "bytes": 1481,
+      "lines": 45,
+      "sha256": "da75c50edf207f5ef468fbbbfc2e77d56e7d906a6c2cda28756f896195e171c5"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/support-to-eng-escalator.md",
+      "bytes": 1842,
+      "lines": 52,
+      "sha256": "46720e5341808a9938825be44f936c91f83739ebdef9e1d17d9f0ec22738346b"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/managed-agents-quickstarts/watchlist-scanner.md",
+      "bytes": 5642,
+      "lines": 96,
+      "sha256": "e67861c63b9d46b01c8d2784998b7f0de9a87aa6012b77127def1253c5ac13db"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/preserved-thinking-migration/causes.md",
+      "bytes": 39705,
+      "lines": 98,
+      "sha256": "c2dbadb0439806863723e5ef7279d626d731d8179fd39293ff26d226b94d3694"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/preserved-thinking-migration/drop_block_probe.py",
+      "bytes": 66582,
+      "lines": 1066,
+      "sha256": "f23abb75bc079d835f57da7598ac5a1bee4318214ab803185feb94d8db8c4b88"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/shared/preserved-thinking-migration/prefix_diff.py",
+      "bytes": 94008,
+      "lines": 1532,
+      "sha256": "734934b81b5f26e9ed2f8f51f44fed6554233de4f37b22a8845ae4ffcb622ac0"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/claude-api/README.md",
+      "bytes": 15833,
+      "lines": 407,
+      "sha256": "b2a01ccbaa0d4406e400bcd8efc033759af5d646a97aab744aee55bf07d6ab16"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/claude-api/batches.md",
+      "bytes": 2594,
+      "lines": 106,
+      "sha256": "acc33bb981acd48b6ee9a6b2c2afeef9487c42ef2b117225da3949dc61efb464"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/claude-api/files-api.md",
+      "bytes": 2384,
+      "lines": 98,
+      "sha256": "df8e4e433a4ded6d4c3eb40de9bc0782cf77aaa8e3e331a539aec1cff55d1316"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/claude-api/streaming.md",
+      "bytes": 9514,
+      "lines": 221,
+      "sha256": "09db982effb0b7d14e29eddd5425b00040debfedccf3dd0db9af73f7d2da3e79"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/claude-api/tool-use.md",
+      "bytes": 24295,
+      "lines": 665,
+      "sha256": "d0c3e5da146c6da8a85ced14f964dc33de4c0153aa2748dee35c319752e8b725"
+    },
+    {
+      "path": "01_anthropics_official_skills/claude-api/typescript/managed-agents/README.md",
+      "bytes": 14013,
+      "lines": 436,
+      "sha256": "5daf6b0c6a443e1ae720b0a7343e061ebdbaeb751dd674f37f9abf9d12efc66f"
+    },
+    {
+      "path": "01_anthropics_official_skills/discernment-nudge/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/discernment-nudge/SKILL.md",
+      "bytes": 10592,
+      "lines": 209,
+      "sha256": "9191177c4a8ef11a20dace786d708506b22d43e748c71287bb823de0dc812dad"
+    },
+    {
+      "path": "01_anthropics_official_skills/doc-coauthoring/SKILL.md",
+      "bytes": 15815,
+      "lines": 375,
+      "sha256": "2e47d78846faeea4a56e9809c52700087a15a2155a3f293a3efbaded81398ef4"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/LICENSE.txt",
+      "bytes": 11357,
+      "lines": 202,
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/SKILL.md",
+      "bytes": 7488,
+      "lines": 92,
+      "sha256": "895d5aa6c4cd98e4aed4c995d846f056f3549086e79bcd6617afea6014f82288"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/__init__.py",
+      "bytes": 1,
+      "lines": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/accept_changes.py",
+      "bytes": 4051,
+      "lines": 135,
+      "sha256": "0c991d2bc7304a1248e9f3bf9b1498f0b6e76641fc457e7cbd73c99b4eef3a74"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/comment.py",
+      "bytes": 14054,
+      "lines": 368,
+      "sha256": "37d116e5f56bb142b208c6c6a4bbcf960495abf470ddb7c6675ccfac864ba3d7"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/merge_runs.py",
+      "bytes": 9398,
+      "lines": 310,
+      "sha256": "3ab367fd7fba4647943d0aa5e65203b15458551410f5ffc821d902616a4b9f40"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/soffice.py",
+      "bytes": 9100,
+      "lines": 276,
+      "sha256": "bcfa227707681ffbecc0f0af5c4e7155407b3baaf5cec5cdd41387c97cdd40c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validate.py",
+      "bytes": 7808,
+      "lines": 216,
+      "sha256": "8c10ec61d8e880877515019e1fe8fab9a1f590c9e50ed0631418e960aca1e313"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/helpers/__init__.py",
+      "bytes": 4042,
+      "lines": 129,
+      "sha256": "5c456ffc522900399b5f9402f92d66aaf2d9f87655d236c69f60bf07f4fd7c9b"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/helpers/pptx_chart.py",
+      "bytes": 9938,
+      "lines": 283,
+      "sha256": "aed734e9a6c743ae712fc228c868bf0f6abcfb6a53549eefb19081b15d240fda"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/helpers/pptx_slide.py",
+      "bytes": 3352,
+      "lines": 100,
+      "sha256": "06fe06953bf038826b85ecc142f4dc9299a37fa0c4e4dd9b00b10486df33524d"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/helpers/pptx_theme.py",
+      "bytes": 3510,
+      "lines": 114,
+      "sha256": "ebb54c56e9c13807f5f98f0cae22d47cdd0162da8525eaa664e3f2c8c8d6bb03"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+      "bytes": 74984,
+      "lines": 1499,
+      "sha256": "41b93bd8857cc68b1e43be2806a872d736a9bdd6566900062d8fdb57d7bbb354"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+      "bytes": 6956,
+      "lines": 146,
+      "sha256": "3fd0586f2637b98bb9886f0e0b67d89e1cc987c2d158cc7deb5f5b9890ced412"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+      "bytes": 51302,
+      "lines": 1085,
+      "sha256": "29b254ee0d10414a8504b5a08149c7baec35a60d5ff607d6b3f492aa36815f40"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+      "bytes": 624,
+      "lines": 11,
+      "sha256": "5cb76dabd8b97d1e9308a1700b90c20139be4d50792d21a7f09789f5cccd6026"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+      "bytes": 152039,
+      "lines": 3081,
+      "sha256": "5375417f0f5394b8dd1a7035b9679151f19a6b65df309dec10cfb4a420cb00e9"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+      "bytes": 1231,
+      "lines": 23,
+      "sha256": "5d389d42befbebd91945d620242347caecd3367f9a3a7cf8d97949507ae1f53c"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+      "bytes": 8862,
+      "lines": 185,
+      "sha256": "b4532b6d258832953fbb3ee4c711f4fe25d3faf46a10644b2505f17010d01e88"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+      "bytes": 14795,
+      "lines": 287,
+      "sha256": "bdad416b096b61d37b71603b2c949484f9070c830bdaeba93bf35e15c8900614"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+      "bytes": 83612,
+      "lines": 1676,
+      "sha256": "d173c3e5d61e42e2e3a97226c632fd2ab7cc481fc4e492365b87024ab546daff"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+      "bytes": 1269,
+      "lines": 28,
+      "sha256": "3c6709101c6aaa82888df5d8795c33f9e857196790eb320d9194e64be2b6bdd8"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+      "bytes": 7328,
+      "lines": 144,
+      "sha256": "0b364451dc36a48dd6dae0f3b6ada05fd9b71e5208211f8ee5537d7e51a587e2"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+      "bytes": 6382,
+      "lines": 174,
+      "sha256": "e2abacbb9a55ce1365f8961bc1b1395bbc811e512b111000d8c333f98458dece"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+      "bytes": 1248,
+      "lines": 25,
+      "sha256": "0ef4bb354ff44b923564c4ddbdda5987919d220225129ec94614a618ceafc281"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+      "bytes": 880,
+      "lines": 18,
+      "sha256": "0d103b99a4a8652f8871552a69d42d2a3760ac6a5e3ef02d979c4273257ff6a4"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+      "bytes": 2608,
+      "lines": 59,
+      "sha256": "9c085407751b9061c1f996f6c39ce58451be22a8d334f09175f0e89e42736285"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+      "bytes": 3507,
+      "lines": 56,
+      "sha256": "bc92e36ccd233722d4c5869bec71ddc7b12e2df56059942cce5a39065cc9c368"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+      "bytes": 7507,
+      "lines": 195,
+      "sha256": "7b5b7413e2c895b1e148e82e292a117d53c7ec65b0696c992edca57b61b4a74b"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+      "bytes": 23313,
+      "lines": 582,
+      "sha256": "3213ef1631606250f5010b42cad7ef716f7c59426367798e33c374c0ec391d3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+      "bytes": 1367,
+      "lines": 25,
+      "sha256": "12264f3c03d738311cd9237d212f1c07479e70f0cbe1ae725d29b36539aef637"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+      "bytes": 242277,
+      "lines": 4439,
+      "sha256": "beffeed56945c22a77440122c8bdc426f3fcbe7f3b12ea0976c770d1f8d54578"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+      "bytes": 26148,
+      "lines": 570,
+      "sha256": "f5ee623b08b6a66935e5aced2f5d8ad0fc71bf9e8e833cd490150c0fa94b8763"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+      "bytes": 25279,
+      "lines": 509,
+      "sha256": "585bedc1313b40888dcc544cb74cd939a105ee674f3b1d3aa1cc6d34f70ff155"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+      "bytes": 535,
+      "lines": 12,
+      "sha256": "133c9f64a5c5d573b78d0a474122b22506d8eadb5e063f67cdbbb8fa2f161d0e"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+      "bytes": 5712,
+      "lines": 108,
+      "sha256": "6bdeb169c3717eb01108853bd9fc5a3750fb1fa5b82abbdd854d49855a40f519"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+      "bytes": 4010,
+      "lines": 96,
+      "sha256": "475dcae1e7d1ea46232db6f8481040c15e53a52a3c256831d3df204212b0e831"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+      "bytes": 171367,
+      "lines": 3646,
+      "sha256": "c2dd9f61f892deae6acd8d20771ea79b12018af25f3bf8d06639c8542d218cfd"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+      "bytes": 4646,
+      "lines": 116,
+      "sha256": "a539aa2fb154fa50e0f5cc97e6ad7cbc66f8ec3e3746f61ec6a8b0d5d15ecdf2"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+      "bytes": 1963,
+      "lines": 42,
+      "sha256": "9e0b7209fc69ab11987900404540969976000c5ebe4d4f58c43dc3842886bf3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+      "bytes": 2515,
+      "lines": 50,
+      "sha256": "451958454e8588dfc7cd945981ada142ca06ff3307937f5700df059c2b307fa8"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+      "bytes": 2856,
+      "lines": 49,
+      "sha256": "6de111e11403f7cd49027400755bae0ea1cabef2815f09bd40a24f0017613b24"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+      "bytes": 1344,
+      "lines": 33,
+      "sha256": "f565adfef5a502044abc3a9153e157edc25af78304d335994afb958874b15e26"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/mce/mc.xsd",
+      "bytes": 3127,
+      "lines": 75,
+      "sha256": "3a37e461ecf5a8670fdec34029703401f8728ab9c96ec1739a6ae58d55212413"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-2010.xsd",
+      "bytes": 26549,
+      "lines": 560,
+      "sha256": "568b26ee156cb9549aa439ca2158965f77b7c1602b7e0316f40ac6cf586e35f2"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-2012.xsd",
+      "bytes": 3745,
+      "lines": 67,
+      "sha256": "0fa75578a000439a7988ba0c59fdc69f774bbd416cbacc14d07125b3f686cb74"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-2018.xsd",
+      "bytes": 901,
+      "lines": 14,
+      "sha256": "be0ff793a22dd31384650c3a4da14c2fa8062751c2e97b0e5ee852bda13c60ad"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+      "bytes": 1778,
+      "lines": 20,
+      "sha256": "fddc2b880cabb9005aebbc7e783e53c19fec1c03df7d0e2f2076a33a0fdfd081"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+      "bytes": 1002,
+      "lines": 13,
+      "sha256": "127ca209fa73d7cb708449cb355c871867948a96e4a74f7bf5811ef62d17991d"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+      "bytes": 600,
+      "lines": 4,
+      "sha256": "842e7163409c8d74f4d7088a8bc99500d80bc75332681a0980055b08f374a604"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+      "bytes": 745,
+      "lines": 8,
+      "sha256": "16f6f8072249f431370723c2cd8974672e0d9c897e00e97dd918079df934871b"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validators/__init__.py",
+      "bytes": 336,
+      "lines": 15,
+      "sha256": "83e0f035c5abea238d3f2c3968afbd511ed022b527b7c9cb60a9434cc34ff987"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validators/base.py",
+      "bytes": 34369,
+      "lines": 887,
+      "sha256": "6129ec6a4fc0a4aa78af1434f9baa73994cc24d3261afda4e680e00f215cbf3b"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validators/docx.py",
+      "bytes": 19745,
+      "lines": 519,
+      "sha256": "7b0f1a23c9cd9ff07187d9d7d359f62317f94a5e389d63fd19766e1688a195a2"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validators/pptx.py",
+      "bytes": 21058,
+      "lines": 549,
+      "sha256": "3a100ec5f00ae183bca67f4aaa8e3e902caee60254e141b8120f32c53d85cee7"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/office/validators/redlining.py",
+      "bytes": 18983,
+      "lines": 478,
+      "sha256": "f9c4455adc32b3890d5203d6c25d868d98d7e970bbad76b686f502950737599a"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/templates/comments.xml",
+      "bytes": 2603,
+      "lines": 3,
+      "sha256": "a08ba83ee8790ac9e3dc61921f4988f19edd7e06ac09d6f1897a877c1581818d"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/templates/commentsExtended.xml",
+      "bytes": 2611,
+      "lines": 3,
+      "sha256": "544eeecfeceed4b468fff163cd9c366d33641c8b8ab691ce002576197846afe8"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/templates/commentsExtensible.xml",
+      "bytes": 2707,
+      "lines": 3,
+      "sha256": "bad10b3283e6ad6e7ef6d1ca5169683721ed690ee331282c65df04017e080631"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/templates/commentsIds.xml",
+      "bytes": 2619,
+      "lines": 3,
+      "sha256": "db20f9616e004ec42ef736e80c2384e45db0f8d1194d31dc8b37c7d6ecdd6420"
+    },
+    {
+      "path": "01_anthropics_official_skills/docx/scripts/templates/people.xml",
+      "bytes": 115,
+      "lines": 3,
+      "sha256": "056f63aa1197fd8c9dda980c9f1b9ff016fd5fa4a462df8aec5f384f39d23e37"
+    },
+    {
+      "path": "01_anthropics_official_skills/frontend-design/LICENSE.txt",
+      "bytes": 10174,
+      "lines": 177,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "path": "01_anthropics_official_skills/frontend-design/SKILL.md",
+      "bytes": 9390,
+      "lines": 71,
+      "sha256": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/SKILL.md",
+      "bytes": 1511,
+      "lines": 32,
+      "sha256": "067b7587a344a928fc6534ef66b1bcd591fc7c26d207ea7ca3334aeb678d6475"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/examples/3p-updates.md",
+      "bytes": 3274,
+      "lines": 47,
+      "sha256": "087e4363c0f3513728a7e695eeb9ead5c3ecd12a4681b59340691180e65b68fc"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/examples/company-newsletter.md",
+      "bytes": 3295,
+      "lines": 65,
+      "sha256": "30f81cfbdb03858a006169c72169024089c7c5d3d32611d337782da4f38c86b5"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/examples/faq-answers.md",
+      "bytes": 2366,
+      "lines": 30,
+      "sha256": "5ecd3356cd6666937f2ebefa753253edfdbdca15e368d07baf398bfcced72484"
+    },
+    {
+      "path": "01_anthropics_official_skills/internal-comms/examples/general-comms.md",
+      "bytes": 602,
+      "lines": 16,
+      "sha256": "4d3a4bb198a77626bcf018e96b2b45a2dbabed172d4ade0fcd70d23ae8a47a47"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/SKILL.md",
+      "bytes": 11129,
+      "lines": 252,
+      "sha256": "b483b56d6673134497e45489c317f26ae0f1429c194db0297e43073e17e6748c"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/reference/evaluation.md",
+      "bytes": 21663,
+      "lines": 602,
+      "sha256": "8c99479f8a2d22a636c38e274537aac3610879e26f34e0709825077c4576f427"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/reference/mcp_best_practices.md",
+      "bytes": 7330,
+      "lines": 249,
+      "sha256": "80fb4369a349447cf18ecdd7494fe7938b6065377e9f08c077cec411093a3007"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/reference/node_mcp_server.md",
+      "bytes": 28745,
+      "lines": 972,
+      "sha256": "ee3c95d812e450f6168b734390d0c9ef6f8ebeef041d73a122c972dfbd4d476a"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/reference/node_mcp_server_v2.md",
+      "bytes": 35171,
+      "lines": 747,
+      "sha256": "49b2fe48f33910b743ae3a56353fffa5d5f252f531053f24f2da4e5914c0d3aa"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/reference/python_mcp_server.md",
+      "bytes": 25099,
+      "lines": 719,
+      "sha256": "2da52f77e675191014ca2e146a4b95aa04d0ca7dd7e2b100322df15ade685e80"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/scripts/connections.py",
+      "bytes": 4875,
+      "lines": 151,
+      "sha256": "9403668a2041568772082a8b334122c1f88daf0541fb393af4522d0094a47a6e"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/scripts/evaluation.py",
+      "bytes": 12579,
+      "lines": 373,
+      "sha256": "49ed1d17cdce5da101b210197740713f49b935c29d4f339542a14b132658e6f7"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/scripts/example_evaluation.xml",
+      "bytes": 1194,
+      "lines": 22,
+      "sha256": "9272b348ddcc4b06ba562367ccd0770e018158c0068ac5116d5e34aaeff8777a"
+    },
+    {
+      "path": "01_anthropics_official_skills/mcp-builder/scripts/requirements.txt",
+      "bytes": 29,
+      "lines": 2,
+      "sha256": "d5d7558b2368ecea9dfeed7d1fbc71ee9e0750bebd1282faa527d528a344c3c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/FORMS.md",
+      "bytes": 11857,
+      "lines": 294,
+      "sha256": "d5df5757e23634cd8a1a37e092af6c3b3b63afb3fd3ce86337fce9017cc3ee9f"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/LICENSE.txt",
+      "bytes": 11357,
+      "lines": 202,
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/REFERENCE.md",
+      "bytes": 16724,
+      "lines": 613,
+      "sha256": "07af9a8f59e77e88fe9b238a403348244f38a4771c54911c412716d8f88f0ea9"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/SKILL.md",
+      "bytes": 8058,
+      "lines": 314,
+      "sha256": "d1c7caf5f35eb7d37877dd7fc33a095037be2b34fb5d2f7f4d43bde3165bb4ee"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/check_bounding_boxes.py",
+      "bytes": 2774,
+      "lines": 65,
+      "sha256": "0ced522402dd7b3c82a0be9518cf4e485fa9cc0467d7beab6ddb04cb36fcc3e1"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/check_fillable_fields.py",
+      "bytes": 268,
+      "lines": 11,
+      "sha256": "1fe10b9980a5493c9bbec8c20630c603eaa475b45403751c08f26738736647b8"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/convert_pdf_to_images.py",
+      "bytes": 1008,
+      "lines": 33,
+      "sha256": "7f58e292a67e18a8ff000d30bad2469389546731f7e8a698cc1d0aed001ea15d"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/create_validation_image.py",
+      "bytes": 1258,
+      "lines": 37,
+      "sha256": "8fa9fd7962c9f940045b81cf6b991e7c1057c1838e3f9cc6d305007a222ffebf"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/extract_form_field_info.py",
+      "bytes": 4300,
+      "lines": 122,
+      "sha256": "bb235b36f497bbb1c7c6821cecf527bbba7213520de11219da99f7b13a38c109"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/extract_form_structure.py",
+      "bytes": 3945,
+      "lines": 115,
+      "sha256": "6814e3fe8f78c2b16d766c132b5a727ff7a31b71d76a7d46bd6e40fe50bc97c5"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/fill_fillable_fields.py",
+      "bytes": 3819,
+      "lines": 98,
+      "sha256": "d140872c2e92e41b1e05370ae8d270c5b7f5ebdf55d9905f03bc974a9c708ff5"
+    },
+    {
+      "path": "01_anthropics_official_skills/pdf/scripts/fill_pdf_form_with_annotations.py",
+      "bytes": 3235,
+      "lines": 107,
+      "sha256": "8a56e063a49ed53c0b0e1d312ecf8023af76816ed139486ec3b539873de202fd"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/LICENSE.txt",
+      "bytes": 11357,
+      "lines": 202,
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/SKILL.md",
+      "bytes": 28365,
+      "lines": 271,
+      "sha256": "598c981d93f2173b251f86a4bc94e9fb4e4f5ddaa314ba2dd4eca24b7a07808e"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/__init__.py",
+      "bytes": 0,
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/add_slide.py",
+      "bytes": 18831,
+      "lines": 463,
+      "sha256": "23a4c66a9f43e651189cbc9f82ba0a8271d19dc8d44cf0c426dda66f7eb6a93a"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/apply_theme.js",
+      "bytes": 7291,
+      "lines": 107,
+      "sha256": "e440b33c43f2e707076cb64b57ca926ce886564b115c19ee23ac487bdb1a6259"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/clean.py",
+      "bytes": 10415,
+      "lines": 309,
+      "sha256": "5c808cd4dff7e02661ef3c68b5917f4e25097cc6610c92a3a7df4a6366a5c3c1"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/slide_text.py",
+      "bytes": 4446,
+      "lines": 132,
+      "sha256": "0deab09d4ae494411ee893f9c69fffc19fe264a6053990a2f066334c0d88d422"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/thumbnail.py",
+      "bytes": 9802,
+      "lines": 311,
+      "sha256": "94ef83a84346aa2d63913de0d42bb2fe902ccdc17bfac6130096ca758381793c"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/soffice.py",
+      "bytes": 9100,
+      "lines": 276,
+      "sha256": "bcfa227707681ffbecc0f0af5c4e7155407b3baaf5cec5cdd41387c97cdd40c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validate.py",
+      "bytes": 7808,
+      "lines": 216,
+      "sha256": "8c10ec61d8e880877515019e1fe8fab9a1f590c9e50ed0631418e960aca1e313"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/helpers/__init__.py",
+      "bytes": 4042,
+      "lines": 129,
+      "sha256": "5c456ffc522900399b5f9402f92d66aaf2d9f87655d236c69f60bf07f4fd7c9b"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/helpers/pptx_chart.py",
+      "bytes": 9938,
+      "lines": 283,
+      "sha256": "aed734e9a6c743ae712fc228c868bf0f6abcfb6a53549eefb19081b15d240fda"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/helpers/pptx_slide.py",
+      "bytes": 3352,
+      "lines": 100,
+      "sha256": "06fe06953bf038826b85ecc142f4dc9299a37fa0c4e4dd9b00b10486df33524d"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/helpers/pptx_theme.py",
+      "bytes": 3510,
+      "lines": 114,
+      "sha256": "ebb54c56e9c13807f5f98f0cae22d47cdd0162da8525eaa664e3f2c8c8d6bb03"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+      "bytes": 74984,
+      "lines": 1499,
+      "sha256": "41b93bd8857cc68b1e43be2806a872d736a9bdd6566900062d8fdb57d7bbb354"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+      "bytes": 6956,
+      "lines": 146,
+      "sha256": "3fd0586f2637b98bb9886f0e0b67d89e1cc987c2d158cc7deb5f5b9890ced412"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+      "bytes": 51302,
+      "lines": 1085,
+      "sha256": "29b254ee0d10414a8504b5a08149c7baec35a60d5ff607d6b3f492aa36815f40"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+      "bytes": 624,
+      "lines": 11,
+      "sha256": "5cb76dabd8b97d1e9308a1700b90c20139be4d50792d21a7f09789f5cccd6026"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+      "bytes": 152039,
+      "lines": 3081,
+      "sha256": "5375417f0f5394b8dd1a7035b9679151f19a6b65df309dec10cfb4a420cb00e9"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+      "bytes": 1231,
+      "lines": 23,
+      "sha256": "5d389d42befbebd91945d620242347caecd3367f9a3a7cf8d97949507ae1f53c"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+      "bytes": 8862,
+      "lines": 185,
+      "sha256": "b4532b6d258832953fbb3ee4c711f4fe25d3faf46a10644b2505f17010d01e88"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+      "bytes": 14795,
+      "lines": 287,
+      "sha256": "bdad416b096b61d37b71603b2c949484f9070c830bdaeba93bf35e15c8900614"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+      "bytes": 83612,
+      "lines": 1676,
+      "sha256": "d173c3e5d61e42e2e3a97226c632fd2ab7cc481fc4e492365b87024ab546daff"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+      "bytes": 1269,
+      "lines": 28,
+      "sha256": "3c6709101c6aaa82888df5d8795c33f9e857196790eb320d9194e64be2b6bdd8"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+      "bytes": 7328,
+      "lines": 144,
+      "sha256": "0b364451dc36a48dd6dae0f3b6ada05fd9b71e5208211f8ee5537d7e51a587e2"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+      "bytes": 6382,
+      "lines": 174,
+      "sha256": "e2abacbb9a55ce1365f8961bc1b1395bbc811e512b111000d8c333f98458dece"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+      "bytes": 1248,
+      "lines": 25,
+      "sha256": "0ef4bb354ff44b923564c4ddbdda5987919d220225129ec94614a618ceafc281"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+      "bytes": 880,
+      "lines": 18,
+      "sha256": "0d103b99a4a8652f8871552a69d42d2a3760ac6a5e3ef02d979c4273257ff6a4"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+      "bytes": 2608,
+      "lines": 59,
+      "sha256": "9c085407751b9061c1f996f6c39ce58451be22a8d334f09175f0e89e42736285"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+      "bytes": 3507,
+      "lines": 56,
+      "sha256": "bc92e36ccd233722d4c5869bec71ddc7b12e2df56059942cce5a39065cc9c368"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+      "bytes": 7507,
+      "lines": 195,
+      "sha256": "7b5b7413e2c895b1e148e82e292a117d53c7ec65b0696c992edca57b61b4a74b"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+      "bytes": 23313,
+      "lines": 582,
+      "sha256": "3213ef1631606250f5010b42cad7ef716f7c59426367798e33c374c0ec391d3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+      "bytes": 1367,
+      "lines": 25,
+      "sha256": "12264f3c03d738311cd9237d212f1c07479e70f0cbe1ae725d29b36539aef637"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+      "bytes": 242277,
+      "lines": 4439,
+      "sha256": "beffeed56945c22a77440122c8bdc426f3fcbe7f3b12ea0976c770d1f8d54578"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+      "bytes": 26148,
+      "lines": 570,
+      "sha256": "f5ee623b08b6a66935e5aced2f5d8ad0fc71bf9e8e833cd490150c0fa94b8763"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+      "bytes": 25279,
+      "lines": 509,
+      "sha256": "585bedc1313b40888dcc544cb74cd939a105ee674f3b1d3aa1cc6d34f70ff155"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+      "bytes": 535,
+      "lines": 12,
+      "sha256": "133c9f64a5c5d573b78d0a474122b22506d8eadb5e063f67cdbbb8fa2f161d0e"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+      "bytes": 5712,
+      "lines": 108,
+      "sha256": "6bdeb169c3717eb01108853bd9fc5a3750fb1fa5b82abbdd854d49855a40f519"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+      "bytes": 4010,
+      "lines": 96,
+      "sha256": "475dcae1e7d1ea46232db6f8481040c15e53a52a3c256831d3df204212b0e831"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+      "bytes": 171367,
+      "lines": 3646,
+      "sha256": "c2dd9f61f892deae6acd8d20771ea79b12018af25f3bf8d06639c8542d218cfd"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+      "bytes": 4646,
+      "lines": 116,
+      "sha256": "a539aa2fb154fa50e0f5cc97e6ad7cbc66f8ec3e3746f61ec6a8b0d5d15ecdf2"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+      "bytes": 1963,
+      "lines": 42,
+      "sha256": "9e0b7209fc69ab11987900404540969976000c5ebe4d4f58c43dc3842886bf3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+      "bytes": 2515,
+      "lines": 50,
+      "sha256": "451958454e8588dfc7cd945981ada142ca06ff3307937f5700df059c2b307fa8"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+      "bytes": 2856,
+      "lines": 49,
+      "sha256": "6de111e11403f7cd49027400755bae0ea1cabef2815f09bd40a24f0017613b24"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+      "bytes": 1344,
+      "lines": 33,
+      "sha256": "f565adfef5a502044abc3a9153e157edc25af78304d335994afb958874b15e26"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/mce/mc.xsd",
+      "bytes": 3127,
+      "lines": 75,
+      "sha256": "3a37e461ecf5a8670fdec34029703401f8728ab9c96ec1739a6ae58d55212413"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-2010.xsd",
+      "bytes": 26549,
+      "lines": 560,
+      "sha256": "568b26ee156cb9549aa439ca2158965f77b7c1602b7e0316f40ac6cf586e35f2"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-2012.xsd",
+      "bytes": 3745,
+      "lines": 67,
+      "sha256": "0fa75578a000439a7988ba0c59fdc69f774bbd416cbacc14d07125b3f686cb74"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-2018.xsd",
+      "bytes": 901,
+      "lines": 14,
+      "sha256": "be0ff793a22dd31384650c3a4da14c2fa8062751c2e97b0e5ee852bda13c60ad"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+      "bytes": 1778,
+      "lines": 20,
+      "sha256": "fddc2b880cabb9005aebbc7e783e53c19fec1c03df7d0e2f2076a33a0fdfd081"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+      "bytes": 1002,
+      "lines": 13,
+      "sha256": "127ca209fa73d7cb708449cb355c871867948a96e4a74f7bf5811ef62d17991d"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+      "bytes": 600,
+      "lines": 4,
+      "sha256": "842e7163409c8d74f4d7088a8bc99500d80bc75332681a0980055b08f374a604"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+      "bytes": 745,
+      "lines": 8,
+      "sha256": "16f6f8072249f431370723c2cd8974672e0d9c897e00e97dd918079df934871b"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validators/__init__.py",
+      "bytes": 336,
+      "lines": 15,
+      "sha256": "83e0f035c5abea238d3f2c3968afbd511ed022b527b7c9cb60a9434cc34ff987"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validators/base.py",
+      "bytes": 34369,
+      "lines": 887,
+      "sha256": "6129ec6a4fc0a4aa78af1434f9baa73994cc24d3261afda4e680e00f215cbf3b"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validators/docx.py",
+      "bytes": 19745,
+      "lines": 519,
+      "sha256": "7b0f1a23c9cd9ff07187d9d7d359f62317f94a5e389d63fd19766e1688a195a2"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validators/pptx.py",
+      "bytes": 21058,
+      "lines": 549,
+      "sha256": "3a100ec5f00ae183bca67f4aaa8e3e902caee60254e141b8120f32c53d85cee7"
+    },
+    {
+      "path": "01_anthropics_official_skills/pptx/scripts/office/validators/redlining.py",
+      "bytes": 18983,
+      "lines": 478,
+      "sha256": "f9c4455adc32b3890d5203d6c25d868d98d7e970bbad76b686f502950737599a"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/SKILL.md",
+      "bytes": 33168,
+      "lines": 485,
+      "sha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/agents/analyzer.md",
+      "bytes": 10376,
+      "lines": 274,
+      "sha256": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/agents/comparator.md",
+      "bytes": 7287,
+      "lines": 202,
+      "sha256": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/agents/grader.md",
+      "bytes": 9049,
+      "lines": 223,
+      "sha256": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/assets/eval_review.html",
+      "bytes": 7058,
+      "lines": 146,
+      "sha256": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/eval-viewer/generate_review.py",
+      "bytes": 16365,
+      "lines": 471,
+      "sha256": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/eval-viewer/viewer.html",
+      "bytes": 44998,
+      "lines": 1325,
+      "sha256": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/references/schemas.md",
+      "bytes": 12061,
+      "lines": 430,
+      "sha256": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/__init__.py",
+      "bytes": 0,
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/aggregate_benchmark.py",
+      "bytes": 14386,
+      "lines": 401,
+      "sha256": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/generate_report.py",
+      "bytes": 12847,
+      "lines": 326,
+      "sha256": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/improve_description.py",
+      "bytes": 11116,
+      "lines": 247,
+      "sha256": "87d864570220b699fac52da309d2d6efdb060647bfebc74f768128e646accf80"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/package_skill.py",
+      "bytes": 4234,
+      "lines": 136,
+      "sha256": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/quick_validate.py",
+      "bytes": 3972,
+      "lines": 103,
+      "sha256": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/run_eval.py",
+      "bytes": 11464,
+      "lines": 310,
+      "sha256": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/run_loop.py",
+      "bytes": 13605,
+      "lines": 328,
+      "sha256": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21"
+    },
+    {
+      "path": "01_anthropics_official_skills/skill-creator/scripts/utils.py",
+      "bytes": 1661,
+      "lines": 47,
+      "sha256": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/SKILL.md",
+      "bytes": 7841,
+      "lines": 254,
+      "sha256": "2efca615ce55a3edd8fc05c779068a8085816617991987e446606403cd3abb22"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/requirements.txt",
+      "bytes": 66,
+      "lines": 4,
+      "sha256": "edc7108a0c6b56183566c71ee96830f6dc791e3b41952112d9cb56b33a6bd757"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/core/easing.py",
+      "bytes": 6265,
+      "lines": 234,
+      "sha256": "60bc943449802541f0f0881a874faa7ef408aaaf0b758fde756664ada7740452"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/core/frame_composer.py",
+      "bytes": 4548,
+      "lines": 176,
+      "sha256": "a127ea8f2a58893ea10a5c7b5cab4e2010af6515adc538676eb0cc14f5a03985"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/core/gif_builder.py",
+      "bytes": 9847,
+      "lines": 269,
+      "sha256": "b6f50d738c491ee0438a2e86e897f71cdab9792494ba4605f140befb0bddbf89"
+    },
+    {
+      "path": "01_anthropics_official_skills/slack-gif-creator/core/validators.py",
+      "bytes": 3785,
+      "lines": 136,
+      "sha256": "56bd19e3aae05f8387d78ec8185d6098b3dc909d1fa041211753da37212528a3"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/SKILL.md",
+      "bytes": 3124,
+      "lines": 59,
+      "sha256": "c35893e221e28895c52143cc11bf30e41a44817796b39d4b15727dadc9796552"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/theme-showcase.pdf",
+      "bytes": 124310,
+      "lines": 888,
+      "sha256": "3e126eca9fe99088051f7cb984c97cedb31c7d9e09ce0ba5d61bd01e70a0d253"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/arctic-frost.md",
+      "bytes": 544,
+      "lines": 19,
+      "sha256": "868a75a8fb5b2a61d0f0ab87c437fe632d3cbab6371c418f06aa2816ac109ae0"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/botanical-garden.md",
+      "bytes": 519,
+      "lines": 19,
+      "sha256": "222cb8e7496abc9b75b29453c809fb9839e7e4b01fa45deecdd896b38d087765"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/desert-rose.md",
+      "bytes": 496,
+      "lines": 19,
+      "sha256": "bd065b8629be3b64655183927e248e3d892a27b8d184b009cfba89c96102744f"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/forest-canopy.md",
+      "bytes": 506,
+      "lines": 19,
+      "sha256": "ecb722efa24688e808b5bf323c334ca2349e989cfddd72ce8400ce5d4c4bd3e7"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/golden-hour.md",
+      "bytes": 528,
+      "lines": 19,
+      "sha256": "3444a00df971d3c2f06b665e21a2e9eb5d7d7d6f6281f2758773b8345776a139"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/midnight-galaxy.md",
+      "bytes": 513,
+      "lines": 19,
+      "sha256": "0e134c4c0324df41e34ac314269aa6829cd378cf3c304b31858d0cd158d2f944"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/modern-minimalist.md",
+      "bytes": 549,
+      "lines": 19,
+      "sha256": "b8bc572b75948d4df69c401af703b9262ed6820a3ceb270da30a529e92763614"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/ocean-depths.md",
+      "bytes": 555,
+      "lines": 19,
+      "sha256": "a7ad8eec85341dbfcb2665da827a4b6a4baee08ab3335ac02421f18e6b46b2e2"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/sunset-boulevard.md",
+      "bytes": 558,
+      "lines": 19,
+      "sha256": "658af11ab04be4923692571081ffb42a428141ae537703117b9236d9f8ee22a3"
+    },
+    {
+      "path": "01_anthropics_official_skills/theme-factory/themes/tech-innovation.md",
+      "bytes": 547,
+      "lines": 19,
+      "sha256": "183648163026dd5eeba3df5effa335b55ba333c3ee1fe215278605e55f40a52a"
+    },
+    {
+      "path": "01_anthropics_official_skills/web-artifacts-builder/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/web-artifacts-builder/SKILL.md",
+      "bytes": 3087,
+      "lines": 74,
+      "sha256": "81c5002c6643b0de7b8710b00e7a9038daa6fb9b68d59870ee6adb12da8d10f8"
+    },
+    {
+      "path": "01_anthropics_official_skills/web-artifacts-builder/scripts/bundle-artifact.sh",
+      "bytes": 1517,
+      "lines": 54,
+      "sha256": "abf0e480bf6585b56fab8526a407dfb7dc740812bddd70c636e1e8f3df5f9618"
+    },
+    {
+      "path": "01_anthropics_official_skills/web-artifacts-builder/scripts/init-artifact.sh",
+      "bytes": 9924,
+      "lines": 322,
+      "sha256": "355e5dd4382aaaee91f01f1627eaeab30b2676ffa8d9b3ec328a1ae450ebccaa"
+    },
+    {
+      "path": "01_anthropics_official_skills/web-artifacts-builder/scripts/shadcn-components.tar.gz",
+      "bytes": 19967,
+      "lines": 71,
+      "sha256": "1296f069e825de7933de7e8ac63672495cacce3f88f2dc45554dbcddbcbca60f"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/LICENSE.txt",
+      "bytes": 11345,
+      "lines": 202,
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/SKILL.md",
+      "bytes": 3913,
+      "lines": 96,
+      "sha256": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/examples/console_logging.py",
+      "bytes": 1027,
+      "lines": 35,
+      "sha256": "ea46877289acb82da7e7ce59d0bc37c8977cd57e2a006d0c88d7a1c625bf95da"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/examples/element_discovery.py",
+      "bytes": 1463,
+      "lines": 40,
+      "sha256": "d63c89604a22f8845d724e95dda45db49b1bf57c25ce0a83afbb7b8da3d402f0"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/examples/static_html_automation.py",
+      "bytes": 953,
+      "lines": 33,
+      "sha256": "9d533aafb875ee3ab8b8ebf8f5b9003ac8d999da3d09b285cce252e623140064"
+    },
+    {
+      "path": "01_anthropics_official_skills/webapp-testing/scripts/with_server.py",
+      "bytes": 3693,
+      "lines": 106,
+      "sha256": "b0dcf4918935b795f4eda9821579b9902119235ff4447f687a30286e7d0925fd"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/LICENSE.txt",
+      "bytes": 11357,
+      "lines": 202,
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/SKILL.md",
+      "bytes": 9770,
+      "lines": 104,
+      "sha256": "f32b1c2b5d5d31e02964df110d6489613d9345f86830c118cfe24159d8448ce6"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/recalc.py",
+      "bytes": 34340,
+      "lines": 903,
+      "sha256": "7265aa4a41f5273596ee5694ce8a4d881c18adafb6203fece769107d08403263"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/soffice.py",
+      "bytes": 9100,
+      "lines": 276,
+      "sha256": "bcfa227707681ffbecc0f0af5c4e7155407b3baaf5cec5cdd41387c97cdd40c7"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validate.py",
+      "bytes": 7808,
+      "lines": 216,
+      "sha256": "8c10ec61d8e880877515019e1fe8fab9a1f590c9e50ed0631418e960aca1e313"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/helpers/__init__.py",
+      "bytes": 4042,
+      "lines": 129,
+      "sha256": "5c456ffc522900399b5f9402f92d66aaf2d9f87655d236c69f60bf07f4fd7c9b"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/helpers/pptx_chart.py",
+      "bytes": 9938,
+      "lines": 283,
+      "sha256": "aed734e9a6c743ae712fc228c868bf0f6abcfb6a53549eefb19081b15d240fda"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/helpers/pptx_slide.py",
+      "bytes": 3352,
+      "lines": 100,
+      "sha256": "06fe06953bf038826b85ecc142f4dc9299a37fa0c4e4dd9b00b10486df33524d"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/helpers/pptx_theme.py",
+      "bytes": 3510,
+      "lines": 114,
+      "sha256": "ebb54c56e9c13807f5f98f0cae22d47cdd0162da8525eaa664e3f2c8c8d6bb03"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+      "bytes": 74984,
+      "lines": 1499,
+      "sha256": "41b93bd8857cc68b1e43be2806a872d736a9bdd6566900062d8fdb57d7bbb354"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+      "bytes": 6956,
+      "lines": 146,
+      "sha256": "3fd0586f2637b98bb9886f0e0b67d89e1cc987c2d158cc7deb5f5b9890ced412"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+      "bytes": 51302,
+      "lines": 1085,
+      "sha256": "29b254ee0d10414a8504b5a08149c7baec35a60d5ff607d6b3f492aa36815f40"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+      "bytes": 624,
+      "lines": 11,
+      "sha256": "5cb76dabd8b97d1e9308a1700b90c20139be4d50792d21a7f09789f5cccd6026"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+      "bytes": 152039,
+      "lines": 3081,
+      "sha256": "5375417f0f5394b8dd1a7035b9679151f19a6b65df309dec10cfb4a420cb00e9"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+      "bytes": 1231,
+      "lines": 23,
+      "sha256": "5d389d42befbebd91945d620242347caecd3367f9a3a7cf8d97949507ae1f53c"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+      "bytes": 8862,
+      "lines": 185,
+      "sha256": "b4532b6d258832953fbb3ee4c711f4fe25d3faf46a10644b2505f17010d01e88"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+      "bytes": 14795,
+      "lines": 287,
+      "sha256": "bdad416b096b61d37b71603b2c949484f9070c830bdaeba93bf35e15c8900614"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+      "bytes": 83612,
+      "lines": 1676,
+      "sha256": "d173c3e5d61e42e2e3a97226c632fd2ab7cc481fc4e492365b87024ab546daff"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+      "bytes": 1269,
+      "lines": 28,
+      "sha256": "3c6709101c6aaa82888df5d8795c33f9e857196790eb320d9194e64be2b6bdd8"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+      "bytes": 7328,
+      "lines": 144,
+      "sha256": "0b364451dc36a48dd6dae0f3b6ada05fd9b71e5208211f8ee5537d7e51a587e2"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+      "bytes": 6382,
+      "lines": 174,
+      "sha256": "e2abacbb9a55ce1365f8961bc1b1395bbc811e512b111000d8c333f98458dece"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+      "bytes": 1248,
+      "lines": 25,
+      "sha256": "0ef4bb354ff44b923564c4ddbdda5987919d220225129ec94614a618ceafc281"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+      "bytes": 880,
+      "lines": 18,
+      "sha256": "0d103b99a4a8652f8871552a69d42d2a3760ac6a5e3ef02d979c4273257ff6a4"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+      "bytes": 2608,
+      "lines": 59,
+      "sha256": "9c085407751b9061c1f996f6c39ce58451be22a8d334f09175f0e89e42736285"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+      "bytes": 3507,
+      "lines": 56,
+      "sha256": "bc92e36ccd233722d4c5869bec71ddc7b12e2df56059942cce5a39065cc9c368"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+      "bytes": 7507,
+      "lines": 195,
+      "sha256": "7b5b7413e2c895b1e148e82e292a117d53c7ec65b0696c992edca57b61b4a74b"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+      "bytes": 23313,
+      "lines": 582,
+      "sha256": "3213ef1631606250f5010b42cad7ef716f7c59426367798e33c374c0ec391d3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+      "bytes": 1367,
+      "lines": 25,
+      "sha256": "12264f3c03d738311cd9237d212f1c07479e70f0cbe1ae725d29b36539aef637"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+      "bytes": 242277,
+      "lines": 4439,
+      "sha256": "beffeed56945c22a77440122c8bdc426f3fcbe7f3b12ea0976c770d1f8d54578"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+      "bytes": 26148,
+      "lines": 570,
+      "sha256": "f5ee623b08b6a66935e5aced2f5d8ad0fc71bf9e8e833cd490150c0fa94b8763"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+      "bytes": 25279,
+      "lines": 509,
+      "sha256": "585bedc1313b40888dcc544cb74cd939a105ee674f3b1d3aa1cc6d34f70ff155"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+      "bytes": 535,
+      "lines": 12,
+      "sha256": "133c9f64a5c5d573b78d0a474122b22506d8eadb5e063f67cdbbb8fa2f161d0e"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+      "bytes": 5712,
+      "lines": 108,
+      "sha256": "6bdeb169c3717eb01108853bd9fc5a3750fb1fa5b82abbdd854d49855a40f519"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+      "bytes": 4010,
+      "lines": 96,
+      "sha256": "475dcae1e7d1ea46232db6f8481040c15e53a52a3c256831d3df204212b0e831"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+      "bytes": 171367,
+      "lines": 3646,
+      "sha256": "c2dd9f61f892deae6acd8d20771ea79b12018af25f3bf8d06639c8542d218cfd"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+      "bytes": 4646,
+      "lines": 116,
+      "sha256": "a539aa2fb154fa50e0f5cc97e6ad7cbc66f8ec3e3746f61ec6a8b0d5d15ecdf2"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+      "bytes": 1963,
+      "lines": 42,
+      "sha256": "9e0b7209fc69ab11987900404540969976000c5ebe4d4f58c43dc3842886bf3a"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+      "bytes": 2515,
+      "lines": 50,
+      "sha256": "451958454e8588dfc7cd945981ada142ca06ff3307937f5700df059c2b307fa8"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+      "bytes": 2856,
+      "lines": 49,
+      "sha256": "6de111e11403f7cd49027400755bae0ea1cabef2815f09bd40a24f0017613b24"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+      "bytes": 1344,
+      "lines": 33,
+      "sha256": "f565adfef5a502044abc3a9153e157edc25af78304d335994afb958874b15e26"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/mce/mc.xsd",
+      "bytes": 3127,
+      "lines": 75,
+      "sha256": "3a37e461ecf5a8670fdec34029703401f8728ab9c96ec1739a6ae58d55212413"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-2010.xsd",
+      "bytes": 26549,
+      "lines": 560,
+      "sha256": "568b26ee156cb9549aa439ca2158965f77b7c1602b7e0316f40ac6cf586e35f2"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-2012.xsd",
+      "bytes": 3745,
+      "lines": 67,
+      "sha256": "0fa75578a000439a7988ba0c59fdc69f774bbd416cbacc14d07125b3f686cb74"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-2018.xsd",
+      "bytes": 901,
+      "lines": 14,
+      "sha256": "be0ff793a22dd31384650c3a4da14c2fa8062751c2e97b0e5ee852bda13c60ad"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+      "bytes": 1778,
+      "lines": 20,
+      "sha256": "fddc2b880cabb9005aebbc7e783e53c19fec1c03df7d0e2f2076a33a0fdfd081"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+      "bytes": 1002,
+      "lines": 13,
+      "sha256": "127ca209fa73d7cb708449cb355c871867948a96e4a74f7bf5811ef62d17991d"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+      "bytes": 600,
+      "lines": 4,
+      "sha256": "842e7163409c8d74f4d7088a8bc99500d80bc75332681a0980055b08f374a604"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+      "bytes": 745,
+      "lines": 8,
+      "sha256": "16f6f8072249f431370723c2cd8974672e0d9c897e00e97dd918079df934871b"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validators/__init__.py",
+      "bytes": 336,
+      "lines": 15,
+      "sha256": "83e0f035c5abea238d3f2c3968afbd511ed022b527b7c9cb60a9434cc34ff987"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validators/base.py",
+      "bytes": 34369,
+      "lines": 887,
+      "sha256": "6129ec6a4fc0a4aa78af1434f9baa73994cc24d3261afda4e680e00f215cbf3b"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validators/docx.py",
+      "bytes": 19745,
+      "lines": 519,
+      "sha256": "7b0f1a23c9cd9ff07187d9d7d359f62317f94a5e389d63fd19766e1688a195a2"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validators/pptx.py",
+      "bytes": 21058,
+      "lines": 549,
+      "sha256": "3a100ec5f00ae183bca67f4aaa8e3e902caee60254e141b8120f32c53d85cee7"
+    },
+    {
+      "path": "01_anthropics_official_skills/xlsx/scripts/office/validators/redlining.py",
+      "bytes": 18983,
+      "lines": 478,
+      "sha256": "f9c4455adc32b3890d5203d6c25d868d98d7e970bbad76b686f502950737599a"
+    },
+    {
+      "path": "02_agency_agents_personas/divisions.json",
+      "bytes": 2514,
+      "lines": 23,
+      "sha256": "a85d4ceeabe671051559e7703dfca074bf7a259ba26b61fb5e14ed36d54ae051"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-brand-guardian.md",
+      "bytes": 11641,
+      "lines": 322,
+      "sha256": "d1d5c78af85d4d35be94b93d5c011d17e3cf5dcb69b2037a3ebf3059803b893e"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-image-prompt-engineer.md",
+      "bytes": 11160,
+      "lines": 236,
+      "sha256": "63a564d01dc5812c494cd8aa034ce1217031d8fe8b3eca1323316879769ff13f"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-inclusive-visuals-specialist.md",
+      "bytes": 6763,
+      "lines": 73,
+      "sha256": "6529724ca198344f31209c0e685a7460c087483b5a4b3a965798e09df70dde07"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-persona-walkthrough.md",
+      "bytes": 16759,
+      "lines": 272,
+      "sha256": "8def8c73df7f79a61704e7353b85b915afa31c4a9fa1100fbb9220c50d6a1c55"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-ui-designer.md",
+      "bytes": 13436,
+      "lines": 386,
+      "sha256": "4dc51255ffcb47e2bf4289a7d49a7cc224238af759f9e6e3c56771c698575d6d"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-ui-finish-gate-reviewer.md",
+      "bytes": 8988,
+      "lines": 217,
+      "sha256": "cc2cc803782a791797b63530bfd46ee676148f05bc1db7c614c8860f9798bc86"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-ux-architect.md",
+      "bytes": 16260,
+      "lines": 482,
+      "sha256": "7d373da3fd204db3c830f28e03cdf85bcacd3858e38fbdad58489953f811c296"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-ux-researcher.md",
+      "bytes": 13030,
+      "lines": 329,
+      "sha256": "25f59c4333df2d0f1170ff7a1b11ea8415fd3d0ef80c3e0985209aeb4018680f"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-visual-storyteller.md",
+      "bytes": 7416,
+      "lines": 149,
+      "sha256": "f4950c9d65b5d105ec48ebce4b7621154e3bf89871dbbf07af245476930eb4dd"
+    },
+    {
+      "path": "02_agency_agents_personas/design/design-whimsy-injector.md",
+      "bytes": 16427,
+      "lines": 460,
+      "sha256": "b1cc9abd37723ff12b508717e4f7f9621aafd8c20014894d93a8d6e2bc5657a4"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-ai-data-remediation-engineer.md",
+      "bytes": 10691,
+      "lines": 211,
+      "sha256": "5aa193052f15283493eeb9749bc346d09c02407f26760fe0d08f8bd9242ede79"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-ai-engineer.md",
+      "bytes": 7383,
+      "lines": 146,
+      "sha256": "f25a69aad25acd35dd1d62e33d5a814f4a26b075d90f968b4d778452e53924d8"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-api-platform-engineer.md",
+      "bytes": 14500,
+      "lines": 181,
+      "sha256": "21076c3abab2c93f459ff7e2becc83287a200d966c40fc1db868fcbcf36067dd"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-ats-validator-architect.md",
+      "bytes": 28144,
+      "lines": 383,
+      "sha256": "742c17d1885f4345c366a4050e12e3b61711f38dc576a24fe365ed3ee7f266d5"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-autonomous-optimization-architect.md",
+      "bytes": 8839,
+      "lines": 121,
+      "sha256": "76a8df3dfd4af54d0830daef736873209bd62cb155b9ed0f3c3a6aec369a9519"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-backend-architect.md",
+      "bytes": 11435,
+      "lines": 255,
+      "sha256": "ac717bde4848d7663fff8a3c7edc711fd119256de6a7ce38c036619372f42c99"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-china-network-engineer.md",
+      "bytes": 17646,
+      "lines": 252,
+      "sha256": "d375db645d1192fb8be3dd4e40de005d55edd33557abf909a4a4135257e03788"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-cms-developer.md",
+      "bytes": 19520,
+      "lines": 536,
+      "sha256": "e072ac6e3d485483818880846b145c85b5224045a68c45dddc4e087940d57ba4"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-code-reviewer.md",
+      "bytes": 3076,
+      "lines": 76,
+      "sha256": "7509fcc3ea1dda46511b2801996305bf3d4a125576f9655ff0b63df25602f446"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-codebase-onboarding-engineer.md",
+      "bytes": 9569,
+      "lines": 173,
+      "sha256": "07aa548b45887c3ad768efad5fdbf6e57bea639df4f1b74c7e383142f454e2a1"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-data-engineer.md",
+      "bytes": 18551,
+      "lines": 349,
+      "sha256": "777c902efa52e796d227dd0cfb332e129273c084f7205379a1c7bcda68002472"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-data-visualization-engineer.md",
+      "bytes": 13797,
+      "lines": 151,
+      "sha256": "0f5b5391f82aa98ca489768d31024f7a5f840a8ee5fe968fe1499ed538948ce5"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-database-optimizer.md",
+      "bytes": 6215,
+      "lines": 188,
+      "sha256": "6d773003e3b9251068ab537be94d6827c118201e0e17c11d789cb29dc245bf99"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-database-reliability-engineer.md",
+      "bytes": 16395,
+      "lines": 201,
+      "sha256": "0096dc3c1b31e33814c509fda43853cc77cef6252bb94da527b833be13b53a5a"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-desktop-app-engineer.md",
+      "bytes": 14777,
+      "lines": 209,
+      "sha256": "aadae54475480341ee9db1017bc19778596f80ff25092970dabc7fba75b1d951"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-developer-tooling-engineer.md",
+      "bytes": 13041,
+      "lines": 153,
+      "sha256": "948d44fddfa47e2363236de150f9dc948edd79599609a92af8bf6b72b5b9b609"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-devops-automator.md",
+      "bytes": 13738,
+      "lines": 385,
+      "sha256": "1b67b3bdc6a076d42281e38bb811250eb04415bb241cdd4c3a7df38ecd20e88b"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-drupal-performance.md",
+      "bytes": 23523,
+      "lines": 347,
+      "sha256": "544942f460b76e15c2cd6e9a820b4048e3344186db3a7123d99adfbdf6c41d09"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-drupal-shopping-cart.md",
+      "bytes": 21461,
+      "lines": 360,
+      "sha256": "cbd06e6d27363029dbbc6638297d47608c78d3b93b3e4a6ff52d16757199ee50"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-electrical-engineer.md",
+      "bytes": 33332,
+      "lines": 575,
+      "sha256": "e62de4808d0209db518f4bde393af88dd5e3d0d74b053d14de91c2b80d2638c0"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-email-intelligence-engineer.md",
+      "bytes": 18341,
+      "lines": 390,
+      "sha256": "70955ab959caccfd769963e9151a645a425e31d40777d00bf31e20fa0d7f8d03"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-embedded-firmware-engineer.md",
+      "bytes": 7654,
+      "lines": 196,
+      "sha256": "f01fc2e817071c4ae10f14b49f0c4866a802f5bf3d8901d3ad0ab68cf61f2743"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-feishu-integration-developer.md",
+      "bytes": 21580,
+      "lines": 606,
+      "sha256": "22f4c40c0d2681918b1bd5884edfca2a3556325054d1b8e912f6524111e2e4fb"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-filament-optimization-specialist.md",
+      "bytes": 14269,
+      "lines": 283,
+      "sha256": "428f6a6be2318a123678b2838600e33c5e193afecbe8f828fa97c779eaf85fbf"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-finops-engineer.md",
+      "bytes": 13261,
+      "lines": 164,
+      "sha256": "2971ce273c45e96002127fd8456cfcb3dce761595aab5b6428cd1f5036dc9cd1"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-frontend-developer.md",
+      "bytes": 11040,
+      "lines": 257,
+      "sha256": "1ae4cc10b2e0163bd3ed921ad54080b865cd02e591becd8919b64b73fab06dad"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-gaussdb-expert.md",
+      "bytes": 15613,
+      "lines": 334,
+      "sha256": "db3e2fbd178e4df20885c5d5f27b0a552061c7736374f9977807fc374ff99e07"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-git-workflow-master.md",
+      "bytes": 3881,
+      "lines": 98,
+      "sha256": "d3f7718f852e03d5cd83a97340550a5b82694547c4b9b22c9e77bb40c1467ba3"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-i18n-engineer.md",
+      "bytes": 14113,
+      "lines": 214,
+      "sha256": "4239debe839a7ba60ad1339bb5527e816dda87a6ff3e1fa4caddd838b56917fc"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-identity-access-engineer.md",
+      "bytes": 16138,
+      "lines": 217,
+      "sha256": "803b047d1b838fba2687a95bf2b8528cee86cf744130037f8380b1cc172c3f8e"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-incident-response-commander.md",
+      "bytes": 21143,
+      "lines": 444,
+      "sha256": "89b9c1294879dd24804c8b6d7805fde193e868a3c930a1ac515a36d527b8522a"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-iot-fleet-engineer.md",
+      "bytes": 13587,
+      "lines": 148,
+      "sha256": "90cfb3b713d0cd11e9529f6158ed72ac99fe1d945a838d9d740009a51e9d3421"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-it-service-manager.md",
+      "bytes": 27663,
+      "lines": 561,
+      "sha256": "26c23ef51726da346dcdf5b9eb004e7c03cfae4ad6a995ed46a26ec6cd5520e6"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-knowledge-graph-engineer.md",
+      "bytes": 23562,
+      "lines": 372,
+      "sha256": "5c01d27d814425a6f72e55bbf14011e8bbdbd088ec2e7854675d8c39dd3f8185"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-llm-post-training-engineer.md",
+      "bytes": 10947,
+      "lines": 166,
+      "sha256": "aa697dc1c0eb402551b9f6764a89938c8787c9628760b74065d3e383299a980a"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-minimal-change-engineer.md",
+      "bytes": 11231,
+      "lines": 207,
+      "sha256": "9999cc74e7b3936af892ef2c2793d105bb92f6c47789aa23db6df92bf68b45e5"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-mobile-app-builder.md",
+      "bytes": 17035,
+      "lines": 493,
+      "sha256": "1a3e043f806b0b7c071d58b2ee3ab3c58c8342e2727c1ca9e6e5175f86986caf"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-mobile-release-engineer.md",
+      "bytes": 13705,
+      "lines": 164,
+      "sha256": "3fae6975de4c2038a7fb0c4a8e366b8f87e8f3bb89e0a64ce4d4bcfdead15617"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-multi-agent-systems-architect.md",
+      "bytes": 29301,
+      "lines": 600,
+      "sha256": "d93dd20fef67bf85a537ba0f869fad1a17d0e589f20899d1bbe1f095a7bcb91b"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-network-engineer.md",
+      "bytes": 13825,
+      "lines": 245,
+      "sha256": "1400d7393e47b05c629d2902b2114911d6e55f34a703c2b77da24bd5f2b31576"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-orgscript-engineer.md",
+      "bytes": 5611,
+      "lines": 113,
+      "sha256": "f8426369743ff0086e32cb9facfc3935488d99a1c2de92961917f9b27d401427"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-payments-billing-engineer.md",
+      "bytes": 15004,
+      "lines": 228,
+      "sha256": "ce47609b6805087e2f731ea62f69edffaf61e1968049042e2ca3d225d4392b40"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-pdf-engine-architect.md",
+      "bytes": 34243,
+      "lines": 696,
+      "sha256": "367dd859aeda52d2a3de6ffd33b8c38eac625e884a2f71574a73d38350f8f457"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-platform-engineer.md",
+      "bytes": 11688,
+      "lines": 270,
+      "sha256": "0736a0c476ff46e16e33b36ec143352107b82d69b3501bcdaefe22feee252652"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-privacy-engineer.md",
+      "bytes": 14229,
+      "lines": 152,
+      "sha256": "0d00d2f0d3008a55000eb01f13adac54f40daf471d240a7c073477efe92376a6"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-prompt-engineer.md",
+      "bytes": 9861,
+      "lines": 209,
+      "sha256": "e94ccdc64a6a4fe064550dee7242778632696813d98dc1d6053f64d3794794d3"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-rag-pipeline-engineer.md",
+      "bytes": 18962,
+      "lines": 450,
+      "sha256": "d9b75715fc6eb5712054658727a6f9082d4be2579766d2b42a6060595caa9a96"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-rapid-prototyper.md",
+      "bytes": 15804,
+      "lines": 466,
+      "sha256": "247ea109c45d9ed372b85b5a436c52a801fee234740e3caa114d72d0e1f05f80"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-realtime-collaboration-engineer.md",
+      "bytes": 15090,
+      "lines": 200,
+      "sha256": "79b1fa3544a7f768ca3702b8b41f2969c9ea14ddb73c7fe349fc652219f91a75"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-rust-refactoring-specialist.md",
+      "bytes": 14863,
+      "lines": 313,
+      "sha256": "06ca53dbd12694560bf01feb94cbbd8c428e4abe6ac92c8a72eeb277ce179a78"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-search-relevance-engineer.md",
+      "bytes": 15023,
+      "lines": 237,
+      "sha256": "5562f37cbb561dce6dac47b1dd4e75cb7bde6c0c48045198db346ba7d6d790af"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-section-508-specialist.md",
+      "bytes": 26617,
+      "lines": 339,
+      "sha256": "d4fb7139c69e270fd626cfc1410b7412bd864d010903b459f9eb90c8359809f9"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-senior-developer.md",
+      "bytes": 6252,
+      "lines": 176,
+      "sha256": "63b8da6c12b95f54bbdbcd0666abeb9519a98b35395233e1b1d8e5c102c82599"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-servicenow-developer-mentor.md",
+      "bytes": 11772,
+      "lines": 180,
+      "sha256": "0a35abb24b63834dc910f7813e7a657cfb06c93f6760f0204da75aabd6b722bd"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-software-architect.md",
+      "bytes": 6485,
+      "lines": 112,
+      "sha256": "b85121691776147bacde26673e68fbbacd6a7f0816d1ca8e203c264d25ce1d30"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-solidity-smart-contract-engineer.md",
+      "bytes": 21719,
+      "lines": 522,
+      "sha256": "9e6f96fb29cc71faf2638bce3a5aa06ff15b4c674ca4ec039e5e4515a7844839"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-sre.md",
+      "bytes": 3882,
+      "lines": 90,
+      "sha256": "85b305e495506913f50c7cb28de42444a85fbc4898cd3ad4e1dc9b358b4ab5e8"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-technical-writer.md",
+      "bytes": 14214,
+      "lines": 393,
+      "sha256": "bf5c809977e10904b988ab8b218853ce8dfa38b2cbd89a7d2cfadba44ac25761"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-universal-document-compiler.md",
+      "bytes": 20060,
+      "lines": 370,
+      "sha256": "70c47b2a1edfa10dd3b3206d22516565a4d3e134f6ca92e086770e2d088ea6f0"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-uswds-developer.md",
+      "bytes": 24213,
+      "lines": 340,
+      "sha256": "d3c46e2340d50a97cec536edd985abd2fe6b5f012c3c02e5e9187cd061b27ca7"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-video-streaming-engineer.md",
+      "bytes": 12918,
+      "lines": 151,
+      "sha256": "7abdbe217f43c41c7d0563d28683d44855a0e8c8871e7874ecd3deb31a543df0"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-voice-ai-integration-engineer.md",
+      "bytes": 28772,
+      "lines": 584,
+      "sha256": "c6f3cc0829fc2b6c989f2aed10929e59365ec3bae89089205e27acbc57c17c7c"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-webassembly-engineer.md",
+      "bytes": 12992,
+      "lines": 153,
+      "sha256": "746f387160d62d9d13a78c75c20a7f14607fe45cec1fd20f48848e89c5429ed4"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-wechat-mini-program-developer.md",
+      "bytes": 15955,
+      "lines": 356,
+      "sha256": "322e068fb168e5ce95b1f66c132de4c1e5c794a114b342d01d997d785e865f43"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-wordpress-performance.md",
+      "bytes": 24292,
+      "lines": 346,
+      "sha256": "58ed429ace903aac3a2c9e190ecae5b61966b7330e9e51ea66aa03eb4112854f"
+    },
+    {
+      "path": "02_agency_agents_personas/engineering/engineering-wordpress-shopping-cart.md",
+      "bytes": 22177,
+      "lines": 346,
+      "sha256": "a2ef45cebe1cf03175b16ef48a2a01acdd2b7e8eda289114f568ebe0f1ae4112"
+    },
+    {
+      "path": "02_agency_agents_personas/finance/finance-bookkeeper-controller.md",
+      "bytes": 15247,
+      "lines": 260,
+      "sha256": "5510a24274d8f7897ca3f4df2c3318262138a2c82827b37dd2489dcfca8de75a"
+    },
+    {
+      "path": "02_agency_agents_personas/finance/finance-financial-analyst.md",
+      "bytes": 13448,
+      "lines": 234,
+      "sha256": "3547907cd52e6108a4c666fd576d5e42715ac337586a3958a722deee4c1f77bb"
+    },
+    {
+      "path": "02_agency_agents_personas/finance/finance-fpa-analyst.md",
+      "bytes": 16614,
+      "lines": 263,
+      "sha256": "5fa9137c80e0b91fbe62815e7981d7b6a2ca5bafe43013c56d1b847a3c963141"
+    },
+    {
+      "path": "02_agency_agents_personas/finance/finance-investment-researcher.md",
+      "bytes": 15678,
+      "lines": 272,
+      "sha256": "4851318dcd82fdfd68403656450761b439a01c6071b8755e49dbd215149bc2c1"
+    },
+    {
+      "path": "02_agency_agents_personas/finance/finance-tax-strategist.md",
+      "bytes": 13731,
+      "lines": 239,
+      "sha256": "37ea1a246e1290f473ef59abe1bba9ecc4f346c9867522fefcc11d37cd0265ab"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-aeo-foundations.md",
+      "bytes": 15548,
+      "lines": 264,
+      "sha256": "b7ef7e1188c924833974bab5cc57f166a7eb6b681d63ccd22eb05c91c25a3c8b"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-agentic-search-optimizer.md",
+      "bytes": 15558,
+      "lines": 279,
+      "sha256": "de143d3db98f6532dcd9d21ae363d1c2fb508dc806c1f7325bba59e8fbd24184"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-ai-citation-strategist.md",
+      "bytes": 9414,
+      "lines": 172,
+      "sha256": "1d23c94aced61beb0e7a3151ad4c14ccb8205a95e48d4bc6c0fda6739c2e356d"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-app-store-optimizer.md",
+      "bytes": 13087,
+      "lines": 321,
+      "sha256": "1987be72f8fd43ca694f9145cb0dbe37eabc5b1f04439425d7b59185db9263c9"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-baidu-seo-specialist.md",
+      "bytes": 12968,
+      "lines": 226,
+      "sha256": "895a5e8440066ad0b8fa6fe79a91c7750d246a233b01bf7932584b74e9c5becb"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-bilibili-content-strategist.md",
+      "bytes": 11647,
+      "lines": 199,
+      "sha256": "4268a7b51025967fbb4a80c0aeb5e4a80abaad9344f5dec164a8d1fb6ea62d06"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-book-co-author.md",
+      "bytes": 5083,
+      "lines": 110,
+      "sha256": "09ea2fb4770180b072c92100be84b808367c40ef8a3f2119cfd059206aa4c717"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-carousel-growth-engine.md",
+      "bytes": 15733,
+      "lines": 204,
+      "sha256": "42a36a3ca0a11b6adc57eb3277dda7628a4db80169b5ea69c5262b7e85d7c06f"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-china-ecommerce-operator.md",
+      "bytes": 16791,
+      "lines": 283,
+      "sha256": "aa6743c68cce9dd00fd31751e9e3c2bea3987857cad332c68c7f68e683e98ba7"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-china-market-localization-strategist.md",
+      "bytes": 16913,
+      "lines": 283,
+      "sha256": "7f6351003b0d6525c7f44870078252d4616287953e33dcace3c8b7da2e9e4325"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-content-creator.md",
+      "bytes": 3140,
+      "lines": 54,
+      "sha256": "26ddce44f057068a3935c13d53becd3c57385fb47fcdcfdd891b80269070b3d5"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-cross-border-ecommerce.md",
+      "bytes": 17415,
+      "lines": 259,
+      "sha256": "073dba84e8159c763c073fcf16f14d57685611c50555a7cde346df85a25c6293"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-developer-community-builder.md",
+      "bytes": 13932,
+      "lines": 285,
+      "sha256": "f1d87ae21d21ee90f73cd94754b2a99e4af7fec64b23290fea59fb2b4637db11"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-douyin-strategist.md",
+      "bytes": 6954,
+      "lines": 149,
+      "sha256": "87e3b91287fc97ad0dedb2f407a49d551b52b8513c8c61d06c1a93d837a7ae46"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-email-strategist.md",
+      "bytes": 16198,
+      "lines": 249,
+      "sha256": "605c98066a4a1b5538d76476a11316247316ecb8da88beda68a21f2c8918f19b"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-global-podcast-strategist.md",
+      "bytes": 21857,
+      "lines": 206,
+      "sha256": "98416e338db666c5cc1d6bfd37c35daffa00532010623fdb4a92ed7dce76a7aa"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-growth-hacker.md",
+      "bytes": 3055,
+      "lines": 54,
+      "sha256": "6938b4fccaf4447e8c4b8fd071ce383a484cd3fb72583d87ac9835fa9741a7c7"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-instagram-curator.md",
+      "bytes": 6563,
+      "lines": 113,
+      "sha256": "bab95910975a95409eca10e28c44cf762cd46f9d8b7d551bcb347ef0f39e68fd"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-kuaishou-strategist.md",
+      "bytes": 13889,
+      "lines": 223,
+      "sha256": "d28742e505fa7bf6b39a88ccb6c2052ee5b4f569d17cebb81401fa8810a5ad49"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-linkedin-content-creator.md",
+      "bytes": 13361,
+      "lines": 214,
+      "sha256": "344896bff33acf0b5107bbba3c84ee1fb310f3652b44c7e53553c934c735ed4f"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-livestream-commerce-coach.md",
+      "bytes": 17166,
+      "lines": 305,
+      "sha256": "2d53e67cd70d825aeeddc9fd8b3b4a496887893b64df85c19903a2e7dbcb101f"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-multi-platform-publisher.md",
+      "bytes": 14660,
+      "lines": 217,
+      "sha256": "adfc6c481c0c1e1c03df21a17ccb5fb4d4c56a84193249abb27cb3d44e4f1f5e"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-podcast-strategist.md",
+      "bytes": 18038,
+      "lines": 277,
+      "sha256": "37fb126529afb4aa6f4409ca02307330d26b01f695dfbaade017d569169d936b"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-pr-communications-manager.md",
+      "bytes": 24692,
+      "lines": 473,
+      "sha256": "e255a9ebf00a0db0dc12e72fe2a647195ceacf3c0e63f38788e077966d69b800"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-private-domain-operator.md",
+      "bytes": 16196,
+      "lines": 308,
+      "sha256": "1170edb4c9534149b77cf9c3279c347b0136a578e44e70320f16f784e7fe5f3c"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-reddit-community-builder.md",
+      "bytes": 7498,
+      "lines": 123,
+      "sha256": "03bb723420800754bcbf23994cba707c45123f7eefe3e1964188cf92ecc2b7d7"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-seo-specialist.md",
+      "bytes": 21310,
+      "lines": 370,
+      "sha256": "cfa35eb3626230e1bc96ab3d434b42005b092fd4de8f517efe4a4b3f8fca60d0"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-short-video-editing-coach.md",
+      "bytes": 30779,
+      "lines": 412,
+      "sha256": "4634520ab5e84b26bb6658f4f8c0f737ed7dd0b5c631b9211482a4cf4037ccbf"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-social-media-strategist.md",
+      "bytes": 7414,
+      "lines": 125,
+      "sha256": "7c698a9280872666b2726b7ca305c6d4890fcb95a098c7c316beb9bf5fdb4274"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-tiktok-strategist.md",
+      "bytes": 7559,
+      "lines": 125,
+      "sha256": "980ca09138f63ec2d934e111af4fa59d76a483bb23220a5f862aa4e9f0c9124a"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-twitter-engager.md",
+      "bytes": 7760,
+      "lines": 126,
+      "sha256": "df58c7df04fb808d282d7a551c84e039bebdf4a17318a09b84fa285a118f54ab"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-video-optimization-specialist.md",
+      "bytes": 6245,
+      "lines": 119,
+      "sha256": "9cf82969be8898c96192617becf5e38e8de6b79650c362d840c53d2c10f2e8b9"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-wechat-official-account.md",
+      "bytes": 9832,
+      "lines": 145,
+      "sha256": "b74a42aff9b960cb2a221e362d2006865924ffece9e3514df81f1116322d2dce"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-weibo-strategist.md",
+      "bytes": 15697,
+      "lines": 240,
+      "sha256": "7a79f1ec3894ab2e32cb0b0b729b77fda176defaffdb59f4feae29e56a767917"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-x-twitter-intelligence-analyst.md",
+      "bytes": 9730,
+      "lines": 161,
+      "sha256": "e3dd504765e720f0dce0c5b68254ab65c440798edccfe6af6aafd0d3925d6dcb"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-xiaohongshu-specialist.md",
+      "bytes": 9609,
+      "lines": 138,
+      "sha256": "c0afe07b77d7795ff6c5ea928360f0e545d51a6df231d42d6282168ace027154"
+    },
+    {
+      "path": "02_agency_agents_personas/marketing/marketing-zhihu-strategist.md",
+      "bytes": 12006,
+      "lines": 162,
+      "sha256": "35f6fd759a67860f92d1ae5245bdf45f5eb524277453a28011899aeb450f5c4c"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-behavioral-nudge-engine.md",
+      "bytes": 5481,
+      "lines": 83,
+      "sha256": "058868fb1a86e78859471dfa4285b1d62c23b2f83edbb345a227fc4beff39562"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-dx-engineer.md",
+      "bytes": 15146,
+      "lines": 332,
+      "sha256": "af7f005d51cd5d74885c1850c3570c2aee67a2a655d6fa9a695e895ff986a448"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-feedback-synthesizer.md",
+      "bytes": 7271,
+      "lines": 119,
+      "sha256": "9f7bc1474bf8bf95c0573c20df5e3d8ae70c3b9659ec5ea7958cc4692b958270"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-manager.md",
+      "bytes": 22687,
+      "lines": 469,
+      "sha256": "4a3fe4661e72e5173877bcba7c362392181774b20efc27ac1789171e98676c9d"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-sprint-prioritizer.md",
+      "bytes": 9464,
+      "lines": 154,
+      "sha256": "da5233770ca85a3931b72d80b37dd09616a54fd24075c607667853acf65b000a"
+    },
+    {
+      "path": "02_agency_agents_personas/product/product-trend-researcher.md",
+      "bytes": 10493,
+      "lines": 159,
+      "sha256": "69c8e54a9413ba411195e8d5274ee3cd88fa8cda18486db70c0f19ce374550a2"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/accounts-payable-agent.md",
+      "bytes": 7584,
+      "lines": 205,
+      "sha256": "f0f401daf0b61441eedb41a077e4bef13e0ff626483652d3c8a6eaae08b09a6e"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/agentic-identity-trust.md",
+      "bytes": 18670,
+      "lines": 394,
+      "sha256": "99d79e4d57e55d44151b770d89efea4ea3bc6647af27bfd4a6b256ebc5a1a63e"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/agents-orchestrator.md",
+      "bytes": 15725,
+      "lines": 367,
+      "sha256": "3f900ee286eba5a809388ecc22ad860c4a3ef9ed7ff25488e80eac18f3a0f317"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/automation-governance-architect.md",
+      "bytes": 5831,
+      "lines": 216,
+      "sha256": "8aab89104fec352f1f601ec5e6db11c9628d0b2072e6324484fd7e4c8462f55e"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/business-strategist.md",
+      "bytes": 25296,
+      "lines": 488,
+      "sha256": "9314906805d8dee81c3e2d10cb93513a391731d9fceb2e4c936257005a144b92"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/change-management-consultant.md",
+      "bytes": 27377,
+      "lines": 497,
+      "sha256": "1feb05dfd0bb4d0942a24a8abb409090ffbc252623e15daa09f5bc8c838b0e5a"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/chief-financial-officer.md",
+      "bytes": 18628,
+      "lines": 388,
+      "sha256": "05efa4015fc7feac9bb41942fa6e9eb2b79e2219bf1280b290c754fd16e15a08"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/corporate-training-designer.md",
+      "bytes": 15673,
+      "lines": 192,
+      "sha256": "e70733229e87dde01bd404f502d2f5b491821f681d7230b314b18d98111b898c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/customer-service.md",
+      "bytes": 19184,
+      "lines": 398,
+      "sha256": "71d5b8ccd6fb6c5861230169a708ec5d8c0af628de44fc293ae256181573424f"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/customer-success-manager.md",
+      "bytes": 23313,
+      "lines": 460,
+      "sha256": "2fc5ebc10734a621d65d1bfe0a253158f0a7418ee39b7c93a18efe6b26661cfe"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/data-consolidation-agent.md",
+      "bytes": 2393,
+      "lines": 60,
+      "sha256": "7e7de097ff27e3aa2732a9f1ab0bd7acaaef73dabf53fc7be6c90c8ab6afab11"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/data-privacy-officer.md",
+      "bytes": 22433,
+      "lines": 412,
+      "sha256": "77e495853a6ef839c8a2f87dae1c8de7b41e11d5e187828fa42c1d9a1e1ae00f"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/esg-sustainability-officer.md",
+      "bytes": 20839,
+      "lines": 396,
+      "sha256": "a8feee4c7b9687ee89ec5ea0879ff98b4cc4451431052369bf00f90d9382b7dd"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/government-digital-presales-consultant.md",
+      "bytes": 22759,
+      "lines": 363,
+      "sha256": "0676fd83a462828901c64df516034b0912468c85abb751d3e484038d3288b848"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/grant-writer.md",
+      "bytes": 27080,
+      "lines": 511,
+      "sha256": "6be5a68dc7628c8292253b60a2bfbc7f76053e9c32aae4d40ff341594534e67b"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/healthcare-aging-parent-care-companion.md",
+      "bytes": 25248,
+      "lines": 414,
+      "sha256": "fca0725bc30a447d6666df5060333eac2a4f81083cc02670118045678c79a035"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/healthcare-customer-service.md",
+      "bytes": 22100,
+      "lines": 389,
+      "sha256": "b2e4117a8b449a94409235f74315b52909716985dd94b82b87413a54ca471d73"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/healthcare-marketing-compliance.md",
+      "bytes": 35322,
+      "lines": 395,
+      "sha256": "942cc3b43da5f0e6103b7e5087941df4247c602228b2c4b0c6487140e89b176e"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/hospitality-guest-services.md",
+      "bytes": 27773,
+      "lines": 603,
+      "sha256": "1c5819c560d3902eca44a4fb372bae9e882e5b9e8455e51aa3e8d9662a5d184a"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/hr-onboarding.md",
+      "bytes": 23923,
+      "lines": 451,
+      "sha256": "28a52c26f27ab24d7fe11f5e48cfe712f6d27da142ec97911683b4a3ad92332c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/identity-graph-operator.md",
+      "bytes": 16090,
+      "lines": 303,
+      "sha256": "91e86c3070bc93a6fb93e386f08943386f255488e1a6f892fb2152095c9a64f9"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/language-translator.md",
+      "bytes": 16086,
+      "lines": 264,
+      "sha256": "afd1e4b5fb1bb8fa9b8b5770774e0d7b003722681f664147ce7b9dddbcd52a4c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/legal-billing-time-tracking.md",
+      "bytes": 27280,
+      "lines": 569,
+      "sha256": "27f84055643150459f4de3102ba05c17696e5967a0efc64426fb600ab3c5d12c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/legal-client-intake.md",
+      "bytes": 25630,
+      "lines": 492,
+      "sha256": "b0b1cce8a30f08ada6d630b010b1af99f765f5eca667436af6592545667f4c79"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/legal-document-review.md",
+      "bytes": 24728,
+      "lines": 454,
+      "sha256": "02bf51dbc9d8ffc93a8b053a09ec61ee2a3a9905e395fbd24389a532d20d1dba"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/loan-officer-assistant.md",
+      "bytes": 28515,
+      "lines": 555,
+      "sha256": "3d6bfdb598187fb19fba6ab4b50ff357870cda04ea846aa975649d04788df84b"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/lsp-index-engineer.md",
+      "bytes": 12246,
+      "lines": 320,
+      "sha256": "305f647acd4f666b8ad44a253ae9dba74891a50725bd13a55e16c652c5200613"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/ma-integration-manager.md",
+      "bytes": 21438,
+      "lines": 427,
+      "sha256": "007dcfaee61d45e852a95c37a4529b1d162a178551f1a7f963ee558f1ace6fb5"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/medical-billing-coding-specialist.md",
+      "bytes": 24636,
+      "lines": 491,
+      "sha256": "e9f597ef3a214d886a2b861347183c3674b6e24278c9308ed998a02972e7007c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/operations-manager.md",
+      "bytes": 19209,
+      "lines": 399,
+      "sha256": "3c133a31ae1542922444d77d7c8f9964127704ba94638dde12e37a9ad0fd35bd"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/organizational-psychologist.md",
+      "bytes": 22579,
+      "lines": 391,
+      "sha256": "b7e523e1557ef9e98d5a0b515809996c6bbc0de6a49b1dc355d803e3bae09be2"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/personal-growth-mentor.md",
+      "bytes": 7833,
+      "lines": 159,
+      "sha256": "623c1ef061d98fedbb941245a39fa5b8c5236ef94194724bfe5c54b8050143d4"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/real-estate-buyer-seller.md",
+      "bytes": 31124,
+      "lines": 596,
+      "sha256": "00e2f54e76be38c85c4eb406135a0944a3f610d287e6747fbfac37a12c82920a"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/recruitment-specialist.md",
+      "bytes": 29688,
+      "lines": 515,
+      "sha256": "cf3d73aae046a12538f64bd67bc5def7946de070485c388ce467251ac8d1e892"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/report-distribution-agent.md",
+      "bytes": 2653,
+      "lines": 65,
+      "sha256": "f5796b3cb693123e6c59f7058c100fe817b744f819d3e281442964714f72bac5"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/resume-tailor.md",
+      "bytes": 11214,
+      "lines": 230,
+      "sha256": "be3d173ce4807d49671c7956f107029a4cb4061651882a0a3ea8c4f20738273f"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/retail-customer-returns.md",
+      "bytes": 27700,
+      "lines": 566,
+      "sha256": "5cd60860a6ea57a95ec6d14246d6b0032e0e13ba0220ec4a79527fdc0ccd0f9c"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/sales-data-extraction-agent.md",
+      "bytes": 2697,
+      "lines": 67,
+      "sha256": "202a6f04df452385fd1185a6bb23a0c9a47e624088eac14179bed4975f0b268a"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/sales-outreach.md",
+      "bytes": 20656,
+      "lines": 425,
+      "sha256": "84d4ca90d4bed4649904c8f239f8e13f373274c8bceb6fd7eb2479e6f9e28c90"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-chief-of-staff.md",
+      "bytes": 18190,
+      "lines": 279,
+      "sha256": "c0d053f19f32d369b6e9a4ded3a3b93efd792648b88b28f0ecd37a899b91b7b3"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-civil-engineer.md",
+      "bytes": 17068,
+      "lines": 356,
+      "sha256": "37c9c37511345799235dcb41a4bd92c5577614c392b9a1fa3a1afee112e5de3b"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-codebase-archaeologist.md",
+      "bytes": 26159,
+      "lines": 341,
+      "sha256": "c1b2c22711cb6e74dd834f831d6a8b3f10c93cd462722073b01acae9d0a40700"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-cultural-intelligence-strategist.md",
+      "bytes": 6643,
+      "lines": 88,
+      "sha256": "91f1d2ef19bcf05f8d3b2758049d2dee909939a18ec2d086f192358179455abc"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-developer-advocate.md",
+      "bytes": 14833,
+      "lines": 317,
+      "sha256": "106d007f1dfa3ccc10e327b8fd1b74723fa01da1e444c61d1499cb8ac214d528"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-document-generator.md",
+      "bytes": 2437,
+      "lines": 55,
+      "sha256": "cd2ca961e0f7baa18942aaaa315e333ea4315604bbb6a182d7daa31b76dfc3a3"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-fedramp-rmf-compliance.md",
+      "bytes": 32568,
+      "lines": 378,
+      "sha256": "3269ca423abba6405b074ddff80da26ff1d73ae01787cc34bc7a1d45732936b0"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-focus-music-architect.md",
+      "bytes": 10534,
+      "lines": 175,
+      "sha256": "9dd1e29f12a4a8acd8872aa263e01f40a766a3b2752517916fe0273fd265bd27"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-french-consulting-market.md",
+      "bytes": 11209,
+      "lines": 194,
+      "sha256": "68ebd164a0b3e0493d8deec43f4122e24b293c0a8f77786b2c3a4c8f3924c045"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-korean-business-navigator.md",
+      "bytes": 14071,
+      "lines": 216,
+      "sha256": "71eb41ef3705fe155eee87d99e0ec7a52a237af442dd66e3421e225b76580f21"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-master-plan-architect.md",
+      "bytes": 10624,
+      "lines": 157,
+      "sha256": "0a9187c15055d76e5867d930eae43daccacd67fa213963ebdc91302044fc354d"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-mcp-builder.md",
+      "bytes": 12476,
+      "lines": 260,
+      "sha256": "f1a9bbde3c5672408a5e0d71d3d888fd635e517ad8b1c5db210aa87e62c39dd4"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-model-qa.md",
+      "bytes": 23433,
+      "lines": 528,
+      "sha256": "effef0d607e8955ff846e1c264237d6d14dd573bcfd02c191e126868c3cbffde"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-pricing-analyst.md",
+      "bytes": 12770,
+      "lines": 243,
+      "sha256": "fb8a63681615666bb2efe45b7fd2d9ad8a072ab9066efae6b61d454a58039f85"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-salesforce-architect.md",
+      "bytes": 9943,
+      "lines": 182,
+      "sha256": "756fd2dc09f76422dfecb8104e2334f8876f8b95cb6734f8f044c36c641b22e1"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-strategy-duel-agent.md",
+      "bytes": 5946,
+      "lines": 130,
+      "sha256": "3012369325bd06ec6e73f980d4e28947fe1f3dd0121e8ccd5ffb5834b50f3911"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/specialized-workflow-architect.md",
+      "bytes": 26492,
+      "lines": 597,
+      "sha256": "a7a73de5d9d3d748f4b30a2d632511304a97d42feb9fbf2a3e7cac27e7386e52"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/study-abroad-advisor.md",
+      "bytes": 16984,
+      "lines": 282,
+      "sha256": "afd4b1033e76671b4d7a17a74329d7d81f491351004c77876a2615137140b84f"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/supply-chain-strategist.md",
+      "bytes": 33078,
+      "lines": 591,
+      "sha256": "aa6c0f0e7bfc7948a9ac5c76d3a0c140c54a59393eac54bdf15b12a9555662da"
+    },
+    {
+      "path": "02_agency_agents_personas/specialized/zk-steward.md",
+      "bytes": 10892,
+      "lines": 211,
+      "sha256": "01fdb11cc8df0ada78aa31007c1565a3d118d64e9e97ff86b8dd838782a44082"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-analytics-reporter.md",
+      "bytes": 17081,
+      "lines": 387,
+      "sha256": "eec3a4afdb04cc6617c452e3c67fbfc8eea070e96055b6a39dae62be5c07a452"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-executive-summary-generator.md",
+      "bytes": 8992,
+      "lines": 212,
+      "sha256": "298891fcf297de5d9b343e9ab9b63864317de63256b15c0c72e6cec172f8f0ff"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-finance-tracker.md",
+      "bytes": 21201,
+      "lines": 480,
+      "sha256": "ae682fa7901d2c81840f78119253e6886eadded764c8fff6e6a1a54da73e436f"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-infrastructure-maintainer.md",
+      "bytes": 23016,
+      "lines": 628,
+      "sha256": "982365c821220e6b47f08d54013af20d0ff2b58fc8d38a7639e2eb8b18d0872b"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-legal-compliance-checker.md",
+      "bytes": 26607,
+      "lines": 591,
+      "sha256": "08d938c5666e41b3cf197c2f7b37070d7f39aca62b7147d157200eb6dbeeced6"
+    },
+    {
+      "path": "02_agency_agents_personas/support/support-support-responder.md",
+      "bytes": 25867,
+      "lines": 607,
+      "sha256": "26b4c8706d88ea30358254dd5ac1a2886766015918300130dff070230e05794b"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-accessibility-auditor.md",
+      "bytes": 16228,
+      "lines": 327,
+      "sha256": "362935907af23839775b9c6162f38c0c5a740542ab4350cb5c5b5a0d9f9a4268"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-api-tester.md",
+      "bytes": 15015,
+      "lines": 334,
+      "sha256": "ab91de9188d48bd9c417282c33673a37b066215e90e08c0f1b270d036084e3bb"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-evidence-collector.md",
+      "bytes": 8910,
+      "lines": 210,
+      "sha256": "ff1868ae89f3be62f6f0da1fc8693582f18578c77751b8a65a53169ef15ececd"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-performance-benchmarker.md",
+      "bytes": 13674,
+      "lines": 285,
+      "sha256": "16a841f67392d084b773c6d9f05341d093e9017f3e116f6df0de59a5a3f59c34"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-reality-checker.md",
+      "bytes": 10854,
+      "lines": 249,
+      "sha256": "6d32fcdb114233e13902ec6372d50293b120e85d490b5e81d372c29808f988a1"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-test-automation-engineer.md",
+      "bytes": 12706,
+      "lines": 196,
+      "sha256": "4299d038e88387546d645ccbe767b1dfdb7de10da55eba1ab103149972cd2b9b"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-test-results-analyzer.md",
+      "bytes": 16017,
+      "lines": 330,
+      "sha256": "d33114b519ba657fc9f29db12495d3c31097a8282d170cfd57cbcb029f61f2de"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-tool-evaluator.md",
+      "bytes": 18918,
+      "lines": 416,
+      "sha256": "01c8aecd0121dd7dde2696282a288aeb7b14c5381b1f8087db540312ed6ea684"
+    },
+    {
+      "path": "02_agency_agents_personas/testing/testing-workflow-optimizer.md",
+      "bytes": 23849,
+      "lines": 488,
+      "sha256": "f15e65baf794b4f6d6ef540661eda5b402fff0adb36ac98c7d08af7d6490a7bf"
+    },
+    {
+      "path": "03_claw_code_harness_gems/AGENTS.md",
+      "bytes": 6316,
+      "lines": 92,
+      "sha256": "1c8ceaff88f834c10d103a7e66ba1a75ec89dde0e73d900f039ee3ff733afdcf"
+    },
+    {
+      "path": "03_claw_code_harness_gems/PARITY.md",
+      "bytes": 13752,
+      "lines": 190,
+      "sha256": "5104c831ab8f590c8a94dc484507365ebf2a1f952c32a99fecd83f6bea5232b0"
+    },
+    {
+      "path": "03_claw_code_harness_gems/PHILOSOPHY.md",
+      "bytes": 4053,
+      "lines": 114,
+      "sha256": "2610c059198a603c17196066ca59c4a9f6def99e6ca3489494520d700f4a2f17"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/QueryEngine.py",
+      "bytes": 712,
+      "lines": 19,
+      "sha256": "3ff5063f9e55655ddb65dd53359e1435a392b9de9d673a597305cc188c30cf5e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/Tool.py",
+      "bytes": 326,
+      "lines": 15,
+      "sha256": "98865f0d12401688acae08af77ad732391685292f2bf344021221cbce01a9371"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/__init__.py",
+      "bytes": 912,
+      "lines": 29,
+      "sha256": "813caa79fcb907f5d214932a427ba796c6b328752be6e6085f5a03733da8eda3"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/_archive_helper.py",
+      "bytes": 468,
+      "lines": 17,
+      "sha256": "3f42f228cfaa7967667069543c0253f1d6454c0cc04d479475feb5139a2f949b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/bootstrap_graph.py",
+      "bytes": 803,
+      "lines": 27,
+      "sha256": "16edee89450b233ef37ec95cf713938bb5eab4dcb3c239df656ac717b5c688fd"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/command_graph.py",
+      "bytes": 1247,
+      "lines": 34,
+      "sha256": "b28568aaaee9c2deab5d16b0fbe0223324b921419d45494ac20fdfed0ac441eb"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/commands.py",
+      "bytes": 3416,
+      "lines": 103,
+      "sha256": "eaf3b4e47d3eea98e45ad47a23d77e063f5b7f87abe0631f2b0a281af88b0c24"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/context.py",
+      "bytes": 1580,
+      "lines": 47,
+      "sha256": "e6771c2ef8d33cd6a29b8a0669116b5b7756b3ee40a7951bf510d56344f16490"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/costHook.py",
+      "bytes": 210,
+      "lines": 8,
+      "sha256": "036f97f0ee18e40ff50bfac7884f5f5b9b686151fccd343c36ddb8d668807f72"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/cost_tracker.py",
+      "bytes": 322,
+      "lines": 13,
+      "sha256": "8f6f4842bfdaff3e0fb83302a29801e62c8bbfdc7d1e9524f39b10b4ed2040ae"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/deferred_init.py",
+      "bytes": 771,
+      "lines": 31,
+      "sha256": "9058696068c4f87cd64781f5f6d7ace93428ffa86b63316d1cc66c2e92678215"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/dialogLaunchers.py",
+      "bytes": 312,
+      "lines": 15,
+      "sha256": "2875d6c600d1c99750a52776b55f7393f90df4d56470005a4e4aab28e8968921"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/direct_modes.py",
+      "bytes": 543,
+      "lines": 21,
+      "sha256": "80754074c6b7c836f7a1f3c7ea462271ddb8bbb15266cf43e38b894ec77f8a36"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/execution_registry.py",
+      "bytes": 1399,
+      "lines": 51,
+      "sha256": "3ab16b30f75efa60893a90e5c4526ee13be748aa08df21026f58efccadb7f800"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/history.py",
+      "bytes": 559,
+      "lines": 22,
+      "sha256": "96665d5b233684a545137b5d1902e7cd04d2429a721f79c2c83108225323e98d"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/ink.py",
+      "bytes": 145,
+      "lines": 6,
+      "sha256": "c0c047c75f8658037740f2661d2770fdec54bf1b8614b83c6af8ced5a1940efd"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/interactiveHelpers.py",
+      "bytes": 129,
+      "lines": 5,
+      "sha256": "1f2ea5bbd000e103b742b26b284ad6a0b96d2e3e6ade4073ce34f16de2d4c6d5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/main.py",
+      "bytes": 10493,
+      "lines": 213,
+      "sha256": "cc8f9690f988b42830316d6073c5e617523de48ce512f4728494a5eb2acfe152"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/models.py",
+      "bytes": 1098,
+      "lines": 50,
+      "sha256": "f4ae7a3b913f13ba61e6c2c20e5e0dde353bf4e6ff792b54441e46e75f8e74a0"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/parity_audit.py",
+      "bytes": 5268,
+      "lines": 138,
+      "sha256": "d3cea0e99eacc7535a74b4e7b218e14ca844ab27e7e05bc4f17a3f7abb2e3873"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/path_scope.py",
+      "bytes": 7180,
+      "lines": 181,
+      "sha256": "fdd3a9778b4fb8e9707cadc142689acc0ac873a509ae26ab722f256c0fb11ec5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/permissions.py",
+      "bytes": 2050,
+      "lines": 49,
+      "sha256": "9f6d8007ef1a806a13710e2e5fe45e81e9c41fd9f0e99a99d65e27815923b205"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/port_manifest.py",
+      "bytes": 1836,
+      "lines": 52,
+      "sha256": "9475b3885fe40fdf3ed58c7713c27062f1f966887c5de82e7c69ab1fbb5517da"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/prefetch.py",
+      "bytes": 640,
+      "lines": 23,
+      "sha256": "8b1d95701989ec58c72a3265b96f4631790c60be5e280a85402dc9d40b12e0e6"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/projectOnboardingState.py",
+      "bytes": 184,
+      "lines": 10,
+      "sha256": "0ddffb1c10bfd7d3df4daea8096b73f6d870f5b92c796e21b806a2a0695ad6e5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/query.py",
+      "bytes": 193,
+      "lines": 13,
+      "sha256": "0c0dab1440ace7c4f1173e8f525a15cb2ddb56abd744818a36b4406843e17f45"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/query_engine.py",
+      "bytes": 8063,
+      "lines": 200,
+      "sha256": "a31405248a65fa1fdf2fd1363a879b3998ef5ec581f9eb44a2299697146c0516"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/remote_runtime.py",
+      "bytes": 753,
+      "lines": 25,
+      "sha256": "861b62afd33ee7eb74a04267bbac80de36d6dec6e16e705a8d0fa18097176056"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/replLauncher.py",
+      "bytes": 169,
+      "lines": 5,
+      "sha256": "8d4f8c9943cfbaf0c0c0e98f3795ac76263618875aaebcbfa3958ca720e2b66e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/runtime.py",
+      "bytes": 9223,
+      "lines": 219,
+      "sha256": "93d980b711c16b6e2e3083a649047d2427c8e0d2d147ea5f453352272b0c17b9"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/session_store.py",
+      "bytes": 1666,
+      "lines": 51,
+      "sha256": "8c9666eb63afbd59fa1a98ef834f3ec51588e1ead55ddb59522a6ced5998f9ae"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/setup.py",
+      "bytes": 2315,
+      "lines": 77,
+      "sha256": "05d5feb30265f365a5fd147863570f38559c010f3c303dd1e64c6f3acdbf4510"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/system_init.py",
+      "bytes": 698,
+      "lines": 23,
+      "sha256": "9dbced67bcadf229edf2ebac97fb0df79a1106e03da680dac28b861f70daeedf"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/task.py",
+      "bytes": 93,
+      "lines": 5,
+      "sha256": "4f9a1412cc6904f336fb192a46d7ceedef43a4facb36fd732139d43daab9383a"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/tasks.py",
+      "bytes": 421,
+      "lines": 11,
+      "sha256": "b4360a8c7ccc8fe3f2fdf1764bbad45e38c28088cd5e889564f3eb98d56e6edd"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/tool_pool.py",
+      "bytes": 1044,
+      "lines": 37,
+      "sha256": "0ff1ed396457950f2733a590de9477677fac612650b56921da31b59626bfed13"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/tools.py",
+      "bytes": 4186,
+      "lines": 111,
+      "sha256": "6fc0b73db56eebeb1131d25c26597b7478786c8e6b4644d04617db517b4c0fd8"
+    },
+    {
+      "path": "03_claw_code_harness_gems/python_core/transcript.py",
+      "bytes": 585,
+      "lines": 23,
+      "sha256": "ff8176887907e00bcd677fc4012abe59558f5e195e46ae896d8c7e3c5f915c01"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/Cargo.toml",
+      "bytes": 433,
+      "lines": 22,
+      "sha256": "e5b0aef85a89eae598c99e151927eb17549c5b3676a13a95f8b25872612ca164"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/AGENTS.md",
+      "bytes": 3005,
+      "lines": 39,
+      "sha256": "0b040e83faa58b593b2a22068f1e22330bd2ee6c2286cb38740a80e54faedcd8"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/Cargo.toml",
+      "bytes": 634,
+      "lines": 24,
+      "sha256": "6612ad9634e3de24399f10f45b98bf6db8692e30ae1ab01b5a80d092582c939f"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/benches/request_building.rs",
+      "bytes": 10751,
+      "lines": 330,
+      "sha256": "a4a3e857a6a00b3f95a8756549882e090f5d34633832e226bc781c9d5172807c"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/client.rs",
+      "bytes": 20371,
+      "lines": 522,
+      "sha256": "1e1485d72b3576b7cd10ea5b058c1f8311b789e57c2f23c6c95700246da8d980"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/error.rs",
+      "bytes": 26411,
+      "lines": 701,
+      "sha256": "1be7113ecb3fd5406f2d5e2ab626234527ee9d0642acfcb73e6b2f16d7455718"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/http_client.rs",
+      "bytes": 13937,
+      "lines": 386,
+      "sha256": "d73f0c76eca784c95202d37d9536cb2bdae6c1ed4b3a9151a68b5c047f9cbd14"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/lib.rs",
+      "bytes": 2431,
+      "lines": 58,
+      "sha256": "c1f351760ac7aa60566075b9f5d383365afcd887ae6a7da247c6f40b02d6f543"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/prompt_cache.rs",
+      "bytes": 23894,
+      "lines": 728,
+      "sha256": "0e64a59934197e54a4726a96e2cc169b724c12b277dccda8cf5e4a2f7b6b1a89"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/sse.rs",
+      "bytes": 10740,
+      "lines": 330,
+      "sha256": "ec0be296fa7c072187e55219444b0f64e095b48b90dbe1c9e0a6515b450ecfb5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/types.rs",
+      "bytes": 10728,
+      "lines": 357,
+      "sha256": "a435af8b2879ad815dd07a969978fe6fa2ce09cbdb7a71444965840f2650ff59"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/providers/anthropic.rs",
+      "bytes": 66988,
+      "lines": 1894,
+      "sha256": "5f61e685d7c5b15dda85a4e5ca93f9bdfb6d6b9899699bb0d2f630611ffa9472"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/providers/mod.rs",
+      "bytes": 77919,
+      "lines": 2043,
+      "sha256": "769a1b17f349ebf2add0e194d59b7f66b02f2493d7e28f757c48b92ee89c03e7"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/src/providers/openai_compat.rs",
+      "bytes": 116553,
+      "lines": 3145,
+      "sha256": "1b955e51c723f2a6392e226207aacbca5a56d742f0a1691b55c614de9cf27236"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/tests/client_integration.rs",
+      "bytes": 35816,
+      "lines": 980,
+      "sha256": "52f8c72f415c9a1fdd0c2dbef1fc2b28539cd63e39c49be8776fce376198a6df"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/tests/openai_compat_integration.rs",
+      "bytes": 32316,
+      "lines": 915,
+      "sha256": "3895819011b3953a3bc06ca8e921967990bf7b10c7dc9e32ea1ee6cb430a1bed"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/tests/provider_client_integration.rs",
+      "bytes": 2703,
+      "lines": 88,
+      "sha256": "6586aed4447b15522665660dacc0cf03576ca2b274688a493d7b239dcc7c1c85"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/api/tests/proxy_integration.rs",
+      "bytes": 6154,
+      "lines": 187,
+      "sha256": "b822cd37a3d52b0d309fde5806286feafe00d65edce932a0d2b61ef345311e9a"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/commands/AGENTS.md",
+      "bytes": 3143,
+      "lines": 37,
+      "sha256": "befc94be73ad3345313743efa91021085c8da3cf7d58316250b026660b481558"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/commands/Cargo.toml",
+      "bytes": 266,
+      "lines": 14,
+      "sha256": "6da4ab431f24d19ff6619c65c344b2372ee1649bc7817693881e52542c532a2e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/commands/bundled/chain-example/SKILL.md",
+      "bytes": 435,
+      "lines": 20,
+      "sha256": "17536c2edeb89b756a751ece2ba574fb6a41b2cc7f12d46b2c5ab8eb1321a852"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/commands/bundled/example-skill/SKILL.md",
+      "bytes": 359,
+      "lines": 18,
+      "sha256": "58217467720d9de756ce44fb986c65b89de7229241681f688b942a630fdc4cce"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/commands/src/lib.rs",
+      "bytes": 262867,
+      "lines": 7341,
+      "sha256": "1cb666b4df5ad1bd1f11c11bd9982a2c8a924b11e641c18691001677f48d057a"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/compat-harness/Cargo.toml",
+      "bytes": 276,
+      "lines": 14,
+      "sha256": "0d4b8e911ffb12f68d4dcf1a5ed3fc5b9dc5c5e69a0de4c3e0315492fa862543"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/compat-harness/src/lib.rs",
+      "bytes": 11143,
+      "lines": 363,
+      "sha256": "8c39fe3d796f970e36b7b93bacee56603f6beca55a5735adc6efcf404ec223f8"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/AGENTS.md",
+      "bytes": 2789,
+      "lines": 39,
+      "sha256": "34613924927da9c2fa2ad3765060cedd9f0cf01a7b885b0597d76e7bb621b2da"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/Cargo.toml",
+      "bytes": 246,
+      "lines": 13,
+      "sha256": "a0ed8a313ae93a8aab4e00936fa36a6ca9d0b0e2f68cc26e69fb7a539c1fefa5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/example-bundled/.claude-plugin/plugin.json",
+      "bytes": 255,
+      "lines": 10,
+      "sha256": "7e978ac55d66fbff9b4fb63ac6a53f789cc765e1e979cfa3d5447ab65c14ff0b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/example-bundled/hooks/post.sh",
+      "bytes": 52,
+      "lines": 2,
+      "sha256": "cefa9a6f1b973769ab7f57913289453146f07ebdc68c2599d3170d2baf166d80"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/example-bundled/hooks/pre.sh",
+      "bytes": 51,
+      "lines": 2,
+      "sha256": "84054bb966824aaad0458f79b0ce6845a0c02d851b1b7e22455ba3b36e534a98"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/sample-hooks/.claude-plugin/plugin.json",
+      "bytes": 252,
+      "lines": 10,
+      "sha256": "314fd40d06ca605612a36b02c10de4b6592a818f65feb0c668ea7db08a52fa80"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/sample-hooks/hooks/post.sh",
+      "bytes": 44,
+      "lines": 2,
+      "sha256": "ef81ada97fc0d7385821bc3e407ed2992b1f368596a8204b3d3de299d1880460"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/bundled/sample-hooks/hooks/pre.sh",
+      "bytes": 43,
+      "lines": 2,
+      "sha256": "57eb4261c16d28ab19849821158d6fd22974e0af7a1e3f0f463781b5af9cf7c1"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/src/hooks.rs",
+      "bytes": 19044,
+      "lines": 597,
+      "sha256": "399147ad82000665b3b090261603f7182b1416a235a0cafc7474013a0ce31979"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/src/lib.rs",
+      "bytes": 131627,
+      "lines": 3888,
+      "sha256": "97c1af591183936d7d2bf7a1b1dd2494aa7632eb5d3abb8880eb571ed3680d7f"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/plugins/src/test_isolation.rs",
+      "bytes": 2142,
+      "lines": 73,
+      "sha256": "b47d2f51b52bdc0cbae39b786c239daa8e830e93600d4616f2847aec4942efae"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/AGENTS.md",
+      "bytes": 3849,
+      "lines": 46,
+      "sha256": "c47bb4f4656eff16af2fd4036f19ac61e91c83e3a5575d2474c07d65d96ad06b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/Cargo.toml",
+      "bytes": 558,
+      "lines": 25,
+      "sha256": "999f1175e4c08ef09be6d23c347e3f9d7912e3225ffc55557957aed69c6275f1"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/approval_tokens.rs",
+      "bytes": 15903,
+      "lines": 502,
+      "sha256": "2770037a4703b8efcbe4fc52f003cffbff6cdc6789c63cbe0c889c0162b3d35e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/bash.rs",
+      "bytes": 18268,
+      "lines": 532,
+      "sha256": "5181de29226008b4c3747976cd5bb97ab273b43eaa0dc3103805cbe817630547"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/bash_validation.rs",
+      "bytes": 28830,
+      "lines": 1004,
+      "sha256": "5d7022adc8b4401dc6d807570849750ee653da3372881a507e27edfdf797f603"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/bootstrap.rs",
+      "bytes": 3072,
+      "lines": 111,
+      "sha256": "b6a72eb43a33a9f5718c81898885ce9e0f6d47eac7d2fb2eb48ab54ebe16a8f0"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/branch_lock.rs",
+      "bytes": 4452,
+      "lines": 144,
+      "sha256": "1ceca027e29d460fea69cbbb7ef430215ef36cf298e5149bbdbf2f7a77996b6f"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/compact.rs",
+      "bytes": 30738,
+      "lines": 846,
+      "sha256": "210c21e39d41483e5764517313bef8a3588c353416bc6adaacb291bba95f9434"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/config.rs",
+      "bytes": 135435,
+      "lines": 4032,
+      "sha256": "283c34558ed822d70b50cec0196381fc7bf062e2a82b8aa97ec754dc1e76b4ac"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/config_validate.rs",
+      "bytes": 29862,
+      "lines": 1022,
+      "sha256": "c58d9b9e9956d823d78ea769d25234599c62e64e435f4ea2e34eca0fad8b3297"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/conversation.rs",
+      "bytes": 98779,
+      "lines": 2810,
+      "sha256": "d221c45ef791a295254eb65647d941ea04d36d5dfcb54c6170cdfb835cbb340e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/file_ops.rs",
+      "bytes": 70012,
+      "lines": 1972,
+      "sha256": "fae706fdfcef93f9510672f9e339a42bdabf139bb06e761fcb0c51da2f2b4923"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/g004_conformance.rs",
+      "bytes": 12842,
+      "lines": 399,
+      "sha256": "e89beca10a17a3d57047a87d18d379845978e97b1319960d4a3ea2decc2dd833"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/git_context.rs",
+      "bytes": 10238,
+      "lines": 324,
+      "sha256": "71772dfa94998a5001ca33c2bb1740ad70b0b014b2c57e9e12e80e7cd9ed5fa5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/green_contract.rs",
+      "bytes": 12123,
+      "lines": 409,
+      "sha256": "713822e5fdd13072a6b168655d4cf6bfc796fcfed447e1c2ee77cd409803095f"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/hooks.rs",
+      "bytes": 35212,
+      "lines": 1160,
+      "sha256": "7e33f6310381b09051fb496acf82eb37473b7d9a41b6742ec93786571ab55ebc"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/json.rs",
+      "bytes": 19393,
+      "lines": 594,
+      "sha256": "4e939832c8d14d81649ca02df389afb93f44e155d174b6cebde3c809938379d7"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/lane_events.rs",
+      "bytes": 85056,
+      "lines": 2561,
+      "sha256": "ff10dcd407fc9ce09adcd69ca786ef5acfcabab0fc73a98bf6fa03e62dc29d7b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/lib.rs",
+      "bytes": 10318,
+      "lines": 231,
+      "sha256": "b0f27bff6b3a8612f44fb92b5f30efcae8fc808d948cdbfa6d0aabaff4f0cb35"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/line_range_selector.rs",
+      "bytes": 10813,
+      "lines": 361,
+      "sha256": "4a77adaf3520c73e45772601a378e944ba55057a160412e53ff241def90fe567"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/lsp_client.rs",
+      "bytes": 23149,
+      "lines": 747,
+      "sha256": "99f76f22007155f5808603d44402d40354cac1cca68fa7b41e32394722500ab8"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp.rs",
+      "bytes": 10005,
+      "lines": 307,
+      "sha256": "187c893856a8e9a316720f9c7befc11c82fdb5024e839078c19fc8151dbd00cc"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp_client.rs",
+      "bytes": 9069,
+      "lines": 252,
+      "sha256": "f58963b1646fbd4e90da63ea8526b806371b67fd33d947eb047753879cb72e98"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp_lifecycle_hardened.rs",
+      "bytes": 27777,
+      "lines": 843,
+      "sha256": "e826c58e9f2787374978fb8308df916e298ff21394551993d6647ddbded18ec2"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp_server.rs",
+      "bytes": 16046,
+      "lines": 440,
+      "sha256": "3d8021ac312918cdd6624ccc9182e85ea65901cd221503f2d46d652cf8296d1e"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp_stdio.rs",
+      "bytes": 109316,
+      "lines": 2976,
+      "sha256": "a5f3a8d73597ba801f1b546839d6a6ada5e2b63ce8ebd00c0d08131531258476"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/mcp_tool_bridge.rs",
+      "bytes": 30938,
+      "lines": 920,
+      "sha256": "3b4f6f4105ce19230500e9b7722869f618680a20eaaea53cf960790c42e8f642"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/memory_store.rs",
+      "bytes": 18529,
+      "lines": 556,
+      "sha256": "17a699596a570f25d666635ace4b82fed1e4acd817bc00f6ff0686cc3c06c21f"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/oauth.rs",
+      "bytes": 20207,
+      "lines": 603,
+      "sha256": "2e6827eea922e20dd643805f4553423d29b7b8c40a883dccf40242b71c63f4c4"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/permission_enforcer.rs",
+      "bytes": 25699,
+      "lines": 740,
+      "sha256": "fbd35c801a115ec4793f557222a7bca8142956ebb8ed36651487f849988b7c36"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/permissions.rs",
+      "bytes": 31065,
+      "lines": 893,
+      "sha256": "84df2eab1bec2aac5b975062d24974cc668668c494add1a0c68b6b37f840cfe1"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/plugin_lifecycle.rs",
+      "bytes": 18216,
+      "lines": 592,
+      "sha256": "0c05001a320b7c600bd88f336ab071ae62de30201a1c97693789045d2ea3422b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/policy_engine.rs",
+      "bytes": 28121,
+      "lines": 937,
+      "sha256": "a5692ba5d58dc582748bb97ba3c411a35325b2bf739e49104f9d42fc6b4e945a"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/prompt.rs",
+      "bytes": 56665,
+      "lines": 1531,
+      "sha256": "c3f8f40f6b3c58e13046ec11e800cedb79b982e9b13d86ae11a526dc936fbc64"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/recovery_recipes.rs",
+      "bytes": 32770,
+      "lines": 941,
+      "sha256": "a45c8eb47ab1e5903fdaa95664fb373f3967c821aef52aeb83c410ec6e774d11"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/remote.rs",
+      "bytes": 12907,
+      "lines": 411,
+      "sha256": "2249f6d4eddc9ff479238b5e0c087ef79d50f702be3ee54d1fbd9dd2c813c222"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/report_schema.rs",
+      "bytes": 19339,
+      "lines": 552,
+      "sha256": "ffe8f521648ec9da325979cf6f58c6eff1fd8b7c5fbc2dfcae8c92d9a6fa4aeb"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/sandbox.rs",
+      "bytes": 17240,
+      "lines": 503,
+      "sha256": "ace9e8b387f1d5ccb1462044d28ef0379d9f0460421e0387e4e268411ab621b2"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/session.rs",
+      "bytes": 67998,
+      "lines": 1967,
+      "sha256": "8ad62c86f6aee1efdcd328983f2686de4e0cb82c27e53195fb3b7572cb63fe12"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/session_control.rs",
+      "bytes": 58129,
+      "lines": 1517,
+      "sha256": "c2cf0f60e7e7866ddc4bb12cad309299856a534735bea8f13a8615953cab6726"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/session_settings.rs",
+      "bytes": 40272,
+      "lines": 1285,
+      "sha256": "f3dbce37ba15c80c4b6cad7c023ade6dfa9414b325e8e66011610f2828d03c3b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/sse.rs",
+      "bytes": 4183,
+      "lines": 158,
+      "sha256": "879c411698f8465fbd49b0243de8a7ef2d8d861bdc1bf1b0da1e5612ce87ade8"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/stale_base.rs",
+      "bytes": 12985,
+      "lines": 429,
+      "sha256": "bcff38cf1ec1ad142ce73fe7cd45c778cfc9dd61c5d6fd43fdad91677aecf8a9"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/stale_branch.rs",
+      "bytes": 12315,
+      "lines": 417,
+      "sha256": "89e7d6630ba7116bb0b852919761c2585fde1fd7940d76318d234d800d7516ed"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/summary_compression.rs",
+      "bytes": 8609,
+      "lines": 300,
+      "sha256": "7254bde33362778ad9f5583fc3f8dcf7195586696b85de5abde2c4c24e83efac"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/task_packet.rs",
+      "bytes": 16263,
+      "lines": 452,
+      "sha256": "eebd6469686ca605ed50f450c73a9937bd0af710c2f7d0367d8fdb8739add632"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/task_registry.rs",
+      "bytes": 22390,
+      "lines": 695,
+      "sha256": "cb980032162bf4729cb6f93d88303513afac966ce87c1f0f97a6fcc5ecdb9414"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/team_cron_registry.rs",
+      "bytes": 15221,
+      "lines": 509,
+      "sha256": "8a118b7654a2d7e670c2f617d6d2b0948fc0c90fa682c590699d1369c4c954fe"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/trident.rs",
+      "bytes": 32081,
+      "lines": 949,
+      "sha256": "5174d077f213d24fc55a188d7453ee2f4b756bb8270723dfa9f0fcfceb20f2f5"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/trust_resolver.rs",
+      "bytes": 30019,
+      "lines": 934,
+      "sha256": "1e5ec3f2abf5a728682a4519c331a153c6d7e1d17e8ef6348f1ff3371a9febc7"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/usage.rs",
+      "bytes": 25565,
+      "lines": 649,
+      "sha256": "48d049204318337a66c5e292262c15e684f93633121a859f659da9d631d5d13c"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/src/worker_boot.rs",
+      "bytes": 89227,
+      "lines": 2463,
+      "sha256": "fca5c0f0827d8311f4feb666cd39f6d4fadb534ecfe0ebcd8982e69cd10452c6"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/tests/g004_conformance.rs",
+      "bytes": 2924,
+      "lines": 80,
+      "sha256": "251f48b21855d76478846c12d9135b5c822b230f6fb48a0ce470da3b4f3cb06a"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/tests/integration_tests.rs",
+      "bytes": 12574,
+      "lines": 386,
+      "sha256": "b3afd5bef06a3e8cf8d64aee9d81e39e0bd47666bf465ca1bb6a39cf3582d654"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/tests/fixtures/g004_contract_bundle.valid.json",
+      "bytes": 2291,
+      "lines": 81,
+      "sha256": "9f2218b72d8ac576ae98ca8c86969d90fa287c893907ebf6524e019c080da273"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/runtime/tests/fixtures/report_schema_v1/README.md",
+      "bytes": 459,
+      "lines": 11,
+      "sha256": "e1b62295712b251866f4d780e69c64eb1477a684d45c70d781bb3b481ff6aab0"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/.gitignore",
+      "bytes": 15,
+      "lines": 1,
+      "sha256": "eef483c9d57e80e17d0cf64087bd83982f5a0e37114adbadd4a187f8591bb088"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/AGENTS.md",
+      "bytes": 3264,
+      "lines": 47,
+      "sha256": "357132b084eb9fed9bbb5f702c8a5ffbd40faa067f61627159edee41e250da3c"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/Cargo.toml",
+      "bytes": 698,
+      "lines": 27,
+      "sha256": "b8d52e831764637dbbabcdb937d229516b7b0d49209c11812e26d5795370aba3"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/GIT_TOOLS_README.md",
+      "bytes": 5333,
+      "lines": 157,
+      "sha256": "79d451e33e69d29feb0e5fffe187f536c27c1568938e7207d659b3149f79d5b2"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/src/lane_completion.rs",
+      "bytes": 5825,
+      "lines": 193,
+      "sha256": "082a5c749d8f6a62da73f17d4ac90d59fad7993c362abfe432f71a4558d7799b"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/src/lib.rs",
+      "bytes": 428034,
+      "lines": 11652,
+      "sha256": "a1b3d4f47aa1b309830ef08e314854b99b9611020121b5f05106bb21d16d4c80"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/src/pdf_extract.rs",
+      "bytes": 18286,
+      "lines": 548,
+      "sha256": "c569183be9506a7e96e5a0b9b04ee5fb3ce5ce595e821b78f90a42e80e09d740"
+    },
+    {
+      "path": "03_claw_code_harness_gems/rust_crates/tools/tests/path_scope_enforcement.rs",
+      "bytes": 7068,
+      "lines": 205,
+      "sha256": "a07dd1dbc6d2f64fcea620e01f0c489ce1169aca6d0d73894ccd33d1ed3e141c"
+    },
+    {
+      "path": "04_ponytail_gems/AGENTS.md",
+      "bytes": 2721,
+      "lines": 32,
+      "sha256": "b98b15e1d683ee205e124b52b8d330128593f4a87b545cf8185e2712cd1bb25f"
+    },
+    {
+      "path": "04_ponytail_gems/README.md",
+      "bytes": 15073,
+      "lines": 237,
+      "sha256": "12557e69530425f97d22ffe2929560a37d8c390e66d9f4d20a392890f60527bb"
+    },
+    {
+      "path": "04_ponytail_gems/__init__.py",
+      "bytes": 8936,
+      "lines": 228,
+      "sha256": "f8ebbc5d26601369adab013506dc6797e6eb07643de91bece0df299be9836903"
+    },
+    {
+      "path": "04_ponytail_gems/package.json",
+      "bytes": 1260,
+      "lines": 48,
+      "sha256": "797154b6e029a9a70816a4dc9b5618a18cfe07f1798041fc131f45974737a01b"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail-audit.toml",
+      "bytes": 1685,
+      "lines": 2,
+      "sha256": "eec7971e361d2f0796bda3d2d7895b5c110ab49949c0e288a559c6cc1319c50f"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail-debt.toml",
+      "bytes": 908,
+      "lines": 2,
+      "sha256": "a537eaafad70f105952301875128363d33dc3a2f1342cd0dc2cada51feaf2eff"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail-gain.toml",
+      "bytes": 1257,
+      "lines": 2,
+      "sha256": "faffa8be16687e519d6a175e93800de8507929509d0c0751c61c46365f38b086"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail-help.toml",
+      "bytes": 1152,
+      "lines": 2,
+      "sha256": "7d47b79ff6f5afcb8972beac1a956d6c76ff35cf9e6ecfa6986a466489866af5"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail-review.toml",
+      "bytes": 2069,
+      "lines": 2,
+      "sha256": "a7f57fd8b951991dc46a064b45ac4f93d5455e61489af613803d24774c9746e2"
+    },
+    {
+      "path": "04_ponytail_gems/commands/ponytail.toml",
+      "bytes": 611,
+      "lines": 2,
+      "sha256": "ecb6a232d49aa3de0d43c3e514f0b1b3755e9657f8703756148f67f42750b495"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/claude-band.json",
+      "bytes": 64,
+      "lines": 6,
+      "sha256": "8316581f357f5481dbf26077d118ca9ee03bcd14166e4da1bcd878ab723884c3"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/claude-codex-hooks.json",
+      "bytes": 1230,
+      "lines": 41,
+      "sha256": "3320ac7fae9bdded7fab83b62017db55c01b25af3f5896a518a5cf911072f54a"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/copilot-hooks.json",
+      "bytes": 1017,
+      "lines": 21,
+      "sha256": "692b5148c3605d2ece2f081834b650c3c43d75cb272a7884dc40e9ce4425ef79"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/cursor-hooks.json",
+      "bytes": 322,
+      "lines": 17,
+      "sha256": "0b9f026058ad3209fd27a212881fd43a7d824a3a3405fdecf446e2f8c8647c65"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-activate.js",
+      "bytes": 9382,
+      "lines": 202,
+      "sha256": "f1a40822d33d7fe816f4607ecbc8dba15ed66cd75d7c1efa65defc65b8f306a6"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-band-import.js",
+      "bytes": 14155,
+      "lines": 278,
+      "sha256": "42c87e51f38c9f9dd331ca12b801609823e6993a6b854b2d9b5240cf00d3218c"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-config.js",
+      "bytes": 5911,
+      "lines": 175,
+      "sha256": "ae81c3552064c9a9f0b9c0e8ec8a959af56f5599f0c899dd79659ea9a101dfc4"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-instructions.js",
+      "bytes": 5565,
+      "lines": 98,
+      "sha256": "36521752b3444ef8daa823edaa996170e6af2cd45c82193644acb3a42f3395f4"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-map.js",
+      "bytes": 5439,
+      "lines": 111,
+      "sha256": "c876b087accb6655d04f7f48bda85d8304941d0ac0fb78c0c164eb9ec7d35e69"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-mode-tracker.js",
+      "bytes": 9947,
+      "lines": 217,
+      "sha256": "b5e0d0d52ddf7ff2d4f1388cdcaf92394d48459fcdf9ed6e9bb0508ea840ba76"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-runtime.js",
+      "bytes": 7751,
+      "lines": 182,
+      "sha256": "52d8e66d542d49217a9eb721942e7bd9f4ee46a56615fb3f53430276cfe3a592"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-statusline.ps1",
+      "bytes": 885,
+      "lines": 24,
+      "sha256": "6138f15bc7651ee7e5ced2a2a2280f5c810d58cad3e9f3252c628f4c923e48c9"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-statusline.sh",
+      "bytes": 696,
+      "lines": 18,
+      "sha256": "f1dbfa5997a5d4b5339619709053eff557ab16d71af75eb3041c3d3e3dca42ec"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/ponytail-subagent.js",
+      "bytes": 3497,
+      "lines": 95,
+      "sha256": "e2cef430619aff95ca26379ef736e16766b26358b69828cc74bc8c78abc70860"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/qoder-hooks.json",
+      "bytes": 718,
+      "lines": 26,
+      "sha256": "3831c8e496b2c6f85bbe0ee36482e34855905d03bfb39e027562dfbe3d4ed0d8"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/band/board.ts",
+      "bytes": 45260,
+      "lines": 560,
+      "sha256": "c697da70dabdf9810361886f07ed6133610746ba31e7dc68bdab8384118c00ce"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/band/logo.ts",
+      "bytes": 49871,
+      "lines": 3,
+      "sha256": "187c17a751140e0a8b030dea9d4436ce818f287efbc6f7d899e48064ecfd309a"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/band/metrics.ts",
+      "bytes": 14738,
+      "lines": 311,
+      "sha256": "e3646320e409ec2a96212cd181c4b49e5a1cc77dbfda759927c7f4def5571587"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/band/register.tsx",
+      "bytes": 21980,
+      "lines": 495,
+      "sha256": "9e4e2915495ef460fe5b313dcefefc30ac1c9351e025a84deb2c7578782f36cb"
+    },
+    {
+      "path": "04_ponytail_gems/hooks/band/types.d.ts",
+      "bytes": 640,
+      "lines": 34,
+      "sha256": "970ccf48e1b970b64ba8b1259557e72c82aa6cd036e1ab9b97187cc57d544e5b"
+    },
+    {
+      "path": "04_ponytail_gems/pi-extension/index.js",
+      "bytes": 9486,
+      "lines": 254,
+      "sha256": "a8ff050f3e9ea9c33647ec87d4f67b3380dddc68375685a88c81960af10a879a"
+    },
+    {
+      "path": "04_ponytail_gems/pi-extension/package.json",
+      "bytes": 144,
+      "lines": 8,
+      "sha256": "376677d0d7d7846e7e521fc14f129e41cdbb60f0018834f34d3ef638f30e4be0"
+    },
+    {
+      "path": "04_ponytail_gems/pi-extension/test/extension.test.js",
+      "bytes": 16950,
+      "lines": 367,
+      "sha256": "25a613493b7610dff0d92b349ba211e75732e425b41f522224915ec10cf586a3"
+    },
+    {
+      "path": "04_ponytail_gems/pi-extension/test/helpers.test.js",
+      "bytes": 8628,
+      "lines": 179,
+      "sha256": "65cc656511d8b9d79c8a6f7ee22a723ad7b9180d1eeb1db29ca2e2760df646f8"
+    },
+    {
+      "path": "04_ponytail_gems/skills/plugin.json",
+      "bytes": 167,
+      "lines": 5,
+      "sha256": "b1db7be1404a84ebf992a2fb7a5a9296adb17b0fc63a14856e2028f0d1d16051"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail/SKILL.md",
+      "bytes": 3496,
+      "lines": 52,
+      "sha256": "9badd22a32e19cb884e46dfa8d3aae82bb81dfa5484105b8b4f0262df823a509"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail-audit/SKILL.md",
+      "bytes": 5417,
+      "lines": 103,
+      "sha256": "2b3223a02c386d1263e1b08343cb8eb3a53e444cdafb1d79e26c8ec2a8fcad28"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail-debt/SKILL.md",
+      "bytes": 1769,
+      "lines": 44,
+      "sha256": "b5ec2762f6ba8c4af9ea7173aa6c9f91b88655a25e43f9de0264f6ce8722b25f"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail-gain/SKILL.md",
+      "bytes": 2164,
+      "lines": 52,
+      "sha256": "231034a896d6762e4b5c8468287083422c56b499119976ec9f76821f7d083090"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail-help/SKILL.md",
+      "bytes": 3188,
+      "lines": 76,
+      "sha256": "86ab0ce0af70cbeeeef499d5c884873b393f87f86401dcc45553662ce2c1eff9"
+    },
+    {
+      "path": "04_ponytail_gems/skills/ponytail-review/SKILL.md",
+      "bytes": 5143,
+      "lines": 101,
+      "sha256": "33fe4ebe22a460924e5d4a261e223df22e409cc94ab76182bee9fb91a3ef022e"
+    },
+    {
+      "path": "05_kian_v2_injectors/inject_4repos_skills.py",
+      "bytes": 11421,
+      "lines": 293,
+      "sha256": "417f986f0397ce4e5bda9a95bfa56538b45053d10ec4abd30247c545803549e3"
+    },
+    {
+      "path": "05_kian_v2_injectors/kian_anthropic_anti_slop.rs",
+      "bytes": 5526,
+      "lines": 114,
+      "sha256": "2183f14347f33eed52107fe34872506d9e06a60c426dc0a98e15ba1c6b6fb398"
+    }
+  ]
+}

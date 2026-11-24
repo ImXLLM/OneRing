@@ -105,7 +105,7 @@ mod fuzz_ai_chat {
                 rng.mutate(&mut mutated);
                 for data in [raw.as_slice(), mutated.as_slice(), p.as_bytes()] {
                     if let Ok(req) = serde_json::from_slice::<AiChatRequest>(data) {
-                        assert!(!req.messages.is_empty());
+                        assert_ne!(req.messages, [] as [kian_contracts::AiMessage; 0]);
                     }
                 }
             }
@@ -131,7 +131,7 @@ mod fuzz_create_escrow {
     /// ۱۴۰ جهش — پارسر قرارداد هرگز panic نمی‌کند.
     #[test]
     fn escrow_parser_never_panics_on_140_mutations() {
-        let mut rng = Rng::seeded(0xC0FFEE);
+        let mut rng = Rng::seeded(0xC0_FFEE);
         for _ in 0..ADVERSARIAL_INPUTS_PER_TARGET {
             let mut data = valid_seed();
             rng.mutate(&mut data);
@@ -154,7 +154,7 @@ mod fuzz_create_escrow {
                 Ok(d) => d,
                 Err(err) => {
                     // منفی/بی‌سقف — ردِ تایپ‌دار در مبدأ (صفر مجاز است)
-                    assert!(amount < 0 || amount > kian_domain::MAX_DIN, "مبلغ {amount} باید Din شود");
+                    assert!(!(0..=kian_domain::MAX_DIN).contains(&amount), "مبلغ {amount} باید Din شود");
                     // منفی → NegativeAmount؛ بیش از سقف → AmountOutOfRange
                     let expected = if amount < 0 {
                         kian_domain::DomainErrorCode::NegativeAmount
@@ -201,7 +201,7 @@ mod fuzz_create_escrow {
                 let err = res.expect_err("bps بالا باید رد شود");
                 assert_eq!(err.code, kian_domain::DomainErrorCode::BpsOutOfRange);
             } else if let Ok(out) = res {
-                assert!(out.escrow.amount.as_i64() == 500_000_000);
+                assert_eq!(out.escrow.amount.as_i64(), 500_000_000);
             }
         }
     }
@@ -219,13 +219,11 @@ mod fuzz_create_escrow {
             product_ref: None,
             at: None,
         };
+        let total_before: i64 = ledger.balances.values().sum();
         let res = create_escrow_with_affiliate(&ledger, &open_registry(), &cmd, Some("citizen:buyer".to_owned()), 2500);
         // پذیرفته یا ردِ تایپ‌دار — فقط بدون panic و با تراز متوازن
-        assert_eq!(
-            ledger.balances.values().sum::<i64>() + ledger.balances.values().sum::<i64>() * 0,
-            ledger.balances.values().sum::<i64>(),
-            "دفتر ورودی دست‌نخورده"
-        );
+        let total_after: i64 = ledger.balances.values().sum();
+        assert_eq!(total_before, total_after, "دفتر ورودی دست‌نخورده");
         let _ = res;
     }
 
@@ -300,7 +298,7 @@ mod fuzz_mint_request {
     /// ۱۴۰ جهش + بدنه‌های مرزی دستی (حجم عظیم، شناسهٔ خالی، یونیکد معکوس).
     #[test]
     fn mint_parser_never_panics_on_140_mutations_plus_edges() {
-        let mut rng = Rng::seeded(0xD1CEB0);
+        let mut rng = Rng::seeded(0xD1_CEB0);
         for _ in 0..ADVERSARIAL_INPUTS_PER_TARGET {
             let mut data = valid_seed();
             rng.mutate(&mut data);

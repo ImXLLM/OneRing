@@ -133,7 +133,7 @@ mod tests {
         }
     }
 
-    /// توصیف‌های غنی‌شده از پورتال AgentX — هر نقش فعال توضیح پورت‌شده دارد.
+    /// توصیف‌های غنی‌شده از پورتال `AgentX` — هر نقش فعال توضیح پورت‌شده دارد.
     #[test]
     fn active_roles_carry_agentx_enriched_descriptions() {
         let expectations: &[(&str, &str)] = &[

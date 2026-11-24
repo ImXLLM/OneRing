@@ -62,6 +62,7 @@ fn cors_for(origins: &[String]) -> CorsLayer {
 }
 
 /// ساخت روتر کامل.
+#[allow(clippy::too_many_lines)]
 pub fn build_router(state: Arc<AppState>) -> Router {
     let api: Router<Arc<AppState>> = Router::new()
         // system / meta

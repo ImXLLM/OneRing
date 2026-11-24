@@ -1,6 +1,6 @@
 # OMNI-MODEL-GENOME — Ecosystem Index
 
-**Audit date:** 2026-11-24. **Evidence status:** one model profile is present. GPT-6 / Free Web / Standard is a user-specified target label; no authenticated model session or benchmark evidence was supplied. Its scorecard is a qualitative routing heuristic, not measured telemetry. Do not treat unknown models as verified fleet members.
+**Audit date:** 2026-11-24. **Evidence status:** two provisional profiles are present. Both model identities/configurations and all scorecards are user-supplied claims without authenticated live sessions or comparative benchmarks. Treat scores as qualitative routing estimates, not measured telemetry.
 
 ## Fleet
 
@@ -47,3 +47,42 @@ Scores are qualitative estimates copied/adapted from the supplied routing card. 
 ## Source inventory and limitations
 
 The 19 supplied inputs are preserved under `uploads/`. They comprise nine numbered OMNI layer drafts and ten unnumbered legacy/companion drafts (including an index synthesis prompt). No KIA-BRAIN-OS router/bootloader source files were supplied, so the bridge is specified above but cannot be verified against a real `06_LINK_Router.md`. See the workspace audit report for exact paths and counts.
+
+## Model #02 — `gemini-4-aragon-high` (provisional)
+
+| Model ID | Display label | Reported reasoning mode | Reported context | Reported role | Evidence status |
+|---|---|---|---|---|---|
+| `gemini-4-aragon-high` | GEMINI 4 Aragon HIGH | Source claims hybrid/thinking | Source claims 131k sweet spot; unverified | Architecture, Rust, review, synthesis (source scorecard) | Artifact checks only; no live model/identity verification |
+
+Profile: [`models/gemini-4-aragon-high/`](models/gemini-4-aragon-high/). Compiler: [`scripts/compile_for_gemini_aragon_high.py`](scripts/compile_for_gemini_aragon_high.py). Empirical artifact check report: [`EMPIRICAL_AUDIT_REPORT.json`](models/gemini-4-aragon-high/EMPIRICAL_AUDIT_REPORT.json).
+
+## Dual-model 20-workload matrix
+
+The GPT column reuses the earlier qualitative estimates; Gemini column transcribes the newly supplied 09 routing-card scores. Both columns are claims/estimates, not benchmark results. Choose based on tools, repository evidence, and independent verification—not score alone.
+
+| # | Workload | GPT-6 profile estimate | Gemini Aragon profile estimate | Routing note |
+|---:|---|---:|---:|---|
+| 1 | System architecture / crate design | 0.87 | 0.99 | Either may draft; review repo fit |
+| 2 | Complex Rust / async / CAS | 0.68 | 0.97 | Compile and test; independent Rust review |
+| 3 | Multi-file refactoring | 0.73 | 0.96 | Requires repo-aware edits and tests |
+| 4 | Interactive frontend UX | 0.70 | 0.96 | Browser and accessibility validation |
+| 5 | 3D / WebGL / shaders | 0.55 | 0.96 | Runtime visual/performance check |
+| 6 | SQLite / ledgers | 0.83 | 0.99 | Run transaction and recovery tests |
+| 7 | Algorithms / formal deduction | 0.88 | 0.99 | Solver/proof verification if critical |
+| 8 | Concurrency root cause | 0.70 | 0.98 | Needs traces, reproducer, race detector |
+| 9 | Security / sandbox review | 0.82 | 0.98 | Qualified review and adversarial tests |
+| 10 | Spec compliance / code review | 0.86 | 0.99 | A passing review is not a passing build |
+| 11 | Large repository archaeology | 0.52 | 0.99 | Use indexed tools; these context claims are unverified |
+| 12 | Agentic tool calling | 0.67 | 0.92 | Actual tools and permissions govern |
+| 13 | Structured data extraction | 0.84 | 0.98 | Enforce parser/schema checks |
+| 14 | Test-suite generation | 0.85 | 0.97 | Execute tests and inspect coverage |
+| 15 | Technical genome synthesis | 0.91 | 1.00 | Source cross-check; scores not empirical |
+| 16 | Persian RTL + English UX | 0.67 | 0.99 | Native and browser/device review |
+| 17 | Telegram Mini-App integration | 0.72 | 0.98 | Verify current platform docs and live integration |
+| 18 | Social ranking / growth | 0.43 | 0.97 | Opaque/current claims require evidence; avoid assumed internals |
+| 19 | Low-latency routing | 0.56 | 0.65 | Benchmark actual latency; deterministic router may win |
+| 20 | 50+ step autonomous orchestration | 0.39 | 0.99 | Do not infer reliability; checkpoint and human approval |
+
+## Step-5 merge notes
+
+`kian_v2_step5_merge/` provides a Rust profile adapter and SQLite injector template. No KIAN repository or `seed/kian-production.db` was present in this workspace, so the Rust struct mapping, DB schema compatibility, and actual injection remain **unverified/not executed**. The injector refuses to create a missing DB. The Gemini profile's 20 scores are encoded as supplied estimates; `think_mode_active` and `requires_external_state_trace` reflect profile claims, not independently tested facts.

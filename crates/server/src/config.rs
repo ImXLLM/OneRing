@@ -124,7 +124,7 @@ impl ServerConfig {
             .unwrap_or(&self.database_url);
         let without_scheme = without_file
             .strip_prefix("sqlite:")
-            .and_then(|rest| if rest == ":memory:" { None } else { Some(rest) })
+            .filter(|&rest| rest != ":memory:")
             .unwrap_or(without_file);
         let normalized = without_scheme.split('?').next().unwrap_or(without_scheme);
         if normalized == ":memory:" || normalized == "sqlite::memory:" || normalized.trim().is_empty() {
@@ -174,8 +174,7 @@ impl ServerConfig {
             rate_limit: env("KIAN_RATE_LIMIT")
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(120),
-            trust_proxy: env("KIAN_TRUST_PROXY").map_or(
-                true,
+            trust_proxy: env("KIAN_TRUST_PROXY").is_none_or(
                 |v| !matches!(v.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off"),
             ),
             backup_dir: env("KIAN_BACKUP_DIR").unwrap_or_else(|| "data/backups".into()),

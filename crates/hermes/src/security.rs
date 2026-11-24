@@ -448,6 +448,196 @@ pub fn socket_restricted_bwrap_argv(cmd: &[&str]) -> Vec<String> {
     out
 }
 
+// ── گارد SSRF دوگذره و ضد-DNS-Rebinding (پورت `firecrawl`) ────────────────
+// گذرهٔ ۱: اعتبارسنجی URL (scheme/هاست/credentials)؛ گذرهٔ ۲: هر IP
+// resolve‌شده قبل از `connect()` — loopback، RFC1918، link-local و
+// متادیتای کلود، CGNAT، multicast/broadcast، ULA/link-local و ترجمه‌های
+// IPv6 (::ffff:0:0/96 و 64:ff9b::/96 به IPv4 برمی‌گردند تا دورزدنِ پوشیده
+// بسته باشد)؛ مجموعهٔ مختلط عمومی+خصوصی = DNS Rebinding و رد قطعی.
+
+/// آیا این IP برای خروجِ عمومی وبِ کیان امن است؟ (پورت `check_resolved_ip`
+/// با سیاست `PublicOnly`) — مقصدهای خصوصی/متادیتا/ترجمه‌شده همگی `false`.
+#[must_use]
+pub fn is_safe_public_ip(ip: std::net::IpAddr) -> bool {
+    match ip {
+        std::net::IpAddr::V4(v4) => {
+            let o = v4.octets();
+            !(v4.is_loopback()
+                || v4.is_private()
+                || v4.is_link_local() // 169.254.0.0/16 شامل 169.254.169.254
+                || v4.is_broadcast()
+                || v4.is_multicast()
+                || v4.is_unspecified()
+                || v4.is_documentation() // 192.0.2.0/24 و هم‌خانواده‌ها
+                || v4 == std::net::Ipv4Addr::new(100, 100, 100, 200) // Alibaba metadata
+                || (o[0] == 100 && (o[1] & 0b1100_0000) == 64) // CGNAT 100.64.0.0/10
+                || (o[0] == 192 && o[1] == 0 && o[2] == 0) // IETF protocol assignments
+                || (o[0] == 198 && (o[1] & 0xfe) == 18) // benchmarking 198.18.0.0/15
+                || o[0] >= 240 // reserved 240.0.0.0/4
+                || o[0] == 0) // this-network 0.0.0.0/8
+        }
+        std::net::IpAddr::V6(v6) => {
+            // IPv4-mapped (::ffff:0:0/96) و NAT64 (64:ff9b::/96) — به IPv4 برمی‌گردند
+            if let Some(embedded) = v6_embedded_ipv4(v6) {
+                return is_safe_public_ip(std::net::IpAddr::V4(embedded));
+            }
+            let seg0 = v6.segments()[0];
+            let is_ula = (seg0 & 0xfe00) == 0xfc00; // fc00::/7
+            let is_link_local = (seg0 & 0xffc0) == 0xfe80; // fe80::/10
+            let is_doc = v6.segments()[0] == 0x2001 && v6.segments()[1] == 0x0db8; // 2001:db8::/32
+            !(v6.is_loopback()
+                || v6.is_unspecified()
+                || v6.is_multicast()
+                || is_ula
+                || is_link_local
+                || is_doc)
+        }
+    }
+}
+
+/// استخراج IPv4 نهفته در شکل‌های پوشیدهٔ IPv6 — `::ffff:a.b.c.d` و `64:ff9b::a.b.c.d`
+/// و سازگارِ IPv4 (`::a.b.c.d` جز `::` و `::1`).
+fn v6_embedded_ipv4(v6: std::net::Ipv6Addr) -> Option<std::net::Ipv4Addr> {
+    if let Some(v4) = v6.to_ipv4_mapped() {
+        return Some(v4);
+    }
+    let s = v6.segments();
+    // NAT64 64:ff9b::/96
+    if s[0] == 0x64 && s[1] == 0xff9b && s[2..6].iter().all(|x| *x == 0) {
+        return Some(std::net::Ipv4Addr::new(
+            (s[6] >> 8) as u8,
+            (s[6] & 0x00ff) as u8,
+            (s[7] >> 8) as u8,
+            (s[7] & 0x00ff) as u8,
+        ));
+    }
+    // IPv4-compatible ::a.b.c.d (جز :: و ::1 که خودشان مسدودند)
+    if s[..6].iter().all(|x| *x == 0) && !(s[6] == 0 && s[7] <= 1) {
+        return Some(std::net::Ipv4Addr::new(
+            (s[6] >> 8) as u8,
+            (s[6] & 0x00ff) as u8,
+            (s[7] >> 8) as u8,
+            (s[7] & 0x00ff) as u8,
+        ));
+    }
+    None
+}
+
+/// گذرهٔ ۱+۲ گارد SSRF: URL باید `https`/`http` با هاستِ بی‌credentials باشد و
+/// **همهٔ** IPهای resolve‌شده پیش از `connect()` عمومی و امن؛ مجموعهٔ خالی یا
+/// مختلطِ عمومی+خصوصی = رد (DNS Rebinding).
+///
+/// # Errors
+/// `Err(&'static str)` روی scheme نامعتبر، هاستِ خالی یا credentialsدار،
+/// resolve خالی، IP غیرعمومی در مجموعه، یا مجموعهٔ مختلط rebinding.
+pub fn validate_egress_url_and_ips(
+    url_str: &str,
+    resolved_ips: &[std::net::IpAddr],
+) -> Result<(), &'static str> {
+    // تجزیهٔ حداقلی بدون وابستگی: scheme://authority/path — فقط scheme،
+    // هاست و credentials بررسی می‌شوند؛ مسیر/کوئری موضوع این گارد نیستند.
+    let Some((scheme, rest)) = url_str.split_once("://") else {
+        return Err("egress URL is not parseable (missing scheme://)");
+    };
+    if !scheme.eq_ignore_ascii_case("https") && !scheme.eq_ignore_ascii_case("http") {
+        return Err("egress URL scheme must be https or http");
+    }
+    let authority = rest
+        .split(['/', '?', '#'])
+        .next()
+        .unwrap_or("");
+    let (has_userinfo, host) =
+        authority.rsplit_once('@').map_or((false, authority), |(userinfo, host)| {
+            (!userinfo.is_empty(), host) // credentialsدار — رد
+        });
+    if has_userinfo {
+        return Err("egress URL must not embed credentials (userinfo@host)");
+    }
+    // port را کنده می‌کنیم؛ هاست bracket دار IPv6 هم ساده برش می‌خورد
+    let host = host.split(':').next().unwrap_or(host);
+    if host.is_empty() {
+        return Err("egress URL host is empty");
+    }
+    if resolved_ips.is_empty() {
+        return Err("empty DNS resolution — refusing to connect blind");
+    }
+    let safe = resolved_ips.iter().filter(|ip| is_safe_public_ip(**ip)).count();
+    if safe == 0 {
+        return Err("egress blocked: every resolved IP is private/loopback/metadata");
+    }
+    if safe < resolved_ips.len() {
+        return Err("DNS rebinding detected: mixed public and private resolved addresses");
+    }
+    Ok(())
+}
+
+/// پیام ثابت ممنوعیت نرمش جریانی — latch می‌شود تا جریان فوراً قطع گردد.
+pub const MODERATION_FLAGGED: &str = "moderation_flagged: forbidden token reached the stream";
+
+/// نشانگر نرمشِ جریانی `dify` با پنجرهٔ لغزان — بررسی تدریجی چانک‌ها با
+/// `window_overlap` تا توکن ممنوعِ شکافته در مرز چانک هم گیر بیفتد؛ هزینهٔ
+/// هر چانک `O(Δ)` است نه `O(n)` و خطای ممنوعیت latch می‌شود.
+#[derive(Debug, Clone)]
+pub struct StreamingModerationCursor {
+    forbidden: Vec<String>,
+    tail: String,
+    window_overlap: usize,
+    flagged: Option<String>,
+}
+
+impl StreamingModerationCursor {
+    /// ساخت با فهرست توکن‌های ممنوع و هم‌پوشانی پنجره؛ `window_overlap == 0`
+    /// یعنی خودکار = طولانی‌ترین توکن منهای یک کاراکتر.
+    #[must_use]
+    pub fn new(forbidden: Vec<String>, window_overlap: usize) -> Self {
+        let auto = forbidden
+            .iter()
+            .map(|t| t.chars().count())
+            .max()
+            .unwrap_or(1);
+        let overlap = if window_overlap == 0 { auto.saturating_sub(1) } else { window_overlap };
+        Self { forbidden, tail: String::new(), window_overlap: overlap, flagged: None }
+    }
+
+    /// چانک بعدی جریان را می‌بلعد — پنجرهٔ لغزان (`overlap` + چانک) یک‌بار
+    /// اسکن می‌شود؛ توکن ممنوع = `Err` و latch.
+    ///
+    /// # Errors
+    /// [`MODERATION_FLAGGED`] روی نخستین توکن ممنوع — و در فراخوان‌های بعدی هم
+    /// همان خطا latch می‌ماند تا جریان قطع شود.
+    pub fn push_chunk(&mut self, chunk: &str) -> Result<(), &'static str> {
+        if let Some(token) = &self.flagged {
+            let _ = token;
+            return Err(MODERATION_FLAGGED);
+        }
+        let mut window = std::mem::take(&mut self.tail);
+        window.push_str(chunk);
+        for token in &self.forbidden {
+            if window.contains(token.as_str()) {
+                self.flagged = Some(token.clone());
+                return Err(MODERATION_FLAGGED);
+            }
+        }
+        // دمِ لغزان: آخرین `window_overlap` کاراکتر برای مرزِ چانک بعدی
+        let chars: Vec<char> = window.chars().collect();
+        let keep = self.window_overlap.min(chars.len());
+        self.tail = chars[chars.len() - keep..].iter().collect();
+        Ok(())
+    }
+
+    /// توکن ممنوعِ یافت‌شده (پس از latch) — برای لَگر و HITL.
+    #[must_use]
+    pub fn flagged_token(&self) -> Option<&str> {
+        self.flagged.as_deref()
+    }
+
+    /// جریان ممنوع شده؟
+    #[must_use]
+    pub fn is_flagged(&self) -> bool {
+        self.flagged.is_some()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -662,5 +852,108 @@ mod tests {
             socket_restricted_bwrap_argv(&[]),
             VM_SOCKET_RESTRICTED_BWRAP_FLAGS.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>()
         );
+    }
+
+    /// آدرس‌های خصوصی/متادیتا/ترجمه‌شده مسدودند — آدرس عمومی امن می‌گذرد.
+    #[test]
+    fn unsafe_public_ip_ranges_are_blocked() {
+        use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+        let blocked_v4: &[Ipv4Addr] = &[
+            Ipv4Addr::LOCALHOST,       // loopback
+            Ipv4Addr::new(10, 0, 0, 5),        // RFC1918 10/8
+            Ipv4Addr::new(172, 16, 3, 9),      // RFC1918 172.16/12
+            Ipv4Addr::new(192, 168, 1, 1),     // RFC1918 192.168/16
+            Ipv4Addr::new(169, 254, 169, 254), // cloud metadata
+            Ipv4Addr::new(100, 100, 100, 200), // Alibaba metadata
+            Ipv4Addr::new(100, 64, 7, 21),     // CGNAT 100.64/10
+            Ipv4Addr::new(224, 0, 0, 9),       // multicast
+            Ipv4Addr::BROADCAST, // broadcast
+            Ipv4Addr::UNSPECIFIED,         // unspecified
+            Ipv4Addr::new(192, 0, 2, 44),      // documentation
+        ];
+        for ip in blocked_v4 {
+            assert!(!is_safe_public_ip(IpAddr::V4(*ip)), "must block {ip}");
+        }
+        assert!(is_safe_public_ip(IpAddr::V4(Ipv4Addr::new(93, 184, 216, 34))), "public ok");
+        let blocked_v6: &[Ipv6Addr] = &[
+            Ipv6Addr::LOCALHOST,
+            Ipv6Addr::new(0xfc00, 0, 0, 0, 0, 0, 0, 1),       // ULA fc00::/7
+            Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 12),      // link-local fe80::/10
+            Ipv6Addr::new(0x2001, 0x0db8, 0, 0, 0, 0, 0, 5),  // documentation
+        ];
+        for ip in blocked_v6 {
+            assert!(!is_safe_public_ip(IpAddr::V6(*ip)), "must block {ip}");
+        }
+        // شکل‌های پوشیده — mapped و NAT64 به IPv4 برمی‌گردند و مسدود می‌شوند
+        assert!(!is_safe_public_ip(IpAddr::V6(
+            Ipv6Addr::new(0, 0, 0, 0, 0, 0xffff, 0x7f00, 0x0001) // ::ffff:127.0.0.1
+        )));
+        assert!(!is_safe_public_ip(IpAddr::V6(
+            Ipv6Addr::new(0x64, 0xff9b, 0, 0, 0, 0, 0x0a00, 0x0001) // 64:ff9b::10.0.0.1
+        )));
+        assert!(is_safe_public_ip(IpAddr::V6(
+            Ipv6Addr::new(0x2606, 0x4700, 0, 0, 0, 0, 0x6860, 0x4801)
+        )), "public IPv6 ok");
+    }
+
+    /// گارد دوگذره: scheme/credentials/resolve خالی/rebinding — همه رد؛
+    /// مجموعهٔ عمومی سالم می‌گذرد.
+    #[test]
+    fn egress_url_and_ips_two_stage_gate() {
+        use std::net::{IpAddr, Ipv4Addr};
+        let public = IpAddr::V4(Ipv4Addr::new(93, 184, 216, 34));
+        let private = IpAddr::V4(Ipv4Addr::new(10, 0, 0, 5));
+
+        assert!(validate_egress_url_and_ips("https://example.com/page", &[public]).is_ok());
+        assert!(validate_egress_url_and_ips(
+            "http://example.com:8080/x?q=1",
+            &[public]
+        ).is_ok());
+
+        assert!(validate_egress_url_and_ips("ftp://example.com", &[public]).is_err());
+        assert!(validate_egress_url_and_ips("notaurl", &[public]).is_err());
+        assert!(validate_egress_url_and_ips(
+            "https://user:pass@example.com",
+            &[public]
+        ).is_err(), "userinfo credentials rejected");
+        assert!(validate_egress_url_and_ips("https://example.com", &[]).is_err(), "empty DNS");
+        assert!(
+            validate_egress_url_and_ips("https://example.com", &[private]).is_err(),
+            "private-only set blocked"
+        );
+        let rebinding_err = validate_egress_url_and_ips("https://example.com", &[public, private]);
+        assert_eq!(
+            rebinding_err,
+            Err("DNS rebinding detected: mixed public and private resolved addresses")
+        );
+    }
+
+    /// نشانگر نرمش جریانی: توکن ممنوع شکافته در مرز چانک با overlap گیر
+    /// می‌افتد، latch می‌شود و هزینهٔ هر چانک O(Δ) است.
+    #[test]
+    fn streaming_moderation_cursor_catches_split_tokens_and_latches() {
+        let mut cursor =
+            StreamingModerationCursor::new(vec!["forbidden-phrase".to_owned()], 0);
+        // توکن ممنوع از مرز دو چانک می‌گذرد: "...forbidd" + "en-phrase..."
+        assert!(cursor.push_chunk("safe text forbidd").is_ok());
+        assert!(cursor.push_chunk("en-phrase continues").is_err());
+        assert_eq!(cursor.flagged_token().map(str::to_owned).as_deref(), Some("forbidden-phrase"));
+        assert!(cursor.is_flagged());
+        // latch — حتی چانک سالم بعدش هم رد می‌شود
+        assert_eq!(cursor.push_chunk("harmless"), Err(MODERATION_FLAGGED));
+
+        // جریان سالم سرراست می‌گذرد
+        let mut clean = StreamingModerationCursor::new(
+            vec!["secret".to_owned(), "خطر".to_owned()],
+            0,
+        );
+        for chunk in ["سلام، ", "تراز ", "شما ", "۵۸٬۷۰۰ ", "میلی‌KIAN است."] {
+            assert!(clean.push_chunk(chunk).is_ok(), "chunk {chunk} must pass");
+        }
+        assert!(!clean.is_flagged());
+        // توکن فارسی ممنوع شکافته
+        let mut fa = StreamingModerationCursor::new(vec!["خطرناک".to_owned()], 0);
+        assert!(fa.push_chunk("این پیام خطرن").is_ok());
+        assert!(fa.push_chunk("اک است.").is_err());
     }
 }

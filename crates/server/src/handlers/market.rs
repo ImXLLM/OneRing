@@ -184,6 +184,7 @@ pub async fn get_product_one(
 /// # Errors
 /// ۴۰۱ نشست؛ 404 محصول ناشناخته؛ ۴۲۲ محصول غیرفعال/خرید از خود/تراز ناکافی؛
 /// 500 خطای SQL.
+#[allow(clippy::too_many_lines)]
 pub async fn purchase(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -601,9 +602,9 @@ pub async fn release(
     .await;
 
     // اگر مبلغ اسکرو از آستانهٔ HITL مادهٔ ۷ گذشت، درخواست تأیید انسانی را در صف HitlRequest ثبت کن
-    if let Err(ApiFailure::Domain(ref err)) = result {
-        if err.error.code == DomainErrorCode::RequiresHumanApproval {
-            if let Ok(Some(escrow)) = state.store.get_escrow(&id).await {
+    if let Err(ApiFailure::Domain(ref err)) = result
+        && err.error.code == DomainErrorCode::RequiresHumanApproval
+            && let Ok(Some(escrow)) = state.store.get_escrow(&id).await {
                 let now_dt = chrono::Utc::now();
                 let exp_dt = now_dt + chrono::Duration::hours(PURCHASE_TTL_HOURS);
                 let hitl = HitlRow {
@@ -625,8 +626,6 @@ pub async fn release(
                 };
                 let _ = state.store.enqueue_hitl(hitl, &id).await;
             }
-        }
-    }
     result
 }
 

@@ -358,9 +358,9 @@ mod tests {
     #[test]
     fn humans_are_never_suppressed() {
         let mut g = BotLoopGuard::new();
-        for i in 0..10 {
+        for i in 0u64..10 {
             assert_eq!(
-                g.observe("c", "human", false, "همان سوال", i as u64 + 1),
+                g.observe("c", "human", false, "همان سوال", i + 1),
                 LoopGuardDecision::Allow,
                 "پیام انسان هرگز سرکوب نمی‌شود"
             );

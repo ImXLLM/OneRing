@@ -14,7 +14,9 @@ impl Rng {
         Self(if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed })
     }
 
-    /// عدد تصادفی بعدی — عین `fuzz_lite.rs`.
+    /// عدد تصادفی بعدی — عین `fuzz_lite.rs` (صفت `Iterator` نیست —
+    /// PRNG اختصاصیِ فاز؛ نام port fidelity را حفظ می‌کند).
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> u64 {
         let mut x = self.0;
         x ^= x << 13;
@@ -25,6 +27,9 @@ impl Rng {
     }
 
     /// جهش بایت‌آرایه — حذف/درج/جایگزینی بایت + برش + درج بایت خراب UTF-8.
+    /// برش `u64→usize` در PRNG فاز فقط مادولو می‌شود — روی هدف ۳۲بیت هم
+    /// توزیع جهش تغییر معنایی نمی‌کند؛ allow هدف‌مندِ صریح.
+    #[allow(clippy::cast_possible_truncation)]
     pub fn mutate(&mut self, bytes: &mut Vec<u8>) {
         if bytes.is_empty() {
             bytes.push(b'x');

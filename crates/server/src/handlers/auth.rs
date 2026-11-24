@@ -34,7 +34,7 @@ pub fn user_view(u: &UserRow) -> UserView {
     }
 }
 
-/// توکن نشست اپاک — دو UUIDv4 رمزنگاری‌شده (CSPRNG سیستم‌عامل) پشت هم = ۶۴ hex.
+/// توکن نشست اپاک — دو `UUIDv4` رمزنگاری‌شده (CSPRNG سیستم‌عامل) پشت هم = ۶۴ hex.
 pub(crate) fn new_session_token() -> String {
     let a = uuid::Uuid::new_v4().simple().to_string();
     let b = uuid::Uuid::new_v4().simple().to_string();
@@ -539,7 +539,7 @@ mod tests {
         assert_eq!(json_body(res).await["user"]["telegramId"], "1001");
     }
 
-    /// خارج از حالت dev — ۴۰۳ DEV_MODE_DISABLED (fail-closed).
+    /// خارج از حالت dev — ۴۰۳ `DEV_MODE_DISABLED` (fail-closed).
     #[tokio::test]
     async fn dev_login_is_forbidden_when_dev_mode_off() {
         let app = app_dev(false).await;

@@ -59,7 +59,7 @@ pub const fn next_offset(update_id: i64) -> i64 {
 mod tests {
     use super::*;
 
-    /// الگوی هرمس — آخرین update_id معلق + ۱؛ خالی → نگه‌داشتن جاری.
+    /// الگوی هرمس — آخرین `update_id` معلق + ۱؛ خالی → نگه‌داشتن جاری.
     #[test]
     fn drain_uses_last_pending_plus_one() {
         assert_eq!(drain_backlog_offset(&[10, 11, 12]), DrainOutcome::Drained(13));

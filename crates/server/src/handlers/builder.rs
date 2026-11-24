@@ -105,8 +105,7 @@ pub async fn create_session(
     let initial_title = req
         .initial_idea
         .as_deref()
-        .map(|s| s.trim().chars().take(120).collect::<String>())
-        .unwrap_or_default();
+        .map_or_default(|s| s.trim().chars().take(120).collect::<String>());
 
     let now = now_unix();
     let session = BuilderSessionRow {
@@ -191,6 +190,7 @@ pub async fn get_session(
 ///
 /// # Errors
 /// ۴۰۱ نشست؛ ۴۰۰ پیام خالی/بلند؛ ۴۰۴ جلسه ناشناخته؛ ۴۲۹ اتمام بودجهٔ روزانهٔ AI؛ ۵۰۰ خطای SQL.
+#[allow(clippy::too_many_lines)]
 pub async fn chat(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -319,6 +319,7 @@ pub async fn chat(
 ///
 /// # Errors
 /// ۴۰۱ نشست؛ ۴۰۰ ورودی نامعتبر؛ ۴۰۴ جلسه ناشناخته؛ ۴۲۲ نبود کد HTML یا `BPS_OUT_OF_RANGE`؛ ۵۰۰ خطای SQL.
+#[allow(clippy::too_many_lines)]
 pub async fn publish(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -394,7 +395,7 @@ pub async fn publish(
         );
     let price_din = req
         .price_din
-        .map_or_else(|| session.suggested_price.max(1), |d| d.get());
+        .map_or_else(|| session.suggested_price.max(1), kian_contracts::Din::get);
     let affiliate_bps = req.affiliate_bps.unwrap_or(session.affiliate_bps);
 
     if !(1..=120).contains(&title.chars().count())

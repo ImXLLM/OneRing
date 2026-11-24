@@ -56,9 +56,10 @@ pub use gateway::{
 };
 pub use redaction::{redact, RedactionFinding, RedactionReport};
 pub use omni_genome_router::{
-    builtin_ecosystem_profiles, builtin_gpt6_standard_profile, compile_prompt_for_model,
-    load_model_genome_from_dir, EngineeringWorkload, GenomeError, GenomeLayerId, HandoffPacket,
-    ModelGenomeProfile,
+    builtin_ecosystem_profiles, builtin_gemini_aragon_high_profile, builtin_gpt6_standard_profile,
+    compile_prompt_for_gemini_aragon_high, compile_prompt_for_model, load_model_genome_from_dir,
+    sanitize_gemini_aragon_output, build_caveman_directive, CavemanIntensity, EngineeringWorkload,
+    GenomeError, GenomeLayerId, HandoffPacket, ModelGenomeProfile, GEMINI_ARAGON_MODEL_ID,
 };
 pub use opencode_zen::{
     is_retired_model, resolve_active_free_model, FreeModelSpec, ModelProtocol, ZenClientConfig,

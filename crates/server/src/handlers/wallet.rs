@@ -539,6 +539,7 @@ mod withdrawal_tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn withdrawal_flow_locks_balance_reject_refunds_and_confirm_finalizes() {
         let app = app().await;
         let tok = auth(&app, "901", "seller_wdr").await;
@@ -822,7 +823,7 @@ mod withdrawal_tests {
         assert_eq!(res.status(), 401);
     }
 
-    /// فاست خارج از حالت dev — ۴۰۳ DEV_MODE_DISABLED (هیچ شیری به تولید نشت نمی‌کند).
+    /// فاست خارج از حالت dev — ۴۰۳ `DEV_MODE_DISABLED` (هیچ شیری به تولید نشت نمی‌کند).
     #[tokio::test]
     async fn faucet_is_forbidden_when_dev_mode_off() {
         let store = V3Store::connect_in_memory().await.unwrap();

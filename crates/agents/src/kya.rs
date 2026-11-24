@@ -168,7 +168,7 @@ mod tests {
             assert_eq!(m.algorithm, "ES256");
             assert_eq!(m.registry, "erc8004");
             assert!(m.jwks_path.starts_with("/.well-known/agents/"));
-            assert!(!m.scopes.is_empty());
+            assert_ne!(m.scopes, [] as [std::string::String; 0]);
         }
         // نگهبان حالا فعال است — اسکوپ‌های امنیت/راستی‌آزمایی دارد.
         let guardian = ROLES.iter().find(|r| r.role == "guardian").expect("guardian");

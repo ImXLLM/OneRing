@@ -9,8 +9,7 @@ description = "تیم ایجنت‌ها — ۷ نقش، MCP، A2A، ناوگان
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
+# thiserror/tracing اینجا مصرفی ندارند — حذف شد تا هشدار manifest صفر شود.
 
 [lints.rust]
 unsafe_code = "forbid"

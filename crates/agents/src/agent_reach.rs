@@ -402,7 +402,7 @@ mod tests {
         let child = attenuate_capabilities(&parent, &subset);
         assert_eq!(child, vec!["web.read".to_owned(), "shell.exec".to_owned()]);
         // زیرمجموعهٔ خالی → هیچ.
-        assert!(attenuate_capabilities(&parent, &[]).is_empty());
+        assert_eq!(attenuate_capabilities(&parent, &[]), [] as [std::string::String; 0]);
     }
 
     #[test]

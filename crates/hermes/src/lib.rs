@@ -17,6 +17,7 @@ pub mod ag_ui;
 pub mod approvals;
 pub mod builder;
 pub mod creator_dna_contract;
+pub mod discipline_gates;
 pub mod engine;
 pub mod faq;
 pub mod fuzzy_patch;
@@ -50,6 +51,12 @@ pub use creator_dna_contract::{
     audit_against_creator_dna, build_creator_dna_system_anchor, CreatorDnaContract, DnaContractError,
     DnaViolation, CREATOR_HANDLE, DNA_SCHEMA_VERSION, PERSIAN_FONT_STACK, REASONING_PERSONA,
 };
+pub use discipline_gates::{
+    audit_frontend_slop, should_suggest_strategic_compact, verify_completion_claim,
+    AtomicInstinct, ReviewStage, TwoStageReview, INSTINCT_MAX_CONFIDENCE, INSTINCT_MIN_CONFIDENCE,
+    STRATEGIC_COMPACT_TOKEN_THRESHOLD, STRATEGIC_COMPACT_TOOL_CALL_INTERVAL,
+    STRATEGIC_COMPACT_TOOL_CALL_THRESHOLD, SYSTEM_PROMPT_DYNAMIC_BOUNDARY,
+};
 pub use fuzzy_patch::{apply_surgical_patch, evaluate_exec_policy, miss_hint, ExecDecision, PatchError};
 pub use engine::{auto_route, identity_score, HermesEngine, HermesError, HermesExit, RunOutcome};
 pub use faq::{match_instant_faq, match_instant_faq_key, FaqTopic, FAQ_TOPICS};
@@ -60,9 +67,10 @@ pub use prompt::{
     SkillIndexEntry, SKILLS_GUIDANCE, SKILL_PROMPT_DESC_LIMIT, ThreeLayerSystemPrompt, RTL_RULE_FA,
 };
 pub use security::{
-    contains_hidden_variation_selectors, redact_with_learned_propagation, sandbox_profile_by_id,
-    socket_restricted_bwrap_argv, strip_shell_comments_preserving_quotes, SandboxEngine,
-    SandboxProfile, StuckCallGate, SANDBOX_PROFILES,
+    contains_hidden_variation_selectors, is_safe_public_ip, redact_with_learned_propagation,
+    sandbox_profile_by_id, socket_restricted_bwrap_argv, strip_shell_comments_preserving_quotes,
+    validate_egress_url_and_ips, SandboxEngine, SandboxProfile, StreamingModerationCursor,
+    StuckCallGate, SANDBOX_PROFILES, MODERATION_FLAGGED,
 };
 pub use studio_design_contract::{
     build_verbatim_user_messages_block, detect_persian_rtl, enforce_rtl, verbatim_budget_chars,

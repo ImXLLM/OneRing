@@ -154,16 +154,29 @@ impl EngineeringWorkload {
 // ─────────────────────────── پروفایل ژنوم ───────────────────────────
 
 /// پروفایل مهندسی معکوس یک مدل — پورت فایل‌های `01..09` به ساختار ماشینی.
+/// پرچم‌های بولیِ زیاد ذاتِ دامنه‌اند: هر پرچم یک قرارداد مستقل از کارت ۰۹ است
+/// (Think، ضد-filler، صفر-کپی، backtick، ضد-Canvas) و ترکیب‌شان معنا را می‌سازد.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelGenomeProfile {
     /// شناسهٔ مدل = نام پوشه (`gpt-6-standard-free`).
     pub model_id: String,
+    /// نام نمایشی رسمی (`GEMINI 4 Aragon HIGH`) — پیش‌فرض همان `model_id`.
+    pub display_name: String,
     /// پارادایم استدلال از frontmatter فایل ۰۱.
     pub reasoning_paradigm: String,
     /// آیا حالت Think زنده است؟ (`gpt-6-standard-free`: false)
     pub think_mode_active: bool,
     /// اگر Think خاموش است — جدول `<pre_computation_state_trace>` الزامی.
     pub requires_external_state_trace: bool,
+    /// سطح تلاش اعلام‌شده (`EFFORT LEVEL`) — `None` = نامشخص (هرگز خودسازی نمی‌شود).
+    pub effort_level: Option<f32>,
+    /// ممنوعیت پرگویی (`Sure!`، `I hope this helps` و …).
+    pub forbids_chatty_filler: bool,
+    /// ترجیح سنتز Rust صفر-کپی (borrow به‌جای clone).
+    pub supports_zero_copy_rust_synthesis: bool,
+    /// قرارداد backtick های `clippy-1.100` در doc comments.
+    pub enforce_clippy_1_100_backticks: bool,
     /// گارد ضد-Canvas / ضد-وب‌سرچ برای هارنس وب.
     pub suppress_web_canvas_hijack: bool,
     /// سقف قواعد هر گیت فازی (پیش‌فرض ۶).
@@ -234,9 +247,11 @@ fn parse_frontmatter(text: &str) -> BTreeMap<String, String> {
     out
 }
 
-/// اسکورکارد ۲۰تسکی کارت ۰۹ را پارس می‌کند — سطرهای `| n | ... | 0.xx |`.
-/// سطرهای کمتر از ۲۰ یعنی امتیاز ناقص → فقط سطرهای معتبر ثبت می‌شوند؛
-/// این تابع هرگز عدد از خودسازی نمی‌سازد.
+/// اسکورکارد ۲۰تسکی کارت ۰۹ را پارس می‌کند — سطرهای `| n | ... | 0.xx |`؛
+/// تزئین‌های Markdown (`**bold**` و `` `code` ``) پیش از پارس کنده می‌شوند تا
+/// کارت‌های `**01**` / `` **`0.99`** `` هم پارس شوند. سطرهای کمتر از ۲۰ یعنی
+/// امتیاز ناقص → فقط سطرهای معتبر ثبت می‌شوند؛ این تابع هرگز عدد از خودسازی
+/// نمی‌سازد.
 fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f32> {
     let mut out = BTreeMap::new();
     for line in routing_card.lines() {
@@ -244,7 +259,10 @@ fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f3
         if !trimmed.starts_with('|') {
             continue;
         }
-        let cells: Vec<&str> = trimmed.split('|').map(str::trim).collect();
+        let cells: Vec<String> = trimmed
+            .split('|')
+            .map(|c| c.trim().trim_matches(['*', '`']).trim().to_string())
+            .collect();
         // cells[0] خالی (جداکنندهٔ ابتدای سطر)؛ cells[1] شمارهٔ ردیف است.
         let Some(row_no) = cells.get(1).and_then(|c| c.parse::<usize>().ok()) else {
             continue;
@@ -305,8 +323,10 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
 
     let routing_text = std::fs::read_to_string(dir.join(GenomeLayerId::RoutingAndHandoffCard.filename()))
         .map_err(|_| GenomeError::UnreadableDirectory { path: dir.display().to_string() })?;
-    let calibration = parse_frontmatter(&routing_text)
+    let routing_fm = parse_frontmatter(&routing_text);
+    let calibration = routing_fm
         .get("calibration_status")
+        .or_else(|| routing_fm.get("empirical_verification_status"))
         .cloned()
         .unwrap_or_else(|| "unspecified".to_string());
     let workload_scores = parse_workload_scores(&routing_text);
@@ -336,6 +356,18 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
         .unwrap_or(6);
 
     Ok(ModelGenomeProfile {
+        display_name: fm.get("display_name").cloned().unwrap_or_else(|| model_id.clone()),
+        effort_level: fm
+            .get("effort_level")
+            .and_then(|v| v.parse::<f32>().ok())
+            .filter(|e| (0.0..=1.0).contains(e)),
+        forbids_chatty_filler: fm.get("forbids_chatty_filler").is_some_and(|v| v == "true"),
+        supports_zero_copy_rust_synthesis: fm
+            .get("supports_zero_copy_rust_synthesis")
+            .is_some_and(|v| v == "true"),
+        enforce_clippy_1_100_backticks: fm
+            .get("enforce_clippy_1_100_backticks")
+            .is_some_and(|v| v == "true"),
         model_id,
         reasoning_paradigm,
         think_mode_active,
@@ -371,6 +403,36 @@ pub fn builtin_gpt6_standard_profile() -> ModelGenomeProfile {
     )
 }
 
+/// شناسهٔ canonical هدف #02 رجیستری دو-مدلی v2.
+pub const GEMINI_ARAGON_MODEL_ID: &str = "gemini-4-aragon-high";
+
+/// امتیازهای اسکورکارد `gemini-4-aragon-high` — کپی کارت ۰۹ مونت‌شده
+/// (کالیبراسیون: برآورد کیفی کاربر، بدون نشست زنده و بدون بنچمارک).
+const GEMINI_ARAGON_SCORES: [f32; 20] = [
+    0.99, 0.97, 0.96, 0.96, 0.96, 0.99, 0.99, 0.98, 0.98, 0.99, 0.99, 0.92, 0.98, 0.97, 1.00,
+    0.99, 0.98, 0.97, 0.65, 0.99,
+];
+
+/// پروفایل داخلی هدف #02 — `gemini-4-aragon-high` (`GEMINI 4 Aragon HIGH`،
+/// Think Mode ON با `EFFORT LEVEL` 1.00، ضد-پرگویی، سنتز صفر-کپی Rust و
+/// قرارداد backtick های `clippy-1.100`).
+#[must_use]
+pub fn builtin_gemini_aragon_high_profile() -> ModelGenomeProfile {
+    let mut p = scores_to_profile(
+        GEMINI_ARAGON_MODEL_ID,
+        "hybrid_thinking (native_deep_cot_scratchpad + aragon4_first_principles_deduction)",
+        true,
+        &GEMINI_ARAGON_SCORES,
+        "user_supplied_qualitative_estimates_not_benchmark_measurements",
+    );
+    p.display_name = "GEMINI 4 Aragon HIGH".to_string();
+    p.effort_level = Some(1.00);
+    p.forbids_chatty_filler = true;
+    p.supports_zero_copy_rust_synthesis = true;
+    p.enforce_clippy_1_100_backticks = true;
+    p
+}
+
 /// امتیازهای provision al ۱۱ اسلات plug-and-play آیندهٔ `00_ECOSYSTEM_INDEX.md`.
 /// برآورد کیفی آرکتایپی — تا وقتی کارت ۰۹ واقعی مونت نشود provisional هستند.
 const ECOSYSTEM_SLOT_SCORES: &[(&str, bool, [f32; 20])] = &[
@@ -387,11 +449,11 @@ const ECOSYSTEM_SLOT_SCORES: &[(&str, bool, [f32; 20])] = &[
     ("opencode-zen-flagship", false, [0.78, 0.72, 0.74, 0.70, 0.54, 0.72, 0.80, 0.68, 0.72, 0.76, 0.56, 0.76, 0.76, 0.78, 0.80, 0.62, 0.66, 0.44, 0.58, 0.46]),
 ];
 
-/// کل اکوسیستم: هدف #01 + ۱۱ اسلات plug-and-play — همهٔ پروفایل‌ها
+/// کل اکوسیستم: هدف #01 + هدف #02 + ۱۱ اسلات plug-and-play — همهٔ پروفایل‌ها
 /// قابل‌گسترش از دیسک (`models/<id>/`) بدون تغییر کرنل.
 #[must_use]
 pub fn builtin_ecosystem_profiles() -> Vec<ModelGenomeProfile> {
-    let mut out = vec![builtin_gpt6_standard_profile()];
+    let mut out = vec![builtin_gpt6_standard_profile(), builtin_gemini_aragon_high_profile()];
     for (model_id, think, scores) in ECOSYSTEM_SLOT_SCORES {
         out.push(scores_to_profile(
             model_id,
@@ -417,6 +479,11 @@ fn scores_to_profile(
         map.insert(*workload, *score);
     }
     ModelGenomeProfile {
+        display_name: model_id.to_string(),
+        effort_level: None,
+        forbids_chatty_filler: false,
+        supports_zero_copy_rust_synthesis: false,
+        enforce_clippy_1_100_backticks: false,
         model_id: model_id.to_string(),
         reasoning_paradigm: paradigm.to_string(),
         think_mode_active: think,
@@ -480,6 +547,157 @@ pub fn compile_prompt_for_model(
     out.push_str("- For patches prefer `<<<<<<< SEARCH` / `=======` / `>>>>>>> REPLACE` blocks with >= 3-line context anchors.\n");
     out.push_str("- End with an explicit verification statement separating proven facts from estimates.\n");
     out
+}
+
+// ─────────────────────────── هدف #02: کامپایلر و پاک‌ساز `gemini-4-aragon-high` ───────────────────────────
+
+/// کامپایلر پرامپت هدف #02 — `EFFORT LEVEL` 1.00 با Think زنده (بدون جدول
+/// پیش‌محاسبه)، لنگر `SYSTEM DNA` کیان، ممنوعیت پرگویی و قرارداد
+/// backtick های `clippy-1.100` وقتی `strict_rust_clippy` روشن است.
+#[must_use]
+pub fn compile_prompt_for_gemini_aragon_high(
+    system_dna: &str,
+    user_task: &str,
+    strict_rust_clippy: bool,
+) -> String {
+    let mut out = String::with_capacity(2048);
+    out.push_str("# TASK CONTRACT — GEMINI 4 Aragon HIGH (effort 1.00)\n\n");
+    out.push_str("## SYSTEM DNA (verbatim anchor — never contradict)\n");
+    out.push_str(system_dna.trim());
+    out.push_str("\n\n");
+    out.push_str("## EFFORT LEVEL: 1.00 — maximum reasoning depth\n");
+    out.push_str("- Think Mode is ACTIVE (hybrid_thinking): reason to full depth internally; \
+        never emit hidden chain-of-thought or `<thought>` markers.\n");
+    out.push_str("- No chatty filler: no `Sure!`, `Certainly!`, `Of course!`, \
+        `I hope this helps`, `Let me know if` — answer starts with substance.\n");
+    out.push_str("- Prefer zero-copy Rust synthesis: borrows over clones, `get_mut` over \
+        direct indexing, no unnecessary `String` allocation.\n\n");
+    out.push_str("## TASK\n");
+    out.push_str(user_task.trim());
+    out.push_str("\n\n");
+    if strict_rust_clippy {
+        out.push_str("## RUST CONTRACT (clippy 1.100 pedantic, `-D warnings`)\n");
+        out.push_str("- `#![forbid(unsafe_code)]`; every pub item documented; technical \
+            identifiers/paths/types in doc comments wrapped in backticks (e.g. `IPv4`, `CAS`).\n");
+        out.push_str("- Compiles on first write: no `unwrap()` outside tests, `# Errors` \
+            section on fallible public functions.\n\n");
+    }
+    out.push_str("## OUTPUT CONTRACT (ANTI-ELISION)\n");
+    out.push_str("- Never emit `// ... existing code` or elided placeholders; complete code only.\n");
+    out.push_str("- End with a verification statement separating proven facts from estimates.\n");
+    out
+}
+
+/// نشانه‌های متا که از پرامپت به خروجی «نشت» کرده‌اند — خط حاوی‌شان کنده می‌شود.
+const GEMINI_LEAKED_MARKERS: &[&str] =
+    &["SPECIAL INSTRUCTION: think silently", "EFFORT LEVEL:"];
+
+/// فیلِرهای محاوره‌ای که پروفایل `forbids_chatty_filler` آن‌ها را ممنوع می‌کند —
+/// خطِ آغازین/پایانیِ حاوی‌شان کنده می‌شود (محتوای فنس کد دست نمی‌خورد).
+const GEMINI_CHATTY_FILLERS: &[&str] = &[
+    "sure!",
+    "certainly!",
+    "of course!",
+    "great question",
+    "i hope this helps",
+    "let me know if you",
+    "feel free to ask",
+    "here is what i came up with",
+];
+
+/// پاک‌ساز خروجی `gemini-4-aragon-high`: نشانه‌های متا نشت‌کرده
+/// (`SPECIAL INSTRUCTION: think silently`، `EFFORT LEVEL:`)، بلوک‌های
+/// `<thought>`/`<think>` پنهان و فیلِر محاوره‌ای را کنده می‌کند — محتوای
+/// فنس‌های ```rust``` و کد معتبر دست‌نخورده می‌ماند.
+#[must_use]
+pub fn sanitize_gemini_aragon_output(raw: &str) -> String {
+    // ۱) بلوک‌های فکر پنهان — چندخطی، غیرحریص
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some(open) = rest.find("<thought>").or_else(|| rest.find("<think>")) {
+        out.push_str(&rest[..open]);
+        let tag_len = if rest[open..].starts_with("<thought>") { 9 } else { 7 };
+        let after_open = &rest[open + tag_len..];
+        let close_tag = if tag_len == 9 { "</thought>" } else { "</think>" };
+        rest = match after_open.find(close_tag) {
+            Some(close) => &after_open[close + close_tag.len()..],
+            None => "", // باز بدون بسته — تا انتها کنده می‌شود
+        };
+    }
+    out.push_str(rest);
+    let scrubbed = out;
+
+    // ۲) خط‌های متا نشت‌کرده حذف کامل می‌شوند؛ فیلِر محاوره‌ای فقط به‌عنوان
+    // پیشوندِ خط کنده می‌شود تا دنبالهٔ معنادار همان خط (پاسخ واقعی) بماند.
+    let mut lines: Vec<String> = Vec::new();
+    for line in scrubbed.lines() {
+        let lower = line.trim_start().to_ascii_lowercase();
+        let leaked = GEMINI_LEAKED_MARKERS
+            .iter()
+            .any(|m| lower.contains(&m.to_ascii_lowercase()));
+        if leaked {
+            continue;
+        }
+        let mut work = line.trim_start().to_string();
+        let mut stripped = false;
+        for filler in GEMINI_CHATTY_FILLERS {
+            if work.to_ascii_lowercase().starts_with(*filler) {
+                work = work[filler.len()..]
+                    .trim_start_matches(['!', '.', ',', ':', ' '])
+                    .to_string();
+                stripped = true;
+            }
+        }
+        if stripped {
+            let remainder = work.trim_end();
+            if remainder.is_empty() {
+                continue;
+            }
+            lines.push(remainder.to_string());
+        } else {
+            lines.push(line.to_string());
+        }
+    }
+    let joined = lines.join("\n");
+    joined.trim().to_string()
+}
+
+/// شدت مود فشرده‌سازی `caveman` (گنجینهٔ `mattpocock/skills`) — خروجی
+/// تله‌گرافیک با حفظ ۱۰۰٪ صحت فنی/کد.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CavemanIntensity {
+    /// خاموش — نثر کامل مجاز.
+    Off,
+    /// سبک — بدون تعارف و بازگوییِ تسک؛ بولت به‌جای پاراگراف.
+    Lite,
+    /// کامل — قطعه‌نوشت تله‌گرافیک؛ بدون صفت/مقاله؛ ~۷۵٪ کاهش توکن خروجی.
+    Full,
+    /// فراحساس — تکه‌کلمه؛ فقط کد و invariant؛ حداکثر فشرده‌سازی.
+    Ultra,
+}
+
+/// دستورِ سیستم برای هر شدت `caveman` — برای تزریق در کامپایلر پرامپت.
+/// نرخ هدف: `Full`/`Ultra` ≈ ~۷۵٪ کاهش توکن خروجی با حفظ ۱۰۰٪ صحت فنی.
+#[must_use]
+pub fn build_caveman_directive(intensity: CavemanIntensity) -> &'static str {
+    match intensity {
+        CavemanIntensity::Off => "",
+        CavemanIntensity::Lite => {
+            "CAVEMAN LITE: no pleasantries, no restating the task, no summaries of what you \
+             are about to do; bullets over paragraphs; keep all code, tests, and error paths \
+             verbatim."
+        }
+        CavemanIntensity::Full => {
+            "CAVEMAN FULL: telegraphic fragments only — drop articles, adjectives and \
+             transitions; zero filler; ~75% output token reduction; code, invariants and \
+             error paths stay 100% verbatim and technically exact."
+        }
+        CavemanIntensity::Ultra => {
+            "CAVEMAN ULTRA: single words and fragments; emit only code, tables and invariants; \
+             explanations only when explicitly asked; ~75%+ output token reduction; 100% \
+             technical/code accuracy preserved — never truncate code."
+        }
+    }
 }
 
 // ─────────────────────────── پاکت تحویل ───────────────────────────
@@ -665,7 +883,7 @@ mod tests {
     #[test]
     fn think_on_profiles_skip_state_trace_but_keep_phase_gates() {
         let profiles = builtin_ecosystem_profiles();
-        assert_eq!(profiles.len(), 12, "target #01 + 11 plug-and-play slots");
+        assert_eq!(profiles.len(), 13, "target #01 + target #02 + 11 plug-and-play slots");
         let thinking = profiles.iter().find(|p| p.model_id == "claude-opus-thinking").expect("slot");
         assert!(thinking.think_mode_active);
         let prompt = compile_prompt_for_model(thinking, "refactor crates", &["clippy clean"]);
@@ -678,11 +896,11 @@ mod tests {
         let profiles = builtin_ecosystem_profiles();
         let best_frontend = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::HighCraftFrontendUiUx)
             .expect("frontend candidate");
-        assert_eq!(best_frontend.model_id, "claude-opus-thinking");
+        assert_eq!(best_frontend.model_id, "gemini-4-aragon-high", "0.96 beats claude 0.90");
         let best_deduction =
             ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::HardAlgorithmicDeduction)
                 .expect("deduction candidate");
-        assert_eq!(best_deduction.model_id, "deepseek-r1-reasoner");
+        assert_eq!(best_deduction.model_id, "gemini-4-aragon-high", "0.99 beats deepseek 0.92");
         let best_fast = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::SubSecondIntentRouting)
             .expect("fast candidate");
         assert_eq!(best_fast.model_id, "llama4-cerebras-fast");
@@ -722,5 +940,133 @@ mod tests {
             "score-less profile must not be routed"
         );
         std::fs::remove_dir_all(&tmp).ok();
+    }
+
+    /// پروفایل داخلی هدف #02 — قراردادهای `EFFORT LEVEL` 1.00 و ضد-filler و
+    /// سنتز صفر-کپی و backtick های `clippy-1.100`.
+    #[test]
+    fn builtin_gemini_aragon_high_profile_matches_mounted_scorecard() {
+        let p = builtin_gemini_aragon_high_profile();
+        assert_eq!(p.model_id, "gemini-4-aragon-high");
+        assert_eq!(p.display_name, "GEMINI 4 Aragon HIGH");
+        assert!(p.think_mode_active, "hybrid thinking ON");
+        assert!(!p.requires_external_state_trace, "Think ON → no trace table");
+        assert_eq!(p.effort_level, Some(1.00));
+        assert!(p.forbids_chatty_filler);
+        assert!(p.supports_zero_copy_rust_synthesis);
+        assert!(p.enforce_clippy_1_100_backticks);
+        assert_eq!(p.workload_scores.len(), 20);
+        assert_eq!(p.workload_scores[&EngineeringWorkload::TechnicalGenomeSynthesis], 1.00);
+        assert_eq!(p.workload_scores[&EngineeringWorkload::HardAlgorithmicDeduction], 0.99);
+        assert_eq!(p.workload_scores[&EngineeringWorkload::MassiveRepoArchaeology], 0.99);
+        assert_eq!(p.workload_scores[&EngineeringWorkload::SubSecondIntentRouting], 0.65);
+        assert_eq!(p.workload_scores[&EngineeringWorkload::LongHorizonAutonomousLoop], 0.99);
+    }
+
+    /// ژنوم مونت‌شدهٔ `gemini-4-aragon-high` از دیسک با کارت ۰۹ تزئین‌دار
+    /// (`**01**` / `` **`0.99`** ``) کامل پارس می‌شود.
+    #[test]
+    fn mounted_gemini_genome_loads_from_disk_with_full_scorecard() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../")
+            .join("OMNI-MODEL-GENOME/models/gemini-4-aragon-high");
+        let profile = load_model_genome_from_dir(&dir).expect("mounted gemini genome must load");
+        assert_eq!(profile.model_id, "gemini-4-aragon-high");
+        assert!(profile.reasoning_paradigm.contains("hybrid_thinking"), "{}", profile.reasoning_paradigm);
+        assert!(profile.think_mode_active, "paradigm contains 'thinking' → Think ON");
+        assert!(!profile.requires_external_state_trace);
+        assert_eq!(profile.workload_scores.len(), 20, "decorated 20-row scorecard must parse");
+        assert_eq!(profile.workload_scores[&EngineeringWorkload::SystemArchitecture], 0.99);
+        assert_eq!(profile.workload_scores[&EngineeringWorkload::SecuritySsrfHardening], 0.98);
+        assert_eq!(
+            profile.calibration_status, "SOURCE_CLAIM_NOT_INDEPENDENTLY_VERIFIED",
+            "honest calibration from 09 frontmatter"
+        );
+    }
+
+    /// مسیریابی هدف #02: استدلال رسمی `UNSAT`/`CAS` و بافتِ >128k و رِیو
+    /// spec-compliance → `gemini-4-aragon-high`؛ روتینگ زیر-ثانیه همان‌طور
+    /// به `llama4-cerebras-fast` می‌رود.
+    #[test]
+    fn gemini_aragon_routes_for_formal_verification_and_massive_context() {
+        let profiles = builtin_ecosystem_profiles();
+        for workload in [
+            EngineeringWorkload::HardAlgorithmicDeduction,
+            EngineeringWorkload::MassiveRepoArchaeology,
+            EngineeringWorkload::SpecComplianceReview,
+            EngineeringWorkload::SqliteLedgerDesign,
+            EngineeringWorkload::SecuritySsrfHardening,
+        ] {
+            let best = ModelGenomeProfile::best_for_workload(&profiles, workload)
+                .unwrap_or_else(|| panic!("no candidate for {workload:?}"));
+            assert_eq!(
+                best.model_id, "gemini-4-aragon-high",
+                "workload {workload:?} must route to target #02"
+            );
+        }
+        let fast = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::SubSecondIntentRouting)
+            .expect("fast candidate");
+        assert_eq!(fast.model_id, "llama4-cerebras-fast", "0.80 beats gemini 0.65");
+    }
+
+    /// کامپایلر پرامپت هدف #02: DNA لنگر عیناً، `EFFORT LEVEL` 1.00، ضد-filler،
+    /// قرارداد `clippy-1.100` فقط وقتی strict خواسته شده و بدون جدول state-trace.
+    #[test]
+    fn compile_gemini_prompt_includes_dna_effort_and_clippy_contract() {
+        let dna = "sovereignty: zero-card zero-KYC; ux_priority_tier=1";
+        let strict = compile_prompt_for_gemini_aragon_high(dna, "design CAS escrow", true);
+        assert!(strict.contains(dna), "system DNA anchor verbatim: {strict}");
+        assert!(strict.contains("EFFORT LEVEL: 1.00"));
+        assert!(strict.contains("No chatty filler"));
+        assert!(strict.contains("clippy 1.100 pedantic"));
+        assert!(strict.contains("ANTI-ELISION"));
+        assert!(!strict.contains("<pre_computation_state_trace>"), "Think ON: no trace gate");
+        let loose = compile_prompt_for_gemini_aragon_high(dna, "t", false);
+        assert!(!loose.contains("clippy 1.100"), "non-strict: no rust contract");
+    }
+
+    /// پاک‌ساز: نشت متا (`SPECIAL INSTRUCTION`/`EFFORT LEVEL`)، بلوک‌های
+    /// `<thought>` و فیلِر حذف می‌شود — فنس ```rust``` و کد دست‌نخورده می‌ماند.
+    #[test]
+    fn sanitize_strips_leaked_markers_thought_blocks_and_filler_preserving_code() {
+        let raw = "Sure! Here is my answer.\n\
+                   SPECIAL INSTRUCTION: think silently about the ledger\n\
+                   EFFORT LEVEL: 1.00 leaked into the reply\n\
+                   <thought>secret chain of thought must vanish</thought>\n\
+                   <think>also hidden</think>\n\
+                   I hope this helps!\n\
+                   ```rust\nfn cas_apply() -> u64 { 42 }\n```\n\
+                   Let me know if you need more.";
+        let clean = sanitize_gemini_aragon_output(raw);
+        assert!(clean.contains("fn cas_apply"), "code fence preserved: {clean}");
+        assert!(clean.contains("my answer"), "substantive prose preserved");
+        assert!(!clean.contains("think silently"), "leaked meta marker stripped: {clean}");
+        assert!(!clean.contains("EFFORT LEVEL"));
+        assert!(!clean.contains("<thought>"));
+        assert!(!clean.contains("<think>"));
+        assert!(!clean.contains("secret chain of thought"));
+        assert!(!clean.contains("Sure!"), "chatty filler stripped");
+        assert!(!clean.contains("I hope this helps"));
+        assert!(!clean.contains("Let me know if"));
+        // بلوک فکرِ بازِ بدون بسته — تا انتها کنده می‌شود
+        let open = sanitize_gemini_aragon_output("ok<think>leak until end");
+        assert_eq!(open, "ok");
+    }
+
+    /// مود `caveman`: خاموش = رشتهٔ خالی؛ شدت‌ها فارق‌دار؛ `Full`/`Ultra`
+    /// قرارداد ~۷۵٪ کاهش با حفظ ۱۰۰٪ صحت را حمل می‌کنند.
+    #[test]
+    fn caveman_directives_are_graduated_and_off_is_empty() {
+        assert_eq!(build_caveman_directive(CavemanIntensity::Off), "");
+        let lite = build_caveman_directive(CavemanIntensity::Lite);
+        let full = build_caveman_directive(CavemanIntensity::Full);
+        let ultra = build_caveman_directive(CavemanIntensity::Ultra);
+        assert!(lite.contains("CAVEMAN LITE") && !lite.contains("75%"));
+        assert!(full.contains("CAVEMAN FULL") && full.contains("~75% output token reduction"));
+        assert!(full.contains("100% verbatim"), "accuracy contract");
+        assert!(ultra.contains("CAVEMAN ULTRA") && ultra.contains("~75%+"));
+        assert!(ultra.contains("never truncate code"));
+        // شدت‌ها نسبت به هم سخت‌گیرترند — رشتهٔ متمایز هر چهار حالت
+        assert_ne!(lite, full);
+        assert_ne!(full, ultra);
     }
 }

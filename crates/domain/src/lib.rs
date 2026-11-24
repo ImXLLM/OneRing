@@ -13,8 +13,10 @@
 //! - [`errors`] — ۲۰ کد خطا + Result
 //! - [`events`] — رویدادهای دامنه با شناسه دترمینیستیک
 //! - [`viral_ranker`] — رتبه‌سنج وایرال بازار (پورت `xai-org/x-algorithm` ۲۰۲۶)
+//! - [`cas`] — قفل خوش‌بینانهٔ CAS + کلید idempotency امانت (پورت `JavaGuide`)
 #![forbid(unsafe_code)]
 
+pub mod cas;
 pub mod charter;
 pub mod errors;
 pub mod escrow;
@@ -42,6 +44,9 @@ pub use charter::{
     MAX_AFFILIATE_BPS,
 };
 pub use errors::{DomainError, DomainErrorCode, DomainResult, Meta, MetaValue};
+pub use cas::{
+    build_cas_update_sql, CasEscrowRecord, CasEscrowState, CasEscrowTransition, CasTransitionOutcome,
+};
 pub use escrow::{
     cancel_escrow, create_escrow, create_escrow_with_affiliate, deliver_escrow, dispute_escrow,
     escrow_account_id, escrow_transitions, expire_escrow, find_expired, fund_escrow, open_registry,
