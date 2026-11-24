@@ -16,8 +16,10 @@
 pub mod ag_ui;
 pub mod approvals;
 pub mod builder;
+pub mod creator_dna_contract;
 pub mod engine;
 pub mod faq;
+pub mod fuzzy_patch;
 pub mod identity;
 pub mod memory;
 pub mod prompt;
@@ -44,6 +46,11 @@ pub use builder::{
     BUILDER_ESTIMATE_TOKENS, BUILDER_HISTORY_WINDOW, BUILDER_MAX_HTML_BYTES,
     BUILDER_MAX_PREVIEW_BYTES, BUILDER_WELCOME_MESSAGE,
 };
+pub use creator_dna_contract::{
+    audit_against_creator_dna, build_creator_dna_system_anchor, CreatorDnaContract, DnaContractError,
+    DnaViolation, CREATOR_HANDLE, DNA_SCHEMA_VERSION, PERSIAN_FONT_STACK, REASONING_PERSONA,
+};
+pub use fuzzy_patch::{apply_surgical_patch, evaluate_exec_policy, miss_hint, ExecDecision, PatchError};
 pub use engine::{auto_route, identity_score, HermesEngine, HermesError, HermesExit, RunOutcome};
 pub use faq::{match_instant_faq, match_instant_faq_key, FaqTopic, FAQ_TOPICS};
 pub use identity::{classify, confidence, hash_state, UserArchetype, UserFeatures};

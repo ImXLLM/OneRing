@@ -19,8 +19,11 @@
 pub mod budget;
 pub mod client;
 pub mod compressor;
+pub mod free_llm_registry;
 pub mod gateway;
 pub mod history_repair;
+pub mod omni_genome_router;
+pub mod opencode_zen;
 pub mod redaction;
 pub mod tool_parser;
 
@@ -52,6 +55,25 @@ pub use gateway::{
     OPENROUTER_BASE_URL, ROUTER9_BASE_URL, SLOT_NAMES,
 };
 pub use redaction::{redact, RedactionFinding, RedactionReport};
+pub use omni_genome_router::{
+    builtin_ecosystem_profiles, builtin_gpt6_standard_profile, compile_prompt_for_model,
+    load_model_genome_from_dir, EngineeringWorkload, GenomeError, GenomeLayerId, HandoffPacket,
+    ModelGenomeProfile,
+};
+pub use opencode_zen::{
+    is_retired_model, resolve_active_free_model, FreeModelSpec, ModelProtocol, ZenClientConfig,
+    ACTIVE_FREE_MODELS, DEFAULT_USER_AGENT, OPENCODE_LEGACY_ZEN_BASE_URL, OPENCODE_OPENAI_BASE_URL,
+    OPENCODE_PUBLIC_API_KEY,
+};
+pub use free_llm_registry::{
+    browser_ready_public_apis, check_model_refusal, classify_http_failure,
+    detect_unresolved_placeholder_tool_args, get_free_provider, restore_tool_names,
+    sanitize_system_prompt_for_antigravity, sanitize_tool_names_for_opencode, zero_card_waterfall,
+    FreeLlmProviderSpec, LaneFailureAction, LaneHealthTracker, PublicApiSpec, SignupTier,
+    ANTIGRAVITY_TRIGGER_LINES, FREE_LLM_PROVIDERS, HERMES_IDENTITY_TRIGGER, KIAN_IDENTITY_REWRITE,
+    STUDIO_PUBLIC_APIS_120, STUDIO_PUBLIC_APIS_120_COUNT, TIER_ONE_KEYLESS_CHAIN,
+    TIER_TWO_NO_CARD_CHAIN,
+};
 
 #[cfg(test)]
 mod tests {

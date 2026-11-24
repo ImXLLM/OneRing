@@ -1,0 +1,236 @@
+{
+  "archive_name": "elite-rust-agent-4repos-gems.zip",
+  "sources": [
+    {
+      "repo": "openai/codex",
+      "commit": "93752dd"
+    },
+    {
+      "repo": "anthropics/claude-code",
+      "commit": "070e7de"
+    },
+    {
+      "repo": "langflow-ai/langflow",
+      "commit": "21381e5"
+    },
+    {
+      "repo": "langchain-ai/langchain",
+      "commit": "fb10639"
+    }
+  ],
+  "total_content_files": 35,
+  "total_raw_bytes": 456477,
+  "total_lines": 10604,
+  "files": [
+    {
+      "path": "01_codex_rs_rust_engine/example.codexpolicy",
+      "bytes": 1342,
+      "lines": 78,
+      "sha256": "f0fc4c5c81e8a9f18d951a6e118eba448c92a0f6ff9f68f92f15721a61562457"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/gpt-5.2-codex_prompt.md",
+      "bytes": 7589,
+      "lines": 80,
+      "sha256": "1b3dd697043a7f613c691a3721a450251626685b3e97ac3ad3d35ea62758a31e"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/guardian_prompt.rs",
+      "bytes": 11823,
+      "lines": 308,
+      "sha256": "52ac6bbf742886fc3b1c27ed9b5f94d2c88f7e55c9300ce2fa61f2700ca6670f"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/lib.rs",
+      "bytes": 46145,
+      "lines": 1408,
+      "sha256": "060602cf947f272e3454238214730692f46c1793c860440f2e6d0328aeacad79"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/linux_run_main.rs",
+      "bytes": 51080,
+      "lines": 1364,
+      "sha256": "572a27954f70e9eefabdccd256ad1359435c30bb3f12d02daa8928c95a49896d"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/parser.rs",
+      "bytes": 22638,
+      "lines": 682,
+      "sha256": "6b8086467d0500f4fc9aa9a35cd33a0bce53c01bcb74b915b9efc6fcf187f7ce"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/rmcp_client.rs",
+      "bytes": 86091,
+      "lines": 2235,
+      "sha256": "1a9ec05888ae9dfce8779a6e023333eee7e6f724b6ebf416ce13ea1319ad1641"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/seatbelt_base_policy.sbpl",
+      "bytes": 3910,
+      "lines": 116,
+      "sha256": "5103332ddb8885ee5e1926de6c0ef23a61f4e55e31297506ae05fa4e0b24ba74"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/seccomp.rs",
+      "bytes": 14911,
+      "lines": 377,
+      "sha256": "5e9998e2638193034efdd2378b2c1236af362c710c8611eee1258fc5bafa2bb8"
+    },
+    {
+      "path": "01_codex_rs_rust_engine/seek_sequence.rs",
+      "bytes": 5909,
+      "lines": 164,
+      "sha256": "a6d0d35b628a4f1e6f8ba77c533046c27e585a8bdd94ee6cd21d2585b39e34e0"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/CLAUDE.md",
+      "bytes": 2218,
+      "lines": 40,
+      "sha256": "0fafa0a267c1a7320c4d9ccb4acaa27bdb7062e34cb23569f32a7a472ed0c7ac"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/commit-push-pr.md",
+      "bytes": 795,
+      "lines": 19,
+      "sha256": "15937f2f044999ad650abfb209a5fb36abd3f93f8b7847bf817f4098c2f4fdca"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/egress-firewall.yaml",
+      "bytes": 1407,
+      "lines": 27,
+      "sha256": "be6973a368ad48706dc8265bcdacc8086e70538ee982cb5f877da49339391e0e"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/init-firewall.sh",
+      "bytes": 4548,
+      "lines": 136,
+      "sha256": "d6da27a11b17bd9b1effa1d8d695e8e223c2214e85949f3afc6b6381d5327bae"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/privacy-README.md",
+      "bytes": 9605,
+      "lines": 162,
+      "sha256": "78e4a1cb188ac9959ae8ad1981f6c35237f138a74df306660381c65ea8831ea8"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/sec-default-register.ts",
+      "bytes": 22257,
+      "lines": 694,
+      "sha256": "25a2aaa5c00fc71e052c74229044b9e76e4e88dc15da1cdacc127a9808ad4b18"
+    },
+    {
+      "path": "02_claude_code_security_and_hooks/triage-issue.md",
+      "bytes": 5550,
+      "lines": 74,
+      "sha256": "d12820dc097b2cac15766aae4090573d05d5be7519ca7a71245e616028edc1eb"
+    },
+    {
+      "path": "03_langflow_middleware_and_flows/guarded_tool.py",
+      "bytes": 4975,
+      "lines": 128,
+      "sha256": "d100201a6d4ea7eb2d033653c7a6380a5a4c19f8a4f4cfc551e03243100055c7"
+    },
+    {
+      "path": "03_langflow_middleware_and_flows/placeholder_corrective_middleware.py",
+      "bytes": 4085,
+      "lines": 103,
+      "sha256": "54b497761125a51d54c5a6b1ec98eae63a87f8dade5903d3e00dc65bc06f5305"
+    },
+    {
+      "path": "03_langflow_middleware_and_flows/single_tool_call_middleware.py",
+      "bytes": 3581,
+      "lines": 96,
+      "sha256": "3112b2966a33fdbd0dfad6b9df1a0a26256d3b3c4d897c9657d4fab58cbe950a"
+    },
+    {
+      "path": "03_langflow_middleware_and_flows/starter_projects_prompts_catalog.json",
+      "bytes": 71145,
+      "lines": 393,
+      "sha256": "eba9e888d2be0aa647a98394f360ad2273cc39fb7f5a1915d07832425f3db8e7"
+    },
+    {
+      "path": "03_langflow_middleware_and_flows/tool_approval.py",
+      "bytes": 10102,
+      "lines": 197,
+      "sha256": "501ff99eb85b811e22cef46b2e387bac131d5b09ca3148c247f132ed957a613f"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/_refusal.py",
+      "bytes": 455,
+      "lines": 11,
+      "sha256": "cdcd0646e3cbe180dc8a56d2ce9a3ef08edb3393037107559beed56127768bcc"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/fix.py",
+      "bytes": 5557,
+      "lines": 156,
+      "sha256": "489312ace37e6558c141c3eb6d58b9060dba115aefe66c3f95baf7629b276f6d"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/format_instructions.py",
+      "bytes": 1108,
+      "lines": 16,
+      "sha256": "1caf8a8cf7d07c1363d15fdab68d3f18decf16c0be5a2c6df15d90e75e457499"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/json.py",
+      "bytes": 4903,
+      "lines": 143,
+      "sha256": "a539848ecb3743963d3ea2203d5140fb81df3898d70f4cd41d7b7f84281060dc"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/mrkl_prompt.py",
+      "bytes": 640,
+      "lines": 15,
+      "sha256": "176512840a4b87f13b24e5e1bc75c44b860663f4afe1d1b57cd0d86cad1a1e33"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/prompts.py",
+      "bytes": 507,
+      "lines": 21,
+      "sha256": "10151633f745a31ffaeea77a3659d12f42985af316b458657339268ff06f1e06"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/retry.py",
+      "bytes": 10802,
+      "lines": 315,
+      "sha256": "9f04479cc75383592c49909ff87acb4958006013c8d282e568e9e4dbd6822059"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/structured_chat_prompt.py",
+      "bytes": 1019,
+      "lines": 34,
+      "sha256": "50c166974f1f58e0c1292412bfc9e0a9b0de8ed1bf7d36ee592d50cbc479ae1d"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/tool_retry.py",
+      "bytes": 15437,
+      "lines": 421,
+      "sha256": "c60658ccdc6be6728005cc5178b5448d5c994c3c9e9068243c96189e27cfd97d"
+    },
+    {
+      "path": "04_langchain_parsers_and_retry/xml.py",
+      "bytes": 11118,
+      "lines": 301,
+      "sha256": "a3484442b658981b21d02d1eea8014cf03852ca817669971cd78ded5477723e8"
+    },
+    {
+      "path": "05_kian_v2_rust_and_db_adapters/inject_agent_resilience_skills.py",
+      "bytes": 4907,
+      "lines": 112,
+      "sha256": "271e2ae9a4a15c9dbba8c5246041973d49dc2f7355685b3242f435e0ae799cb5"
+    },
+    {
+      "path": "05_kian_v2_rust_and_db_adapters/kian_codex_patch_and_execpolicy.rs",
+      "bytes": 5532,
+      "lines": 152,
+      "sha256": "41c087c4f87f7864b7a80a86326a6e4d7a4d9ade9dfe36450f3dc61c81cb6d70"
+    },
+    {
+      "path": "VAULT_INDEX_FA.md",
+      "bytes": 2786,
+      "lines": 26,
+      "sha256": "cff1f14ec2db7c9dd1f41b865acb6f26cb0f53a0e0806fdb7c5912bbfbc857bc"
+    }
+  ]
+}
