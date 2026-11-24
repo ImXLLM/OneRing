@@ -22,6 +22,7 @@ pub mod escrows;
 pub mod market;
 pub mod nation;
 pub mod security;
+pub mod studio;
 pub mod system;
 pub mod trinity;
 pub mod wallet;
@@ -91,6 +92,11 @@ pub use security::{
     INIT_DATA_MAX_AGE_SECS, INIT_DATA_MAX_FUTURE_SECS, RATE_SHARD_COUNT, RateLimiter,
     ShardedLimiter, TelegramIdentity, build_bot_init_data, make_test_init_data, verify_kian_key,
     verify_telegram_init_data, verify_telegram_init_data_at,
+};
+pub use studio::{
+    CognitiveTierView, CommandPaletteView, DualBundleView, PortfolioCatalogResponse,
+    PortfolioSafetyFixView, PortfolioSafetyReportView, StorefrontProjectCardView,
+    StudioGenerateRequest, StudioGenerateResponse, StudioModalityView, StudioUxProfilesResponse,
 };
 pub use system::{BackupCreated, HealthResponse, HealthService, HealthStatus};
 pub use wallet::{

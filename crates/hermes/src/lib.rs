@@ -29,6 +29,7 @@ pub mod security;
 pub mod shield;
 pub mod skills;
 pub mod studio_design_contract;
+pub mod super_studio_engine;
 pub mod token_saver;
 pub mod trinity_pipeline;
 
@@ -78,6 +79,22 @@ pub use studio_design_contract::{
     build_verbatim_user_messages_block, detect_persian_rtl, enforce_rtl, verbatim_budget_chars,
     AstraAudit, AstraQualityGate, DesignDials, LTR_FONT_STACK, RTL_FONT_STACK, RTL_HTML_ATTRS,
     VERBATIM_CLOSE, VERBATIM_OPEN,
+};
+pub use super_studio_engine::{
+    build_toyspark_instant_creation, bundle_content_sha256, cognitive_tier_profiles,
+    command_palette_config, derive_pricing, derive_rea_score, derive_title, emit_command_palette_js,
+    emit_dual_cosmos_fishkal_bundle, html_escape, infer_or_override_tier,
+    is_blocked_source_path, js_syntax_sanity_check, modality_body, modality_script, prompt_seed,
+    portfolio_dark_glass_css, portfolio_safety_report, promote_featured_top2,
+    sanitize_source_tree, seed_storefront_catalog, studio_modality_specs, studio_shell,
+    uses_technical_tokens, verify_portfolio_safety_fixes, CognitiveTelemetry, CognitiveTier,
+    CognitiveTierProfile, CommandPaletteConfig, DualCosmosFishkalBundle, OmniModalStudioEngine,
+    PortfolioFix, PortfolioFixReport, StorefrontProjectCard, StudioArtifact, StudioModality,
+    StudioModalitySpec, ToySparkCreation,
+    DUAL_BUNDLE_SIGNATURE, PORTFOLIO_CATALOG_ENV, PORTFOLIO_ROOT_RESOLUTION,
+    PORTFOLIO_STOREFRONT_SIGNATURE, STUDIO_MODALITY_COUNT, TOYSPARK_ACTIONS,
+    TOYSPARK_DEFAULT_UKIAN, TOYSPARK_DEFAULT_USDC_MICROS, TOYSPARK_DEFAULT_XTR_STARS,
+    TOYSPARK_MAX_ACTIONS_PER_SCREEN, TOYSPARK_MAX_WORDS_PER_LABEL, TOYSPARK_MIN_TAP_TARGET_PX,
 };
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};

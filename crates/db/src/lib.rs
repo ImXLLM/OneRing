@@ -34,6 +34,7 @@ pub mod proof;
 pub mod queries;
 pub mod sqlsafe;
 pub mod store;
+pub mod studio;
 pub mod users;
 pub mod wallet_chains;
 pub mod wire;
@@ -79,6 +80,9 @@ pub use brain::{
 
 // حاکمیت M5 — پارلمان HITL
 pub use nation::{BillRow, VoteRow};
+
+// استودیوی ادراک‌سیار (Wave 5) — آفرینش‌های ۹-مدالیتی
+pub use studio::StudioCreationRow;
 
 // کیف پول M5 + درخواست‌های برداشت کریپتو (فاز ۶)
 pub use wallet_chains::{UsdtDepositRow, WalletAddressRow, WithdrawalRequestRow};

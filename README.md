@@ -401,7 +401,7 @@ rows at audit time (now **327** after the DNA #12 `12_TRINITY_AVATAR_ENGINE` inj
 
 | Invariant / Table | Verified Value | Guarantee |
 | :--- | :---: | :--- |
-| `"KbEntry"` (skills, agents & genomes) | **327 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #12 `kb:dna-12-trinity-avatar-engine` is the newest row |
+| `"KbEntry"` (skills, agents & genomes) | **329 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #14 `kb:dna-14-omni-studio-adaptive-ux` is the newest row |
 | `"User"` (verified citizens) | **466 citizens** | Production citizen accounts preserved |
 | `"ReferralLineage"` (viral graph) | **247 lineages** | Multi-tier referral attribution intact |
 | `"Escrow"` (atomic orders) | **108 escrows** | Protected by CAS (`WHERE version = ?`) + `idempotency_key` |
@@ -426,6 +426,8 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (party) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
 | Trinity | `POST /builder/trinity/alpha` (Avatar 1 — discovery / master-prompt lock) · `POST /builder/trinity/orchestrate` (Avatar 2 `3×9 OpenBot` + Avatar 3 Mairon `IQ=150/EQ=145` self-healing forge loop) | Bearer |
+| Studio — Wave 5 | `GET /studio/ux-profiles` (3 cognitive tiers `ToySpark`/`CreatorStudio`/`ProTerminal` + 9 zero-cost modalities + 6/6 portfolio fix report) · `POST /studio/generate` (adaptive artifact + dual `Fishkal`+`Cosmos` bundle + ARDA 20-locale packaging + Mairon `SKILL.md` forge + `studio_creations` persistence) · `GET /studio/portfolio-catalog` (featured top-2, dark-glass tokens, `Ctrl+K`/`Meta+K`/`/` command palette) | Public / Bearer |
+| ARDA — Wave 4 | `GET /arda/flags` (20-locale verbatim vector flag catalog + circular badges) · `POST /arda/localize-now` (live packaging, owner-only stamping) · `GET /market/products/{id}/skill` (auto-forge `SKILL.md`/`skill.json` at the REA gate) | Public / Bearer |
 | Market — Mairon Gate | `POST /market/products/{id}/mairon-confirm` (two-key publication + `⚒️ Forge-Grade` badge stamp) · `POST /market/products/{id}/reviews` (citizen `1..=5` star vote) · `GET /market/products/{id}/reviews` (Bayesian summary + histogram + `combinedRankScore`) | Bearer / Public |
 | Wallet | `POST /wallet/mint\|burn\|faucet` · `GET/POST /wallet/withdrawals` · `POST /wallet/withdrawals/{id}/confirm\|reject` · `GET /wallet/chains` · `GET /wallet/treasury` | Bearer / Admin |
 | Deposits | `POST /wallet/ton-deposits` · `POST /wallet/usdt-deposits` · `POST /wallet/ton-deposits/{id}/confirm\|reject` | Bearer / Admin |

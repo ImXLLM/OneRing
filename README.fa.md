@@ -357,7 +357,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 
 | ناورنی / جدول | مقدار وِریفای‌شده | تضمین |
 | :--- | :---: | :--- |
-| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **327 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA دوازدهم `kb:dna-12-trinity-avatar-engine` است |
+| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **329 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA چهاردهم `kb:dna-14-omni-studio-adaptive-ux` است |
 | `"User"` (شهروندان وریفای‌شده) | **466 شهروند** | حساب‌های شهروندِ تولید حفظ شده‌اند |
 | `"ReferralLineage"` (گراف وایرال) | **247 تبار** | اتریبیوشن چند-سطحیِ رفرال دست‌نخورده |
 | `"Escrow"` (سفارش‌های اتمیک) | **108 اسکرو** | با CAS (`WHERE version = ?`) + `idempotency_key` محافظت‌شده |
@@ -380,6 +380,8 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (طرف) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
 | Trinity | `POST /builder/trinity/alpha` (کالبد ۱ — کشف / قفل مستر پرامپت) · `POST /builder/trinity/orchestrate` (کالبد ۲ «۳×۹ OpenBot» + کالبد ۳ مایرون `IQ=150/EQ=145` با حلقهٔ خودترمیمی) | Bearer |
+| Studio — موج ۵ | `GET /studio/ux-profiles` (۳ لایهٔ شناختی `ToySpark`/`CreatorStudio`/`ProTerminal` + ۹ مدالیتیِ صفر-هزینه + گزارش ۶/۶ درمان پورتفولیو) · `POST /studio/generate` (آرتیفکت ادراک‌سیار + باندل دوگانهٔ `Fishkal`+`Cosmos` + بسته‌بندی ۲۰-زبانهٔ ARDA + فورج `SKILL.md` مایرون + ماندگاری در `studio_creations`) · `GET /studio/portfolio-catalog` (دو ویترینیِ برتر، توکن‌های گلسِ تاریک، پالت فرمان `Ctrl+K`/`Meta+K`/`/`) | عمومی / Bearer |
+| ARDA — موج ۴ | `GET /arda/flags` (کاتالوگ ۲۰-زبانهٔ پرچم وکتور + نشان دایره‌ای) · `POST /arda/localize-now` (بسته‌بندی زنده، مُهر فقط-فروشنده) · `GET /market/products/{id}/skill` (فورج خودکار `SKILL.md`/`skill.json` روی گیت REA) | عمومی / Bearer |
 | Market — گیت مایرون | `POST /market/products/{id}/mairon-confirm` (انتشار دو-کلیدی + مُهر `⚒️ Forge-Grade`) · `POST /market/products/{id}/reviews` (رأی ستارهٔ `1..=5` شهروند) · `GET /market/products/{id}/reviews` (خلاصهٔ بیزی + هیستوگرام + `combinedRankScore`) | Bearer / عمومی |
 | Wallet | `POST /wallet/mint\|burn\|faucet` · `GET/POST /wallet/withdrawals` · `POST /wallet/withdrawals/{id}/confirm\|reject` · `GET /wallet/chains` · `GET /wallet/treasury` | Bearer / ادمین |
 | Deposits | `POST /wallet/ton-deposits` · `POST /wallet/usdt-deposits` · `POST /wallet/ton-deposits/{id}/confirm\|reject` | Bearer / ادمین |
