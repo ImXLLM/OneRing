@@ -1,8 +1,0 @@
-{
-  "name": "@kian/nation",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@kian/contracts": "workspace:*"
-  }
-}
