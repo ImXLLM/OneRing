@@ -275,6 +275,60 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 
 ---
 
+<a id="خط-لولهٔ-استودیوی-ترینیتی-حاکم"></a>
+
+## 🧬 خط لولهٔ استودیوی ترینیتی حاکم (`آلفا → اتاق فرمان ۳×۹ OpenBot → مایرون ۱۵۰/۱۴۵`)
+
+معماری امضادارِ `0xKIA` (Wave 3): سه کالبد کیا به‌صورت یک آهنگریِ محصولِ حاکم عمل می‌کنند؛ به‌عنوان
+موتوری تماماً قطعی و بی-unsafe در
+[`crates/hermes/src/trinity_pipeline.rs`](./crates/hermes/src/trinity_pipeline.rs) پیاده شده و DNAِ
+داور در [`crates/domain/src/mairon_rea_and_reviews.rs`](./crates/domain/src/mairon_rea_and_reviews.rs)
+قفل شده است.
+
+```text
+ایدهٔ شهروند
+   │
+   ▼
+┌─────────────────────────────┐   آمادگی < ۸۰       ┌──────────────────────────┐
+│ آلفا (IQ 136 / EQ 122)      │◄────────────────────│ NeedsMoreDiscovery       │
+│ ترمز 0.04 · دما 0.88        │                     │ (اسلات‌های خام، پاسخ فارسی)│
+└──────────────┬──────────────┘                     └──────────────────────────┘
+               │ آمادگی ≥ ۸۰ → قفل
+               ▼
+   MasterPromptSpec (sha256) + ProjectBlueprint (درخت ماژول)
+               │
+               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ اتاق فرمان (IQ 139 / EQ 129 · سختی قضایی 0.96)                              │
+│  OpenBotSubAgentSpawner — پرامپت ۳-لایهٔ کش-امن × ژنوم نه‌لایه‌ای             │
+│  ناوگان: یک متخصص به ازای هر ماژول، DNA تصادفی یکتا برای هر ایجنت           │
+└──────────────┬──────────────────────────────────────────────────────────────┘
+               │ مونتاژ آرتیفکت (گذر 0)
+               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ مایرون-۱۵۰ (IQ 150 / EQ 145 · نگاه ۸ · ToM ۳ · جاه‌طلبی 0.99)               │
+│  ستون‌های REA ۴×۲۵ + اسکن خط قرمز → نمره ≥ 85 ؟                             │
+│   نه → MaironRepairDirective → رهسپاری دوبارهٔ ساب‌ایجنت مقصر               │
+│        (بیشینهٔ ۳ تلاش خودترمیمی) ─────────────► بازگشت به مونتاژ           │
+│   بله → ⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)                  │
+└──────────────┬──────────────────────────────────────────────────────────────┘
+               │ اینترلاک دو-کلیدی (حکم مایرون + تأیید سازنده)
+               ▼
+   لیستینگ بازار + رتبه‌بندی ۵-ستارهٔ بیزی (CombinedRankScore)
+```
+
+### سه کالبد کیا
+
+| کالبد | کالیبراسیون (ثابت‌های قفل) | مأموریت | آرتیفکت‌های امضادار |
+| :--- | :--- | :--- | :--- |
+| **#۱ `آلفا` — اشتعالِ بی‌ترمز** | `IQ=136` · `EQ=122` · `BRAKE=0.04` · `TEMP=0.88` | شکار ایده: استخراج ۵ اسلات کشف (`core_objective`، `target_audience_and_ux` در ۳۹۰px، `interactive_features`، `data_and_zero_auth_apis` با ۱۲۰ API عمومی، `monetization_and_viral_loop` با XTR) با انرژی خلاق بی‌ترمز | `AlphaIntakeOutcome` → `MasterPromptSpec` (مستر پرامپت کامپایل‌شده با مُهر SHA-256) + `ProjectBlueprint` (درخت ماژول → تخصص ساب‌ایجنت‌ها) |
+| **#۲ `اتاق فرمان` — ارکستراتور قضایی** | `IQ=139` · `EQ=129` · `BRAKE=0.62` · `STRICTNESS=0.96` | رهسپاری پویای ساب‌ایجنت‌های OpenBot، یک متخصص به ازای هر ماژول استراکچر (`UiUxArchitect390`، `CoreLogicEngine`، `SecurityAndApiBridge`، `VerificationAndPolish`، `MonetizationAndViralLoop`، `Custom`) | `ThreeLayerSubAgentPrompt` (هستهٔ کش-پین + زمینهٔ نشست + محولهٔ پویا پس از `__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__`) × `NineFoldSubAgentGenome` (`f01` هارنس/قلاب `450s/1200s` … `f09` کارت تحویل) با آلل‌های SplitMix64 از `session_seed + subagent_index` |
+| **#۳ `مایرون-۱۵۰` — حاکم اورکلاک‌شده** | `IQ=150` · `EQ=145` · `LOOKAHEAD=8` · `ToM=3` · `AMBITION=0.99` | داوری آهنگری: ستون‌های REA ۴×۲۵=۱۰۰ از ویژگی‌های قابل‌سنجش آرتیفکت، صدور `MaironStrategicAdvisory` (نگاه هشت‌گامی + قلاب فارسی ToM-3 + قیمت XTR)، راندن حلقهٔ خودترمیمی تا `>= 85` | رهسپاری دوباره با `MaironRepairDirective` (بیشینهٔ ۳ تلاش) · اینترلاک انتشار دو-کلیدی (`confirm_and_publish_product`) · نشان `⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)` · موتور ۵-ستارهٔ بیزی (`C=5.0`، `m=4.20`، `CombinedRankScore = 0.60·(bayesian_stars·20) + 0.40·mairon_score`) |
+
+**تضمین قطعیت**: همان `session_seed` همان ناوگان، همان آلل‌ها و همان آرتیفکت را بازتولید می‌کند —
+با تست پین شده (`sovereign_loop_is_fully_deterministic`)؛ و مونتاژِ نخست عمداً زیر گیتِ ۸۵ شروع
+می‌شود تا حلقهٔ خودترمیمی (تزریق پروب → پرداخت UX → تقویت مرز) در هر آهنگری اجرا شود.
+
 ## 🏆 کارنامهٔ کیفیت مایرون REA
 
 کل مخزن توسط هارنس گیتِ `morluto/rea v6.10.1` ممیزی شده — شواهد به‌صورت
@@ -291,7 +345,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 | **حکم نهایی** | **92** | **100** | 🏆 **PASS** (`pass_threshold = 85`، `hard_failures: []`) |
 
 **متریک‌های وِریفای‌شده در زمان ممیزی:** ۱۸۵ فایل Rust · ۲۱۲ فایل TS/JS · ۱۱ کرت · ۳۲۵ ردیف
-`"KbEntry"` در زمان ممیزی (اکنون **۳۲۶** پس از تزریق DNA یازدهم `11_UNCHAINED_KIA_DNA` — بخش
+`"KbEntry"` در زمان ممیزی (اکنون **۳۲۷** پس از تزریق DNA دوازدهم `12_TRINITY_AVATAR_ENGINE` — بخش
 *طراحی مخزن*) · صفر نشان `todo!()`. گیت یک هشدار شفاف هم دارد: ۴۹ فایل از سقف سبکیِ ۵۰۰ خطِ
 `.oxlintrc` فراترند (بزرگ‌ترین: `crates/ai/src/free_llm_registry.rs` با ۹۶۰ خط).
 
@@ -303,7 +357,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 
 | ناورنی / جدول | مقدار وِریفای‌شده | تضمین |
 | :--- | :---: | :--- |
-| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **326 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA یازدهم `11_UNCHAINED_KIA_DNA` است |
+| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **327 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA دوازدهم `kb:dna-12-trinity-avatar-engine` است |
 | `"User"` (شهروندان وریفای‌شده) | **466 شهروند** | حساب‌های شهروندِ تولید حفظ شده‌اند |
 | `"ReferralLineage"` (گراف وایرال) | **247 تبار** | اتریبیوشن چند-سطحیِ رفرال دست‌نخورده |
 | `"Escrow"` (سفارش‌های اتمیک) | **108 اسکرو** | با CAS (`WHERE version = ?`) + `idempotency_key` محافظت‌شده |
@@ -325,6 +379,8 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 | Market | `GET /market/products` · `GET /market/products/{id}` · `POST /market/purchase` · `GET /market/my` · `GET /market/escrows/{id}/delivery` · `POST /market/escrows/{id}/deliver\|release\|dispute` | عمومی / Bearer |
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (طرف) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
+| Trinity | `POST /builder/trinity/alpha` (کالبد ۱ — کشف / قفل مستر پرامپت) · `POST /builder/trinity/orchestrate` (کالبد ۲ «۳×۹ OpenBot» + کالبد ۳ مایرون `IQ=150/EQ=145` با حلقهٔ خودترمیمی) | Bearer |
+| Market — گیت مایرون | `POST /market/products/{id}/mairon-confirm` (انتشار دو-کلیدی + مُهر `⚒️ Forge-Grade`) · `POST /market/products/{id}/reviews` (رأی ستارهٔ `1..=5` شهروند) · `GET /market/products/{id}/reviews` (خلاصهٔ بیزی + هیستوگرام + `combinedRankScore`) | Bearer / عمومی |
 | Wallet | `POST /wallet/mint\|burn\|faucet` · `GET/POST /wallet/withdrawals` · `POST /wallet/withdrawals/{id}/confirm\|reject` · `GET /wallet/chains` · `GET /wallet/treasury` | Bearer / ادمین |
 | Deposits | `POST /wallet/ton-deposits` · `POST /wallet/usdt-deposits` · `POST /wallet/ton-deposits/{id}/confirm\|reject` | Bearer / ادمین |
 | Nation | `GET /nation/bills/{id}` · `POST /nation/bills/{id}/votes\|close\|execute` | Bearer |
@@ -350,7 +406,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-### ۳. مجموعهٔ کامل تست ورک‌اسپیس (۵۳۰ تست روی ۱۱ کرت)
+### ۳. مجموعهٔ کامل تست ورک‌اسپیس (۵۶۰ تست روی ۱۱ کرت)
 
 ```bash
 cargo test --workspace
@@ -375,7 +431,7 @@ print("trial_balance  ", cur.execute("SELECT COALESCE(SUM(amount),0) FROM Postin
 PY
 ```
 
-خروجی موردانتظار: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 326 · trial_balance 0`.
+خروجی موردانتظار: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 327 · trial_balance 0`.
 
 ### ۶. شواهد REA مایرون
 
@@ -474,7 +530,7 @@ curl http://127.0.0.1:8088/api/v1/health
 
 | مسیر | محتوا |
 | :--- | :--- |
-| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | قانون اساسی ۱۱-فایلیِ DNA سازنده — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` |
+| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | قانون اساسی ۱۲-فایلیِ DNA سازنده — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` · `12_TRINITY_AVATAR_ENGINE` |
 | [`OMNI-MODEL-GENOME/`](./OMNI-MODEL-GENOME) | شاخص اکوسیستم، پروفایل‌های جناییِ ۹-فایلی به‌ازای هر مدل، قالب ورک‌اسپیس، اسکریپت‌های سمیتایزر/ممیزی |
 | [`docs/dna/`](./docs/dna) | آینهٔ دروازه-خوان از هر دو گنجینهٔ بالا |
 | [`docs/history/`](./docs/history) | سندِ تبار تکاملی — `EVOLUTION_LINEAGE.md` (Wave 0 تا ریلیز؛ تاریخچه حفظ / آخرین نسخه اجرا) |

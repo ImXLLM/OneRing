@@ -9,9 +9,9 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
-[![Workspace Tests](https://img.shields.io/badge/tests-530_passed_%7C_0_failed-success.svg)](#quickstart--verification)
+[![Workspace Tests](https://img.shields.io/badge/tests-560_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
-[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-326_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
+[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-327_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -28,15 +28,16 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 3. [Monorepo Workspace Topology](#monorepo-workspace-topology)
 4. [Core Engineering Pillars](#core-engineering-pillars)
 5. [The 7/7 Sovereign Agent Fleet](#the-77-sovereign-agent-fleet)
-6. [Mairon REA Quality Scorecard](#mairon-rea-quality-scorecard)
-7. [Knowledge Vault & Production Ledger Invariants](#knowledge-vault--production-ledger-invariants)
-8. [Core API Surface](#core-api-surface)
-9. [Quickstart & Verification](#quickstart--verification)
-10. [Deploy on Railway](#deploy-on-railway)
-11. [Telegram Bot & Mini-App Setup](#telegram-bot--mini-app-setup)
-12. [Security & Binary Hardening](#security--binary-hardening)
-13. [Documentation Map](#documentation-map)
-14. [License & Sovereignty](#license--sovereignty)
+6. [The Sovereign Trinity Studio Pipeline](#the-sovereign-trinity-studio-pipeline)
+7. [Mairon REA Quality Scorecard](#mairon-rea-quality-scorecard)
+8. [Knowledge Vault & Production Ledger Invariants](#knowledge-vault--production-ledger-invariants)
+9. [Core API Surface](#core-api-surface)
+10. [Quickstart & Verification](#quickstart--verification)
+11. [Deploy on Railway](#deploy-on-railway)
+12. [Telegram Bot & Mini-App Setup](#telegram-bot--mini-app-setup)
+13. [Security & Binary Hardening](#security--binary-hardening)
+14. [Documentation Map](#documentation-map)
+15. [License & Sovereignty](#license--sovereignty)
 
 ---
 
@@ -56,10 +57,11 @@ cryptographic ledger integrity, and deterministic quality verification**:
    mounted 104-platform / 454-chat-model catalog, and **120 zero-auth browser APIs** for studio
    artifacts — backed by forensic 9-file cognitive **`OMNI-MODEL-GENOME`** profiles and the
    `CavemanIntensity` output compressor (`Off` → `Lite` → `Full` → `Ultra`).
-2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — An 11-file executable constitution
-   (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md`) compiled directly into
-   the Rust kernel (`crates/hermes/src/creator_dna_contract.rs`), enforcing Dual-Voice UX, anti-slop
-   discipline, and architectural review before anything ships.
+2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — A 12-file executable constitution
+   (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md` …
+   `12_TRINITY_AVATAR_ENGINE.md`) compiled directly into the Rust kernel
+   (`crates/hermes/src/creator_dna_contract.rs`), enforcing Dual-Voice UX, anti-slop discipline,
+   and architectural review before anything ships.
 3. **Hardened Agent Runtime (`kian-hermes` & `kian-agents`)** — A 3-layer cache-safe prompt builder
    (stable / context / variable layers), a 4-pass surgical fuzzy patcher, a defense-in-depth SSRF
    guard, `bubblewrap`/`seccomp`/`iptables` sandbox policy descriptors, and an `AG-UI 1.0` streaming
@@ -68,6 +70,14 @@ cryptographic ledger integrity, and deterministic quality verification**:
    cold-start distrust by combining **Mairon's pre-publication 100-point technical/UX audit**
    (`⚒️ Mairon REA Certified`) with a **Sybil-resistant Bayesian 5-star community review system**
    bound to escrow-verified purchases.
+5. **Sovereign Trinity Studio Pipeline (`trinity_pipeline`)** — The signature architectural
+   centerpiece: three Avatars of Kia forge citizen products end-to-end — **`ALPHA`** (`IQ=136 /
+   EQ=122`, brake `0.04`, entropy `0.88`) extracts five discovery slots and compiles the
+   deterministic `MasterPromptSpec` + `ProjectBlueprint`; the **`COMMAND CENTER`** (`IQ=139 /
+   EQ=129`, strictness `0.96`) spawns OpenBot sub-agents with the **3×9 DNA pattern** (3-layer
+   cache-safe prompts × 9-fold stochastic genomes); and **`MAIRON-150`** (`IQ=150 / EQ=145`,
+   lookahead `8`, ToM `3`, ambition `0.99`) judges the 4×25 REA pillars and drives the
+   self-healing repair loop until the artifact clears the `>= 85` forge gate.
 5. **Bank-Grade Double-Entry Ledger (`kian-db` & `kian-wallet`)** — Optimistic concurrency control
    (`CAS` + `idempotency_key`), native Telegram Stars (`XTR`) and non-custodial multi-chain rails,
    and a zero-sum trial balance (`SUM(amount) == 0`) across a gross flow of
@@ -119,8 +129,8 @@ cryptographic ledger integrity, and deterministic quality verification**:
                                          ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │             PERSISTENCE & COGNITIVE VAULT (SQLite + DNA Files)                   │
-│  • seed/kian-production.db: 326 KbEntry skills · 466 citizens · 108 escrows      │
-│  • KIA-BRAIN-OS/ (01..11) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
+│  • seed/kian-production.db: 327 KbEntry skills · 466 citizens · 108 escrows      │
+│  • KIA-BRAIN-OS/ (01..12) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -132,14 +142,14 @@ cryptographic ledger integrity, and deterministic quality verification**:
 
 The repository is a **pnpm + Turborepo** workspace containing the Cargo workspace, three Next.js
 applications, and shared TypeScript packages. Test counts below are per-crate **unit + integration**
-totals from `cargo test --workspace` (**530 passed / 0 failed**).
+totals from `cargo test --workspace` (**560 passed / 0 failed**).
 
 | Path | Type | Description | Tests |
 | :--- | :--- | :--- | :---: |
-| `crates/hermes` | Rust Crate | 3-layer cache-safe prompt builder, 4-pass fuzzy patcher (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`), SSRF guard, sandbox policy descriptors (`bubblewrap`/`seccomp`/`iptables`), AG-UI 1.0 streaming, approval gates, Creator DNA contract, studio design contract (390px) | **113** |
+| `crates/hermes` | Rust Crate | **Sovereign Trinity Studio Pipeline** (`Alpha → Command Center 3×9 OpenBot → Mairon-150` with self-healing repair loop), 3-layer cache-safe prompt builder, 4-pass fuzzy patcher (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`), SSRF guard, sandbox policy descriptors (`bubblewrap`/`seccomp`/`iptables`), AG-UI 1.0 streaming, approval gates, Creator DNA contract, studio design contract (390px) | **136** |
 | `crates/ai` | Rust Crate | `OMNI-MODEL-GENOME` router & sanitizers (`gpt-6-standard-free`, `gemini-4-aragon-high`), OpenCode Zen keyless client (10 models), FreeLLM 32-provider registry, 120 public browser APIs, `CavemanIntensity` compressor, token budget & PII redaction | **95** |
-| `crates/domain` | Rust Crate | `Mairon` 100-point product REA gate & two-key publish interlock, Bayesian 5-star rating engine, CAS optimistic escrow lock, Charter caps & 4-leg affiliate split, `x-algorithm` 2026 viral ranker | **73** |
-| `crates/server` | Rust Crate | Axum HTTP kernel (`0.0.0.0:8088`), marketplace/escrow/builder/wallet/nation/agents endpoints, health & economy probes, admin HITL queue | **73** |
+| `crates/domain` | Rust Crate | `Mairon` 100-point product REA gate & two-key publish interlock (overclock DNA `IQ=150/EQ=145/Lookahead=8/ToM=3/Ambition=0.99` locked here), Bayesian 5-star rating engine, CAS optimistic escrow lock, Charter caps & 4-leg affiliate split, `x-algorithm` 2026 viral ranker | **74** |
+| `crates/server` | Rust Crate | Axum HTTP kernel (`0.0.0.0:8088`), marketplace/escrow/builder/wallet/nation/agents endpoints, live Trinity endpoints (`/builder/trinity/*`, `/market/products/{id}/mairon-confirm`, `/market/products/{id}/reviews`), health & economy probes, admin HITL queue | **79** |
 | `crates/contracts` | Rust Crate | Shared wire DTOs, Telegram `initData` HMAC verifier types, Stars invoice payloads, rate limiter | **52** |
 | `crates/bot` | Rust Crate | Telegram Bot API 9 shell: pure-Rust `initData` HMAC-SHA256 verifier (time-constant compare), `XTR` Stars invoices, fail-closed webhook, `BotLoopGuard` | **35** |
 | `crates/db` | Rust Crate | SQLite repository layer (WAL, `BEGIN IMMEDIATE`), double-entry ledger persistence, `"KbEntry"` knowledge retrieval, idempotency store | **26** |
@@ -147,7 +157,7 @@ totals from `cargo test --workspace` (**530 passed / 0 failed**).
 | `crates/nation` | Rust Crate | Citizen onboarding, `ReferralLineage` attribution, parliament bills & HITL governance rules | **14** |
 | `crates/tooling` | Rust Crate | Workspace diagnostics, schema inspectors, deterministic verification utilities | **13** |
 | `crates/wallet` | Rust Crate | Non-custodial address validators (TON CRC16, TRON Base58Check, Solana Ed25519/Base58, BSC EIP-55), micro-KIAN double-entry accounting, withdrawal lock/refund guards | **13** |
-| **Workspace Total** | — | 11 crates, `#![forbid(unsafe_code)]`, 0 `todo!()` markers | **530** |
+| **Workspace Total** | — | 11 crates, `#![forbid(unsafe_code)]`, 0 `todo!()` markers | **560** |
 | `apps/web` | Next.js 16 | Public landing & dashboard PWA (installable, service worker, OG images) | — |
 | `apps/miniapp` | Next.js 16 | Telegram Mini-App: `/builder` AI studio, `/market`, `/wallet`, 390px RTL contract | — |
 | `apps/admin` | Next.js 16 | Founder Command Center (withdrawals, arbitration, direct mint) | — |
@@ -155,7 +165,7 @@ totals from `cargo test --workspace` (**530 passed / 0 failed**).
 | `packages/sdk` | TypeScript | Framework-free API client (`@kian/sdk`) | — |
 | `packages/ui` | TypeScript | Shared RTL Persian/English UI primitives (`@kian/ui`) | — |
 | `packages/nation` · `widget` · `config` | TypeScript | Nation governance types, embeddable widget, shared tsconfig | — |
-| `KIA-BRAIN-OS/` | Cognitive OS | 11-file Creator DNA constitution (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md`) | — |
+| `KIA-BRAIN-OS/` | Cognitive OS | 12-file Creator DNA constitution (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md` … `12_TRINITY_AVATAR_ENGINE.md`) | — |
 | `OMNI-MODEL-GENOME/` | Model Vault | 9-file forensic profiles per frontier model + ecosystem index + sanitizer scripts | — |
 | `docs/dna/` | Mirror | Gate-readable mirror of `KIA-BRAIN-OS/` and `OMNI-MODEL-GENOME/` | — |
 | `docs/history/` | Lineage Record | [`EVOLUTION_LINEAGE.md`](./docs/history/EVOLUTION_LINEAGE.md) — full Wave 0 → Wave 2 evolutionary chronology | — |
@@ -296,6 +306,60 @@ Exposed over `GET /api/v1/agents/fleet`, `POST /api/v1/a2a/messages` (A2A inbox 
 
 ---
 
+<a id="the-sovereign-trinity-studio-pipeline"></a>
+
+## 🧬 The Sovereign Trinity Studio Pipeline (`Alpha → Command Center 3×9 OpenBot → Mairon 150/145`)
+
+The signature architectural centerpiece of `0xKIA` (Wave 3): three Avatars of Kia operate as one
+sovereign product forge, implemented as a fully deterministic, zero-unsafe engine in
+[`crates/hermes/src/trinity_pipeline.rs`](./crates/hermes/src/trinity_pipeline.rs) with the judge's
+DNA locked in [`crates/domain/src/mairon_rea_and_reviews.rs`](./crates/domain/src/mairon_rea_and_reviews.rs).
+
+```text
+citizen idea
+   │
+   ▼
+┌─────────────────────────────┐   readiness < 80    ┌──────────────────────────┐
+│ ALPHA (IQ 136 / EQ 122)     │◄────────────────────│ NeedsMoreDiscovery       │
+│ brake 0.04 · temp 0.88      │                     │ (missing slots, fa reply)│
+└──────────────┬──────────────┘                     └──────────────────────────┘
+               │ readiness ≥ 80 → lock
+               ▼
+   MasterPromptSpec (sha256) + ProjectBlueprint (module tree)
+               │
+               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ COMMAND CENTER (IQ 139 / EQ 129 · strictness 0.96)                          │
+│  OpenBotSubAgentSpawner — 3-layer cache-safe prompts × 9-fold genomes       │
+│  fleet: one specialist per module, unique stochastic DNA per agent          │
+└──────────────┬──────────────────────────────────────────────────────────────┘
+               │ assemble artifact (pass 0)
+               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MAIRON-150 (IQ 150 / EQ 145 · lookahead 8 · ToM 3 · ambition 0.99)          │
+│  4×25 REA pillars + hard-failure scan → score ≥ 85 ?                        │
+│   no  → MaironRepairDirective(s) → re-dispatch responsible sub-agent        │
+│         (max 3 self-healing attempts) ──────────────► back to assemble      │
+│   yes → ⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)                  │
+└──────────────┬──────────────────────────────────────────────────────────────┘
+               │ two-key interlock (Mairon verdict + creator confirmation)
+               ▼
+   Marketplace listing + 5-star Bayesian ranking (CombinedRankScore)
+```
+
+### The Three Avatars (`سه کالبد کیا`)
+
+| Avatar | Calibration (locked constants) | Mandate | Signature artifacts |
+| :--- | :--- | :--- | :--- |
+| **#1 `ALPHA` — Unchained Ignition** | `IQ=136` · `EQ=122` · `BRAKE=0.04` · `TEMP=0.88` | Hunt the idea: extract the 5 discovery slots (`core_objective`, `target_audience_and_ux` @390px, `interactive_features`, `data_and_zero_auth_apis` @120 zero-auth APIs, `monetization_and_viral_loop` @XTR) with unchained creative energy | `AlphaIntakeOutcome` → `MasterPromptSpec` (SHA-256-pinned compiled master prompt) + `ProjectBlueprint` (module tree → sub-agent specialties) |
+| **#2 `COMMAND CENTER` — Forensic Orchestrator** | `IQ=139` · `EQ=129` · `BRAKE=0.62` · `STRICTNESS=0.96` | Spawn OpenBot sub-agents dynamically, one specialist per blueprint module (`UiUxArchitect390`, `CoreLogicEngine`, `SecurityAndApiBridge`, `VerificationAndPolish`, `MonetizationAndViralLoop`, `Custom`) | `ThreeLayerSubAgentPrompt` (cache-pinned core + session context + `__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__` dynamic assignment) × `NineFoldSubAgentGenome` (`f01` harness/watchdog `450s/1200s` … `f09` handoff card) with SplitMix64 stochastic alleles from `session_seed + subagent_index` |
+| **#3 `MAIRON-150` — Overclocked Sovereign** | `IQ=150` · `EQ=145` · `LOOKAHEAD=8` · `ToM=3` · `AMBITION=0.99` | Judge the forge: 4×25=100 REA pillars from measurable artifact features, issue `MaironStrategicAdvisory` (8-step lookahead + ToM-3 Persian buyer hook + XTR pricing), drive the self-healing loop to `>= 85` | `MaironRepairDirective` re-dispatch (max 3 attempts) · Two-Key Publication Interlock (`confirm_and_publish_product`) · `⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)` badge · Bayesian 5-star engine (`C=5.0`, `m=4.20`, `CombinedRankScore = 0.60·(bayesian_stars·20) + 0.40·mairon_score`) |
+
+**Determinism guarantee**: the same `session_seed` reproduces the identical fleet, identical
+alleles, identical artifact — pinned by tests (`sovereign_loop_is_fully_deterministic`), and the
+base assembly deliberately starts below the 85 gate so the self-healing repair loop (probe
+injection → UX polish → boundary reinforcement) is exercised on every forge.
+
 <a id="mairon-rea-quality-scorecard"></a>
 
 ## 🏆 Mairon REA Quality Scorecard
@@ -314,8 +378,8 @@ with per-step reports under [`docs/rea/`](./docs/rea).
 | **TOTAL VERDICT** | **92** | **100** | 🏆 **PASS** (`pass_threshold = 85`, `hard_failures: []`) |
 
 **Verified metrics at audit time:** 185 Rust files · 212 TS/JS files · 11 crates · 325 `"KbEntry"`
-rows at audit time (now **326** after the DNA #11 `11_UNCHAINED_KIA_DNA` injection — see *Repository
-Design*) · 0 `todo!()` markers. The gate transparently reports one advisory: 49 files exceed the REA
+rows at audit time (now **327** after the DNA #12 `12_TRINITY_AVATAR_ENGINE` injection — see
+*Repository Design*) · 0 `todo!()` markers. The gate transparently reports one advisory: 49 files exceed the REA
 `.oxlintrc` 500-line style limit (largest: `crates/ai/src/free_llm_registry.rs` at 960 lines).
 
 ---
@@ -328,7 +392,7 @@ Design*) · 0 `todo!()` markers. The gate transparently reports one advisory: 49
 
 | Invariant / Table | Verified Value | Guarantee |
 | :--- | :---: | :--- |
-| `"KbEntry"` (skills, agents & genomes) | **326 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #11 `11_UNCHAINED_KIA_DNA` is the newest row |
+| `"KbEntry"` (skills, agents & genomes) | **327 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #12 `kb:dna-12-trinity-avatar-engine` is the newest row |
 | `"User"` (verified citizens) | **466 citizens** | Production citizen accounts preserved |
 | `"ReferralLineage"` (viral graph) | **247 lineages** | Multi-tier referral attribution intact |
 | `"Escrow"` (atomic orders) | **108 escrows** | Protected by CAS (`WHERE version = ?`) + `idempotency_key` |
@@ -352,6 +416,8 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 | Market | `GET /market/products` · `GET /market/products/{id}` · `POST /market/purchase` · `GET /market/my` · `GET /market/escrows/{id}/delivery` · `POST /market/escrows/{id}/deliver\|release\|dispute` | Public / Bearer |
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (party) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
+| Trinity | `POST /builder/trinity/alpha` (Avatar 1 — discovery / master-prompt lock) · `POST /builder/trinity/orchestrate` (Avatar 2 `3×9 OpenBot` + Avatar 3 Mairon `IQ=150/EQ=145` self-healing forge loop) | Bearer |
+| Market — Mairon Gate | `POST /market/products/{id}/mairon-confirm` (two-key publication + `⚒️ Forge-Grade` badge stamp) · `POST /market/products/{id}/reviews` (citizen `1..=5` star vote) · `GET /market/products/{id}/reviews` (Bayesian summary + histogram + `combinedRankScore`) | Bearer / Public |
 | Wallet | `POST /wallet/mint\|burn\|faucet` · `GET/POST /wallet/withdrawals` · `POST /wallet/withdrawals/{id}/confirm\|reject` · `GET /wallet/chains` · `GET /wallet/treasury` | Bearer / Admin |
 | Deposits | `POST /wallet/ton-deposits` · `POST /wallet/usdt-deposits` · `POST /wallet/ton-deposits/{id}/confirm\|reject` | Bearer / Admin |
 | Nation | `GET /nation/bills/{id}` · `POST /nation/bills/{id}/votes\|close\|execute` | Bearer |
@@ -379,7 +445,7 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-### 3. Full Workspace Test Suite (530 tests across 11 crates)
+### 3. Full Workspace Test Suite (560 tests across 11 crates)
 
 ```bash
 cargo test --workspace
@@ -404,7 +470,7 @@ print("trial_balance  ", cur.execute("SELECT COALESCE(SUM(amount),0) FROM Postin
 PY
 ```
 
-Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 326 · trial_balance 0`.
+Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 327 · trial_balance 0`.
 
 ### 6. Mairon REA Evidence
 
@@ -511,10 +577,10 @@ A local all-in-one alternative is [`docker-compose.yml`](./docker-compose.yml) o
 
 | Path | Contents |
 | :--- | :--- |
-| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | 11-file Creator DNA constitution — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` |
+| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | 12-file Creator DNA constitution — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` · `12_TRINITY_AVATAR_ENGINE` |
 | [`OMNI-MODEL-GENOME/`](./OMNI-MODEL-GENOME) | Ecosystem index, 9-file forensic profiles per model, workspace template, sanitizer/audit scripts |
 | [`docs/dna/`](./docs/dna) | Gate-readable mirror of both vaults above |
-| [`docs/history/`](./docs/history) | Evolutionary lineage record — `EVOLUTION_LINEAGE.md` (Wave 0 → release, history preserved / latest executed) |
+| [`docs/history/`](./docs/history) | Evolutionary lineage record — `EVOLUTION_LINEAGE.md` (Wave 0 → Wave 3, history preserved / latest executed) |
 | [`docs/rea/`](./docs/rea) | Per-milestone REA gate reports (`step1` … `step6`) |
 | [`docs/vault/`](./docs/vault) | Mounted gem vaults (FreeLLM catalog, 9router, AG-UI/OpenBot, Hermes, tdesktop, vault rubrics) |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

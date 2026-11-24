@@ -258,6 +258,8 @@ pub async fn products_list(State(state): State<Arc<AppState>>, headers: HeaderMa
                 artifact_kind: p.artifact_kind.clone(),
                 active: p.active,
                 created_at: p.created_at.clone(),
+                mairon_score: p.mairon_score,
+                mairon_badge: p.mairon_badge.clone(),
             })
             .collect(),
     }))

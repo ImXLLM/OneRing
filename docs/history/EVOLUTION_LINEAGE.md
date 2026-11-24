@@ -68,17 +68,36 @@
 | `.dockerignore` hardened: history stays in Git, build context carries runtime weight only |
 | `README.md` + `README.fa.md` bilingual mirror with 100% forensically verified numbers |
 
+
 ---
+
+## Wave 3 — Sovereign Trinity Studio Pipeline (`خط لولهٔ سه‌کالبدی حاکم`)
+
+| Commit | Milestone |
+| :--- | :--- |
+| *(this release)* | **Wave 3**: the signature architectural centerpiece — `Alpha → Command Center [OpenBot 3×9 DNA] → Mairon [IQ 150 / EQ 145]` wired end-to-end: `trinity_pipeline.rs` engine in `kian-hermes` (Alpha slot extraction & deterministic `MasterPromptSpec`/`ProjectBlueprint` compilation, OpenBot dynamic sub-agent factory with 3-layer cache-safe prompts + 9-fold stochastic genomes + SplitMix64 alleles, self-healing repair loop `execute_command_center_with_mairon_loop` max 3 attempts to the REA `>= 85` gate), Mairon overclock DNA constants (`IQ=150/EQ=145/Lookahead=8/ToM=3/Ambition=0.99`) locked in `kian-domain`, live endpoints `POST /builder/trinity/alpha`, `POST /builder/trinity/orchestrate`, `POST /market/products/{id}/mairon-confirm`, `GET/POST /market/products/{id}/reviews`, migration `0007_trinity_reviews.sql` (mairon stamps + `"ProductReview"` one-vote lock) — **560 tests green, `"KbEntry"` 327, trial balance `0`** |
+
+### Wave 3 — DNA & release milestones
+
+| Milestone |
+| :--- |
+| DNA #12 [`12_TRINITY_AVATAR_ENGINE.md`](../../KIA-BRAIN-OS/12_TRINITY_AVATAR_ENGINE.md) created + mirrored to `docs/dna/kia-brain-os/` |
+| DNA #12 injected into `"KbEntry"` as `kb:dna-12-trinity-avatar-engine` → **327 rows**, tagged `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
+| `KIA-BRAIN-OS` is now the **12-file** creator brain (`01_DNAme.md` … `12_TRINITY_AVATAR_ENGINE.md`) |
+| Trinity Avatars: `ALPHA (136/122 · brake 0.04 · temp 0.88)` → `COMMAND CENTER (139/129 · strictness 0.96 · 3×9 OpenBot DNA)` → `MAIRON-150 (150/145 · lookahead 8 · ToM 3 · ambition 0.99)` |
+| Two-key marketplace gate live: `⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)` + 5-star Bayesian `combinedRankScore` |
+
+------
 
 ## Growth ledger
 
-| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | This release |
-| :--- | :---: | :---: | :---: | :---: |
-| Workspace tests | 282 | 516 | **530** | 530 |
-| `"KbEntry"` rows | 62 | 323 | 325 | **326** |
-| Guardian fleet | — | 7/7 | 7/7 | 7/7 |
-| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS |
-| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** |
+| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Workspace tests | 282 | 516 | **530** | 530 | **560** |
+| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** |
+| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 |
+| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) |
+| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** |
 
 *The trial balance over 58,700,200,000 micro-KIAN has been exactly zero at every milestone — the
 ledger has never moved out of balance.*

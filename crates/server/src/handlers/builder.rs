@@ -19,9 +19,20 @@ use kian_db::{
     now_iso, AiUsageRow, BuilderMessageRow, BuilderSessionPatch, BuilderSessionRow, ProductRow,
 };
 use kian_domain::{DomainError, DomainErrorCode, DEFAULT_AFFILIATE_BPS, MAX_AFFILIATE_BPS};
+use kian_contracts::{
+    TrinityAlphaRequest, TrinityAlphaResponse, TrinityAlleleView, TrinityAdvisoryView,
+    TrinityBlueprintModuleView, TrinityBlueprintView, TrinityMasterPromptView,
+    TrinityOrchestrateRequest, TrinityOrchestrateResponse, TrinityPillarsView,
+    TrinityRepairDirectiveView, TrinityRepairRoundView, TrinitySlotsState, TrinitySubAgentDnaView,
+};
+use kian_hermes::trinity_pipeline::{
+    AlphaIntakeRequest, MasterPromptSpec, ProjectBlueprint, SubagentStallWatchdog,
+    ALPHA_READINESS_LOCK_THRESHOLD, LOGIC_EFFECTIVE_EQ, LOGIC_EFFECTIVE_IQ,
+};
 use kian_hermes::{
-    build_preview_html, BuilderEngine, BUILDER_ESTIMATE_TOKENS, BUILDER_HISTORY_WINDOW,
-    BUILDER_WELCOME_MESSAGE,
+    build_preview_html, AlphaDiscoverySlots, AlphaIgnitionPersona, AlphaIntakeOutcome,
+    BuilderEngine, CommandCenterOrchestrator, TrinityForgeOutcome, BUILDER_ESTIMATE_TOKENS,
+    BUILDER_HISTORY_WINDOW, BUILDER_WELCOME_MESSAGE, MAIRON_AMBITION_GAIN,
 };
 
 use crate::error::{ApiFailure, ApiResult};
@@ -88,6 +99,8 @@ fn product_view(p: &ProductRow) -> ProductView {
         artifact_kind: p.artifact_kind.clone(),
         active: p.active,
         created_at: p.created_at.clone(),
+        mairon_score: p.mairon_score,
+        mairon_badge: p.mairon_badge.clone(),
     }
 }
 
@@ -427,6 +440,8 @@ pub async fn publish(
         delivery_payload: Some(session.generated_html.clone()),
         active: true,
         created_at: now_iso(),
+        mairon_score: 0,
+        mairon_badge: String::new(),
     };
     state
         .store
@@ -460,6 +475,272 @@ pub async fn publish(
             already_published: false,
         }),
     ))
+}
+
+
+// ── Trinity Studio Pipeline (Wave 3) — کالبد ۱ آلفا + کالبد ۲/۳ اتاق فرمان و مایرون ──
+
+/// بازگرداندن وضعیت اسلات‌ها از DTO وایر به موتور — نگاشت یک‌به‌یک.
+fn slots_from_wire(wire: &TrinitySlotsState) -> AlphaDiscoverySlots {
+    AlphaDiscoverySlots {
+        core_objective: wire.core_objective.clone(),
+        target_audience_and_ux: wire.target_audience_and_ux.clone(),
+        interactive_features: wire.interactive_features.clone(),
+        data_and_zero_auth_apis: wire.data_and_zero_auth_apis.clone(),
+        monetization_and_viral_loop: wire.monetization_and_viral_loop.clone(),
+    }
+}
+
+/// بازگرداندن وضعیت اسلات‌ها از موتور به DTO وایر.
+fn slots_to_wire(slots: &AlphaDiscoverySlots) -> TrinitySlotsState {
+    TrinitySlotsState {
+        core_objective: slots.core_objective.clone(),
+        target_audience_and_ux: slots.target_audience_and_ux.clone(),
+        interactive_features: slots.interactive_features.clone(),
+        data_and_zero_auth_apis: slots.data_and_zero_auth_apis.clone(),
+        monetization_and_viral_loop: slots.monetization_and_viral_loop.clone(),
+    }
+}
+
+/// نگاشت مانیفست DNA موتور به وایر — الگوی `۳×۹` کامل.
+fn manifest_to_wire(outcome: &TrinityForgeOutcome) -> Vec<TrinitySubAgentDnaView> {
+    outcome
+        .manifest
+        .iter()
+        .map(|agent| TrinitySubAgentDnaView {
+            subagent_index: agent.subagent_index,
+            specialty: agent.specialty.as_str(),
+            specialty_fa: agent.specialty.fa_label(),
+            assigned_modules: agent.assigned_modules.clone(),
+            thread_id: agent.thread_id.clone(),
+            logic_iq: LOGIC_EFFECTIVE_IQ,
+            logic_eq: LOGIC_EFFECTIVE_EQ,
+            watchdog_soft_secs: SubagentStallWatchdog::SOFT_STALL_SECS,
+            watchdog_hard_secs: SubagentStallWatchdog::HARD_TIMEOUT_SECS,
+            caveman: agent.genome.f03_token_economics.as_str().to_owned(),
+            alleles: TrinityAlleleView {
+                surgical_density: agent.genome.f04_stochastic_alleles.surgical_density,
+                ux_craft: agent.genome.f04_stochastic_alleles.ux_craft,
+                edge_case_paranoia: agent.genome.f04_stochastic_alleles.edge_case_paranoia,
+                execution_velocity: agent.genome.f04_stochastic_alleles.execution_velocity,
+                allele_seed: agent.genome.f04_stochastic_alleles.allele_seed,
+            },
+            layer1_chars: agent.prompt.layer1_stable_core.chars().count(),
+            layer2_chars: agent.prompt.layer2_blueprint_context.chars().count(),
+            layer3_chars: agent.prompt.layer3_dynamic_assignment.chars().count(),
+            prompt_preview: agent.prompt.layer3_dynamic_assignment.chars().take(220).collect(),
+            xml_prompt_chars: agent.genome.f06_compiled_xml_prompt.chars().count(),
+            empirical_probes: agent.genome.f08_empirical_probes.clone(),
+            handoff_card: agent.genome.f09_handoff_card.clone(),
+            sanitizer_passed: agent.genome.f07_sanitizer_gate.passed,
+        })
+        .collect()
+}
+
+/// `POST /builder/trinity/alpha` — کالبد ۱: آلفا (`IQ=136/EQ=122/Brake=0.04/Temp=0.88`).
+///
+/// استخراج قطعی پنج اسلات کشف از پیام کاربر؛ در آمادگیِ `>= 80` مستر پرامپت
+/// و استراکچر پروژه قفل و تحویل می‌شود. ۲۰۰.
+///
+/// # Errors
+/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر.
+#[allow(clippy::too_many_lines)]
+pub async fn trinity_alpha(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<Json<TrinityAlphaResponse>> {
+    let user = require_session(&state, &headers).await?;
+    let req: TrinityAlphaRequest = parse_body(&body)?;
+    let message_len = req.user_message.trim().chars().count();
+    if !(1..=4_000).contains(&message_len) {
+        return Err(kian_contracts::HttpFailure::invalid_request(1).into());
+    }
+    let session_id = match req.session_id.as_deref().map(str::trim) {
+        Some(sid) if (4..=80).contains(&sid.chars().count()) => sid.to_owned(),
+        _ => format!("trn:{}", uuid::Uuid::now_v7()),
+    };
+    let prior = req
+        .prior_slots
+        .as_ref()
+        .map_or_else(AlphaDiscoverySlots::default, slots_from_wire);
+    let outcome = AlphaIgnitionPersona.process_intake(&AlphaIntakeRequest {
+        session_id: session_id.clone(),
+        citizen_id: user.account_id.clone(),
+        user_message: req.user_message.clone(),
+        prior_slots: prior,
+    });
+    let mut updated = req
+        .prior_slots
+        .as_ref()
+        .map_or_else(AlphaDiscoverySlots::default, slots_from_wire);
+    let hay = req.user_message.to_lowercase();
+    let spark = req.user_message.split_whitespace().collect::<Vec<_>>().join(" ");
+    let spark = spark.chars().take(280).collect::<String>();
+    for (kind, keywords) in AlphaIgnitionPersona::slot_keyword_table() {
+        if !updated.is_filled(kind) && keywords.iter().any(|k| hay.contains(k)) {
+            updated.fill(kind, spark.clone());
+        }
+    }
+    let missing_slots = updated
+        .missing_slots()
+        .iter()
+        .map(|k| k.as_str().to_owned())
+        .collect::<Vec<_>>();
+    let response = match outcome {
+        AlphaIntakeOutcome::NeedsMoreDiscovery { alpha_reply_fa, readiness_pct, .. } => {
+            TrinityAlphaResponse {
+                status: "needs_more_discovery".to_owned(),
+                session_id: session_id.clone(),
+                citizen_id: user.account_id.clone(),
+                alpha_reply_fa,
+                missing_slots: missing_slots.clone(),
+                readiness_pct,
+                updated_slots: slots_to_wire(&updated),
+                master_prompt: None,
+                blueprint: None,
+            }
+        }
+        AlphaIntakeOutcome::LockedForCommandCenter { alpha_handoff_fa, master_prompt, blueprint } => {
+            TrinityAlphaResponse {
+                status: "locked_for_command_center".to_owned(),
+                session_id: master_prompt.session_id.clone(),
+                citizen_id: user.account_id.clone(),
+                alpha_reply_fa: alpha_handoff_fa,
+                missing_slots: Vec::new(),
+                readiness_pct: 100,
+                updated_slots: slots_to_wire(&updated),
+                master_prompt: Some(TrinityMasterPromptView {
+                    spec_hash: master_prompt.spec_hash,
+                    system_directive: master_prompt.system_directive,
+                    functional_spec: master_prompt.functional_spec,
+                    ux_390_constraints: master_prompt.ux_390_constraints,
+                    verification_criteria: master_prompt.verification_criteria,
+                    compiled_prompt: master_prompt.compiled_prompt,
+                    project_name: master_prompt.project_name,
+                    price_stars_hint: master_prompt.price_stars_hint,
+                }),
+                blueprint: Some(TrinityBlueprintView {
+                    project_name: blueprint.project_name,
+                    project_slug: blueprint.project_slug,
+                    modules: blueprint
+                        .modules
+                        .iter()
+                        .map(|m| TrinityBlueprintModuleView {
+                            path: m.path.clone(),
+                            role: m.role.clone(),
+                            dependencies: m.dependencies.clone(),
+                            specialty: m.specialty.as_str(),
+                            specialty_fa: m.specialty.fa_label(),
+                        })
+                        .collect(),
+                }),
+            }
+        }
+    };
+    Ok(Json(response))
+}
+
+/// `POST /builder/trinity/orchestrate` — کالبد ۲ + کالبد ۳: اتاق فرمان
+/// (`IQ=139/EQ=129/Strictness=0.96`) با کارخانهٔ ساب‌ایجنت‌های `OpenBot` الگوی
+/// `۳×۹` و داوری مایرون (`IQ=150/EQ=145`) با حلقهٔ خودترمیمی تا گیتِ `>= 85`.
+///
+/// ورودی: اسلات‌های قفل‌شدهٔ آلفا (آمادگیِ `>= 80` الزامی). ۲۰۰.
+///
+/// # Errors
+/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ آمادگی زیر ۸۰ (قفلِ آلفا لازم است).
+#[allow(clippy::too_many_lines)]
+pub async fn trinity_orchestrate(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<Json<TrinityOrchestrateResponse>> {
+    let user = require_session(&state, &headers).await?;
+    let req: TrinityOrchestrateRequest = parse_body(&body)?;
+    let session_id = req.session_id.trim().to_owned();
+    if !(4..=80).contains(&session_id.chars().count()) {
+        return Err(kian_contracts::HttpFailure::invalid_request(1).into());
+    }
+    let slots = slots_from_wire(&req.slots);
+    let readiness = slots.readiness_pct();
+    if readiness < ALPHA_READINESS_LOCK_THRESHOLD {
+        return Err(DomainError::new(
+            DomainErrorCode::InvalidTransition,
+            format!(
+                "Alpha lock requires readiness >= 80 — current {readiness}% (call /builder/trinity/alpha first)"
+            ),
+        )
+        .into());
+    }
+    let seed = req
+        .session_seed
+        .unwrap_or_else(|| CommandCenterOrchestrator::session_seed_from_session(&session_id));
+    let master = MasterPromptSpec::compile(&slots, &session_id, &user.account_id);
+    let blueprint = ProjectBlueprint::compile(&slots, &master.project_name);
+    let outcome = CommandCenterOrchestrator::new(&session_id, &user.account_id, seed)
+        .execute_command_center_with_mairon_loop(&master, &blueprint);
+    let verdict = &outcome.final_verdict.verdict;
+    let advisory_view = TrinityAdvisoryView {
+        iq: outcome.final_verdict.advisory.iq,
+        eq: outcome.final_verdict.advisory.eq,
+        lookahead_horizon: outcome.final_verdict.advisory.lookahead_horizon,
+        tom_order: outcome.final_verdict.advisory.tom_order,
+        ambition_gain: MAIRON_AMBITION_GAIN,
+        eight_step_lookahead_summary: outcome
+            .final_verdict
+            .advisory
+            .eight_step_lookahead_summary
+            .clone(),
+        third_order_tom_market_hook_fa: outcome
+            .final_verdict
+            .advisory
+            .third_order_tom_market_hook_fa
+            .clone(),
+    };
+    let repair_history = outcome
+        .repair_history
+        .iter()
+        .map(|round| TrinityRepairRoundView {
+            attempt: round.attempt,
+            score_before: round.score_before,
+            score_after: round.score_after,
+            approved: round.approved,
+            directives: round
+                .directives
+                .iter()
+                .map(|d| TrinityRepairDirectiveView {
+                    attempt: d.attempt,
+                    target_specialty: d.target_specialty.as_str(),
+                    pillar: d.pillar.clone(),
+                    directive_en: d.directive_en.clone(),
+                    directive_fa: d.directive_fa.clone(),
+                })
+                .collect(),
+        })
+        .collect();
+    let pillars = verdict.pillars;
+    let artifact_bytes = outcome.artifact.bytes();
+    Ok(Json(TrinityOrchestrateResponse {
+        manifest: manifest_to_wire(&outcome),
+        session_id: outcome.session_id,
+        project_name: outcome.project_name,
+        artifact_html: outcome.artifact.html,
+        artifact_bytes,
+        probe_count: outcome.artifact.probe_count,
+        integrated_modules: outcome.artifact.integrated_modules,
+        final_score: verdict.total_score,
+        approved_for_listing: verdict.approved_for_listing,
+        mairon_badge: verdict.visible_badge.clone(),
+        pillars: TrinityPillarsView {
+            architecture: pillars.architecture,
+            security_hardening: pillars.security_hardening,
+            ux_and_anti_slop: pillars.ux_and_anti_slop,
+            verification_proof: pillars.verification_proof,
+        },
+        advisory: advisory_view,
+        repair_attempts_used: outcome.repair_attempts_used,
+        repair_history,
+    }))
 }
 
 #[cfg(test)]
@@ -858,4 +1139,172 @@ mod builder_tests {
             .unwrap();
         assert_eq!(json_body(res).await["totalTokens"], 700);
     }
+    // ── Trinity Studio Pipeline — مسیرهای زندهٔ HTTP (Wave 3) ────────────────
+
+    async fn trinity_post(app: &axum::Router, token: &str, uri: &str, body: Value) -> Value {
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(uri)
+                    .header("authorization", format!("Bearer {token}"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200, "trinity POST {uri} must succeed");
+        json_body(res).await
+    }
+
+    /// نوبت اول آلفا — کشف؛ سپس تحویل قفل با آمادگیِ کامل.
+    #[tokio::test]
+    async fn trinity_alpha_discovers_then_locks_master_prompt() {
+        let app = app_without_llm().await;
+        let token = auth(&app, "777", "trinity-maker").await;
+
+        // نوبت ۱ — پیامِ دو-اسلاتی → ادامهٔ کشف با پاسخ فارسی جرقه‌ای
+        let body = trinity_post(
+            &app,
+            &token,
+            "/api/v1/builder/trinity/alpha",
+            json!({
+                "sessionId": "trn:e2e-alpha-1",
+                "userMessage": "می‌خواهم یک محصول بسازم که مخاطبش فریلنسرها هستند و رابط موبایل rtl دارد"
+            }),
+        ).await;
+        assert_eq!(body["status"], "needs_more_discovery");
+        assert!(body["alphaReplyFa"].as_str().unwrap().contains("آلفا"));
+        assert_eq!(body["readinessPct"], 40);
+        let missing = body["missingSlots"].as_array().unwrap();
+        assert_eq!(missing.len(), 3);
+
+        // نوبت ۲ — اسلات‌های قبلی + پیامِ کامل → قفل در ۸۰٪+
+        let body = trinity_post(
+            &app,
+            &token,
+            "/api/v1/builder/trinity/alpha",
+            json!({
+                "sessionId": "trn:e2e-alpha-1",
+                "userMessage": "فرم سفارش تعاملی می‌خواهم و داده‌ها در api عمومی بدون لاگین ذخیره می‌شوند",
+                "priorSlots": body["updatedSlots"]
+            }),
+        ).await;
+        assert_eq!(body["status"], "locked_for_command_center", "body: {body}");
+        let master = &body["masterPrompt"];
+        assert_eq!(master["specHash"].as_str().unwrap().len(), 64);
+        assert!(master["compiledPrompt"].as_str().unwrap().contains("390px"));
+        let blueprint = &body["blueprint"];
+        let paths: Vec<&str> = blueprint["modules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|m| m["path"].as_str().unwrap())
+            .collect();
+        assert!(paths.contains(&"src/index.html"));
+        assert!(paths.contains(&"src/js/api-bindings.js"));
+        assert_eq!(
+            blueprint["modules"].as_array().unwrap()[0]["specialty"],
+            "ui_ux_architect_390"
+        );
+    }
+
+    /// آلفا بدون نشست → ۴۰۱ fail-closed.
+    #[tokio::test]
+    async fn trinity_alpha_requires_session() {
+        let app = app_without_llm().await;
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/builder/trinity/alpha")
+                    .body(Body::from(json!({"userMessage": "سلام"}).to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 401);
+    }
+
+    /// آهنگری کامل — اتاق فرمان ۳×۹ + حلقهٔ خودترمیمی مایرون تا گیت ۸۵+.
+    #[tokio::test]
+    async fn trinity_orchestrate_forges_through_mairon_gate() {
+        let app = app_without_llm().await;
+        let token = auth(&app, "778", "forge-captain").await;
+        let body = trinity_post(
+            &app,
+            &token,
+            "/api/v1/builder/trinity/orchestrate",
+            json!({
+                "sessionId": "trn:e2e-forge-1",
+                "slots": {
+                    "coreObjective": "سازندهٔ ابزار بهره‌وری برای فریلنسرهای فارسی‌زبان",
+                    "targetAudienceAndUx": "فریلنسر فارسی‌زبان، موبایل‌فرست ۳۹۰ پیکسل rtl",
+                    "interactiveFeatures": "فرم سفارش تعاملی و جریان پرداخت",
+                    "dataAndZeroAuthApis": "ذخیره در localStorage و api عمومی بدون لاگین",
+                    "monetizationAndViralLoop": "قیمت ۲۰۰ ستاره با پورسانت معرف"
+                }
+            }),
+        ).await;
+        assert!(body["finalScore"].as_u64().unwrap() >= 85, "score: {body}");
+        assert_eq!(body["approvedForListing"], true);
+        assert!(body["maironBadge"].as_str().unwrap().contains("Forge-Grade"));
+        assert!(body["artifactHtml"].as_str().unwrap().contains("data-probe"));
+        assert!(body["integratedModules"].as_array().unwrap().len() >= 4);
+        let manifest = body["manifest"].as_array().unwrap();
+        assert!(manifest.len() >= 4, "one OpenBot sub-agent per module");
+        let agent = &manifest[0];
+        assert_eq!(agent["logicIq"], 139);
+        assert_eq!(agent["logicEq"], 129);
+        assert_eq!(agent["watchdogSoftSecs"], 450);
+        assert_eq!(agent["watchdogHardSecs"], 1200);
+        assert_eq!(agent["sanitizerPassed"], true);
+        assert!(agent["promptPreview"].as_str().unwrap().contains("ASSIGNMENT (dynamic)"));
+        assert!(agent["xmlPromptChars"].as_u64().unwrap() > 200);
+        let advisory = &body["advisory"];
+        assert_eq!(advisory["iq"], 150);
+        assert_eq!(advisory["eq"], 145);
+        assert_eq!(advisory["lookaheadHorizon"], 8);
+        assert_eq!(advisory["tomOrder"], 3);
+        assert!(advisory["thirdOrderTomMarketHookFa"]
+            .as_str()
+            .unwrap()
+            .contains("200 ستارهٔ تلگرام (XTR)"));
+        // حلقهٔ خودترمیمی — تاریخچهٔ بهبود نمره ثبت شده است
+        let history = body["repairHistory"].as_array().unwrap();
+        assert!(!history.is_empty(), "base assembly starts below the 85 gate");
+        let first = &history[0];
+        assert!(first["scoreAfter"].as_u64().unwrap() > first["scoreBefore"].as_u64().unwrap());
+        assert_eq!(body["pillars"]["verificationProof"], 25);
+    }
+
+    /// اجرای اتاق فرمان بدون قفلِ آلفا → ۴۲۲ (قرارداد دو-مرحله‌ای حفظ می‌شود).
+    #[tokio::test]
+    async fn trinity_orchestrate_rejects_sub_threshold_readiness() {
+        let app = app_without_llm().await;
+        let token = auth(&app, "779", "too-early").await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/builder/trinity/orchestrate")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::from(
+                        json!({"sessionId": "trn:e2e-early", "slots": {}}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 422);
+        let body = json_body(res).await;
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("readiness >= 80"));
+    }
+
 }

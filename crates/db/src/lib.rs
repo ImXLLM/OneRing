@@ -62,10 +62,10 @@ pub use store::{
 };
 pub use wire::{event_kind, event_payload};
 
-// کوئری‌های صف HITL، محصولات داشبورد، audit و بکاپ
+// کوئری‌های صف HITL، محصولات داشبورد، audit و بکاپ + رأی ۵-ستارهٔ ترینیتی
 pub use queries::{
     deliver_order, AiUsageRow, AuditRowRead, BackupInfo, HitlDecision, HitlRow, ProductFilter,
-    ProductRow,
+    ProductReviewRow, ProductRow,
 };
 
 // هویت M3 — شهروندان تلگرام، نشست‌ها، واریز TON

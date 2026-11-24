@@ -119,6 +119,12 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/market/escrows/{id}/deliver", post(market::deliver))
         .route("/market/escrows/{id}/release", post(market::release))
         .route("/market/escrows/{id}/dispute", post(market::dispute))
+        // market — Wave 3: مُهر دو-کلیدی مایرون + رأی ۵-ستارهٔ بیزی شهروندان
+        .route("/market/products/{id}/mairon-confirm", post(market::mairon_confirm))
+        .route(
+            "/market/products/{id}/reviews",
+            post(market::submit_review).get(market::list_reviews),
+        )
         // builder — فاز ۴: استودیوی ساخت محصول HTML چندمرحله‌ای + انتشار یک‌کلیکه (نشست شهروند)
         .route(
             "/builder/sessions",
@@ -127,6 +133,11 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/builder/sessions/{id}", get(builder::get_session))
         .route("/builder/sessions/{id}/chat", post(builder::chat))
         .route("/builder/sessions/{id}/publish", post(builder::publish))
+        // trinity — Wave 3: استودیوی حاکم سه‌کالبدی
+        // (کالبد ۱ آلفا → کالبد ۲ اتاق فرمان با ساب‌ایجنت‌های OpenBot الگوی ۳×۹
+        //  → کالبد ۳ مایرون IQ=150/EQ=145 با حلقهٔ خودترمیمی تا گیت REA >= 85)
+        .route("/builder/trinity/alpha", post(builder::trinity_alpha))
+        .route("/builder/trinity/orchestrate", post(builder::trinity_orchestrate))
         // deposits — M3: واریز TON (اثبات PENDING → تأیید ادمین → ضرب مادهٔ ۳)
         .route(
             "/wallet/ton-deposits",

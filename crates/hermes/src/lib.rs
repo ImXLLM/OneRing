@@ -29,6 +29,7 @@ pub mod shield;
 pub mod skills;
 pub mod studio_design_contract;
 pub mod token_saver;
+pub mod trinity_pipeline;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-hermes";
@@ -80,6 +81,16 @@ pub use studio_design_contract::{
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};
 pub use token_saver::compress_tool_output_preserving_secrets;
+pub use trinity_pipeline::{
+    AlphaDiscoverySlots, AlphaIgnitionPersona, AlphaIntakeOutcome, AlphaIntakeRequest,
+    AlphaSlotKind, AssembledArtifact, BlueprintModule, CavemanIntensity, CommandCenterOrchestrator,
+    MaironRepairDirective, MaironSovereignJudge, MaironStrategicAdvisory, MaironSovereignVerdict,
+    NineFoldSubAgentGenome, OpenBotSubAgentSpawner, ProjectBlueprint, RepairRound, SanitizerReport,
+    SpawnedSubAgent, SubAgentAlleles, SubAgentSpecialty, SubagentStallWatchdog,
+    ThreeLayerSubAgentPrompt, TrinityForgeOutcome, WatchdogVerdict, LAYER1_STABLE_CORE,
+    MAIRON_AMBITION_GAIN, MAIRON_LOOKAHEAD_HORIZON, MAIRON_OVERCLOCK_EQ, MAIRON_OVERCLOCK_IQ,
+    MAIRON_TOM_ORDER, MAX_OPENBOT_REPAIR_ATTEMPTS,
+};
 
 #[cfg(test)]
 mod tests {

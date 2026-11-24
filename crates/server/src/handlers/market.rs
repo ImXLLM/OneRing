@@ -13,10 +13,15 @@ use std::sync::Arc;
 
 use kian_contracts::{
     CreateProductRequest, DeliverEscrowRequest, DisputeEscrowRequest, EscrowActionResponse,
-    EscrowDeliveryView, MAX_DELIVERY_PAYLOAD_BYTES, MAX_PREVIEW_HTML_BYTES, MyMarketResponse,
-    ProductListResponse, ProductView, PurchaseRequest, PurchaseResponse, ReleaseEscrowRequest,
+    EscrowDeliveryView, MaironConfirmResponse, MAX_DELIVERY_PAYLOAD_BYTES, MAX_PREVIEW_HTML_BYTES,
+    MyMarketResponse, ProductListResponse, ProductRatingSummaryResponse, ProductReviewSubmitRequest,
+    ProductReviewView, ProductView, PurchaseRequest, PurchaseResponse, ReleaseEscrowRequest,
 };
-use kian_db::{now_iso, ApplyOptions, CommandOutcome, HitlRow, ProductFilter, ProductRow};
+use kian_db::{now_iso, ApplyOptions, CommandOutcome, HitlRow, ProductFilter, ProductReviewRow, ProductRow};
+use kian_domain::{
+    confirm_and_publish_product, evaluate_user_product_with_mairon, submit_product_review,
+    summarize_product_ratings, MaironReaPillarScores, ProductReview,
+};
 use kian_domain::{
     create_escrow_with_affiliate, deliver_escrow, dispute_escrow, fund_escrow, release_escrow,
     AccountKind, CreateEscrowCommand, DeliverEscrowCommand, DisputeEscrowCommand, DomainError,
@@ -69,6 +74,8 @@ fn product_view(p: &ProductRow) -> ProductView {
         artifact_kind: p.artifact_kind.clone(),
         active: p.active,
         created_at: p.created_at.clone(),
+        mairon_score: p.mairon_score,
+        mairon_badge: p.mairon_badge.clone(),
     }
 }
 
@@ -130,6 +137,8 @@ pub async fn create_product(
         delivery_payload: req.delivery_payload,
         active: true,
         created_at: now_iso(),
+        mairon_score: 0,
+        mairon_badge: String::new(),
     };
     state.store.insert_product(&row).await.map_err(ApiFailure::from)?;
     Ok((StatusCode::CREATED, Json(product_view(&row))))
@@ -678,6 +687,267 @@ pub async fn dispute(
         },
     )
     .await
+}
+
+
+// ── مُهر مایرون و رأی ۵-ستارهٔ شهروندان (Wave 3 — Trinity marketplace gate) ──
+
+/// `POST /market/products/{id}/mairon-confirm` — دروازهٔ دو-کلیدی انتشار.
+///
+/// کلید ۱: حکم قطعی مایرون روی آرتیفکت واقعی محصول (`judge_market_product`)؛
+/// کلید ۲: تأیید صریح سازنده از مسیر نشست (همان endpoint). فقط هم‌زمانیِ
+/// هر دو، نمره و نشان `⚒️ Mairon REA Certified` را روی لیستینگ مُهر می‌کند. ۲۰۰.
+///
+/// # Errors
+/// ۴۰۱ نشست غایب؛ ۴۰۳ غیر از سازندهٔ محصول؛ ۴۰۴ محصول ناموجود؛ ۴۲۲ حکم مایرون
+/// پذیرش نیست (خطوط قرمز یا نمرهٔ زیر ۸۵)؛ 500 خطای SQL.
+pub async fn mairon_confirm(
+    State(state): State<Arc<AppState>>,
+    Path(product_id): Path<String>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<Json<MaironConfirmResponse>> {
+    let user = require_session(&state, &headers).await?;
+    let _req: serde_json::Value = parse_body(&body)?;
+    let product = state
+        .store
+        .get_product(&product_id)
+        .await
+        .map_err(ApiFailure::from)?
+        .ok_or_else::<ApiFailure, _>(|| {
+            DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {product_id} does not exist"),
+            )
+            .into()
+        })?;
+    if product.seller_id != user.account_id {
+        return Err(kian_contracts::HttpFailure::forbidden_escrow_role().into());
+    }
+    let verdict = kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html);
+    // کلید ۲ — تأیید سازنده از مسیر نشست: `creator_confirmed = true`
+    let listing = confirm_and_publish_product(&verdict, true).map_err(|msg| {
+        DomainError::new(DomainErrorCode::InvalidTransition, msg.to_owned())
+    })?;
+    state
+        .store
+        .stamp_product_mairon(&product_id, listing.mairon_rea_score, &listing.mairon_visible_badge)
+        .await
+        .map_err(ApiFailure::from)?;
+    Ok(Json(MaironConfirmResponse {
+        product_id: listing.product_id,
+        mairon_rea_score: listing.mairon_rea_score,
+        mairon_visible_badge: listing.mairon_visible_badge,
+        creator_confirmed: listing.creator_confirmed,
+        published: true,
+    }))
+}
+
+/// `POST /market/products/{id}/reviews` — رأی واقعی شهروند با ستارهٔ سخت‌سنجی‌شدهٔ
+/// `1..=5`؛ خریدِ تاییدشده (اسکرو `RELEASED`) وزنِ بیزیِ کامل می‌گیرد. ۲۰۱.
+///
+/// # Errors
+/// ۴۰۱ نشست غایب؛ ۴۰۰ ستاره/نظر نامعتبر؛ ۴۰۴ محصول ناموجود؛ ۴۲۲ رأی تکراری؛ 500 SQL.
+pub async fn submit_review(
+    State(state): State<Arc<AppState>>,
+    Path(product_id): Path<String>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<(StatusCode, Json<ProductReviewView>)> {
+    let user = require_session(&state, &headers).await?;
+    let req: ProductReviewSubmitRequest = parse_body(&body)?;
+    let product = state
+        .store
+        .get_product(&product_id)
+        .await
+        .map_err(ApiFailure::from)?
+        .ok_or_else::<ApiFailure, _>(|| {
+            DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {product_id} does not exist"),
+            )
+            .into()
+        })?;
+    // عکسِ فوریِ نمرهٔ مایرون: مُهرِ رسمی اگر باشد، وگرنه داوریِ تازهٔ قطعی
+    let mairon_score = if product.mairon_score > 0 {
+        product.mairon_score
+    } else {
+        kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html)
+            .total_score
+    };
+    let existing = state
+        .store
+        .list_product_reviews(&product_id)
+        .await
+        .map_err(ApiFailure::from)?;
+    let existing_domain: Vec<ProductReview> = existing
+        .iter()
+        .map(|r| ProductReview {
+            review_id: r.id.clone(),
+            product_id: r.product_id.clone(),
+            reviewer_citizen_id: r.reviewer_id.clone(),
+            stars: r.stars,
+            comment: r.comment.clone(),
+            verified_purchase: r.verified_purchase,
+            mairon_score_at_review: r.mairon_score_at_review,
+        })
+        .collect();
+    let verified = state
+        .store
+        .has_verified_purchase(&product_id, &user.account_id)
+        .await
+        .map_err(ApiFailure::from)?;
+    let review = submit_product_review(
+        &existing_domain,
+        &format!("rev:{}", uuid::Uuid::now_v7()),
+        &product_id,
+        &user.account_id,
+        req.stars,
+        &req.comment,
+        verified,
+        mairon_score,
+    )
+    .map_err(|msg: &'static str| {
+        // ستاره/نظر نامعتبر → ۴۰۰؛ رأی تکراری → ۴۲۲ (نگاشت صادقانهٔ لبهٔ HTTP)
+        if msg.contains("between 1 and 5") || msg.contains("must not") {
+            ApiFailure::Http(kian_contracts::HttpFailure::invalid_request(1))
+        } else {
+            kian_contracts::DomainFailure::new(DomainError::new(
+                DomainErrorCode::InvalidTransition,
+                msg.to_owned(),
+            ))
+            .into()
+        }
+    })?;
+    let row = ProductReviewRow {
+        id: review.review_id.clone(),
+        product_id: review.product_id.clone(),
+        reviewer_id: review.reviewer_citizen_id.clone(),
+        stars: review.stars,
+        comment: review.comment.clone(),
+        verified_purchase: review.verified_purchase,
+        mairon_score_at_review: review.mairon_score_at_review,
+        created_at: now_iso(),
+    };
+    state
+        .store
+        .insert_product_review(&row)
+        .await
+        .map_err(ApiFailure::from)?;
+    Ok((StatusCode::CREATED, Json(ProductReviewView {
+        review_id: row.id,
+        product_id: row.product_id,
+        reviewer_id: row.reviewer_id,
+        stars: row.stars,
+        comment: row.comment,
+        verified_purchase: row.verified_purchase,
+        mairon_score_at_review: row.mairon_score_at_review,
+        created_at: row.created_at,
+    })))
+}
+
+/// `GET /market/products/{id}/reviews` — خلاصهٔ بیزی ۵-ستاره + هیستوگرام +
+/// `combined_rank_score` (`0.60 * bayesian_stars * 20 + 0.40 * mairon_score`).
+///
+/// # Errors
+/// ۴۰۴ محصول ناموجود؛ 500 خطای SQL.
+pub async fn list_reviews(
+    State(state): State<Arc<AppState>>,
+    Path(product_id): Path<String>,
+) -> ApiResult<Json<ProductRatingSummaryResponse>> {
+    let product = state
+        .store
+        .get_product(&product_id)
+        .await
+        .map_err(ApiFailure::from)?
+        .ok_or_else::<ApiFailure, _>(|| {
+            DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {product_id} does not exist"),
+            )
+            .into()
+        })?;
+    let rows = state
+        .store
+        .list_product_reviews(&product_id)
+        .await
+        .map_err(ApiFailure::from)?;
+    let reviews: Vec<ProductReview> = rows
+        .iter()
+        .map(|r| ProductReview {
+            review_id: r.id.clone(),
+            product_id: r.product_id.clone(),
+            reviewer_citizen_id: r.reviewer_id.clone(),
+            stars: r.stars,
+            comment: r.comment.clone(),
+            verified_purchase: r.verified_purchase,
+            mairon_score_at_review: r.mairon_score_at_review,
+        })
+        .collect();
+    // لایهٔ فنی: مُهرِ رسمی اگر باشد، وگرنه داوریِ قطعیِ تازه روی preview_html
+    let (score, badge) = if product.mairon_score > 0 {
+        (product.mairon_score, product.mairon_badge.clone())
+    } else {
+        let v = kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html);
+        (v.total_score, v.visible_badge)
+    };
+    let verdict = evaluate_user_product_with_mairon(
+        &product_id,
+        MaironReaPillarScores {
+            architecture: 0,
+            security_hardening: 0,
+            ux_and_anti_slop: 0,
+            verification_proof: 0,
+        }
+        .clamped(),
+        Vec::new(),
+    );
+    // نمرهٔ رسمی مایرون در خلاصه از مُهر/داوریِ تازه می‌آید — با بازسازی حکمِ
+    // امتیاز برابر، موتور بیزی دامنه بدون کپیِ فرمول مصرف می‌شود.
+    let verdict_with_score = evaluate_user_product_with_mairon(
+        &product_id,
+        pillar_scores_for_total(score),
+        Vec::new(),
+    );
+    let _ = &verdict;
+    let summary = summarize_product_ratings(&product_id, &verdict_with_score, &reviews);
+    Ok(Json(ProductRatingSummaryResponse {
+        product_id: summary.product_id,
+        mairon_rea_score: score,
+        mairon_visible_badge: if badge.is_empty() { verdict_with_score.visible_badge.clone() } else { badge },
+        total_reviews: summary.total_reviews,
+        verified_reviews: summary.verified_reviews,
+        average_stars: summary.average_stars,
+        bayesian_stars: summary.bayesian_stars,
+        star_histogram: summary.star_histogram.to_vec(),
+        five_star_display: summary.five_star_display.clone(),
+        combined_rank_score: summary.combined_rank_score,
+        reviews: rows
+            .iter()
+            .map(|r| ProductReviewView {
+                review_id: r.id.clone(),
+                product_id: r.product_id.clone(),
+                reviewer_id: r.reviewer_id.clone(),
+                stars: r.stars,
+                comment: r.comment.clone(),
+                verified_purchase: r.verified_purchase,
+                mairon_score_at_review: r.mairon_score_at_review,
+                created_at: r.created_at.clone(),
+            })
+            .collect(),
+    }))
+}
+
+/// چیدمانِ قطعی چهار ستون برای رسیدن به مجموعِ هدف — نشانِ رسمیِ مایرون در
+/// خلاصهٔ وایر با موتور دامنه بازتولید می‌شود (بدون کپیِ فرمول نشان).
+fn pillar_scores_for_total(target: u8) -> MaironReaPillarScores {
+    let a = target.min(25);
+    let rest = target - a;
+    let s = rest.min(25);
+    let rest2 = rest - s;
+    let u = rest2.min(25);
+    let v = rest2 - u;
+    MaironReaPillarScores { architecture: a, security_hardening: s, ux_and_anti_slop: u, verification_proof: v }
 }
 
 #[cfg(test)]
@@ -1261,4 +1531,264 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
     }
+    // ── مُهر مایرون + رأی ۵-ستارهٔ شهروندان — مسیرهای زندهٔ HTTP (Wave 3) ──
+
+    /// آرتیفکتِ آهنگری‌شده — از گیت مایرون عبور می‌کند (RTL + ۳۹۰ + ۳ سکشن + اسکریپت).
+    const FORGED_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
+<style>body{font-family:'Vazirmatn',sans-serif;max-width: 390px;}</style>\
+</head><body>\
+<section aria-label=\"الف\">داشبورد</section><section>گزارش</section><section>تنظیمات</section>\
+<script>/* assert: 390px zero-overflow */</script>\
+</body></html>";
+
+    async fn create_forged_product(app: &axum::Router, token: &str, title: &str) -> String {
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/market/products")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::from(
+                        json!({
+                            "title": title,
+                            "description": "آرتیفکت تک‌صفحه‌ای آهنگری‌شده برای گیت مایرون",
+                            "priceDin": 500,
+                            "previewHtml": FORGED_PREVIEW
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        json_body(res).await["id"].as_str().unwrap().to_owned()
+    }
+
+    /// دروازهٔ دو-کلیدی: مُهر فقط با حکم مایرون + تأیید سازنده می‌نشیند؛
+    /// رأی ۵-ستاره با وزن بیزی و هیستوگرام دقیق جمع می‌شود؛ رأی تکراری ۴۲۲.
+    #[tokio::test]
+    #[allow(clippy::too_many_lines)]
+    async fn mairon_confirm_two_key_gate_then_review_lifecycle() {
+        let app = app().await;
+        let seller = auth(&app, "321", "forge-seller").await;
+        let buyer = auth(&app, "322", "star-buyer").await;
+        let product_id = create_forged_product(&app, &seller, "محصول آهنگری‌شده").await;
+
+        // محصولِ بدون مُهر — خلاصهٔ رأی، داوریِ تازهٔ مایرون را نشان می‌دهد
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = json_body(res).await;
+        assert_eq!(body["totalReviews"], 0);
+        assert!(body["maironReaScore"].as_u64().unwrap() >= 85, "body: {body}");
+
+        // غیر از سازنده → ۴۰۳ (کلید دوم قابل سرقت نیست)
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/mairon-confirm"))
+                    .header("authorization", format!("Bearer {buyer}"))
+                    .body(Body::from("{}".to_owned()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 403);
+
+        // کلید ۱ + کلید ۲ — سازنده تأیید می‌کند → مُهر Forge-Grade
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/mairon-confirm"))
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from("{}".to_owned()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = json_body(res).await;
+        assert_eq!(body["creatorConfirmed"], true);
+        assert_eq!(body["published"], true);
+        let score = body["maironReaScore"].as_u64().unwrap();
+        assert!(score >= 85, "score: {score}");
+        assert!(body["maironVisibleBadge"].as_str().unwrap().contains("Forge-Grade"));
+
+        // نمای عمومی محصول حالا مُهر را حمل می‌کند (additive wire)
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{product_id}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = json_body(res).await;
+        assert_eq!(body["maironScore"], score);
+        assert!(body["maironBadge"].as_str().unwrap().contains("Forge-Grade"));
+
+        // رأی خریدار — ۵ ستاره؛ خرید تاییدشده ندارد → وزن ۰.۲۵ (ضد-سوریل)
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .header("authorization", format!("Bearer {buyer}"))
+                    .body(Body::from(
+                        json!({"stars": 5, "comment": "آهنگری واقعاً تمیز است — بدون اسلوپ"}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        let review = json_body(res).await;
+        assert_eq!(review["stars"], 5);
+        assert_eq!(review["verifiedPurchase"], false);
+        assert_eq!(review["maironScoreAtReview"], score);
+        assert!(review["reviewId"].as_str().unwrap().starts_with("rev:"));
+
+        // قفلِ یک‌رأیی — همان شهروند → ۴۲۲
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .header("authorization", format!("Bearer {buyer}"))
+                    .body(Body::from(
+                        json!({"stars": 1, "comment": "رأی دوم سوریل است"}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 422);
+
+        // ستارهٔ بیرون از ۱..=۵ → ۴۰۰
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from(
+                        json!({"stars": 0, "comment": "ستارهٔ نامعتبر"}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 400);
+
+        // خلاصهٔ بیزی — هیستوگرام دقیق + رتبهٔ ترکیبی
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = json_body(res).await;
+        assert_eq!(body["totalReviews"], 1);
+        assert_eq!(body["verifiedReviews"], 0);
+        assert_eq!(body["starHistogram"], json!([0, 0, 0, 0, 1]));
+        assert_eq!(body["averageStars"], 5.0);
+        let bayes = body["bayesianStars"].as_f64().unwrap();
+        assert!(bayes > 4.2 && bayes < 5.0, "prior 4.20 pulls the lone 5-star down: {bayes}");
+        let combined = body["combinedRankScore"].as_f64().unwrap();
+        let expected = 0.60 * (bayes * 20.0) + 0.40 * f64::from(u32::try_from(score).unwrap());
+        assert!((combined - expected).abs() < 1e-9, "combined: {combined} vs {expected}");
+        assert!(body["fiveStarDisplay"].as_str().unwrap().contains("⚒️ نمره مایرون REA"));
+    }
+
+    /// محصولِ خام — گیت مایرون صادقانه رد می‌کند (۴۲۲) و مُهر نمی‌نشیند.
+    #[tokio::test]
+    #[allow(clippy::too_many_lines)]
+    async fn mairon_confirm_honestly_rejects_unforged_artifact() {
+        let app = app().await;
+        let seller = auth(&app, "331", "raw-seller").await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/market/products")
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from(
+                        json!({
+                            "title": "محصول خام",
+                            "description": "بدون آرتیفکت واقعی",
+                            "priceDin": 100
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        let product_id = json_body(res).await["id"].as_str().unwrap().to_owned();
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/mairon-confirm"))
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from("{}".to_owned()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 422, "unforged artifact must not pass the gate");
+        let body = json_body(res).await;
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("not approved"));
+        // رأی روی محصولِ بدون مُهر — عکسِ نمرهٔ داوریِ تازه ثبت می‌شود
+        let buyer = auth(&app, "332", "candid-buyer").await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/market/products/{product_id}/reviews"))
+                    .header("authorization", format!("Bearer {buyer}"))
+                    .body(Body::from(
+                        json!({"stars": 2, "comment": "هنوز آهنگری نشده"}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        let review = json_body(res).await;
+        let stamp = review["maironScoreAtReview"].as_u64().unwrap();
+        assert!(stamp < 85, "fresh judgement must be honest: {stamp}");
+    }
+
 }

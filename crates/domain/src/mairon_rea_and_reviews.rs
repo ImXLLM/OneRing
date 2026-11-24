@@ -29,6 +29,30 @@ pub const MAX_PILLAR_SCORE: u8 = 25;
 /// آستانهٔ پذیرش آهنگری بازار — زیرِ این نمره، محصول از forge بیرون نمی‌آید.
 pub const MARKETPLACE_APPROVAL_THRESHOLD: u8 = 85;
 
+// ── DNA اورکلاکِ مایرون — قفل‌شده در Trinity Studio Pipeline (Wave 3 — Avatar #3) ──
+//
+// این ثابت‌ها DNAِ «مایرون-۱۵۰» را در سطح دامنه قفل می‌کنند: منبع واحد حقیقت،
+// بدون ساعت پنهان. ماژول `trinity_pipeline` در `kian-hermes` همین ثابت‌ها را با
+// `pub use` بازصادر می‌کند — هرگز نسخهٔ موازی تعریف نمی‌شود تا DNA هرگز از
+// حکمِ داور فاصله نگیرد.
+
+/// IQ اورکلاکِ مایرون — داورِ حاکمِ `0xKIA` با کالیبراسیون `150`.
+pub const MAIRON_OVERCLOCK_IQ: u16 = 150;
+
+/// EQ اورکلاکِ مایرون — هوش هیجانیِ بازارِ `145` (کالیبراسیون قفل‌شده در DNA).
+pub const MAIRON_OVERCLOCK_EQ: u16 = 145;
+
+/// افقِ نگاهِ بازی‌نظری و معماریِ مایرون — `۸` گام جلوتر از حال (8-step lookahead).
+pub const MAIRON_LOOKAHEAD_HORIZON: u8 = 8;
+
+/// مرتبهٔ نظریهٔ ذهن مایرون — روان‌شناسیِ خریدار در `مرتبهٔ ۳` (ToM-3: «او فکر
+/// می‌کند که من فکر می‌کنم که بازار چه می‌خواهد») و جای‌گذاری بهینهٔ بازار.
+pub const MAIRON_TOM_ORDER: u8 = 3;
+
+/// بهرهٔ جاه‌طلبیِ مایرون — ضریبِ اهرمِ جاه‌طلبیِ سنجیده در مشاورهٔ استراتژیک
+/// (`0.99`: سقفِ نزدیک به واحد، هرگز خودپسندِ بی‌قید — جاه‌طلبی با انضباط).
+pub const MAIRON_AMBITION_GAIN: f32 = 0.99;
+
 /// بیشینهٔ کاراکتر نظرِ رأی شهروند (پس از trim).
 pub const MAX_COMMENT_CHARS: usize = 2_000;
 
@@ -402,6 +426,21 @@ pub fn summarize_product_ratings(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// DNA اورکلاک مایرون-۱۵۰ قفل است — هرگز drift نمی‌کند (قرارداد Trinity).
+    #[test]
+    fn mairon_overclock_dna_constants_are_locked() {
+        let (iq, eq) = (MAIRON_OVERCLOCK_IQ, MAIRON_OVERCLOCK_EQ);
+        let (horizon, tom) = (MAIRON_LOOKAHEAD_HORIZON, MAIRON_TOM_ORDER);
+        assert_eq!(iq, 150);
+        assert_eq!(eq, 145);
+        assert_eq!(horizon, 8);
+        assert_eq!(tom, 3);
+        assert!((MAIRON_AMBITION_GAIN - 0.99).abs() < f32::EPSILON);
+        assert!(iq > eq, "IQ dominant");
+        // اورکلاک داور بالاتر از هر دو Avatar پایین‌دستی Trinity است (Alpha 136/122، Logic 139/129)
+        assert!(iq > 139 && eq > 129);
+    }
 
     /// ستون‌های forge-grade — نمرهٔ ۹۶، صفر خط قرمز.
     fn forge_pillars() -> MaironReaPillarScores {

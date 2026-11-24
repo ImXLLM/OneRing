@@ -69,6 +69,10 @@ pub struct ProductView {
     pub active: bool,
     /// زمان ایجاد ISO
     pub created_at: String,
+    /// نمرهٔ REA مایرون مُهر‌شده روی لیستینگ (`0..=100`؛ `0` = هنوز مُهر نشده)
+    pub mairon_score: u8,
+    /// نشان مرئی مایرون (خالی = مُهر نشده)
+    pub mairon_badge: String,
 }
 
 /// فهرست محصولات فعال بازار.
@@ -133,6 +137,85 @@ pub struct MyMarketResponse {
     pub orders: Vec<EscrowView>,
 }
 
+// ── مُهر مایرون و رأی ۵-ستارهٔ شهروندان (Wave 3 — Trinity marketplace gate) ──
+
+/// پاسخ تأیید و انتشار دو-کلیدی (`POST /market/products/{id}/mairon-confirm`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MaironConfirmResponse {
+    /// شناسهٔ محصول
+    pub product_id: String,
+    /// نمرهٔ REA مایرون (`0..=100`)
+    pub mairon_rea_score: u8,
+    /// نشان مرئی مُهرشده روی لیستینگ
+    pub mairon_visible_badge: String,
+    /// تأیید صریح سازنده — کلید دوم دروازهٔ دو-کلیدی
+    pub creator_confirmed: bool,
+    /// آیا لیستینگ با مُهر منتشر شد؟
+    pub published: bool,
+}
+
+/// درخواست ثبت رأی شهروند روی محصول (`POST /market/products/{id}/reviews`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductReviewSubmitRequest {
+    /// ستاره — فقط `1..=5`
+    pub stars: u8,
+    /// نظر صحیح‌سنجی‌شده (`1..=2000` کاراکتر پس از trim)
+    pub comment: String,
+}
+
+/// نمای یک رأی روی وایر.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductReviewView {
+    /// شناسهٔ یکتای رأی (`rev:{uuid}`)
+    pub review_id: String,
+    /// شناسهٔ محصول
+    pub product_id: String,
+    /// حساب شهروند رأی‌دهنده (`citizen:{tg_id}`)
+    pub reviewer_id: String,
+    /// ستاره (`1..=5`)
+    pub stars: u8,
+    /// نظر
+    pub comment: String,
+    /// خرید تاییدشده (اتصال به امانت تسویه‌شده؛ ضد-سوریل)
+    pub verified_purchase: bool,
+    /// عکس فوری نمرهٔ REA مایرون هنگام رأی
+    pub mairon_score_at_review: u8,
+    /// زمان ثبت ISO
+    pub created_at: String,
+}
+
+/// خلاصهٔ رتبهٔ ۵-ستارهٔ بیزی + هیستوگرام + نمرهٔ رتبهٔ ترکیبی
+/// (`GET /market/products/{id}/reviews`) — دو لایهٔ فنی و اجتماعی کنار هم.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductRatingSummaryResponse {
+    /// شناسهٔ محصول
+    pub product_id: String,
+    /// نمرهٔ فنی مایرون (`0..=100`)
+    pub mairon_rea_score: u8,
+    /// نشان مرئی مایرون
+    pub mairon_visible_badge: String,
+    /// شمار همهٔ رأی‌ها
+    pub total_reviews: u32,
+    /// شمار رأی‌های خرید تاییدشده
+    pub verified_reviews: u32,
+    /// میانگین حسابی ستاره‌ها (`0.0..=5.0`)
+    pub average_stars: f64,
+    /// میانگین بیزی (پیشین `C = 5.0` و `m = 4.20`)
+    pub bayesian_stars: f64,
+    /// هیستوگرام دقیق `[1★..5★]`
+    pub star_histogram: Vec<u32>,
+    /// نمایش پنج‌ستارهٔ دوزبانه
+    pub five_star_display: String,
+    /// نمرهٔ رتبهٔ ترکیبی: `0.60 * (bayesian_stars * 20) + 0.40 * mairon_score`
+    pub combined_rank_score: f64,
+    /// همهٔ رأی‌های محصول — جدیدترین اول
+    pub reviews: Vec<ProductReviewView>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,6 +235,8 @@ mod tests {
             artifact_kind: "html".into(),
             active: true,
             created_at: "2026-01-01T00:00:00.000Z".into(),
+            mairon_score: 92,
+            mairon_badge: "⚒️ Mairon REA Certified: 92/100 (Forge-Grade)".into(),
         };
         let json = to_string(&p).unwrap();
         assert!(json.contains("\"category\":null"), "explicit null — {json}");

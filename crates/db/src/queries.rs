@@ -424,6 +424,49 @@ pub struct ProductRow {
     pub active: bool,
     /// زمان ایجاد ISO
     pub created_at: String,
+    /// نمرهٔ REA مایرون مُهر‌شده (`0` = هنوز مُهر نشده)
+    pub mairon_score: u8,
+    /// نشان مرئی مایرون (خالی = مُهر نشده)
+    pub mairon_badge: String,
+}
+
+/// یک رأی ۵-ستارهٔ ثبت‌شدهٔ شهروند روی محصول (`"ProductReview"`) — مُهر مایرون
+/// و رأی جامعه (Wave 3 — Trinity marketplace gate).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProductReviewRow {
+    /// شناسهٔ یکتای رأی (`rev:<uuid>`)
+    pub id: String,
+    /// شناسهٔ محصول
+    pub product_id: String,
+    /// حساب شهروند رأی‌دهنده
+    pub reviewer_id: String,
+    /// ستاره (`1..=5`)
+    pub stars: u8,
+    /// نظر صحیح‌سنجی‌شده
+    pub comment: String,
+    /// خرید تاییدشده — اتصال به امانت تسویه‌شده (ضد-سوریل)
+    pub verified_purchase: bool,
+    /// عکس فوری نمرهٔ REA مایرون هنگام رأی
+    pub mairon_score_at_review: u8,
+    /// زمان ثبت ISO
+    pub created_at: String,
+}
+
+const PRODUCT_REVIEW_SELECT: &str = r#"SELECT "id","productId","reviewerId","stars","comment","verifiedPurchase","maironScoreAtReview","createdAt" FROM "ProductReview""#;
+
+fn product_review_row_from(row: sqlx::sqlite::SqliteRow) -> ProductReviewRow {
+    use sqlx::Row;
+    ProductReviewRow {
+        id: row.get("id"),
+        product_id: row.get("productId"),
+        reviewer_id: row.get("reviewerId"),
+        stars: u8::try_from(row.get::<i64, _>("stars")).unwrap_or(1),
+        comment: row.get("comment"),
+        verified_purchase: row.get::<i64, _>("verifiedPurchase") != 0,
+        mairon_score_at_review: u8::try_from(row.get::<i64, _>("maironScoreAtReview"))
+            .unwrap_or(0),
+        created_at: row.get("createdAt"),
+    }
 }
 
 /// فیلترهای فهرست محصولات — همان کوئری‌های TS (`q`/`limit`/`offset`).
@@ -440,7 +483,7 @@ pub struct ProductFilter {
 }
 
 /// کوئری عمومی محصول — ستون `deliveryPayload` عمداً خوانده نمی‌شود تا هرگز لو نرود.
-const PRODUCT_PUBLIC_SELECT: &str = r#"SELECT "id","sellerId","title","description","category","priceDin","previewHtml","affiliateBps","artifactKind","active","createdAt" FROM "Product""#;
+const PRODUCT_PUBLIC_SELECT: &str = r#"SELECT "id","sellerId","title","description","category","priceDin","previewHtml","affiliateBps","artifactKind","active","createdAt","maironScore","maironBadge" FROM "Product""#;
 
 fn product_row_public_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
     use sqlx::Row;
@@ -458,6 +501,8 @@ fn product_row_public_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
         delivery_payload: None,
         active: row.get::<i64, _>("active") != 0,
         created_at: row.get("createdAt"),
+        mairon_score: u8::try_from(row.get::<i64, _>("maironScore")).unwrap_or(0),
+        mairon_badge: row.get("maironBadge"),
     }
 }
 
@@ -477,6 +522,8 @@ fn product_row_with_delivery_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
         delivery_payload: row.get("deliveryPayload"),
         active: row.get::<i64, _>("active") != 0,
         created_at: row.get("createdAt"),
+        mairon_score: u8::try_from(row.get::<i64, _>("maironScore")).unwrap_or(0),
+        mairon_badge: row.get("maironBadge"),
     }
 }
 
@@ -563,7 +610,8 @@ impl V3Store {
     pub async fn get_product_with_delivery(&self, id: &str) -> DbResult<Option<ProductRow>> {
         let row = sqlx::query(
             r#"SELECT "id","sellerId","title","description","category","priceDin",
-               "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt"
+               "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt",
+               "maironScore","maironBadge"
                FROM "Product" WHERE "id" = ?"#,
         )
         .bind(id)
@@ -580,8 +628,10 @@ impl V3Store {
         sqlx::query(
             r#"INSERT INTO "Product"
                ("id","sellerId","title","description","category","priceDin",
-                "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt")
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"#,
+                "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt",
+                "maironScore","maironBadge")
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,
+                       COALESCE(?, 0), COALESCE(?, ''))"#,
         )
         .bind(&p.id)
         .bind(&p.seller_id)
@@ -595,10 +645,124 @@ impl V3Store {
         .bind(&p.delivery_payload)
         .bind(i64::from(p.active))
         .bind(&p.created_at)
+        .bind(i64::from(p.mairon_score))
+        .bind(&p.mairon_badge)
         .execute(self.pool_ref())
         .await?;
         self.audit_ext("server", "product.create", Some(&p.id), None).await?;
         Ok(())
+    }
+
+    /// مُهر دو-کلیدی مایرون روی لیستینگ — نمره و نشان فقط پس از عبور حکمِ
+    /// داور **و** تأیید صریح سازنده اینجا می‌نشیند (`maironScore`/`maironBadge`).
+    ///
+    /// # Errors
+    /// محصول ناموجود → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    pub async fn stamp_product_mairon(
+        &self,
+        id: &str,
+        score: u8,
+        badge: &str,
+    ) -> DbResult<()> {
+        let updated = sqlx::query(
+            r#"UPDATE "Product" SET "maironScore"=?, "maironBadge"=? WHERE "id"=?"#,
+        )
+        .bind(i64::from(score))
+        .bind(badge)
+        .bind(id)
+        .execute(self.pool_ref())
+        .await?
+        .rows_affected();
+        if updated == 0 {
+            return Err(DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {id} does not exist"),
+            )
+            .into());
+        }
+        self.audit_ext("server", "product.mairon_stamp", Some(id), None).await?;
+        Ok(())
+    }
+
+    /// ثبت رأی شهروند — قفلِ یک‌رأییِ (محصول، رأی‌دهنده) در سطح UNIQUE؛
+    /// رأی تکراری → `EscrowAlreadyExists` (۴۲۲، همان قاعدهٔ دامنه).
+    ///
+    /// # Errors
+    /// محصول ناموجود → `PRODUCT_NOT_FOUND`؛ رأی تکراری → ۴۲۲؛ خطای SQL.
+    pub async fn insert_product_review(&self, r: &ProductReviewRow) -> DbResult<()> {
+        let product = self.get_product(&r.product_id).await?;
+        if product.is_none() {
+            return Err(DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {} does not exist", r.product_id),
+            )
+            .into());
+        }
+        let duplicate: i64 = sqlx::query_scalar(
+            r#"SELECT COUNT(*) FROM "ProductReview" WHERE "productId"=? AND "reviewerId"=?"#,
+        )
+        .bind(&r.product_id)
+        .bind(&r.reviewer_id)
+        .fetch_one(self.pool_ref())
+        .await?;
+        if duplicate > 0 {
+            return Err(DomainError::new(
+                DomainErrorCode::EscrowAlreadyExists,
+                format!(
+                    "Citizen {} has already reviewed product {}",
+                    r.reviewer_id, r.product_id
+                ),
+            )
+            .into());
+        }
+        sqlx::query(
+            r#"INSERT INTO "ProductReview"
+               ("id","productId","reviewerId","stars","comment","verifiedPurchase","maironScoreAtReview","createdAt")
+               VALUES (?,?,?,?,?,?,?,?)"#,
+        )
+        .bind(&r.id)
+        .bind(&r.product_id)
+        .bind(&r.reviewer_id)
+        .bind(i64::from(r.stars))
+        .bind(&r.comment)
+        .bind(i64::from(r.verified_purchase))
+        .bind(i64::from(r.mairon_score_at_review))
+        .bind(&r.created_at)
+        .execute(self.pool_ref())
+        .await?;
+        self.audit_ext("server", "product.review", Some(&r.id), None).await?;
+        Ok(())
+    }
+
+    /// همهٔ رأی‌های یک محصول — جدیدترین اول.
+    ///
+    /// # Errors
+    /// خطای SQL.
+    pub async fn list_product_reviews(&self, product_id: &str) -> DbResult<Vec<ProductReviewRow>> {
+        let sql = format!(
+            "{PRODUCT_REVIEW_SELECT} WHERE \"productId\" = ? ORDER BY \"createdAt\" DESC, \"id\" DESC"
+        );
+        let rows = sqlx::query(sqlsafe::audited(sql))
+            .bind(product_id)
+            .fetch_all(self.pool_ref())
+            .await?;
+        Ok(rows.into_iter().map(product_review_row_from).collect())
+    }
+
+    /// آیا این شهروندِ خریدِ تاییدشدهٔ (اسکرو `RELEASED`) روی این محصول دارد؟
+    /// — وزنِ رأی واقعی `1.0` در برابر `0.25` (ضد-سوریل، لایهٔ بیزی).
+    ///
+    /// # Errors
+    /// خطای SQL.
+    pub async fn has_verified_purchase(&self, product_id: &str, buyer_id: &str) -> DbResult<bool> {
+        let count: i64 = sqlx::query_scalar(
+            r#"SELECT COUNT(*) FROM "Escrow" WHERE "productRef"=? AND "buyerId"=? AND "status"='RELEASED'"#,
+        )
+        .bind(product_id)
+        .bind(buyer_id)
+        .fetch_one(self.pool_ref())
+        .await?;
+        Ok(count > 0)
     }
 
     /// به‌روزرسانی جزئی محصول — فقط فیلدهای `Some` اعمال می‌شوند. ستون‌های

@@ -22,6 +22,7 @@ pub mod market;
 pub mod nation;
 pub mod security;
 pub mod system;
+pub mod trinity;
 pub mod wallet;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
@@ -63,13 +64,20 @@ pub use escrows::{
     RefundEscrowRequest, ReleaseEscrowRequest,
 };
 pub use market::{
-    CreateProductRequest, EscrowDeliveryView, MAX_DELIVERY_PAYLOAD_BYTES, MAX_PREVIEW_HTML_BYTES,
-    MyMarketResponse, ProductListResponse, ProductView, PurchaseRequest, PurchaseResponse,
+    CreateProductRequest, EscrowDeliveryView, MaironConfirmResponse, MAX_DELIVERY_PAYLOAD_BYTES,
+    MAX_PREVIEW_HTML_BYTES, MyMarketResponse, ProductListResponse, ProductRatingSummaryResponse,
+    ProductReviewSubmitRequest, ProductReviewView, ProductView, PurchaseRequest, PurchaseResponse,
 };
 pub use builder::{
     BuilderChatRequest, BuilderChatResponse, BuilderMessageView, BuilderSessionListResponse,
     BuilderSessionSummary, BuilderSessionView, CreateBuilderSessionRequest, PublishBuilderRequest,
     PublishBuilderResponse,
+};
+pub use trinity::{
+    TrinityAdvisoryView, TrinityAlleleView, TrinityAlphaRequest, TrinityAlphaResponse,
+    TrinityBlueprintModuleView, TrinityBlueprintView, TrinityOrchestrateRequest,
+    TrinityOrchestrateResponse, TrinityPillarsView, TrinityRepairDirectiveView,
+    TrinityRepairRoundView, TrinitySlotsState, TrinitySubAgentDnaView, TrinityMasterPromptView,
 };
 pub use nation::{
     BillKind, BillListResponse, BillView, CastVoteRequest, CreateBillRequest, EscrowResolution,
