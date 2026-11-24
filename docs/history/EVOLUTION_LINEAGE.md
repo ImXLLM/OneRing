@@ -126,15 +126,29 @@
 
 ------
 
+### Wave 6 — Quant & financial engine milestones
+
+| Milestone |
+| :--- |
+| DNA #15 [`15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md`](../../KIA-BRAIN-OS/15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md) created + mirrored to `crates/hermes/KIA-BRAIN-OS/` and `docs/dna/kia-brain-os/` |
+| DNA #15 injected into `"KbEntry"` as `kb:dna-15-ccxt-vibe-quant` → **330 rows**, tagged `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
+| `KIA-BRAIN-OS` is now the **15-file** creator brain (`01_DNAme.md` … `15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md`) |
+| Pure-Rust `ccxt` core: `Precise` i128 fixed-point + float-free `TICK_SIZE` (forensic fix #1) + L2 `OrderBook` sequence-gap guard (forensic fix #2) + dual throttler + 8-venue keyless matrix |
+| `Vibe-Trading` causal quant engine: typed `StrategyAst` (zero dynamic execution — fix #1), strictly-causal `&candles[0..=t]` backtester with `+1 bar` fills (fix #2), SHA-256 `VerifiedNumericClaimLedger` (fix #3), `PortfolioRiskGuard` hard kill-switch (fix #4) |
+| Mairon sovereign quant gate: sharpe ≥ 1.20 ∧ \|DD\| ≤ 20% ∧ ≥ 5 trades ∧ causal proof ∧ ledger verified — with 4 deterministic regime-boost variants |
+| `quant_strategies` live on migration `0010`; `GET /quant/venues`, `POST /quant/vibe-backtest`, `GET /quant/strategies` on the wire |
+
+------
+
 ## Growth ledger
 
-| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** |
-| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** |
-| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 |
-| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) |
-| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** |
+| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) | Wave 5 (Studio) | Wave 6 (Quant) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** | **607** | **641** |
+| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** | **329** | **330** |
+| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 |
+| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) | **92/100 PASS** + adaptive UX gate | **92/100 PASS** + sovereign quant gate (sharpe ≥ 1.20) |
+| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** | **0** | **0** |
 
 *The trial balance over 58,700,200,000 micro-KIAN has been exactly zero at every milestone — the
 ledger has never moved out of balance.*

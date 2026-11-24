@@ -28,7 +28,7 @@ use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
     accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, hermes,
-    market, nation, studio, system, wallet,
+    market, nation, quant, studio, system, wallet,
 };
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -144,6 +144,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // (کاتالوگِ عمومیِ ۲۰ زبان + اجرای زندهٔ ARDA با تزریقِ ایدمپوتنت)
         .route("/arda/flags", get(arda::flags_catalog))
         .route("/arda/localize-now", post(arda::localize_now))
+        // quant — Wave 6: هستهٔ ccxt + موتور کوانتِ علّیِ Vibe-Trading
+        .route("/quant/venues", get(quant::venues))
+        .route("/quant/vibe-backtest", post(quant::vibe_backtest))
+        .route("/quant/strategies", get(quant::strategies))
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
         // ۹-مدالیتیِ صفر-هزینه + ویترین پورتفولیو (۶ درمانِ قضایی)
         .route("/studio/ux-profiles", get(studio::ux_profiles))

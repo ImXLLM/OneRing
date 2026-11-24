@@ -30,6 +30,7 @@ pub mod legacy;
 pub mod migrate;
 pub mod nation;
 pub mod outbox;
+pub mod quant;
 pub mod proof;
 pub mod queries;
 pub mod sqlsafe;
@@ -83,6 +84,9 @@ pub use nation::{BillRow, VoteRow};
 
 // استودیوی ادراک‌سیار (Wave 5) — آفرینش‌های ۹-مدالیتی
 pub use studio::StudioCreationRow;
+
+// کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
+pub use quant::QuantStrategyRow;
 
 // کیف پول M5 + درخواست‌های برداشت کریپتو (فاز ۶)
 pub use wallet_chains::{UsdtDepositRow, WalletAddressRow, WithdrawalRequestRow};

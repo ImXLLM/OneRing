@@ -8,6 +8,7 @@ description = "کیف پول USDT — TRX/SOL/TON/BSC + خزانه و حضانت
 
 [dependencies]
 base64 = "0.22"
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 thiserror = { workspace = true }
 

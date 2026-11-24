@@ -21,6 +21,7 @@ pub mod error;
 pub mod escrows;
 pub mod market;
 pub mod nation;
+pub mod quant;
 pub mod security;
 pub mod studio;
 pub mod system;
@@ -37,6 +38,11 @@ pub use accounts::{AccountListResponse, AccountView, BalanceResponse, CreateAcco
 pub use arda::{
     ArdaFlagView, ArdaFlagsCatalogResponse, ArdaLocaleParityView, ArdaLocalizeRequest,
     ArdaLocalizeResponse, ArdaParityReportView, ProductSkillPackageResponse,
+};
+pub use quant::{
+    QuantGateView, QuantMetricsView, QuantStrategiesResponse, QuantStrategyView,
+    QuantSwarmNodeView, QuantTickSelftestView, QuantVibeBacktestRequest,
+    QuantVibeBacktestResponse, QuantVenueEndpointView, QuantVenueView, QuantVenuesResponse,
 };
 pub use auth::{
     AuthResponse, DevLoginRequest, FaucetRequest, MeResponse, SetTonAddressRequest,

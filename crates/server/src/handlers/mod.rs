@@ -19,6 +19,7 @@ pub mod escrows;
 pub mod hermes;
 pub mod market;
 pub mod nation;
+pub mod quant;
 pub mod studio;
 pub mod system;
 pub mod wallet;

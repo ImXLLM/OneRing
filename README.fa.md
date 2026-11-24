@@ -10,7 +10,7 @@
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#شروع-سریع-و-وریفای)
 [![Workspace Tests](https://img.shields.io/badge/tests-530_passed_%7C_0_failed-success.svg)](#شروع-سریع-و-وریفای)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#کارنامهٔ-کیفیت-مایرون-rea)
-[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-326_active-purple.svg)](#گنجینهٔ-دانش-و-ناورنی‌های-دفتر-تولید)
+[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-330_active-purple.svg)](#گنجینهٔ-دانش-و-ناورنی‌های-دفتر-تولید)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#امنیت-و-هاردنینگ-باینری)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -107,7 +107,7 @@
                                          ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │             PERSISTENCE & COGNITIVE VAULT (SQLite + DNA Files)                   │
-│  • seed/kian-production.db: 326 KbEntry skills · 466 citizens · 108 escrows      │
+│  • seed/kian-production.db: 330 KbEntry skills · 466 citizens · 108 escrows      │
 │  • KIA-BRAIN-OS/ (01..11) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -122,17 +122,17 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 
 | مسیر | نوع | شرح | تست |
 | :--- | :--- | :--- | :---: |
-| `crates/hermes` | کرت Rust | پرامپت‌ساز ۳-لایهٔ cache-safe، پچر فازی ۴-پاسی (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`)، گارد SSRF، توصیف‌گرهای سندباکس، استریم AG-UI 1.0، گیت‌های تایید، قرارداد DNA سازنده، قرارداد طراحی استودیو (390px) | **113** |
+| `crates/hermes` | کرت Rust | پرامپت‌ساز ۳-لایهٔ cache-safe، پچر فازی ۴-پاسی (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`)، گارد SSRF، توصیف‌گرهای سندباکس، استریم AG-UI 1.0، گیت‌های تایید، قرارداد DNA سازنده، قرارداد طراحی استودیو (390px)، **موتور کوانتِ علّیِ Vibe-Trading** (AST تایپ‌دار، تجزیه‌گرِ دوزبانهٔ FA/EN، بک‌تسترِ `&candles[0..=t]`، دفترِ ادعای SHA-256، DAG ۵گرهی، گیتِ کوانتِ مایرون) | **178** |
 | `crates/ai` | کرت Rust | روتر `OMNI-MODEL-GENOME` و سمیتایزرها (`gpt-6-standard-free`، `gemini-4-aragon-high`)، کلاینت بی‌کلید OpenCode Zen (۱۰ مدل)، رجیستری ۳۲-تامین‌کنندهٔ FreeLLM، ۱۲۰ API مرورگری، فشرده‌ساز `CavemanIntensity`، بودجهٔ توکن و حذف PII | **95** |
 | `crates/domain` | کرت Rust | گیت REA محصولِ ۱۰۰-امتیازیِ `Mairon` و اینترلاک انتشارِ دو-کلیدی، موتور امتیاز ۵-ستارهٔ بیزی، قفل خوش‌بینانهٔ اسکرو CAS، سقف‌های منشور و تقسیم ۴-پایِ افیلیت، رنکر وایرال `x-algorithm` | **73** |
 | `crates/server` | کرت Rust | کرنل HTTP با Axum (`0.0.0.0:8088`)، اندپوینت‌های بازار/اسکرو/بیلدر/ولت/ملت/ایجنت‌ها، پروب‌های health و economy، صف HITL ادمین | **73** |
 | `crates/contracts` | کرت Rust | DTOهای سیم مشترک، تایپ‌های وریفایر `initData` تلگرام، پیلود فاکتورهای Stars، ریت‌لیمیتِر | **52** |
 | `crates/bot` | کرت Rust | شِل Telegram Bot API 9: وریفایر خالص-Rust `initData` HMAC-SHA256 (مقایسهٔ زمان-ثابت)، فاکتورهای `XTR`، وبهوک fail-closed، `BotLoopGuard` | **35** |
-| `crates/db` | کرت Rust | لایهٔ مخزن SQLite (WAL، `BEGIN IMMEDIATE`)، پایداری دفتر دوطرفه، بازیابی دانش `"KbEntry"`، مخزن ایدمپوتنسی | **26** |
+| `crates/db` | کرت Rust | لایهٔ مخزن SQLite (WAL، `BEGIN IMMEDIATE`)، پایداری دفتر دوطرفه، بازیابی دانش `"KbEntry"`، مخزن ایدمپوتنسی، ماندگاریِ `quant_strategies` (مهاجرت `0010`) | **29** |
 | `crates/agents` | کرت Rust | دیسپچر ناوگان حاکم ۷/۷ با متادیتای KYA، اسکوپ‌های گاردین (`mairon.rea`، `product.rate`)، پیام‌رسانی A2A و سطح ابزار MCP | **23** |
 | `crates/nation` | کرت Rust | ثبت‌نام شهروند، اتریبیوشن `ReferralLineage`، لوایح پارلمان و قواعد حاکمیت HITL | **14** |
 | `crates/tooling` | کرت Rust | ابزارهای عیب‌یابی ورک‌اسپیس، بازرسان اسکیما، ابزارهای وِریفای قطعی | **13** |
-| `crates/wallet` | کرت Rust | وریفایرهای آدرس غیر-امانیتی (TON CRC16، TRON Base58Check، Solana Ed25519/Base58، BSC EIP-55)، حسابداری دوطرفهٔ میکرو-کیان، گاردهای lock/refund برداشت | **13** |
+| `crates/wallet` | کرت Rust | وریفایرهای آدرس غیر-امانیتی (TON CRC16، TRON Base58Check، Solana Ed25519/Base58، BSC EIP-55)، حسابداری دوطرفهٔ میکرو-کیان، گاردهای lock/refund برداشت، **هستهٔ خالص-راستِ `ccxt`** (`Precise` دهدهیِ i128، `TICK_SIZE` بدونِ شناور، محدودسازِ دوگانه، `OrderBook` L2 با نگهبانِ گپِ ترتیب، ماتریسِ ۸-مکانیِ بی‌کلید) | **29** |
 | **جمع ورک‌اسپیس** | — | ۱۱ کرت، `#![forbid(unsafe_code)]`، صفر نشان `todo!()` | **530** |
 | `apps/web` | Next.js 16 | لندینگ و داشبورد عمومی PWA (نصب‌شدنی، سرویس‌ورکر، تصاویر OG) | — |
 | `apps/miniapp` | Next.js 16 | مینی‌اپ تلگرام: استودیوی `/builder`، `/market`، `/wallet`، قرارداد RTL 390px | — |
@@ -357,7 +357,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 
 | ناورنی / جدول | مقدار وِریفای‌شده | تضمین |
 | :--- | :---: | :--- |
-| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **329 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA چهاردهم `kb:dna-14-omni-studio-adaptive-ux` است |
+| `"KbEntry"` (مهارت‌ها، ایجنت‌ها و ژنوم‌ها) | **330 ردیف** | تزریق‌کننده‌های `UPSERT` ایدمپوتنت زیر `scripts/` (بدون تکرار) — جدیدترین ردیف، DNA پانزدهم `kb:dna-15-ccxt-vibe-quant` است |
 | `"User"` (شهروندان وریفای‌شده) | **466 شهروند** | حساب‌های شهروندِ تولید حفظ شده‌اند |
 | `"ReferralLineage"` (گراف وایرال) | **247 تبار** | اتریبیوشن چند-سطحیِ رفرال دست‌نخورده |
 | `"Escrow"` (سفارش‌های اتمیک) | **108 اسکرو** | با CAS (`WHERE version = ?`) + `idempotency_key` محافظت‌شده |
@@ -380,6 +380,7 @@ TypeScript مشترک است. تعداد تست‌های جدول زیر، جم�
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (طرف) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
 | Trinity | `POST /builder/trinity/alpha` (کالبد ۱ — کشف / قفل مستر پرامپت) · `POST /builder/trinity/orchestrate` (کالبد ۲ «۳×۹ OpenBot» + کالبد ۳ مایرون `IQ=150/EQ=145` با حلقهٔ خودترمیمی) | Bearer |
+| Quant — موج ۶ | `GET /quant/venues` (ماتریسِ ۸-مکانیِ بی‌کلید + خودآزمونِ تیکِ `Precise` + وضعیتِ نگهبانِ گپِ ترتیبِ `OrderBook`) · `POST /quant/vibe-backtest` (پرامپتِ دوزبانهٔ FA/EN → DAG ۵گرهی → بک‌تسترِ اکیداً علّیِ `&candles[0..=t]` با پرِ `+۱ کندل` → دفترِ ادعای SHA-256 → گیتِ مایرون (شارپ ≥ ۱٫۲۰، |DD| ≤ ۲۰٪، ≥ ۵ معامله) → ماندگاری در `quant_strategies` + فورجِ خودکارِ `SKILL.md` کوانت) · `GET /quant/strategies` (استراتژی‌هایِ ماندگار، نوترینِ اول) | عمومی / Bearer |
 | Studio — موج ۵ | `GET /studio/ux-profiles` (۳ لایهٔ شناختی `ToySpark`/`CreatorStudio`/`ProTerminal` + ۹ مدالیتیِ صفر-هزینه + گزارش ۶/۶ درمان پورتفولیو) · `POST /studio/generate` (آرتیفکت ادراک‌سیار + باندل دوگانهٔ `Fishkal`+`Cosmos` + بسته‌بندی ۲۰-زبانهٔ ARDA + فورج `SKILL.md` مایرون + ماندگاری در `studio_creations`) · `GET /studio/portfolio-catalog` (دو ویترینیِ برتر، توکن‌های گلسِ تاریک، پالت فرمان `Ctrl+K`/`Meta+K`/`/`) | عمومی / Bearer |
 | ARDA — موج ۴ | `GET /arda/flags` (کاتالوگ ۲۰-زبانهٔ پرچم وکتور + نشان دایره‌ای) · `POST /arda/localize-now` (بسته‌بندی زنده، مُهر فقط-فروشنده) · `GET /market/products/{id}/skill` (فورج خودکار `SKILL.md`/`skill.json` روی گیت REA) | عمومی / Bearer |
 | Market — گیت مایرون | `POST /market/products/{id}/mairon-confirm` (انتشار دو-کلیدی + مُهر `⚒️ Forge-Grade`) · `POST /market/products/{id}/reviews` (رأی ستارهٔ `1..=5` شهروند) · `GET /market/products/{id}/reviews` (خلاصهٔ بیزی + هیستوگرام + `combinedRankScore`) | Bearer / عمومی |
@@ -433,7 +434,7 @@ print("trial_balance  ", cur.execute("SELECT COALESCE(SUM(amount),0) FROM Postin
 PY
 ```
 
-خروجی موردانتظار: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 327 · trial_balance 0`.
+خروجی موردانتظار: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 330 · trial_balance 0`.
 
 ### ۶. شواهد REA مایرون
 

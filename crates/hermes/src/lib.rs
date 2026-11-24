@@ -32,6 +32,7 @@ pub mod studio_design_contract;
 pub mod super_studio_engine;
 pub mod token_saver;
 pub mod trinity_pipeline;
+pub mod vibe_trading_engine;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-hermes";

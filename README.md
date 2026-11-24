@@ -9,9 +9,9 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
-[![Workspace Tests](https://img.shields.io/badge/tests-583_passed_%7C_0_failed-success.svg)](#quickstart--verification)
+[![Workspace Tests](https://img.shields.io/badge/tests-641_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
-[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-328_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
+[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-330_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -138,7 +138,7 @@ cryptographic ledger integrity, and deterministic quality verification**:
                                          ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │             PERSISTENCE & COGNITIVE VAULT (SQLite + DNA Files)                   │
-│  • seed/kian-production.db: 327 KbEntry skills · 466 citizens · 108 escrows      │
+│  • seed/kian-production.db: 330 KbEntry skills · 466 citizens · 108 escrows      │
 │  • KIA-BRAIN-OS/ (01..12) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -155,17 +155,17 @@ totals from `cargo test --workspace` (**560 passed / 0 failed**).
 
 | Path | Type | Description | Tests |
 | :--- | :--- | :--- | :---: |
-| `crates/hermes` | Rust Crate | **Sovereign Trinity Studio Pipeline** (`Alpha → Command Center 3×9 OpenBot → Mairon-150` with self-healing repair loop), 3-layer cache-safe prompt builder, 4-pass fuzzy patcher (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`), SSRF guard, sandbox policy descriptors (`bubblewrap`/`seccomp`/`iptables`), AG-UI 1.0 streaming, approval gates, Creator DNA contract, studio design contract (390px) | **136** |
+| `crates/hermes` | Rust Crate | **Sovereign Trinity Studio Pipeline** (`Alpha → Command Center 3×9 OpenBot → Mairon-150` with self-healing repair loop), 3-layer cache-safe prompt builder, 4-pass fuzzy patcher (`Exact → LineTrimmed → BlockAnchor → UnicodeNormalized`), SSRF guard, sandbox policy descriptors (`bubblewrap`/`seccomp`/`iptables`), AG-UI 1.0 streaming, approval gates, Creator DNA contract, studio design contract (390px), **Vibe-Trading causal quant engine** (typed `StrategyAst`, bilingual FA/EN parser, `&candles[0..=t]` backtester, SHA-256 claim ledger, 5-node swarm DAG, Mairon quant gate) | **178** |
 | `crates/ai` | Rust Crate | `OMNI-MODEL-GENOME` router & sanitizers (`gpt-6-standard-free`, `gemini-4-aragon-high`), OpenCode Zen keyless client (10 models), FreeLLM 32-provider registry, 120 public browser APIs, `CavemanIntensity` compressor, token budget & PII redaction | **95** |
 | `crates/domain` | Rust Crate | `Mairon` 100-point product REA gate & two-key publish interlock (overclock DNA `IQ=150/EQ=145/Lookahead=8/ToM=3/Ambition=0.99` locked here), Bayesian 5-star rating engine, CAS optimistic escrow lock, Charter caps & 4-leg affiliate split, `x-algorithm` 2026 viral ranker | **74** |
 | `crates/server` | Rust Crate | Axum HTTP kernel (`0.0.0.0:8088`), marketplace/escrow/builder/wallet/nation/agents endpoints, live Trinity endpoints (`/builder/trinity/*`, `/market/products/{id}/mairon-confirm`, `/market/products/{id}/reviews`), health & economy probes, admin HITL queue | **79** |
 | `crates/contracts` | Rust Crate | Shared wire DTOs, Telegram `initData` HMAC verifier types, Stars invoice payloads, rate limiter | **52** |
 | `crates/bot` | Rust Crate | Telegram Bot API 9 shell: pure-Rust `initData` HMAC-SHA256 verifier (time-constant compare), `XTR` Stars invoices, fail-closed webhook, `BotLoopGuard` | **35** |
-| `crates/db` | Rust Crate | SQLite repository layer (WAL, `BEGIN IMMEDIATE`), double-entry ledger persistence, `"KbEntry"` knowledge retrieval, idempotency store | **26** |
+| `crates/db` | Rust Crate | SQLite repository layer (WAL, `BEGIN IMMEDIATE`), double-entry ledger persistence, `"KbEntry"` knowledge retrieval, idempotency store, `quant_strategies` persistence (migration `0010`) | **29** |
 | `crates/agents` | Rust Crate | 7/7 sovereign fleet dispatcher with KYA metadata, guardian scopes (`mairon.rea`, `product.rate`), A2A messaging & MCP tool surface | **23** |
 | `crates/nation` | Rust Crate | Citizen onboarding, `ReferralLineage` attribution, parliament bills & HITL governance rules | **14** |
 | `crates/tooling` | Rust Crate | Workspace diagnostics, schema inspectors, deterministic verification utilities | **13** |
-| `crates/wallet` | Rust Crate | Non-custodial address validators (TON CRC16, TRON Base58Check, Solana Ed25519/Base58, BSC EIP-55), micro-KIAN double-entry accounting, withdrawal lock/refund guards | **13** |
+| `crates/wallet` | Rust Crate | Non-custodial address validators (TON CRC16, TRON Base58Check, Solana Ed25519/Base58, BSC EIP-55), micro-KIAN double-entry accounting, withdrawal lock/refund guards, **pure-Rust `ccxt` core** (`Precise` i128 fixed-point, float-free `TICK_SIZE`, dual throttler, L2 `OrderBook` with sequence-gap guard, 8-venue keyless matrix) | **29** |
 | **Workspace Total** | — | 11 crates, `#![forbid(unsafe_code)]`, 0 `todo!()` markers | **560** |
 | `apps/web` | Next.js 16 | Public landing & dashboard PWA (installable, service worker, OG images) | — |
 | `apps/miniapp` | Next.js 16 | Telegram Mini-App: `/builder` AI studio, `/market`, `/wallet`, 390px RTL contract | — |
@@ -401,7 +401,7 @@ rows at audit time (now **327** after the DNA #12 `12_TRINITY_AVATAR_ENGINE` inj
 
 | Invariant / Table | Verified Value | Guarantee |
 | :--- | :---: | :--- |
-| `"KbEntry"` (skills, agents & genomes) | **329 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #14 `kb:dna-14-omni-studio-adaptive-ux` is the newest row |
+| `"KbEntry"` (skills, agents & genomes) | **330 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #15 `kb:dna-15-ccxt-vibe-quant` is the newest row |
 | `"User"` (verified citizens) | **466 citizens** | Production citizen accounts preserved |
 | `"ReferralLineage"` (viral graph) | **247 lineages** | Multi-tier referral attribution intact |
 | `"Escrow"` (atomic orders) | **108 escrows** | Protected by CAS (`WHERE version = ?`) + `idempotency_key` |
@@ -426,6 +426,7 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (party) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
 | Trinity | `POST /builder/trinity/alpha` (Avatar 1 — discovery / master-prompt lock) · `POST /builder/trinity/orchestrate` (Avatar 2 `3×9 OpenBot` + Avatar 3 Mairon `IQ=150/EQ=145` self-healing forge loop) | Bearer |
+| Quant — Wave 6 | `GET /quant/venues` (8-venue keyless market matrix + `Precise` tick-size self-test proof + OrderBook sequence-gap guard status) · `POST /quant/vibe-backtest` (bilingual FA/EN Vibe prompt → 5-node swarm DAG → strictly-causal `&candles[0..=t]` backtester with `+1 bar` fills → SHA-256 claim ledger → Mairon quant gate (sharpe ≥ 1.20, |DD| ≤ 20%, ≥ 5 trades) → `quant_strategies` persistence + auto-forged Quant `SKILL.md`) · `GET /quant/strategies` (persisted strategies, newest-first) | Public / Bearer |
 | Studio — Wave 5 | `GET /studio/ux-profiles` (3 cognitive tiers `ToySpark`/`CreatorStudio`/`ProTerminal` + 9 zero-cost modalities + 6/6 portfolio fix report) · `POST /studio/generate` (adaptive artifact + dual `Fishkal`+`Cosmos` bundle + ARDA 20-locale packaging + Mairon `SKILL.md` forge + `studio_creations` persistence) · `GET /studio/portfolio-catalog` (featured top-2, dark-glass tokens, `Ctrl+K`/`Meta+K`/`/` command palette) | Public / Bearer |
 | ARDA — Wave 4 | `GET /arda/flags` (20-locale verbatim vector flag catalog + circular badges) · `POST /arda/localize-now` (live packaging, owner-only stamping) · `GET /market/products/{id}/skill` (auto-forge `SKILL.md`/`skill.json` at the REA gate) | Public / Bearer |
 | Market — Mairon Gate | `POST /market/products/{id}/mairon-confirm` (two-key publication + `⚒️ Forge-Grade` badge stamp) · `POST /market/products/{id}/reviews` (citizen `1..=5` star vote) · `GET /market/products/{id}/reviews` (Bayesian summary + histogram + `combinedRankScore`) | Bearer / Public |
@@ -481,7 +482,7 @@ print("trial_balance  ", cur.execute("SELECT COALESCE(SUM(amount),0) FROM Postin
 PY
 ```
 
-Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 327 · trial_balance 0`.
+Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 330 · trial_balance 0`.
 
 ### 6. Mairon REA Evidence
 
