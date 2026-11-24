@@ -1,17 +1,65 @@
-# Keep the Railway/Railpack build context lean
+# ═══════════════════════════════════════════════════════════════════════════
+#  KIAN v2 — Docker/Railway build-context guard
+#
+#  Doctrine (KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md — Law #3):
+#    • History lives in Git: docs, vaults, DNA and the full commit log stay on GitHub.
+#    • The build context carries ONLY runtime weight — excluded below are every
+#      non-compiled historical/archival directory so Railway uploads & builds the
+#      Rust kernel as fast as possible.
+#    • The Dockerfile only needs: Cargo.toml, Cargo.lock, rust-toolchain.toml,
+#      crates/, seed/kian-production.db, start-railway.sh (+ the small deploy configs).
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── Build artifacts & caches ──────────────────────────────────────────────
 target/
 node_modules/
-data/
+.next/
+.turbo/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# ── Git & local secrets (history stays on GitHub — never in build context) ─
 .git/
+.github/
 .env
 .env.*
 !.env.example
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
-.next/
-dist/
-coverage/
-.turbo/
-*.log
-.DS_Store
+
+# ── Historical & cognitive vaults (preserved in Git, not compiled) ────────
+docs/
+KIA-BRAIN-OS/
+OMNI-MODEL-GENOME/
+CHANGELOG.md
+REA-SCORECARD-FA.md
+REA_FINAL_VERDICT.json
+rea-scorecard.json
+MIGRATION_REPORT_FA.md
+TEST_TONIGHT_FA.md
+setup.html
+
+# ── Frontend monorepo (Next.js services build as separate Railway services) ─
+apps/
+packages/
+pnpm-lock.yaml
+pnpm-workspace.yaml
+turbo.json
+next.config.ts
+tsconfig.json
+
+# ── Ops, tests & local launchers (not needed to compile the Rust kernel) ───
+scripts/
+tools/
+tests/
+infra/
+docker-compose.yml
+start-tonight.sh
+start-tonight.bat
+Makefile
+deny.toml
+clippy.toml
+rustfmt.toml

@@ -11,7 +11,7 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
 [![Workspace Tests](https://img.shields.io/badge/tests-530_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
-[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-325_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
+[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-326_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -56,10 +56,10 @@ cryptographic ledger integrity, and deterministic quality verification**:
    mounted 104-platform / 454-chat-model catalog, and **120 zero-auth browser APIs** for studio
    artifacts — backed by forensic 9-file cognitive **`OMNI-MODEL-GENOME`** profiles and the
    `CavemanIntensity` output compressor (`Off` → `Lite` → `Full` → `Ultra`).
-2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — A 10-file executable constitution
-   (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md`) compiled directly into the Rust kernel
-   (`crates/hermes/src/creator_dna_contract.rs`), enforcing Dual-Voice UX, anti-slop discipline, and
-   architectural review before anything ships.
+2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — An 11-file executable constitution
+   (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md`) compiled directly into
+   the Rust kernel (`crates/hermes/src/creator_dna_contract.rs`), enforcing Dual-Voice UX, anti-slop
+   discipline, and architectural review before anything ships.
 3. **Hardened Agent Runtime (`kian-hermes` & `kian-agents`)** — A 3-layer cache-safe prompt builder
    (stable / context / variable layers), a 4-pass surgical fuzzy patcher, a defense-in-depth SSRF
    guard, `bubblewrap`/`seccomp`/`iptables` sandbox policy descriptors, and an `AG-UI 1.0` streaming
@@ -119,8 +119,8 @@ cryptographic ledger integrity, and deterministic quality verification**:
                                          ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │             PERSISTENCE & COGNITIVE VAULT (SQLite + DNA Files)                   │
-│  • seed/kian-production.db: 325 KbEntry skills · 466 citizens · 108 escrows      │
-│  • KIA-BRAIN-OS/ (01..10) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
+│  • seed/kian-production.db: 326 KbEntry skills · 466 citizens · 108 escrows      │
+│  • KIA-BRAIN-OS/ (01..11) · OMNI-MODEL-GENOME/ · Trial Balance == 0              │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -155,12 +155,32 @@ totals from `cargo test --workspace` (**530 passed / 0 failed**).
 | `packages/sdk` | TypeScript | Framework-free API client (`@kian/sdk`) | — |
 | `packages/ui` | TypeScript | Shared RTL Persian/English UI primitives (`@kian/ui`) | — |
 | `packages/nation` · `widget` · `config` | TypeScript | Nation governance types, embeddable widget, shared tsconfig | — |
-| `KIA-BRAIN-OS/` | Cognitive OS | 10-file Creator DNA constitution (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md`) | — |
+| `KIA-BRAIN-OS/` | Cognitive OS | 11-file Creator DNA constitution (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md`) | — |
 | `OMNI-MODEL-GENOME/` | Model Vault | 9-file forensic profiles per frontier model + ecosystem index + sanitizer scripts | — |
 | `docs/dna/` | Mirror | Gate-readable mirror of `KIA-BRAIN-OS/` and `OMNI-MODEL-GENOME/` | — |
+| `docs/history/` | Lineage Record | [`EVOLUTION_LINEAGE.md`](./docs/history/EVOLUTION_LINEAGE.md) — full Wave 0 → Wave 2 evolutionary chronology | — |
 | `seed/kian-production.db` | Production DB | Full production state — invariants in the table below | Verified |
 | `scripts/` | Ops | Migration ETL, vault injectors, live benchmarks, E2E smokes, relaunch broadcast | — |
 | `tools/rea/` | Quality Gates | Milestone gate runners (`step1` … `step6-gate.mjs`) + `release-exposure.mjs` | — |
+
+### Repository Design — Full Evolutionary Lineage + Latest-Version Execution Weight
+
+This repository is architected under **Law #3 of [`KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md`](./KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md)**:
+*Evolutionary Lineage Preservation with Latest-Version Execution Weight* (`حفظ تاریخچهٔ تکامل + وزن اجرایی روی آخرین نسخه`):
+
+- **History is preserved, immutable** — the full `git log` (every commit from Wave 0 to the final
+  release), the 19 mounted gem vaults under [`docs/vault/`](./docs/vault), the per-step REA gate
+  reports under [`docs/rea/`](./docs/rea), and the complete chronology in
+  [`docs/history/EVOLUTION_LINEAGE.md`](./docs/history/EVOLUTION_LINEAGE.md) remain inside the
+  repository as proof-of-work lineage (`تاریخچهٔ پیشرفت`).
+- **Execution weight (`وزن اجرایی`) is exclusive to the latest version** — inside
+  `seed/kian-production.db`, the latest v2 sovereign genome/DNA/routing entries carry the
+  `[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]` marker while every legacy entry stays queryable as lineage
+  (zero deletions); and the hardened [`.dockerignore`](./.dockerignore) strips every
+  historical/vault/frontend directory from the Docker build context, so **GitHub keeps 100% of the
+  history** while **Railway's build only uploads** `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`,
+  `crates/`, `seed/kian-production.db` and `start-railway.sh` — deployments compile only the
+  fastest, production-hardened v2 kernel.
 
 ---
 
@@ -294,7 +314,8 @@ with per-step reports under [`docs/rea/`](./docs/rea).
 | **TOTAL VERDICT** | **92** | **100** | 🏆 **PASS** (`pass_threshold = 85`, `hard_failures: []`) |
 
 **Verified metrics at audit time:** 185 Rust files · 212 TS/JS files · 11 crates · 325 `"KbEntry"`
-rows · 0 `todo!()` markers. The gate transparently reports one advisory: 49 files exceed the REA
+rows at audit time (now **326** after the DNA #11 `11_UNCHAINED_KIA_DNA` injection — see *Repository
+Design*) · 0 `todo!()` markers. The gate transparently reports one advisory: 49 files exceed the REA
 `.oxlintrc` 500-line style limit (largest: `crates/ai/src/free_llm_registry.rs` at 960 lines).
 
 ---
@@ -307,7 +328,7 @@ rows · 0 `todo!()` markers. The gate transparently reports one advisory: 49 fil
 
 | Invariant / Table | Verified Value | Guarantee |
 | :--- | :---: | :--- |
-| `"KbEntry"` (skills, agents & genomes) | **325 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) |
+| `"KbEntry"` (skills, agents & genomes) | **326 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #11 `11_UNCHAINED_KIA_DNA` is the newest row |
 | `"User"` (verified citizens) | **466 citizens** | Production citizen accounts preserved |
 | `"ReferralLineage"` (viral graph) | **247 lineages** | Multi-tier referral attribution intact |
 | `"Escrow"` (atomic orders) | **108 escrows** | Protected by CAS (`WHERE version = ?`) + `idempotency_key` |
@@ -383,7 +404,7 @@ print("trial_balance  ", cur.execute("SELECT COALESCE(SUM(amount),0) FROM Postin
 PY
 ```
 
-Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 325 · trial_balance 0`.
+Expected: `User 466 · ReferralLineage 247 · Escrow 108 · Product 20 · KbEntry 326 · trial_balance 0`.
 
 ### 6. Mairon REA Evidence
 
@@ -412,18 +433,33 @@ KIAN ships Railway-native configuration for a clean **2-service project** from o
 - **Service 1 — `kian-kernel` (Rust API)**: built via [`railpack.json`](./railpack.json) or
   [`Dockerfile`](./Dockerfile) (`infra/docker/Dockerfile.server` also provided). Mount a volume at
   `/data` and set `KIAN_DATABASE_URL=/data/kian.sqlite`, `KIAN_BACKUP_DIR=/data/backups`. The server
-  binds `0.0.0.0:$PORT` (fallback `8088`); healthcheck path `/api/v1/health`. Required variables:
+  binds `0.0.0.0:$KIAN_PORT` (fallback `8088`); healthcheck path `/api/v1/health`. Required variables:
   `KIAN_ADMIN_KEY`, `KIAN_BOT_TOKEN`, `KIAN_BOT_WEBHOOK_SECRET`, `KIAN_HOST=0.0.0.0`,
-  `KIAN_TRUST_PROXY=true`, `KIAN_ALLOWED_ORIGINS`, `KIAN_MINIAPP_URL`, `KIAN_TREASURY_*`,
+  `KIAN_TRUST_PROXY=true`, `KIAN_CORS_ORIGIN`, `KIAN_MINIAPP_URL`, `KIAN_TREASURY_*`,
   and at least one AI slot (`KIAN_AI_*`).
 - **Service 2 — `kian-miniapp` (Next.js 16)**: `pnpm install --frozen-lockfile && pnpm --filter
   @kian/miniapp build` → `pnpm --filter @kian/miniapp start`, with `NEXT_PUBLIC_KIAN_API` and
   `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`.
 - Release builds are hardened end-to-end: `lto = "thin"`, `codegen-units = 1`, `panic = "abort"`,
   `strip = "symbols"`, `overflow-checks = true` (see [`Cargo.toml`](./Cargo.toml)).
-- Full variable reference: [`.env.example`](./.env.example) and
-  [`railway.env.example`](./railway.env.example); a local all-in-one alternative is
-  [`docker-compose.yml`](./docker-compose.yml) or `./start-tonight.sh`.
+
+### Priority-Ordered Environment Variables (`P0` → `P5`)
+
+Both [`.env.example`](./.env.example) and [`railway.env.example`](./railway.env.example) are written
+in **strict operational-priority order** — the most critical variables live at the very top of the
+file and the optional tuning knobs at the bottom. Every name below is read by the actual code
+(`config.rs` · `gateway.rs` · `opencode_zen.rs` · `start-railway.sh` · Next.js apps):
+
+| Tier | Meaning | Variables (all real, fail-closed semantics) |
+| :--- | :--- | :--- |
+| **P0 — Critical boot, network & storage** | Server cannot boot or persist state without these | `KIAN_DATABASE_URL` · `KIAN_HOST` · `KIAN_PORT` · `KIAN_SEED_DATABASE_PATH` · `KIAN_BACKUP_DIR` · `KIAN_KEEP_BACKUPS` |
+| **P1 — Sovereign security & admin gates** | Fail-closed: empty = surface honestly disabled | `KIAN_ADMIN_KEY` · `KIAN_TRUST_PROXY` · `KIAN_CORS_ORIGIN` · `KIAN_DEV_MODE` |
+| **P2 — AI inference mesh (zero-cost keyless first)** | OpenCode Zen `Bearer public` works with $0 card; optional slots after | `OPENCODE_API_KEY` · `KIAN_AI_BASE_URL/API_KEY/MODEL` · `KIAN_AI_FALLBACK_*` · `KIAN_AI_PRIMARY_*` · `KIAN_AI_SECONDARY_*` · `KIAN_AI_TERTIARY_*` · `KIAN_AI_COARENA_*` · `KIAN_AI_OPENROUTER_*` · `KIAN_AI_ROUTER9_*` · `KIAN_AI_DAILY_TOKENS` |
+| **P3 — Telegram bot & Mini-App bridge** | TMA HMAC auth, Stars `XTR`, fail-closed webhook | `KIAN_BOT_TOKEN` · `KIAN_BOT_WEBHOOK_SECRET` · `KIAN_MINIAPP_URL` · `KIAN_KERNEL_URL` · `NEXT_PUBLIC_KIAN_API` · `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` |
+| **P4 — Non-custodial treasury & multi-chain rails** | Public deposit addresses only — zero private keys on server | `KIAN_TON_TREASURY` · `KIAN_TON_TO_DIN` · `KIAN_USDT_TO_DIN` · `KIAN_TREASURY_TRX/SOL/TON/BSC` · `KIAN_NATION_QUORUM` |
+| **P5 — Runtime governance & telemetry tuning** | Optional; safe production defaults | `KIAN_SESSION_TTL_HOURS` · `KIAN_RATE_LIMIT` · `RUST_LOG` · `RAILPACK_CARGO_WORKSPACE` · `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_KIAN_URL` · `NEXT_PUBLIC_KERNEL_URL` |
+
+A local all-in-one alternative is [`docker-compose.yml`](./docker-compose.yml) or `./start-tonight.sh`.
 
 ---
 
@@ -475,9 +511,10 @@ KIAN ships Railway-native configuration for a clean **2-service project** from o
 
 | Path | Contents |
 | :--- | :--- |
-| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | 10-file Creator DNA constitution — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` |
+| [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | 11-file Creator DNA constitution — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` |
 | [`OMNI-MODEL-GENOME/`](./OMNI-MODEL-GENOME) | Ecosystem index, 9-file forensic profiles per model, workspace template, sanitizer/audit scripts |
 | [`docs/dna/`](./docs/dna) | Gate-readable mirror of both vaults above |
+| [`docs/history/`](./docs/history) | Evolutionary lineage record — `EVOLUTION_LINEAGE.md` (Wave 0 → release, history preserved / latest executed) |
 | [`docs/rea/`](./docs/rea) | Per-milestone REA gate reports (`step1` … `step6`) |
 | [`docs/vault/`](./docs/vault) | Mounted gem vaults (FreeLLM catalog, 9router, AG-UI/OpenBot, Hermes, tdesktop, vault rubrics) |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

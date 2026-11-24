@@ -17,7 +17,8 @@ DB_URL="${KIAN_DATABASE_URL:-file:/data/kian.db}"
 # همان نرمال‌سازی کرنل (crates/db/src/store.rs::connect): اسکیمه و ?query حذف می‌شود
 DB_PATH=$(printf '%s' "$DB_URL" | sed -e 's|^file:||' -e 's|^sqlite:||' -e 's|?.*$||')
 [ -n "$DB_PATH" ] || DB_PATH="/data/kian.db"
-SEED="/app/seed/kian-production.db"
+# Seed source — overridable via the P0 env tier (KIAN_SEED_DATABASE_PATH):
+SEED="${KIAN_SEED_DATABASE_PATH:-/app/seed/kian-production.db}"
 
 mkdir -p "$(dirname "$DB_PATH")"
 
