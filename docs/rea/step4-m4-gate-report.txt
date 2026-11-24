@@ -1,0 +1,162 @@
+# KIAN REA gate — step 4 (M4 admin + brain: X-KIAN-Key · redaction · sandbox)
+# date: 2026-11-20T19:40:45.649Z
+# kernel: target/release/kian-server — audit-release-exposure --fail_on low
+# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on low
+# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low
+
+════ 1) X-KIAN-Key access control ════
+  PASS  constant-time compare (subtle ct_eq) in contracts
+  PASS  admin guard fail-closed triad in middleware
+  PASS  every admin handler calls require_admin — 10 call sites
+  PASS  admin/a2a/mcp routes wired
+
+════ 2) redaction (kian-ai tests) ════
+  PASS  kian-ai lib tests green — 14 passed
+  PASS  all six redaction patterns present
+
+════ 3) hermes shield + sandbox (kian-hermes tests) ════
+  PASS  kian-hermes lib tests green — 17 passed
+  PASS  kernel skills execute only registered handlers (no eval/interp)
+  PASS  sandbox principle documented
+
+════ 4) admin guard matrix over the wire (kian-server test) ════
+  PASS  admin guard matrix test green
+
+════ 5) no credential markers in admin app source ════
+  PASS  no literal admin key in admin source — 0 hits
+
+════ 6) audit-release-exposure ════
+── kernel: target/release/kian-server
+evidence_id: ev_9802aef3b6ff2fb307e854a299a01060768d7d4791684c7298d87afc396fd45a
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: f3762e008b63395f8647f583f9e504064288d3ac3d889f9cd58b95d1b7a40406
+    selection: null
+    format: elf
+    architecture: null
+  name: kian-server
+  local_path: /home/z/my-project/kian/target/release/kian-server
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/target/release/kian-server
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/target/release/kian-server
+    kind: executable
+    format: elf
+    sha256: f3762e008b63395f8647f583f9e504064288d3ac3d889f9cd58b95d1b7a40406
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: not_observed
+      severity: null
+      confidence: observed
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 0
+        samples: []
+  PASS  kernel audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_9802aef3b6ff2fb307e854a299a01060768d7d4791684c7298d87afc396fd45a
+  filters: not_observed×5 monitored×0 exposed×1
+── admin: apps/admin/.next/standalone
+evidence_id: ev_ffb60ef17ccf5f0e6c62f5d73df6520385cce6000e9cbe086cd8dbb38e68c6df
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: 5d1324c89b4e87e42da767e7590b9ef35a60d42d7af6671897b9b0546a0ad180
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/admin/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/admin/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/admin/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1016
+        samples: []
+  PASS  admin audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_ffb60ef17ccf5f0e6c62f5d73df6520385cce6000e9cbe086cd8dbb38e68c6df
+  filters: not_observed×3 monitored×0 exposed×1
+── web: apps/web/.next/standalone
+evidence_id: ev_492830bce30fe7528ae2967f6c73d131d6951de50403da979fab79ebe914758c
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: be22d8de99c650f6a8d0834e4834ed8f87c125db431c4f08ad4f5983d626cbd7
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/web/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/web/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/web/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1157
+        samples: []
+  PASS  web audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_492830bce30fe7528ae2967f6c73d131d6951de50403da979fab79ebe914758c
+  filters: not_observed×3 monitored×0 exposed×1
+
+════ verdict: PASS — step 4 gate green (exit 0) ════

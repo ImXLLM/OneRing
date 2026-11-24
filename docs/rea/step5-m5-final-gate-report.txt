@@ -1,0 +1,169 @@
+# KIAN REA gate — step 5 FINAL (M5 governance + four-chain wallet — 10/10)
+# date: 2026-11-20T21:47:26.208Z
+# kernel: target/release/kian-server — audit-release-exposure --fail_on low
+# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on low
+# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low
+
+════ 1) governance — parliament HITL bound to the charter ════
+  PASS  charter is the single source of the 50,000 Đ gate
+  PASS  nation reuses the charter gate (no duplicated threshold math)
+  PASS  human vote required — one-voter-one-vote + HITL reason encoded
+  PASS  execution only from PASSED (one-way transition)
+  PASS  server execution goes through the pure M2 domain path
+  PASS  nation routes wired (open/list/get/vote/close/execute)
+  PASS  kian-nation tests green — 14 passed
+
+════ 2) four-chain wallet — official checksums per chain ════
+  PASS  canonical USDT contracts on TRX/SOL/TON/BSC verified in constants
+  PASS  official checksum validators per chain
+  PASS  keccak vectors present (empty/abc/multi-block)
+  PASS  custody: treasury movement requires parliament bill
+  PASS  wallet chain routes wired (chains/treasury/addresses/usdt-deposits)
+  PASS  USDT deposit replay-proof (UNIQUE chain+txHash)
+  PASS  kian-wallet tests green — 13 passed
+
+════ 3) whole-workspace tests green ════
+  PASS  cargo test --workspace — 223 tests passed, 0 failing suites
+  PASS  server integration surface covers M5 flows — kian-server lib = 43 tests
+
+════ 4) clippy -D warnings = 0 errors ════
+  PASS  clippy clean — 0 error(s)
+
+════ 5) no credential markers in source ════
+  PASS  no literal keys/tokens in M5 sources and frontends — 0 hits
+
+════ 6) audit-release-exposure (fail_on low) ════
+── kernel: target/release/kian-server
+evidence_id: ev_b65e886354cd76235f7868548bcc8e4b9ba6a9997b06003de71213d715a5068a
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: bda296f5d8532e4c11f2f7b51df51d2474ad2b602d153bd43fea2b65fb464c6c
+    selection: null
+    format: elf
+    architecture: null
+  name: kian-server
+  local_path: /home/z/my-project/kian/target/release/kian-server
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/target/release/kian-server
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/target/release/kian-server
+    kind: executable
+    format: elf
+    sha256: bda296f5d8532e4c11f2f7b51df51d2474ad2b602d153bd43fea2b65fb464c6c
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: not_observed
+      severity: null
+      confidence: observed
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 0
+        samples: []
+  PASS  kernel audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_b65e886354cd76235f7868548bcc8e4b9ba6a9997b06003de71213d715a5068a
+  filters: not_observed×5 monitored×0 exposed×1
+── admin: apps/admin/.next/standalone
+evidence_id: ev_40039376739e82f9b6e13817fcc859c8d6dfa5e6b9ad35b7ec5e225d340a7b6f
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: 920119e6c317ab5c65deb87e6c7731e27b93860b0edf1519a3a311fa6399d084
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/admin/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/admin/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/admin/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1012
+        samples: []
+  PASS  admin audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_40039376739e82f9b6e13817fcc859c8d6dfa5e6b9ad35b7ec5e225d340a7b6f
+  filters: not_observed×3 monitored×0 exposed×1
+── web: apps/web/.next/standalone
+evidence_id: ev_075564f5540cf3d877f18153de12ad7a243a30f4de9d33f01b9f9539caf80895
+evidence_format: 2
+subject:
+  identity:
+    kind: file
+    sha256: 35994514e0362a5289b2eb651833c264119eaf3a255932d8d298e24ea93304b5
+    selection: null
+    format: directory
+    architecture: null
+  name: standalone
+  local_path: /home/z/my-project/kian/apps/web/.next/standalone
+provider:
+  id: rea-release-exposure
+  name: REA release exposure audit
+  version: "1"
+analysis_profile: null
+predicate_type: rea.analysis
+operation: audit_release_exposure
+parameters:
+  path: /home/z/my-project/kian/apps/web/.next/standalone
+  max_file_bytes: 268435456
+raw_result: null
+normalized_result:
+  target:
+    selected_path: /home/z/my-project/kian/apps/web/.next/standalone
+    kind: directory
+    format: directory
+    sha256: null
+  checks[15]:
+    - id: javascript.source_map_sources
+      status: unknown
+      severity: null
+      confidence: inferred
+      observation:
+        counts:
+          embedded: 0
+          without_sources: 0
+          unparsed: 0
+          skipped: 1039
+        samples: []
+  PASS  web audit exit 0 (fail_on low) — status=0
+  evidence_id: ev_075564f5540cf3d877f18153de12ad7a243a30f4de9d33f01b9f9539caf80895
+  filters: not_observed×3 monitored×0 exposed×1
+
+════ verdict: PASS — FINAL gate 10/10 green (exit 0) ════

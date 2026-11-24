@@ -1,0 +1,129 @@
+{
+  "evidence_scope": "Deterministic checks of user-supplied profile text/code only; not a live Gemini probe or model benchmark.",
+  "checks": {
+    "lipogram": {
+      "sentence_found": true,
+      "word_count": 14,
+      "expected_word_count_14": true,
+      "contains_e": false,
+      "zero_e_pass": true,
+      "contains_memory": false,
+      "zero_memory_pass": true,
+      "pass": true
+    },
+    "cas_ledger": {
+      "source_probe_present": true,
+      "balances": {
+        "A": 90,
+        "B": 70,
+        "C": 40
+      },
+      "versions": [
+        3,
+        2,
+        2
+      ],
+      "Tx1": "ABORTED",
+      "conservation_sum": 200,
+      "pass": true
+    },
+    "service_permutations": {
+      "permutations_checked": 120,
+      "solutions_with_C1_C4": 0,
+      "relaxed_C4_solutions": [
+        [
+          "Cache",
+          "DB",
+          "Worker",
+          "Auth",
+          "Gateway"
+        ]
+      ],
+      "unsat_verified": true,
+      "pass": true
+    },
+    "rust_zero_copy": {
+      "function_extracted": true,
+      "rustc_available": false,
+      "static_checks": {
+        "uses_get_mut": true,
+        "no_direct_array_indexing": true,
+        "borrows_input_lifetime": true,
+        "checks_capacity_before_write": true
+      },
+      "static_pass": true
+    },
+    "nine_file_sanitizer": {
+      "files_checked": 9,
+      "files": [
+        {
+          "file": "01_TOPOLOGY_AND_HARNESS.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "02_REASONING_AND_LOGIC_DNA.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "03_CODE_AND_PATCH_MECHANICS.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "04_TOOL_CALLING_AND_STATE.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "05_UI_UX_AND_AESTHETIC_BIAS.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "06_GUARDRAILS_AND_FRAMING.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "07_PROMPT_COMPILER_LEXICON.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "08_FAILURE_MODES_AND_PATCHES.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        },
+        {
+          "file": "09_ROUTING_AND_HANDOFF_CARD.md",
+          "is_valid": true,
+          "has_yaml_frontmatter": true,
+          "elision_violations": [],
+          "secret_violations": []
+        }
+      ],
+      "pass_count": 9,
+      "pass": true
+    }
+  },
+  "overall_artifact_checks_pass": true,
+  "live_model_empirical_verification": "NOT PERFORMED: no live Gemini inference endpoint/session or authenticated telemetry was available."
+}

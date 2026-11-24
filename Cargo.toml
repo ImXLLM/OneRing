@@ -1,0 +1,77 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agents",
+    "crates/ai",
+    "crates/bot",
+    "crates/contracts",
+    "crates/db",
+    "crates/domain",
+    "crates/hermes",
+    "crates/nation",
+    "crates/server",
+    "crates/tooling",
+    "crates/wallet",
+]
+# پوشه‌های خام مرجع گنجینه (پوشهٔ ۰۷) — بسته‌های مستقل با libfuzzer/nightly؛
+# هرگز عضو workspace نمی‌شوند و فقط به‌عنوان مرجع حفظ می‌شوند.
+# گنجینهٔ CopilotKit/OpenBot (Wave 2) هم زیر docs/vault/ سوار می‌شود — کریت‌های
+# مرجع خام ag-ui-core/ag-ui-client با Cargo.toml مستقل؛ cargo هرگز آن‌ها را
+# کامپایل نمی‌کند.
+exclude = [
+    "crates/tooling/fuzz_suite",
+    "crates/tooling/vault_pro",
+    "docs/vault/**",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.100.0"
+license = "MIT"
+# «authors» اینجا اعلان نمی‌شود — فقط کریت‌های عضو workspace آن را ارث می‌برند؛
+# vault_pro (خارج از workspace، مرجعِ خالص) مانیفست مستقل دارد.
+
+[workspace.dependencies]
+tokio = { version = "1.54", features = ["full"] }
+axum = "0.8"
+# M2 — پایگاه داده: sqlite (تصمیم ثبت‌شدهٔ legacy: همان بستر v3 برای dual-run؛
+# کوئری‌ها همه پشت kian-db پنهان‌اند و اگر روزی postgres لازم شد فقط همین خط عوض می‌شود)
+sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls", "sqlite", "migrate", "postgres", "uuid", "chrono", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+utoipa = "6"
+thiserror = "2"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4", "v7"] }
+teloxide = { version = "0.17", default-features = false }
+# M2 — کرنل پول
+chrono = { version = "0.4", features = ["serde", "clock"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "cors"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+anyhow = "1"
+# «http-body-util» اینجا اعلان نمی‌شود — server نسخهٔ خودش را مستقل اعلام می‌کند
+# و vault_pro خارج از workspace است؛ ورودیِ بی‌مصرف هشدارِ manifest می‌داد.
+# امنیت قراردادی — مقایسهٔ زمان‌ثابت + احراز initData (M3)
+subtle = "2"
+hex = "0.4"
+hmac = "0.12"
+sha2 = "0.10"
+# M4 — گیت‌وی AI: کلاینت HTTPS سبک (rustls + webpki-roots؛ هرگز openssl-system)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-webpki-roots"] }
+async-trait = "0.1"
+
+# محدودیت دیسک سندباکس — بدون debug info در dev (تست‌ها سبک می‌مانند)
+[profile.dev]
+debug = 0
+
+# REA gates: native.debug_companions / rust.dependency_metadata / symbol leakage
+# ElfHardening (morluto/rea v6.10.1): thin-LTO + single codegen unit + abort-on-panic
+# + stripped symbols + overflow checks — the canonical hardened release profile.
+[profile.release]
+strip = "symbols"
+debug = false
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+overflow-checks = true

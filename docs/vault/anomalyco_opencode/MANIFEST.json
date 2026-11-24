@@ -1,0 +1,257 @@
+{
+  "vault_name": "anomalyco-opencode-gems",
+  "source_repo": "https://github.com/anomalyco/opencode",
+  "source_version": "2.4.1",
+  "source_commit": "18ff071",
+  "total_files_excluding_manifest": 41,
+  "total_bytes_excluding_manifest": 1049473,
+  "total_lines_excluding_manifest": 35357,
+  "files": [
+    {
+      "path": "VAULT_INDEX_FA.md",
+      "bytes": 2624,
+      "lines": 18,
+      "sha256": "c10cddaacfc1cd7b2f996a1b4946df58d46f9fb95af243ecc69275948d9eb802"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/console-access.ts",
+      "bytes": 1077,
+      "lines": 22,
+      "sha256": "7ae41c74078b9c5a3887bec4908e9ee0ab00e632d3ce1f5eaf37d9da23c0eec5"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/free_models.rs",
+      "bytes": 4403,
+      "lines": 99,
+      "sha256": "29f068d66dca33ee308cc7827d90e927949df130a3485006e6afd7e50fa3eca8"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/legacy.ts",
+      "bytes": 4852,
+      "lines": 98,
+      "sha256": "404c26ff97996a9756fb281c80c92727e7d735ee114070f08ef67ab4ca9f74f0"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/models_dev_opencode_zen.json",
+      "bytes": 659542,
+      "lines": 26879,
+      "sha256": "235626a82c2951e38a7e358a2802b318bb0a69d508c45cddd07121945535aa53"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/provider.ts",
+      "bytes": 27984,
+      "lines": 553,
+      "sha256": "39869059555020a934b55479da00ce86425089e5b22b33587e57946ac08ccffb"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/ai_providers/index.ts",
+      "bytes": 2189,
+      "lines": 45,
+      "sha256": "298481abd809e0c508035a9b7c4997191a3d4e81e9c8c714004190b12b502a4f"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/ai_providers/opencode.ts",
+      "bytes": 1595,
+      "lines": 45,
+      "sha256": "992ea05d8fdeba9d5fceaee368d97d9d5c64ac43d4ef252097522d8df4dc0f21"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/ai_providers/opencode/decisions.ts",
+      "bytes": 103,
+      "lines": 2,
+      "sha256": "0dce0b15ee87d65439f804f1d0b2ecd49168313b9047c65be330fdfb6e20267a"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/core_providers/opencode-artifacts.ts",
+      "bytes": 9409,
+      "lines": 216,
+      "sha256": "98fcd54206ba1356187db84963534d7327b0fa4be54eb7daf0f869e3580db0da"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/core_providers/opencode-watches.ts",
+      "bytes": 35881,
+      "lines": 753,
+      "sha256": "6632d0f3f9280d344cf159491ad965192ab644536331cc6251f1bbc7227021c9"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/core_providers/opencode.ts",
+      "bytes": 41084,
+      "lines": 883,
+      "sha256": "2a1b05f8c52d3c50a087e59cb331b2f1ec77d5b0f53b452490594c7b240ac73d"
+    },
+    {
+      "path": "01_opencode_providers_and_zen_free/core_providers/zenmux.ts",
+      "bytes": 709,
+      "lines": 21,
+      "sha256": "2e90104adb1036a314862beb78c404df330f16ef07b5fc4c67c8cd57c151c06b"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/agent.ts",
+      "bytes": 3886,
+      "lines": 115,
+      "sha256": "cae29f26087f32183b9a7bc62b7738daf8f48df36703ec60064c3bd7a0968024"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/optimize.ts",
+      "bytes": 3305,
+      "lines": 84,
+      "sha256": "db7330ae4d996b03f79e7d009f26526a721cd59dd5008212a7d36ff151393598"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/plan.ts",
+      "bytes": 5093,
+      "lines": 116,
+      "sha256": "1c7dfa531ac8dda4c21a270a07a9fa70d9d17baa86b1b454dfd024022176af9c"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system-prompt.ts",
+      "bytes": 1332,
+      "lines": 28,
+      "sha256": "88f088f1bfa0b5e7dabfb6d3083c19d4203f7e12cc00a251494264a5b243f1dd"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/anthropic.txt",
+      "bytes": 300,
+      "lines": 2,
+      "sha256": "0ae1276d0af9abb456a0f96409b32beb1b081227db7a3d0f236f919e4fd29bac"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/default_runner_system.txt",
+      "bytes": 1035,
+      "lines": 16,
+      "sha256": "ea6fc452d3c2e499b357aa6dac18b3db050a8c5336c01922bd7036f582f7134c"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/gpt-astra.txt",
+      "bytes": 4104,
+      "lines": 46,
+      "sha256": "5322d77edfccb18ee02bd4b81ecd8c6e9d8c2ebc42ee976f77f4d6cfb7000f58"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/gpt.txt",
+      "bytes": 2851,
+      "lines": 40,
+      "sha256": "9e5d6551682322b98017a9b069b243cf37d5db4c5fc5be7a874d6f4f36ba7528"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/kimi.txt",
+      "bytes": 8978,
+      "lines": 96,
+      "sha256": "15ef7ade0ae745a69ebe9c1862c5095b8784e51726dc93f8345f6aba56b21191"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/meta.txt",
+      "bytes": 8132,
+      "lines": 56,
+      "sha256": "c415d37307c446f486fd8de7289158387344d42e2158e28aa5d6d31be7690c15"
+    },
+    {
+      "path": "02_agent_prompts_and_modes/system_prompts/trinity.txt",
+      "bytes": 7961,
+      "lines": 98,
+      "sha256": "01532f3e128241303602c7a3b1d5830b07e18daaf46bb71e5fb952c5a6cd7e53"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/compaction.ts",
+      "bytes": 61016,
+      "lines": 1259,
+      "sha256": "b10f11578635bc13d335c8330cfc887f5f646bba36f65fa761799f6fca6d0533"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/edit.rs",
+      "bytes": 3226,
+      "lines": 98,
+      "sha256": "d0601f777d511a5d524eb8ab0a78f405a9d1074f0e046f885b591c20a04234cd"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/edit.ts",
+      "bytes": 17538,
+      "lines": 371,
+      "sha256": "0d80b789560436611eebce1cfb952adffa3ea8e1ee820ef7266ee4d5774b4740"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/patch-grammar.txt",
+      "bytes": 578,
+      "lines": 19,
+      "sha256": "d6367f4826ed608c424b0a308f3d6163527df63c22513d089b91863552f8bfeb"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/patch.rs",
+      "bytes": 15055,
+      "lines": 395,
+      "sha256": "c3e0d0b69c0f39a58f1f4ce55e76c519b885132f382f88b7a2ab26e1e00c338f"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/patch.txt",
+      "bytes": 1092,
+      "lines": 33,
+      "sha256": "6decf236ce2c7399b02c222c3c081d034434d3eaa7f3b6dccda4ddef65182142"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/revert.ts",
+      "bytes": 4208,
+      "lines": 112,
+      "sha256": "f26fa15d9267f1559f2aa3a205a29af19061ac04fd3133aef721122e40a2f107"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/snapshot.ts",
+      "bytes": 10081,
+      "lines": 248,
+      "sha256": "78985d64da01ff6403952221a19286222627e3b53bb95a9c5bfa116252f20a53"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/step.ts",
+      "bytes": 18798,
+      "lines": 401,
+      "sha256": "0a0cc4ee22b0c732e8810ad79dd03cdce3f637e5a7d05e6ae41e0f6d69bb7462"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/tool_patch.ts",
+      "bytes": 17069,
+      "lines": 360,
+      "sha256": "629f50d83d15bd57aa639d173f240ebb08f6869b7c3554308e2fda350705cb61"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/util_patch.ts",
+      "bytes": 13265,
+      "lines": 381,
+      "sha256": "c09f7aa9a15d6dd7ff854741b81a92bcd786306abb73daa7e93d01fc34446c52"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/vcs_patch.ts",
+      "bytes": 3807,
+      "lines": 106,
+      "sha256": "f5e8d66d3dbbb5e49271992d44fc6a46cac6ec3195c57b29173b23db107d78b6"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/permission/permission.ts",
+      "bytes": 16636,
+      "lines": 417,
+      "sha256": "243beefe96619ea6d10deab183a5bdf5b27a89558ced1f71bf90e7c9d4b75c5c"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/permission/saved.ts",
+      "bytes": 4747,
+      "lines": 140,
+      "sha256": "848367e039e6eec2eab1d12019d28b7978554862ff981ac4d2eb82e096680958"
+    },
+    {
+      "path": "03_fuzzy_edit_and_session_engine/permission/sql.ts",
+      "bytes": 771,
+      "lines": 20,
+      "sha256": "3199a8f2cec3cab82d37b480783cb27eb03cb0ab715b9ebd4975c85a6bcf11d9"
+    },
+    {
+      "path": "04_kian_v2_rust_adapters/kian_fuzzy_replacer.rs",
+      "bytes": 11594,
+      "lines": 355,
+      "sha256": "961010414f280554ca964c0c3cf3de93d7208b407a74909850983b8477da5fb3"
+    },
+    {
+      "path": "04_kian_v2_rust_adapters/kian_opencode_zen_provider.rs",
+      "bytes": 11563,
+      "lines": 311,
+      "sha256": "24bebdaf586191fddfe7637a3faf1415f4d9475d2671e29504a247fd09c15788"
+    }
+  ]
+}

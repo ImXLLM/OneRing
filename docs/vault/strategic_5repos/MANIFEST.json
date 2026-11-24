@@ -1,0 +1,2660 @@
+{
+  "total_files": 295,
+  "files": [
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/README.md",
+      "source_repo": "x-algorithm",
+      "source_path": "README.md",
+      "commit": "269340c",
+      "bytes": 48631,
+      "lines": 510,
+      "sha256": "f42bdc76d2f9905cccfb88aca6de08a19e3e141df5116c7dfc2d57037a172f70"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/inputs.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/inputs.rs",
+      "commit": "269340c",
+      "bytes": 1522,
+      "lines": 56,
+      "sha256": "bce36b88b28f4fb4fcfda25c3b1e64fbe82f0a73c576bd4b1aba6cfe6d0c6072"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/lib.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/lib.rs",
+      "commit": "269340c",
+      "bytes": 656,
+      "lines": 18,
+      "sha256": "e8cdb80ecb9058e65eff1cf94e7ac90b9369d3055dcc4d7ceef7222824101355"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/phoenix_scores.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/phoenix_scores.rs",
+      "commit": "269340c",
+      "bytes": 1211,
+      "lines": 32,
+      "sha256": "54bd8f1fad398c97e55fe6db9f389231128d0c6aac509e338efd39c0f635a165"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/proto.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/proto.rs",
+      "commit": "269340c",
+      "bytes": 4208,
+      "lines": 100,
+      "sha256": "c1f4a31862eda0dfc35bf9fb668799527808454ec76981a6ad4b145c665bafef"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/scoring.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/scoring.rs",
+      "commit": "269340c",
+      "bytes": 30498,
+      "lines": 897,
+      "sha256": "d9c48738e33c3c4ffceef35275724c552992d2b0f1683a78fc4c0c508c2fdb7f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/xai-value-model/weights.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "xai-value-model/weights.rs",
+      "commit": "269340c",
+      "bytes": 8782,
+      "lines": 250,
+      "sha256": "da531f59e93aa26fb7e98590cbb8494ec0099eb45b8ff6d847802c54c1bbb42d"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/params/config.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/params/config.rs",
+      "commit": "269340c",
+      "bytes": 1755,
+      "lines": 44,
+      "sha256": "0845ead222edf2608fc3bfe484217ca4641c6a3eddc6e579a32421f5be3259c1"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/params/mod.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/params/mod.rs",
+      "commit": "269340c",
+      "bytes": 61,
+      "lines": 5,
+      "sha256": "67931dbdf90c1636e371c8f1da13e2e454954c88e89135aa287663a9d16a2096"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/params/param.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/params/param.rs",
+      "commit": "269340c",
+      "bytes": 32681,
+      "lines": 1623,
+      "sha256": "2490093bb07c39a712d7f2b22956d3e1bdce9b2cfc6cf3e887559df79cd0fa1e"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/author_cold_start.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/author_cold_start.rs",
+      "commit": "269340c",
+      "bytes": 33358,
+      "lines": 1008,
+      "sha256": "d20de57747b87ce25cac4daff1614266a9a620155ba68242c4c62518e2be3a69"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/immersive_video_scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/immersive_video_scorer.rs",
+      "commit": "269340c",
+      "bytes": 2738,
+      "lines": 71,
+      "sha256": "d4725cb7365bfc9cce3b09ecc8e5f7ab0adbb270028b15aaed84382e030fc2af"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/mod.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/mod.rs",
+      "commit": "269340c",
+      "bytes": 331,
+      "lines": 11,
+      "sha256": "bdb844f15e4e6dce03668647e57098a016835628c0a0b185c12f59a4865cf294"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/page_decode_rerank_scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/page_decode_rerank_scorer.rs",
+      "commit": "269340c",
+      "bytes": 11232,
+      "lines": 308,
+      "sha256": "4ef00609ea32e42b95542ed4101905fec72dc35032542004b8d5c48af79a0824"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/page_rl_exploration_scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/page_rl_exploration_scorer.rs",
+      "commit": "269340c",
+      "bytes": 9161,
+      "lines": 285,
+      "sha256": "08834e003dfc17164ec8418eaa8853bcd2f9aabe8bb07c158fb46d68cb1f6bc8"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/phoenix_scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/phoenix_scorer.rs",
+      "commit": "269340c",
+      "bytes": 9339,
+      "lines": 244,
+      "sha256": "f997d00a7ba09c618d73ce67d3bb101bb7c5c5a6e08dbfc69a2646ed936528dc"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/phoenix_scores_ranking_scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/phoenix_scores_ranking_scorer.rs",
+      "commit": "269340c",
+      "bytes": 1170,
+      "lines": 38,
+      "sha256": "b00a8011f7b72611fe2a96a833d7e62809ffb474dd5e8722627bf30178d56039"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/value_model.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/value_model.rs",
+      "commit": "269340c",
+      "bytes": 5583,
+      "lines": 131,
+      "sha256": "6111567bbf0458274da99368d3443c76953d7f028fe19de200726810d9fe7576"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/vm_ranker.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/vm_ranker.rs",
+      "commit": "269340c",
+      "bytes": 11156,
+      "lines": 313,
+      "sha256": "59c803542eefd67eb5f9cfc0bec443bcb7960c0536c4fc29b796b1af82445fc2"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/vm_ranker_debias_payload.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/vm_ranker_debias_payload.rs",
+      "commit": "269340c",
+      "bytes": 2973,
+      "lines": 85,
+      "sha256": "15ab4fbb056428f2953d81dddd999be8e837ba5ac38fc21b156cb9dd8eb706ab"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/vm_ranker_engagement_labels.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/vm_ranker_engagement_labels.rs",
+      "commit": "269340c",
+      "bytes": 2323,
+      "lines": 78,
+      "sha256": "56f7192a21464fd1e167a6bd699854fb683810c874b6dd7718fce266dc287781"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/scorers/vm_ranker_request.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/scorers/vm_ranker_request.rs",
+      "commit": "269340c",
+      "bytes": 18950,
+      "lines": 542,
+      "sha256": "4c3f47e46e4e8ec57c29eb13aad04a6c01e4ab7505c5309eeab2d9ef1b8ce1ea"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/ad_adjacent_served_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/ad_adjacent_served_filter.rs",
+      "commit": "269340c",
+      "bytes": 29934,
+      "lines": 934,
+      "sha256": "80f4aeebd5c14f440fd139455e7e88576868047342003d0e5315661a31adc40e"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/age_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/age_filter.rs",
+      "commit": "269340c",
+      "bytes": 918,
+      "lines": 31,
+      "sha256": "d6cce37b46a33c8fd331db35f5b414c87971d1b5819532bd444f473d26cdec86"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/ancestor_video_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/ancestor_video_filter.rs",
+      "commit": "269340c",
+      "bytes": 687,
+      "lines": 23,
+      "sha256": "3fafb56f4288c3de6eab494dabaf534deb41e32e849737fdd1354abbdfdcbb27"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/ancillary_vf_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/ancillary_vf_filter.rs",
+      "commit": "269340c",
+      "bytes": 595,
+      "lines": 19,
+      "sha256": "cdb8b10b49ae78708fb35a00662e3fea45db9c801db06c5a9595b4d7f0a4968c"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/author_socialgraph_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/author_socialgraph_filter.rs",
+      "commit": "269340c",
+      "bytes": 10365,
+      "lines": 325,
+      "sha256": "e0fad0d6c2036552eba80a9c2f3cb462f5cbe527f0cc8c54f71dca3e21c17952"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/core_data_hydration_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/core_data_hydration_filter.rs",
+      "commit": "269340c",
+      "bytes": 480,
+      "lines": 15,
+      "sha256": "0bb32b7ead846c3b5a8504d6d32bdbb628844fd5731b85b65de49921e3eb1c27"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/dedup_conversation_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/dedup_conversation_filter.rs",
+      "commit": "269340c",
+      "bytes": 5193,
+      "lines": 165,
+      "sha256": "cadf2a57f9e88b842179184641221672344582089f62afcc7c9f1f28e6fb3d30"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/drop_duplicates_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/drop_duplicates_filter.rs",
+      "commit": "269340c",
+      "bytes": 6607,
+      "lines": 190,
+      "sha256": "5cd6847edb55c5e7288d11743a8e85ba54b2d14c240cde00ada7cf9a6f6c48cb"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/fair_share_ranking_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/fair_share_ranking_filter.rs",
+      "commit": "269340c",
+      "bytes": 5429,
+      "lines": 161,
+      "sha256": "67e5b307182e218f06d3e6e6cc326b9ce0c10a364e293ca51b5e3af0438771b0"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/fav_holdout_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/fav_holdout_filter.rs",
+      "commit": "269340c",
+      "bytes": 5275,
+      "lines": 165,
+      "sha256": "27832d9109513bbf0c7e1c94d687ff4c8d86fc98267ec28610362279318e8bf7"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/following_retweet_deduplication_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/following_retweet_deduplication_filter.rs",
+      "commit": "269340c",
+      "bytes": 1697,
+      "lines": 48,
+      "sha256": "85073847e19d49fd9888b4dc1c6f939d55ae733f199e0e3096fa38022fe4a3b7"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/following_viewer_muted_keyword_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/following_viewer_muted_keyword_filter.rs",
+      "commit": "269340c",
+      "bytes": 4064,
+      "lines": 120,
+      "sha256": "0ed718b0252203b69e490833e08d6476d795d4f9710d3a2f5913e1b77447002b"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/ineligible_subscription_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/ineligible_subscription_filter.rs",
+      "commit": "269340c",
+      "bytes": 1957,
+      "lines": 66,
+      "sha256": "342a6ff5645c5e078542c2ee5880fb35252fc9a5f5935957033a164aaafbfc00"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/invalid_conversation_module_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/invalid_conversation_module_filter.rs",
+      "commit": "269340c",
+      "bytes": 585,
+      "lines": 17,
+      "sha256": "5e6a97cb677f1dde26464fae9c59e67533bccee553b2b2a1c39386c40536f8c5"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/inventory_holdout_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/inventory_holdout_filter.rs",
+      "commit": "269340c",
+      "bytes": 8652,
+      "lines": 261,
+      "sha256": "b357a5fcd049f3ebf7188fd08201b4ef6ad9d0e263502e3bca641ac5485101f5"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/mod.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/mod.rs",
+      "commit": "269340c",
+      "bytes": 1128,
+      "lines": 33,
+      "sha256": "5be40e996944c36c0f0b8af6ebd55da49332884fb00c07b73a222bca6d6f7680"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/new_user_min_engagement_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/new_user_min_engagement_filter.rs",
+      "commit": "269340c",
+      "bytes": 3599,
+      "lines": 113,
+      "sha256": "68a9d9e489b18fbef463d430148dff8fa54a667a053b0f819f257d16f9606ea8"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/new_user_soft_nsfw_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/new_user_soft_nsfw_filter.rs",
+      "commit": "269340c",
+      "bytes": 5843,
+      "lines": 169,
+      "sha256": "3eaee407422fec7f04a5adadc730f898fc9df86ac3968cddbd56ecf2376d1c2d"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/oon_nsfw_simclusters_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/oon_nsfw_simclusters_filter.rs",
+      "commit": "269340c",
+      "bytes": 1908,
+      "lines": 52,
+      "sha256": "7d36bf6b74a76d914432f575c8bd4ee3f288b0d40a9e45db52a1aac1e74fc960"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/oon_retweet_reply_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/oon_retweet_reply_filter.rs",
+      "commit": "269340c",
+      "bytes": 4867,
+      "lines": 130,
+      "sha256": "f9b2b9928c99ee0c2969f5cf4f280fb5d69f4003ebd36d5537e16da370b2490b"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/popular_topics_author_dedup_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/popular_topics_author_dedup_filter.rs",
+      "commit": "269340c",
+      "bytes": 2997,
+      "lines": 95,
+      "sha256": "713d9d9f47767ddf1994ad0c82837e9528e943645889c159c8c1eed019858e8e"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/previously_seen_posts_backup_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/previously_seen_posts_backup_filter.rs",
+      "commit": "269340c",
+      "bytes": 2551,
+      "lines": 89,
+      "sha256": "00233d4a1e52a24578c60093cf8362662e719655f71455bfa8bdccb277455f48"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/previously_seen_posts_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/previously_seen_posts_filter.rs",
+      "commit": "269340c",
+      "bytes": 1183,
+      "lines": 33,
+      "sha256": "750c3283ef6b473994a2197b38ab6d7e998a34631ace5ec90b9817f7bd1afe50"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/previously_served_posts_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/previously_served_posts_filter.rs",
+      "commit": "269340c",
+      "bytes": 4176,
+      "lines": 103,
+      "sha256": "c1f3759ff5b8db1a1282d27dc3a10d7f2b31ca345d9438ba1fd22ceb2480ab32"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/push_to_home_dedup_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/push_to_home_dedup_filter.rs",
+      "commit": "269340c",
+      "bytes": 909,
+      "lines": 27,
+      "sha256": "d1c4b879cd645bfcbfc181578b31fb4eadb753c1c8ba196627e2094b630ac888"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/result_size_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/result_size_filter.rs",
+      "commit": "269340c",
+      "bytes": 676,
+      "lines": 21,
+      "sha256": "ba77623e6318becd22cb2d3846505ae72478ca1e064b588c349fb3ccc23fd219"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/retweet_deduplication_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/retweet_deduplication_filter.rs",
+      "commit": "269340c",
+      "bytes": 6648,
+      "lines": 205,
+      "sha256": "35d55140b996eeb9d14dd8218ae8119efec4b22c6cb12e554b44af42a6587d27"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/self_reply_chain_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/self_reply_chain_filter.rs",
+      "commit": "269340c",
+      "bytes": 4894,
+      "lines": 168,
+      "sha256": "d471b438bdf76c17eb22694f6638dc224e4c81a0e11932bde2a3e9c9a15d1d3f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/self_tweet_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/self_tweet_filter.rs",
+      "commit": "269340c",
+      "bytes": 3032,
+      "lines": 89,
+      "sha256": "34e255f7a15e391b4fda6f2cd8f909389a64f4c329eec2b5965f6b463cb621a7"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/topic_ids_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/topic_ids_filter.rs",
+      "commit": "269340c",
+      "bytes": 56798,
+      "lines": 1502,
+      "sha256": "9b6f13e3f76b018136b300bf8bcaada1e06548e0f69e4dcf27c309fb4a67ec18"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/vf_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/vf_filter.rs",
+      "commit": "269340c",
+      "bytes": 1848,
+      "lines": 56,
+      "sha256": "33f42784645515722f4a38555d61f18757a9d8f38e2a1db0f3b89257c20e63f4"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/video_carousel_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/video_carousel_filter.rs",
+      "commit": "269340c",
+      "bytes": 9090,
+      "lines": 231,
+      "sha256": "02c176b5b0ab40dcbb893d3ec00f7e41eb133d976150709f7d25cabb07870087"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/video_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/video_filter.rs",
+      "commit": "269340c",
+      "bytes": 3547,
+      "lines": 128,
+      "sha256": "d2c3fc70441efc186f85a0aaf3802754ae6b2a6dc38b45c6cad1610799ff61e6"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/viewer_muted_keyword_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/viewer_muted_keyword_filter.rs",
+      "commit": "269340c",
+      "bytes": 10783,
+      "lines": 315,
+      "sha256": "50a23a4e10d688bf4e6e2bc3bf2cd8f4a089e29b7f04517f6dd3243925f25e11"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/home-mixer/filters/zero_fav_codivert_filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "home-mixer/filters/zero_fav_codivert_filter.rs",
+      "commit": "269340c",
+      "bytes": 3586,
+      "lines": 110,
+      "sha256": "94392565c511e4ccd3d6efd5f44b5d96b47725a21b667d2ecd9f36c13292b2fb"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/vm-ranker/dpp.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "vm-ranker/dpp.rs",
+      "commit": "269340c",
+      "bytes": 22591,
+      "lines": 769,
+      "sha256": "9697f96869af727d7566f5fb93dc4db8752cb40e178cca4e1f38b7ee3b4aa8ac"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/vm-ranker/scoring/debias.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "vm-ranker/scoring/debias.rs",
+      "commit": "269340c",
+      "bytes": 9286,
+      "lines": 291,
+      "sha256": "03f579728ecb90405afb77d1f639e23e0b61a3c54536f28e533746ce30d718c3"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/vm-ranker/scoring/dpp_model.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "vm-ranker/scoring/dpp_model.rs",
+      "commit": "269340c",
+      "bytes": 14385,
+      "lines": 453,
+      "sha256": "c6a3aaec0e1d2207b50680c7e6ebeff83d48bd06c036549949a414d69c288764"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/vm-ranker/scoring/mod.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "vm-ranker/scoring/mod.rs",
+      "commit": "269340c",
+      "bytes": 28361,
+      "lines": 819,
+      "sha256": "674c7a9309f9540ea92eb43cd52448f208b9c9ca9deb26431b7ad60ba7b614ae"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/vm-ranker/scoring/value_model.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "vm-ranker/scoring/value_model.rs",
+      "commit": "269340c",
+      "bytes": 15757,
+      "lines": 446,
+      "sha256": "33e7f7a7a278168bd63d32269aef47aed2a4a2f5213e49cfdf80f2b4e8a550a0"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/candidate_pipeline.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/candidate_pipeline.rs",
+      "commit": "269340c",
+      "bytes": 19834,
+      "lines": 556,
+      "sha256": "f85a47c175c4d12b5e8a88e9222ba6de3198a7535d4f74d4ffcd43951c05c15f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/filter.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/filter.rs",
+      "commit": "269340c",
+      "bytes": 4262,
+      "lines": 129,
+      "sha256": "d6b17cc6d4576a3ed5edc907c34ae1a0450417fb743514ce809d30e636139d12"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/hydrator.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/hydrator.rs",
+      "commit": "269340c",
+      "bytes": 16186,
+      "lines": 523,
+      "sha256": "5eef7ea22d1c1a48a6818213663dca0d459064a1b3104762cb91b5da76331b2f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/lib.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/lib.rs",
+      "commit": "269340c",
+      "bytes": 390,
+      "lines": 15,
+      "sha256": "d11e110baa53b4e61851f6b2885097e19e08868ce3d8b381d96f8700374810b1"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/pipeline_summary.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/pipeline_summary.rs",
+      "commit": "269340c",
+      "bytes": 12316,
+      "lines": 420,
+      "sha256": "0fee190721f3f8dc7e130aa8461527a66583ba389c8cb68e2c5e3a06c23118a9"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/query_hydrator.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/query_hydrator.rs",
+      "commit": "269340c",
+      "bytes": 1270,
+      "lines": 44,
+      "sha256": "c736f9f086ff74d21518c89e1275969a85c9172066c2dd2b8180885a2bd8b8de"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/scorer.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/scorer.rs",
+      "commit": "269340c",
+      "bytes": 1948,
+      "lines": 64,
+      "sha256": "73b338f21634d09cc0247a788ffe96d675e1a385921eb6a8dbcb4961ac17e7a6"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/selector.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/selector.rs",
+      "commit": "269340c",
+      "bytes": 7329,
+      "lines": 224,
+      "sha256": "a2a19a2f18b9fee5041f95ece674bf38c36ecea4dc8e46027630721fcd5b1b9e"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/side_effect.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/side_effect.rs",
+      "commit": "269340c",
+      "bytes": 920,
+      "lines": 38,
+      "sha256": "8bec5f17504a63ff6a0b411aed0f9f53d0e7284654fc1efb646b9f3346f2f859"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/source.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/source.rs",
+      "commit": "269340c",
+      "bytes": 1280,
+      "lines": 42,
+      "sha256": "8647cb0a179b1e2eaae283a8568b55bb51b631eefa71e344ee654169533d02b8"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/candidate-pipeline/util.rs",
+      "source_repo": "x-algorithm",
+      "source_path": "candidate-pipeline/util.rs",
+      "commit": "269340c",
+      "bytes": 108,
+      "lines": 3,
+      "sha256": "8f61c5ea4f3807b8b70e74a022fb36c4037989a9959ddd498ddf32d50a49435f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/Edge.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/Edge.scala",
+      "commit": "269340c",
+      "bytes": 486,
+      "lines": 20,
+      "sha256": "42058f703f2efa89ef37a8fb2c8d7795dc58a0ccc6cace34cd0fa467ba371024"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/SnapshotSafeguard.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/SnapshotSafeguard.scala",
+      "commit": "269340c",
+      "bytes": 2354,
+      "lines": 90,
+      "sha256": "733671884f25c4539302d759ed5a8575935dfb8f9daead1772ad3599a34df308"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserCredV2.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserCredV2.scala",
+      "commit": "269340c",
+      "bytes": 494,
+      "lines": 20,
+      "sha256": "fd551e08885583eb0463671dc061b41c1068a31cf37d2a5c0af7b1fb8f8c6d6b"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserCredV2App.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserCredV2App.scala",
+      "commit": "269340c",
+      "bytes": 17618,
+      "lines": 534,
+      "sha256": "c00134dd9475314af4154a229afa243801df895c49fb22f19a3497ead2b7147d"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserCredV2Config.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserCredV2Config.scala",
+      "commit": "269340c",
+      "bytes": 2401,
+      "lines": 64,
+      "sha256": "61f07fefcf15070aafc02477c0838c11528d4d0faf1900bfa922ea4a9bb8fcfd"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserCredV2Injection.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserCredV2Injection.scala",
+      "commit": "269340c",
+      "bytes": 656,
+      "lines": 13,
+      "sha256": "d9821cebf365ea86c71628a84676d171abf872333ef0d7fb734f9a44d9f73717"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserMass.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserMass.scala",
+      "commit": "269340c",
+      "bytes": 283,
+      "lines": 14,
+      "sha256": "66c482471eaec3eac1af41d5cfdefe4bca24081cf4a5eec96128aa4ca80a193f"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/UserNode.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/UserNode.scala",
+      "commit": "269340c",
+      "bytes": 154,
+      "lines": 7,
+      "sha256": "bb393928649fa49447a71e3be98b801844d01e0ab00c48101710a6f7b3a170e9"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/user-cred-v2/ValidUserInfo.scala",
+      "source_repo": "x-algorithm",
+      "source_path": "user-cred-v2/ValidUserInfo.scala",
+      "commit": "269340c",
+      "bytes": 1343,
+      "lines": 43,
+      "sha256": "1b62888a2255e880977ffb28b84b932d915d0ad3f4da708baf8ecf10292a37ce"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/skill.json",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "skill.json",
+      "commit": "e8b065f",
+      "bytes": 943,
+      "lines": 43,
+      "sha256": "78359a9459389174953677cc388a1192816ca4ab4a8ac7e42d0e99b6f962d79f"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/stack/scripts/design-audit.mjs",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "stack/scripts/design-audit.mjs",
+      "commit": "e8b065f",
+      "bytes": 11310,
+      "lines": 232,
+      "sha256": "70621fd1962486fef2214fc9574b6c2ece1cd87ee61b5b4b797abf179c6af856"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/stack/docs/WORKFLOW.md",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "stack/docs/WORKFLOW.md",
+      "commit": "e8b065f",
+      "bytes": 3370,
+      "lines": 84,
+      "sha256": "9382897ea79fe1d01a1c0513089947ec32e989b567ec1f6acad7cedf7d8d23b4"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/app-interface.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/app-interface.csv",
+      "commit": "e8b065f",
+      "bytes": 11046,
+      "lines": 33,
+      "sha256": "331e7cf2c0b222d80c566c5f255c63cb339f65bfd02e471a720f28e4864a9f08"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/charts.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/charts.csv",
+      "commit": "e8b065f",
+      "bytes": 23682,
+      "lines": 26,
+      "sha256": "80045f5793cbeca3b1373831851c992444a38967960cbba900c1472f1420e978"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/colors.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/colors.csv",
+      "commit": "e8b065f",
+      "bytes": 38488,
+      "lines": 195,
+      "sha256": "f14cc97bc4c3527e6181b2ec3231704271249ca4ad56dcaa9bf562ab795a3dd7"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/google-fonts.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/google-fonts.csv",
+      "commit": "e8b065f",
+      "bytes": 747241,
+      "lines": 1935,
+      "sha256": "1c8c3b2ea1faf6a1012da463756def8b3889db33f2226f0343bb4daa80307d03"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/icons.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/icons.csv",
+      "commit": "e8b065f",
+      "bytes": 57945,
+      "lines": 106,
+      "sha256": "50816c6012030178195a16ee481ebf58b47bd985d70e8ec58886cc83f6eddafc"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/landing.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/landing.csv",
+      "commit": "e8b065f",
+      "bytes": 25449,
+      "lines": 35,
+      "sha256": "9a2edd3bb676c2a58f00ade7a062e285222d4297bfd847c8d5b056f0dbbf52d0"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/motion.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/motion.csv",
+      "commit": "e8b065f",
+      "bytes": 14679,
+      "lines": 18,
+      "sha256": "381affe8df8ea1f66fbbda2598827f9f54299107bbe6a1b4e9b68f6b62091ceb"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/products.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/products.csv",
+      "commit": "e8b065f",
+      "bytes": 78382,
+      "lines": 195,
+      "sha256": "2b78d254f0fe0cc137ee811df280215c257868df24d2041264624d01f747f511"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/react-performance.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/react-performance.csv",
+      "commit": "e8b065f",
+      "bytes": 15080,
+      "lines": 45,
+      "sha256": "3d925802539abac5afeb63ae8aa1960b7229ad271b3a47caed40ab2d97ad0734"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/styles.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/styles.csv",
+      "commit": "e8b065f",
+      "bytes": 152958,
+      "lines": 90,
+      "sha256": "a9b6cadbd1cb9e7cb8398a3b445e0691d01e42ed5e5efa60a5d0c08c99c8100d"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/typography.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/typography.csv",
+      "commit": "e8b065f",
+      "bytes": 49997,
+      "lines": 75,
+      "sha256": "321fc446e89024488ebae96dda93efc4d2307bd8bddb240857ad51364f6782c8"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/ui-reasoning.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/ui-reasoning.csv",
+      "commit": "e8b065f",
+      "bytes": 78979,
+      "lines": 195,
+      "sha256": "60b8b1a0fc426d65c8d536fbd348e89e6c6484ab9cb54ddbcfe85b4339d960f9"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/ux-guidelines.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/ux-guidelines.csv",
+      "commit": "e8b065f",
+      "bytes": 41929,
+      "lines": 142,
+      "sha256": "03b89ae5e237ab2f23a2e9a7ecebd5d70e42776341d0d7eb7302393fbd79c26a"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/angular.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/angular.csv",
+      "commit": "e8b065f",
+      "bytes": 19863,
+      "lines": 51,
+      "sha256": "704be83f2bad30c7e6de01afb113ffa01e0c458762f48b7102f31ba2367b5553"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/astro.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/astro.csv",
+      "commit": "e8b065f",
+      "bytes": 14591,
+      "lines": 54,
+      "sha256": "2c2f55fadaafc05e04cc321c8194a1a28b656e6757fe2ba316f41b16428299c6"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/avalonia.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/avalonia.csv",
+      "commit": "e8b065f",
+      "bytes": 27327,
+      "lines": 57,
+      "sha256": "442fca14675a020683473e7e49f08abb27b9df0765c80efe54aef61f1a4ac258"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/flutter.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/flutter.csv",
+      "commit": "e8b065f",
+      "bytes": 14192,
+      "lines": 53,
+      "sha256": "64dba0ac17349f28bce517a0f5f48c54d9ed2e487ec0c0258303463b382f41a0"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/html-tailwind.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/html-tailwind.csv",
+      "commit": "e8b065f",
+      "bytes": 16551,
+      "lines": 60,
+      "sha256": "d05a581d20af57b8ca0104a6d31d90a07c437d500662a96c3029fc2f9a4678ee"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/javafx.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/javafx.csv",
+      "commit": "e8b065f",
+      "bytes": 33577,
+      "lines": 76,
+      "sha256": "2e819b8d5abdd23ad4dae0991650fdb57af497aabd68b37463aa9c442944c869"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/jetpack-compose.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/jetpack-compose.csv",
+      "commit": "e8b065f",
+      "bytes": 12295,
+      "lines": 53,
+      "sha256": "699de218b286948eaec7d15767b6e1350ee299167e49bf476d82e3ff58724e0a"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/laravel.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/laravel.csv",
+      "commit": "e8b065f",
+      "bytes": 20163,
+      "lines": 51,
+      "sha256": "854ea4daa5fc61292d22235ad33b49ba3fe22423c3de8d3cb03758ffed3b59f9"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/nextjs.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/nextjs.csv",
+      "commit": "e8b065f",
+      "bytes": 18687,
+      "lines": 62,
+      "sha256": "ecd2c27b2ea0127d203ae726060efcdd7335b5e83f96b99e4f3befbbfeebd5a4"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/nuxt-ui.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/nuxt-ui.csv",
+      "commit": "e8b065f",
+      "bytes": 32292,
+      "lines": 84,
+      "sha256": "9c0179d559abe39ad63b958b54cb29c82be1dd20706430476096ea8967bfa328"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/nuxtjs.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/nuxtjs.csv",
+      "commit": "e8b065f",
+      "bytes": 23014,
+      "lines": 68,
+      "sha256": "3d9b54ed2d151bd9c86e9e5609b8a6f88a00c4c52fa601a30af96c49b2c4d176"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/react-native.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/react-native.csv",
+      "commit": "e8b065f",
+      "bytes": 14049,
+      "lines": 52,
+      "sha256": "ba31dd9c0c04da6bc02a74448bf121f9c0728ae5ba3b4d47b487778b0a1135b5"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/react.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/react.csv",
+      "commit": "e8b065f",
+      "bytes": 21166,
+      "lines": 67,
+      "sha256": "4dd176a9787e5c6306b5df94158d75955adcdc6edab41ce5286641a5842303c1"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/shadcn.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/shadcn.csv",
+      "commit": "e8b065f",
+      "bytes": 23184,
+      "lines": 69,
+      "sha256": "e56cfde5b74907836ac3582a4779d5b7f3d206a702ab81b8669a1b668c3eeb51"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/svelte.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/svelte.csv",
+      "commit": "e8b065f",
+      "bytes": 15078,
+      "lines": 56,
+      "sha256": "f6e379ba802941ba26b01d4ffbe3cd39120f2587659a1d93851c707f66bc13db"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/swiftui.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/swiftui.csv",
+      "commit": "e8b065f",
+      "bytes": 15323,
+      "lines": 51,
+      "sha256": "bdd9231ff3ad658f4e7c063e1eb49df2fd09ac8d90631a86df899b39833b9623"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/threejs.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/threejs.csv",
+      "commit": "e8b065f",
+      "bytes": 46769,
+      "lines": 54,
+      "sha256": "155d583b9c64da0df4b6c6cb060c02eab222505e0734d6353da02c9e2b5d982b"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/uno.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/uno.csv",
+      "commit": "e8b065f",
+      "bytes": 30091,
+      "lines": 60,
+      "sha256": "a0474363e4225b5367214d5675fd3e075f137026f9500f0d04357882ef4f6d48"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/uwp.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/uwp.csv",
+      "commit": "e8b065f",
+      "bytes": 24692,
+      "lines": 56,
+      "sha256": "c409f08c1fbba1f1029f1acaa554e7b4471cc85517a5751c9f2e62465badcd5c"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/vue.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/vue.csv",
+      "commit": "e8b065f",
+      "bytes": 12813,
+      "lines": 50,
+      "sha256": "b655f1ebb9dff2652d15981f31b1784c8a6d4759efd2815a14f3088257569f95"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/winui.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/winui.csv",
+      "commit": "e8b065f",
+      "bytes": 27890,
+      "lines": 60,
+      "sha256": "e676dc1c13ee6c205c40b0746f1335150a346c7a49a0616d2545bc3d2c930c85"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/data/stacks/wpf.csv",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/data/stacks/wpf.csv",
+      "commit": "e8b065f",
+      "bytes": 24158,
+      "lines": 57,
+      "sha256": "9781a9950b20333637b30a02e498b7efca21b618a3eeb8665836f3ac6e974da7"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/core.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/core.py",
+      "commit": "e8b065f",
+      "bytes": 45708,
+      "lines": 1092,
+      "sha256": "5d0b789c82be150fab860cabc1dc8bb666986ba548bc35b728891af3ca863ab9"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/design_system.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/design_system.py",
+      "commit": "e8b065f",
+      "bytes": 81780,
+      "lines": 1920,
+      "sha256": "df3a6a10f54fb3e1919103b1bcfe9cb332d471c4cebbe30ab70bff5d3e57e742"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/preview.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/preview.py",
+      "commit": "e8b065f",
+      "bytes": 20012,
+      "lines": 557,
+      "sha256": "ca34658b15afea5eeabeb19d09a6d7a11f3067ef43a6cc27deaa6f48f1b271fc"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/reasoning_contract.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/reasoning_contract.py",
+      "commit": "e8b065f",
+      "bytes": 5824,
+      "lines": 123,
+      "sha256": "b8bac1af82aa280d3e06f00aabaeac4337e632996b07fed874e2b6ee6e9c5913"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/search.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/search.py",
+      "commit": "e8b065f",
+      "bytes": 14207,
+      "lines": 257,
+      "sha256": "d6ae5b3421ff9fb7fde20c817d83b0b89feb557ebb9201d9effe2b3e3e8d89fc"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/scripts/validate_data.py",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/scripts/validate_data.py",
+      "commit": "e8b065f",
+      "bytes": 52627,
+      "lines": 1102,
+      "sha256": "6f160c5baeb00dc82d526f8544457eadd5b53eeeb23760b94347614b54c3752b"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/templates/base/quick-reference.md",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/templates/base/quick-reference.md",
+      "commit": "e8b065f",
+      "bytes": 30261,
+      "lines": 332,
+      "sha256": "4e5083c3dd4f80f252066cff046716a52c8a1e9bb8f0f3a284d786f8c1fdc398"
+    },
+    {
+      "vault_path": "02_ui_ux_pro_max_skill_pack/src/ui-ux-pro-max/templates/base/skill-content.md",
+      "source_repo": "ui-ux-pro-max-skill",
+      "source_path": "src/ui-ux-pro-max/templates/base/skill-content.md",
+      "commit": "e8b065f",
+      "bytes": 30370,
+      "lines": 462,
+      "sha256": "7b1f1bc995d43d1492fe8a2643143b6d237f96197ae38b97f2b034c77dd36da4"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/CODE_MAP.md",
+      "source_repo": "starnet",
+      "source_path": "CODE_MAP.md",
+      "commit": "e316231",
+      "bytes": 6719,
+      "lines": 94,
+      "sha256": "159f3924a9f29215e1097026ac26c94269889bcd74e50ec391caaf1a0ea82f28"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/README.md",
+      "source_repo": "starnet",
+      "source_path": "README.md",
+      "commit": "e316231",
+      "bytes": 10974,
+      "lines": 204,
+      "sha256": "3dfe665ce920052a6375fafade135c22dec1f770e84146ac85b8e59f791a9b2a"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/shared/events.js",
+      "source_repo": "starnet",
+      "source_path": "shared/events.js",
+      "commit": "e316231",
+      "bytes": 27898,
+      "lines": 354,
+      "sha256": "ffcfd20d2aecd5443eec9f936a9d4b3b4391304f7b37facb65dcf6d717a60395"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/shared/schema.js",
+      "source_repo": "starnet",
+      "source_path": "shared/schema.js",
+      "commit": "e316231",
+      "bytes": 3406,
+      "lines": 75,
+      "sha256": "50972376815b32171a8503e3f4160c86257b8938098336950e15f70bdcf4627f"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/shared/specialties.js",
+      "source_repo": "starnet",
+      "source_path": "shared/specialties.js",
+      "commit": "e316231",
+      "bytes": 110355,
+      "lines": 653,
+      "sha256": "b346c34841d2b2b75eb77dabd2e9c47049a85738a56e001d73eecd4933f41893"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/loop.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/loop.js",
+      "commit": "e316231",
+      "bytes": 261352,
+      "lines": 3224,
+      "sha256": "c6e7d15b429fa4b891adc8b7c6a87470643866158e5e4b61f10d29768cd54e16"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/subagents.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/subagents.js",
+      "commit": "e316231",
+      "bytes": 39708,
+      "lines": 597,
+      "sha256": "16b2232ca75589805666f54e9deb22bab9888ccfb950dae02a01a8edd0be4b49"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/taint.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/taint.js",
+      "commit": "e316231",
+      "bytes": 19618,
+      "lines": 250,
+      "sha256": "f2c3623c264b3227ee15a7f258c5599c0021433b3bc0e3697a15462f99af3a80"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/compaction-fidelity.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/compaction-fidelity.js",
+      "commit": "e316231",
+      "bytes": 19571,
+      "lines": 327,
+      "sha256": "a3ed4132c854fc271f0ddf10584198f3513e61dbc15c32307b1e5bc912db3c50"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/compaction-summarizer.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/compaction-summarizer.js",
+      "commit": "e316231",
+      "bytes": 18048,
+      "lines": 277,
+      "sha256": "f7c855a36cc1f4bc0b24f250091564c98ceaccb09b53e1f318fa2a3b6f36fe48"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/scout.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/scout.js",
+      "commit": "e316231",
+      "bytes": 37785,
+      "lines": 578,
+      "sha256": "11e30c3102b8ea063c12033b640b52c0abe084dbd234ea809d9896dff8d384bd"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/autonomy-ledger.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/autonomy-ledger.js",
+      "commit": "e316231",
+      "bytes": 6905,
+      "lines": 126,
+      "sha256": "26e766a4c70db32aab85b668c5a057ed322bafdeab69935f2693c54d31d06b32"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/steer-buffer.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/steer-buffer.js",
+      "commit": "e316231",
+      "bytes": 11363,
+      "lines": 170,
+      "sha256": "be9f2d610425d741eb2691024471c3ffa5b4ae34b86887188c78a52c0cec20e7"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/crew-call.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/crew-call.js",
+      "commit": "e316231",
+      "bytes": 8751,
+      "lines": 105,
+      "sha256": "02ab5ffca0af3d47069b21771ce4d50683cc3cb362b169b12253c448cb497698"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/src-tauri/src/process_job.rs",
+      "source_repo": "starnet",
+      "source_path": "src-tauri/src/process_job.rs",
+      "commit": "e316231",
+      "bytes": 56048,
+      "lines": 1094,
+      "sha256": "72f416cb021617ce01998f34b9ac840234eafc19732306aabb1c4006f46ef27f"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/src-tauri/src/sidecar_reap.rs",
+      "source_repo": "starnet",
+      "source_path": "src-tauri/src/sidecar_reap.rs",
+      "commit": "e316231",
+      "bytes": 14970,
+      "lines": 297,
+      "sha256": "ba2eda41430061b26bd1d7b8e682c5637129c3bad06fd1336e945738514f4d7f"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/src-tauri/src/credentials.rs",
+      "source_repo": "starnet",
+      "source_path": "src-tauri/src/credentials.rs",
+      "commit": "e316231",
+      "bytes": 34524,
+      "lines": 868,
+      "sha256": "851a07ed66ba75b91ac051a07a7434dae2f8c978aab3359923398ea2957fe557"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/src-tauri/src/hud_mode.rs",
+      "source_repo": "starnet",
+      "source_path": "src-tauri/src/hud_mode.rs",
+      "commit": "e316231",
+      "bytes": 23271,
+      "lines": 558,
+      "sha256": "511e45f16ce5f4a215967b941386612c24143b0a9de0c883db950f65307f6740"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/cap-scope.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/cap-scope.js",
+      "commit": "e316231",
+      "bytes": 7021,
+      "lines": 112,
+      "sha256": "86b3fe6a97d038b78e16847075e5b3698770f0a73f95788b0e295b2094dd0ea3"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/capGate.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/capGate.js",
+      "commit": "e316231",
+      "bytes": 2705,
+      "lines": 48,
+      "sha256": "37f8c1825014ff7f733b8272792727d8e70f88b4a3724eb1be28c90740602457"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/capsummary.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/capsummary.js",
+      "commit": "e316231",
+      "bytes": 19622,
+      "lines": 225,
+      "sha256": "c6ab242130695e23cd190628e8f51a1611c7aebc1f3f757a21c3387f60f4c5d0"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/effective-toolsets.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/effective-toolsets.js",
+      "commit": "e316231",
+      "bytes": 7064,
+      "lines": 88,
+      "sha256": "4a7dd4a373c9c9c4daed68bda297fe617247079ee713ee7b55ff505ab7af73f0"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/office.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/office.js",
+      "commit": "e316231",
+      "bytes": 6484,
+      "lines": 96,
+      "sha256": "6fb4227f1217585f7d03a9b6b962a6357de3b035f595e47c39d3c6f51d334529"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/project-tools.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/project-tools.js",
+      "commit": "e316231",
+      "bytes": 22025,
+      "lines": 319,
+      "sha256": "d63772b74d31271e9f7b3b8a0794a9945b6747a0d05f22c6c30df7800b09ffe8"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/registry.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/registry.js",
+      "commit": "e316231",
+      "bytes": 40162,
+      "lines": 393,
+      "sha256": "ecc33cc7cf0df30a16a62fae9bfd55b4f6147bd4a3231d92964c0d5ce5e6cf20"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/resolve.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/resolve.js",
+      "commit": "e316231",
+      "bytes": 3717,
+      "lines": 67,
+      "sha256": "50f93e4067987ac885025dfa9d07335b13fab16ea110bb6033dd5e082c3db94d"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/saved-placement.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/saved-placement.js",
+      "commit": "e316231",
+      "bytes": 1788,
+      "lines": 30,
+      "sha256": "d415b2611aad6c018b7c4b07f6d2cd50991c6c070defaadd883abef4fb4fc6ad"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/toolsets.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/toolsets.js",
+      "commit": "e316231",
+      "bytes": 5488,
+      "lines": 85,
+      "sha256": "f9991fa8642877b1223d0166ed3cf9c2f13dae492f9f15a57cd670f16ac93f3d"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/sidecar/capability/withheld.js",
+      "source_repo": "starnet",
+      "source_path": "sidecar/capability/withheld.js",
+      "commit": "e316231",
+      "bytes": 3817,
+      "lines": 69,
+      "sha256": "cbc0989c9c8943776ae38c35584142f57f9bc990c5a11771f84f321e0cb40e7d"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/address-pr-comments/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/address-pr-comments/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4775,
+      "lines": 40,
+      "sha256": "ab72bc1c9d902d88f497162187ed4250aaea977029bc932acc6b3f0650f6d1b2"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/bills-and-subscriptions/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/bills-and-subscriptions/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5147,
+      "lines": 41,
+      "sha256": "e460fe8d34881349ec2e479c5fe535ec827d2de8d6b9f4307794952a7efdaaee"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/blocked-page-recovery/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/blocked-page-recovery/SKILL.md",
+      "commit": "e316231",
+      "bytes": 6525,
+      "lines": 91,
+      "sha256": "13380c7397ec304e9e0fa5c468441f63d2afe8c217152b4739660a298c36a3a7"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/brand-assets/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/brand-assets/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3720,
+      "lines": 36,
+      "sha256": "93cea920683e5de9dc7add3013c4f558069130497367ad54bf0db0784ef2e834"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/calendar-scheduling/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/calendar-scheduling/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4395,
+      "lines": 40,
+      "sha256": "0ed58792e5d6e7e98e6dea559047faccc1c020e59703276241b4fb39fba6d376"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/changelog-writing/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/changelog-writing/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5144,
+      "lines": 40,
+      "sha256": "312d601dd2a3a61518a27c2b8869eccec207fe35d4a1170c89f6fe8d34c10160"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/channel-updates/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/channel-updates/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3264,
+      "lines": 41,
+      "sha256": "6ca849c2551e888106b08c9375679d6e00c1c2ea1be115dd633352cb6296482b"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/code-wiki/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/code-wiki/SKILL.md",
+      "commit": "e316231",
+      "bytes": 13917,
+      "lines": 392,
+      "sha256": "abc34dc64333654a8b05924c15cb4bd521df99f7c371a5ce1836c58895515ecc"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/cold-email/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/cold-email/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10291,
+      "lines": 139,
+      "sha256": "a2e76de1e808978be3c2b8f36df9ae86353f98e83acc2e041c39ff1490ead270"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/competitor-news-monitor/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/competitor-news-monitor/SKILL.md",
+      "commit": "e316231",
+      "bytes": 7952,
+      "lines": 115,
+      "sha256": "99fef332500a4eec074b82fe64bb4ebb6a0de480ec0f11111eb4f3c48f79075a"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/conversion-review/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/conversion-review/SKILL.md",
+      "commit": "e316231",
+      "bytes": 8748,
+      "lines": 125,
+      "sha256": "38d542c604f7637ada9cd1f7474d581f8b0935affe1beee888b7a1fea0175520"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/crew-handoff/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/crew-handoff/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3887,
+      "lines": 38,
+      "sha256": "deed41c0736b5139739e6e4029e736a1210b11763f3bce7225db780a0ed1a21f"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/customer-research/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/customer-research/SKILL.md",
+      "commit": "e316231",
+      "bytes": 11085,
+      "lines": 138,
+      "sha256": "5d48e46acc5c3cc29fbe37e8a3c18666ec14929d5934349942793e58638b3e93"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/daily-briefing/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/daily-briefing/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5149,
+      "lines": 40,
+      "sha256": "4cda236f59cc3984c42a3d1f68cba3d4c1ce67feb7b7ad9c0578079c454a75a3"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/data-cleanup-and-analysis/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/data-cleanup-and-analysis/SKILL.md",
+      "commit": "e316231",
+      "bytes": 6209,
+      "lines": 41,
+      "sha256": "4acefdd395f35bf082381d3fb2b07926392aa7e25b0d6cabd7a69f9be4c3bd47"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/decision-questionnaire/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/decision-questionnaire/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4374,
+      "lines": 89,
+      "sha256": "2d9c76df5870f33e753e84034c9f01843a4988fa49bd000ec09ce8e33cd85bf3"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/deliverable-handoff/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/deliverable-handoff/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3309,
+      "lines": 36,
+      "sha256": "e7fcc3d88cf4e37499ff4517b5296db399985f5d83d720bad6c4104ccce12182"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/document-to-action-items/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/document-to-action-items/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4848,
+      "lines": 91,
+      "sha256": "ec204bac033df459da27951936fafc5e41be08257c7a57829d21c71ef91289ad"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/finishing-a-branch/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/finishing-a-branch/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10083,
+      "lines": 219,
+      "sha256": "6a1cfa653bab9257cf854113afff50e3625830f757b016c32f8306f181565b34"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/fitness-and-nutrition/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/fitness-and-nutrition/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5660,
+      "lines": 38,
+      "sha256": "fa9902e696911637fa44451040cadbf36bd0baf4e2233de8c28d756fca13cad8"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/fix-failing-ci/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/fix-failing-ci/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5193,
+      "lines": 39,
+      "sha256": "465e223befa35320769075d4924afebb6647ce68fdb4472fc73ab5321efbb568"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/flashcards/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/flashcards/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5433,
+      "lines": 39,
+      "sha256": "8fa86d2c64d67ab0433589fba09aeda149caaebaf7ca57807f845b9319032cf2"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/frontend-design/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/frontend-design/SKILL.md",
+      "commit": "e316231",
+      "bytes": 9714,
+      "lines": 96,
+      "sha256": "798aa53d2fb15af0ab1dd6e56aefa7d28c146ca3d8202732fc7eb2e047f5998a"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/grill-me/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/grill-me/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4906,
+      "lines": 93,
+      "sha256": "6249754d66afced14939fbc1cd64035dee32affa41bd9486f9af74375735ff79"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/grounded-citations/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/grounded-citations/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4641,
+      "lines": 38,
+      "sha256": "af9f75bbe3e958fb1a4623d9b003d42679b3ef2882ea1532530e4f01744ffd10"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/issue-triage/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/issue-triage/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5383,
+      "lines": 41,
+      "sha256": "ac54a5f82141520576a678efb015bd20fecbca15810cd71ba49c3d585d74a891"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/lead-magnets/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/lead-magnets/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10460,
+      "lines": 155,
+      "sha256": "3d03b02f2b32599548bf11e92fe6f76b1ab16e54d624c3c135523393a33f6b13"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/line-design/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/line-design/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4279,
+      "lines": 39,
+      "sha256": "f2d3fd147a181ce88d113ced67b9ab5f933e23ee54403aaf711ec81178262038"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/link-and-video-summary/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/link-and-video-summary/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4365,
+      "lines": 40,
+      "sha256": "ed2002aa19ac09a9fb44fe240b4c490a6a4b2c376c7fd01e5678fa0d7a0edf7e"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/llm-wiki/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/llm-wiki/SKILL.md",
+      "commit": "e316231",
+      "bytes": 16146,
+      "lines": 304,
+      "sha256": "81ebc990398f2fce8bb5fe49e64e9ccd5fce2ce07a2914f63b7e11374cc77366"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/maps/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/maps/SKILL.md",
+      "commit": "e316231",
+      "bytes": 11406,
+      "lines": 165,
+      "sha256": "008e62460e891eb69921a1488423922d4192cf21bcdbd6fa48e9bc258c72ddea"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/mcp-server-building/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/mcp-server-building/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10642,
+      "lines": 214,
+      "sha256": "01fe53d56d6cb7d75bf4bd13b68c9d21ef114dbfb1b945fd1436b671d81ef63c"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/meeting-action-items/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/meeting-action-items/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4575,
+      "lines": 90,
+      "sha256": "519f22bf4d1e719577d571ee78efa57738c2ba93ac1b15d2ec59f1a7e5877af1"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/meeting-prep/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/meeting-prep/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3885,
+      "lines": 40,
+      "sha256": "7706ab06099b5be1b7e23460ae99e41cd4e04967b406643688fb61d3421348a4"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/notebook-gardening/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/notebook-gardening/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3602,
+      "lines": 38,
+      "sha256": "3f12ded043610b4839e888dbfe8668db0677d7a4e43619c0e04f2f3dffaabcf3"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/notes-vault/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/notes-vault/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3600,
+      "lines": 61,
+      "sha256": "f35b40abb22fc09e884f0492036e57756d31fc9bd3c7ebe7c992f475ce62261a"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/persistent-reminders/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/persistent-reminders/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5447,
+      "lines": 40,
+      "sha256": "a1ed9b18cbd107fb772f9da812cf1991308003817df96955a3eaf64526250210"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/pricing-strategy/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/pricing-strategy/SKILL.md",
+      "commit": "e316231",
+      "bytes": 11221,
+      "lines": 147,
+      "sha256": "8da8bcb8e4d94569a2f4ba817feab997d14b0605fd45ef248f83e2f13c6c12f7"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/project-onboarding/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/project-onboarding/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3853,
+      "lines": 36,
+      "sha256": "4721847a06f8f39dae7db901d940288a8ab76558901709db9187b3f377dd9077"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/publish-site/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/publish-site/SKILL.md",
+      "commit": "e316231",
+      "bytes": 12299,
+      "lines": 191,
+      "sha256": "9559852c00aadc861b34e2f3831463d14e0e9cf5280e87bc20373b9f33140022"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/receipt-organizer/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/receipt-organizer/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3876,
+      "lines": 37,
+      "sha256": "347f5e1fd389b76f219ddfa26139185b87b29670bcb01bba6636af9db6d4d78d"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/receiving-code-review/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/receiving-code-review/SKILL.md",
+      "commit": "e316231",
+      "bytes": 8307,
+      "lines": 236,
+      "sha256": "136996ff63e244f57835ec7b4a355b62360f91c6a4c48f5320b4bf1aa0e7c0ad"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/rest-graphql-debug/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/rest-graphql-debug/SKILL.md",
+      "commit": "e316231",
+      "bytes": 13798,
+      "lines": 258,
+      "sha256": "35d5805c4a3c78ac01d60207bd119030419eb675c38ae9c8dc733d5f37a8c2ce"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/routine-craft/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/routine-craft/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4043,
+      "lines": 38,
+      "sha256": "22897198f9ccb22abab494f48d4484e131a143491955fbf7e82560006adca6e1"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/seo-audit/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/seo-audit/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10901,
+      "lines": 134,
+      "sha256": "9c3d9d266e69b2e0c58d829f07c95e0bcca12a46d0b60bdbd87a1782862eb4ff"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/simple-english/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/simple-english/SKILL.md",
+      "commit": "e316231",
+      "bytes": 20357,
+      "lines": 338,
+      "sha256": "65a8c0c90cf2915f7da6864ec5668316b0a79f713aa704ef03d401da9693fbc9"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/skill-authoring/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/skill-authoring/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3810,
+      "lines": 47,
+      "sha256": "ebe89ba96c8d7cd2c64e1eccc814fbfb8f5dece65f4234857f9a746300a8a8b0"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/songwriting/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/songwriting/SKILL.md",
+      "commit": "e316231",
+      "bytes": 12072,
+      "lines": 295,
+      "sha256": "c36c045e055de0af7e5eec0095fab6036aabddc06a3035fdfda1305a7ea7f836"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/spend-aware-work/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/spend-aware-work/SKILL.md",
+      "commit": "e316231",
+      "bytes": 4128,
+      "lines": 39,
+      "sha256": "1a05b8715d00df35d35b0b5cf8d93e7bf65b2b8d47c47b913f892bb9ddba37c2"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/station-self-check/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/station-self-check/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3563,
+      "lines": 36,
+      "sha256": "0d63a39f30f75e9c33ccd4fd1cf1fa7ad3a45156f6d2d0a882e2abe3e2023aa1"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/studio-video/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/studio-video/SKILL.md",
+      "commit": "e316231",
+      "bytes": 3949,
+      "lines": 37,
+      "sha256": "5f0ba0ef94e26c9d41b751e58710e887e7b7b07c972b781ac4a85089bc1672c0"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/teach-me/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/teach-me/SKILL.md",
+      "commit": "e316231",
+      "bytes": 10746,
+      "lines": 175,
+      "sha256": "f3f5bf64da2c2d88971f75a85c3aff8dd897e83651dc151042a5fe725981811d"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/threat-model/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/threat-model/SKILL.md",
+      "commit": "e316231",
+      "bytes": 8240,
+      "lines": 111,
+      "sha256": "5352c98f7341ee26571f76f19ff4214c36220682a85bad71e2afb08f32a4172a"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/verification-before-completion/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/verification-before-completion/SKILL.md",
+      "commit": "e316231",
+      "bytes": 6452,
+      "lines": 154,
+      "sha256": "63bea902b43dfbce2a71c7689d2875c2c5567aa78b07d6885f6d39b725ed0e7f"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/web-app-qa/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/web-app-qa/SKILL.md",
+      "commit": "e316231",
+      "bytes": 8944,
+      "lines": 156,
+      "sha256": "616aaaa399d8ab50003019f5f1fa03b95cd8ef4d4a087d46fd6693bcb4e81572"
+    },
+    {
+      "vault_path": "03_starnet_architecture_gems/skills-catalog/skills/weekly-review/SKILL.md",
+      "source_repo": "starnet",
+      "source_path": "skills-catalog/skills/weekly-review/SKILL.md",
+      "commit": "e316231",
+      "bytes": 5439,
+      "lines": 89,
+      "sha256": "0bdf761ad10f8d2bc935d42925a19e85dac2f45964ab63e5830d777f71dcbe6d"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/README.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "README.md",
+      "commit": "a5179ac",
+      "bytes": 162422,
+      "lines": 1270,
+      "sha256": "2f33669126bd64fda4c7838954db92713eb29528064da5459b77e2bef8f8c217"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/website/AGENTS.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "website/AGENTS.md",
+      "commit": "a5179ac",
+      "bytes": 2020,
+      "lines": 17,
+      "sha256": "d7a35fe0aabd2b666ca378f8f46f1ccf650073682a090ca4088bafa581acf499"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/website/design-qa.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "website/design-qa.md",
+      "commit": "a5179ac",
+      "bytes": 6244,
+      "lines": 50,
+      "sha256": "f9e482dd86666bdb65595031a511d07436f26dd81797590409f1a59011585373"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/thunderfall/PROMPT.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/thunderfall/PROMPT.md",
+      "commit": "a5179ac",
+      "bytes": 5716,
+      "lines": 76,
+      "sha256": "d94f4277ee89e16240f86fbe6c94c5e4fd4cad3d885da92a8f4eadbe05e3b7ac"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/thunderfall/DESIGN.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/thunderfall/DESIGN.md",
+      "commit": "a5179ac",
+      "bytes": 7716,
+      "lines": 71,
+      "sha256": "2cc832266a133e642290b9fe85c3934fd6769b25a5a2d6fdae4307a2158fe8be"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/thunderfall/README.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/thunderfall/README.md",
+      "commit": "a5179ac",
+      "bytes": 8870,
+      "lines": 120,
+      "sha256": "7e2126880f7b5dab58f82e937114965c0a7244ccb2da928c6327735517a03b65"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/orbital-garden/PROMPT.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/orbital-garden/PROMPT.md",
+      "commit": "a5179ac",
+      "bytes": 2657,
+      "lines": 49,
+      "sha256": "dd24aeae6c0d9a93054b5f1824eab33bead4f76c5750992b45118fe910c319c7"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/orbital-garden/README.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/orbital-garden/README.md",
+      "commit": "a5179ac",
+      "bytes": 5998,
+      "lines": 93,
+      "sha256": "909e97c26cac366b7fa2b4749eb369d90a80847cd8c327a8e10f805a50a2fc4f"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/orbital-garden/index.html",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/orbital-garden/index.html",
+      "commit": "a5179ac",
+      "bytes": 44320,
+      "lines": 326,
+      "sha256": "d4a6c366bdeb439ac8e14fff1d29107fd086574de8f6f6215e718ae157b801b1"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/three-kingdoms/PROMPTS.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/three-kingdoms/PROMPTS.md",
+      "commit": "a5179ac",
+      "bytes": 2742,
+      "lines": 49,
+      "sha256": "bce6ba0f26603a6cb7cf7e13c846908eac213bd28eae148781bfe05a31a9314c"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/three-kingdoms/CREATION.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/three-kingdoms/CREATION.md",
+      "commit": "a5179ac",
+      "bytes": 3685,
+      "lines": 33,
+      "sha256": "653d17f42fe2484cfe81297266f73934ba3f2363e8dedc8b44a630ac6122e308"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/three-kingdoms/VALIDATION.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/three-kingdoms/VALIDATION.md",
+      "commit": "a5179ac",
+      "bytes": 3523,
+      "lines": 39,
+      "sha256": "f364aadda9c729cdec29a55c2eff0fd7d79aa965fdd1f5a8dd6cde55ff461173"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/sunjing-puzzles/PROMPTS.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/sunjing-puzzles/PROMPTS.md",
+      "commit": "a5179ac",
+      "bytes": 2178,
+      "lines": 31,
+      "sha256": "0144b5712fc77ba2e59e4df10e5b12add26d777907492ee26f231e8e45d184d6"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/sunjing-puzzles/CREATION.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/sunjing-puzzles/CREATION.md",
+      "commit": "a5179ac",
+      "bytes": 4960,
+      "lines": 40,
+      "sha256": "5d29ef40ccf5e79c7a5a7ded052d6f3e375604124ae24315a5279143d42b8133"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/sunjing-puzzles/VALIDATION.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/sunjing-puzzles/VALIDATION.md",
+      "commit": "a5179ac",
+      "bytes": 6581,
+      "lines": 54,
+      "sha256": "4033c2858b3fd8461b69e2048173e918aabdf33ce97c6532ae1fae3483ef9b7b"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/apex-club/PROMPTS.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/apex-club/PROMPTS.md",
+      "commit": "a5179ac",
+      "bytes": 884,
+      "lines": 14,
+      "sha256": "8a37321e23cca605f40a9f392c34bc7d656157a098892e3d4c76fd7b5762c35f"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/apex-club/CREATION.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/apex-club/CREATION.md",
+      "commit": "a5179ac",
+      "bytes": 2581,
+      "lines": 37,
+      "sha256": "ac5a92d7abe8109ef126c12732e4a3ee993ffa85f1a409d91af00e88cd42da95"
+    },
+    {
+      "vault_path": "04_gpt6_astra_prompts_and_patterns/works/apex-club/EXPERIENCE.md",
+      "source_repo": "awesome-gpt-6-astra",
+      "source_path": "works/apex-club/EXPERIENCE.md",
+      "commit": "a5179ac",
+      "bytes": 11589,
+      "lines": 79,
+      "sha256": "b45b2c4577102f7a1a6c6583ed2c664ece6cd84199eb223ced4c25632fe2fa8f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/llms.txt",
+      "source_repo": "Agent-Reach",
+      "source_path": "llms.txt",
+      "commit": "a8ab1e9",
+      "bytes": 3079,
+      "lines": 33,
+      "sha256": "6b9fe9f584da75cf4a85c2d98ee827e24fe94752d68f909c43fbf60d7e736c60"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/pyproject.toml",
+      "source_repo": "Agent-Reach",
+      "source_path": "pyproject.toml",
+      "commit": "a8ab1e9",
+      "bytes": 1984,
+      "lines": 76,
+      "sha256": "d9cb92ece02661bc24e87a1405924fbb9166abe5516ac1f78f06cef9598fe6b0"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/docs/README_en.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "docs/README_en.md",
+      "commit": "a8ab1e9",
+      "bytes": 15120,
+      "lines": 244,
+      "sha256": "48a6802a297a051e40bc1310aff114be8e5c0e0214e1151c839577e8eedb9af5"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/__init__.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/__init__.py",
+      "commit": "a8ab1e9",
+      "bytes": 127,
+      "lines": 6,
+      "sha256": "b69ecdf55ae117277ae48818471f4bb22d60f5af516f508e1e85274cccfd5c1f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/cli.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/cli.py",
+      "commit": "a8ab1e9",
+      "bytes": 1605,
+      "lines": 50,
+      "sha256": "822293cf0a5b73fde7ddf36f65d78f4f555ace386a29b1ee1eb9b0f468051612"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/config.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/config.py",
+      "commit": "a8ab1e9",
+      "bytes": 6356,
+      "lines": 198,
+      "sha256": "d747e9fe41aababbf3a3a7a45b0d41c82364b2ac9cbfe98b583fa4db7c128d8b"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/transcribe.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/transcribe.py",
+      "commit": "a8ab1e9",
+      "bytes": 16525,
+      "lines": 504,
+      "sha256": "707ca35daba07fd12ea719b460fec2ea0a438dcab167b0b491646a8542b729f2"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/__init__.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/__init__.py",
+      "commit": "a8ab1e9",
+      "bytes": 1397,
+      "lines": 60,
+      "sha256": "8c19e8f4988542a0371cabde5aaa2bb3d68b742909d7b7324bac982a2c9cb015"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/_opencli_site.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/_opencli_site.py",
+      "commit": "a8ab1e9",
+      "bytes": 2649,
+      "lines": 64,
+      "sha256": "4a6bc045a5cf7ee0a8243c4107a2b0df41c8c2015f9ca12757b62e4b83f4287f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/base.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/base.py",
+      "commit": "a8ab1e9",
+      "bytes": 4932,
+      "lines": 123,
+      "sha256": "4cb31517d004e8953fc7fcb7e428c3187f0cd5ff1e8d28498a0b1c9dadbd1013"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/bilibili.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/bilibili.py",
+      "commit": "a8ab1e9",
+      "bytes": 10949,
+      "lines": 259,
+      "sha256": "e2bcd52db7798cc9904ba571fb88ebb4eecad4c1f92cbca498e955ea72d8e32f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/boss.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/boss.py",
+      "commit": "a8ab1e9",
+      "bytes": 7367,
+      "lines": 158,
+      "sha256": "25710bf51958da91b0c9d8957dd3e439f53cca977940c770413b4877a3bcc386"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/facebook.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/facebook.py",
+      "commit": "a8ab1e9",
+      "bytes": 1550,
+      "lines": 43,
+      "sha256": "2cf6c6d74b0730e15a40be7044d09aab1272bed06fb4ab1f327146cafd47ec5d"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/github.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/github.py",
+      "commit": "a8ab1e9",
+      "bytes": 7277,
+      "lines": 191,
+      "sha256": "3c59923f052a5b0f925019b635fb6bad7e213c603900726502668f537deeadd8"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/instagram.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/instagram.py",
+      "commit": "a8ab1e9",
+      "bytes": 2091,
+      "lines": 56,
+      "sha256": "5d2d2aa28ffd7574e64baac098d4ea1787f86b1bc1e0f36dc5a293a7b68470c9"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/linkedin.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/linkedin.py",
+      "commit": "a8ab1e9",
+      "bytes": 2361,
+      "lines": 53,
+      "sha256": "491b9744f81a5ccc0a3775c1efed92d485ed6129423d60b98b25e8fae94a537f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/reddit.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/reddit.py",
+      "commit": "a8ab1e9",
+      "bytes": 3709,
+      "lines": 96,
+      "sha256": "98678f44f489c53bd7e15f27123f3516d7aaec0c6a4aa748f33cb6c0ff694986"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/twitter.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/twitter.py",
+      "commit": "a8ab1e9",
+      "bytes": 3180,
+      "lines": 91,
+      "sha256": "636de3216a65b8b0bba5e2b2244ea15cdf8cd5228162a4665799bc5735911cd5"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/v2ex.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/v2ex.py",
+      "commit": "a8ab1e9",
+      "bytes": 8968,
+      "lines": 255,
+      "sha256": "290786a0c9a43e3e05bbcf7f726d72995aa8d66359554e69c3c24780ab148645"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/web.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/web.py",
+      "commit": "a8ab1e9",
+      "bytes": 8866,
+      "lines": 230,
+      "sha256": "8c881350a067f2677ef4be5aea4f861c93e6845d9756cd43289294f68cbc1521"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/xiaohongshu.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/xiaohongshu.py",
+      "commit": "a8ab1e9",
+      "bytes": 5541,
+      "lines": 132,
+      "sha256": "07618298ea2ce9268235d5e88e15ca880c6adf73ff5a030c0adf40fd8b5971f3"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/xiaoyuzhou.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/xiaoyuzhou.py",
+      "commit": "a8ab1e9",
+      "bytes": 2911,
+      "lines": 70,
+      "sha256": "f71618d4dbd2cc297d8e84c642d5229f187e5a32fb2f7498cea92cf2f7c2f343"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/xueqiu.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/xueqiu.py",
+      "commit": "a8ab1e9",
+      "bytes": 13776,
+      "lines": 377,
+      "sha256": "8f96318e567c2fdf5a7a105450e8f493f474bc20336482efc9368d5af40e386b"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/channels/youtube.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/channels/youtube.py",
+      "commit": "a8ab1e9",
+      "bytes": 9233,
+      "lines": 241,
+      "sha256": "bfabca15528839e2bb875d5f7d36c9a502a65cdf1968880a903904bb5eb3b79c"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/backends/__init__.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/backends/__init__.py",
+      "commit": "a8ab1e9",
+      "bytes": 312,
+      "lines": 9,
+      "sha256": "d94bb273299126e5fca5beea64ba8320a951fa6c04ae577f88832e1e7ad93914"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/backends/boss_native.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/backends/boss_native.py",
+      "commit": "a8ab1e9",
+      "bytes": 4689,
+      "lines": 83,
+      "sha256": "7f67b2a6e54c0db38e1565a38db0063555a898f823bd958ce576db7d87ed1815"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/backends/cloak.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/backends/cloak.py",
+      "commit": "a8ab1e9",
+      "bytes": 2099,
+      "lines": 42,
+      "sha256": "a1f7e79152a8af3278b0ca2cb2e385c50c7d5fca37777cb4a17063f995d1408d"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/backends/opencli.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/backends/opencli.py",
+      "commit": "a8ab1e9",
+      "bytes": 6181,
+      "lines": 140,
+      "sha256": "41c811d8fa5b14675243425ee0e2eb60ec6ff785b7a8b4cddfa84d2201e892f5"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/__init__.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/__init__.py",
+      "commit": "a8ab1e9",
+      "bytes": 80,
+      "lines": 1,
+      "sha256": "1e7cc98b89f5582373d8d75f2fca9bd3f3358dfe9ed3f75e24c3233f4bdbd25c"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/bridge.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/bridge.py",
+      "commit": "a8ab1e9",
+      "bytes": 3929,
+      "lines": 102,
+      "sha256": "03c48c1d0f08f76572be7cfccf78f5ca5a087f2d59f5ec09d8e94e5112023520"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/browser.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/browser.py",
+      "commit": "a8ab1e9",
+      "bytes": 38322,
+      "lines": 947,
+      "sha256": "e7a888478fc2573681b814f7cd3ab70c2d53104913464095479861f0ffb52dd0"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/browser_binding.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/browser_binding.py",
+      "commit": "a8ab1e9",
+      "bytes": 5403,
+      "lines": 154,
+      "sha256": "5b25d1b543f706a3fddc1946a500b0d00a44790606baf056624b1ac9c26639e0"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/browser_watcher.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/browser_watcher.py",
+      "commit": "a8ab1e9",
+      "bytes": 8623,
+      "lines": 194,
+      "sha256": "8fd77267ec87ad75fc2d4ee4aa79ea2bfa98a566864caa6b75821e93126db421"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/cdp.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/cdp.py",
+      "commit": "a8ab1e9",
+      "bytes": 8783,
+      "lines": 222,
+      "sha256": "e4e619960842683887ca0f5a40384e1be8d9f36a0210d993de37c81640df7bd6"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/cli.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/cli.py",
+      "commit": "a8ab1e9",
+      "bytes": 25030,
+      "lines": 582,
+      "sha256": "03f5b74a44e563cd12b42c9bac28263d75e6d4170e4ab10a8cb38c12f60ff631"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/clock.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/clock.py",
+      "commit": "a8ab1e9",
+      "bytes": 1656,
+      "lines": 61,
+      "sha256": "abbd33a24c88fe5e8baa6f8d3ec0ffe99b417e472da9bc583f64a9586ad76603"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/dispatch.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/dispatch.py",
+      "commit": "a8ab1e9",
+      "bytes": 14309,
+      "lines": 322,
+      "sha256": "b635035f8a82d796f9ed8d95787b0509e27c3faf34ee1e8026727ab863c26159"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/legacy.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/legacy.py",
+      "commit": "a8ab1e9",
+      "bytes": 4707,
+      "lines": 124,
+      "sha256": "7befb2c6c069b0f0cb15dcb8c01322238cc6642cc4fc66cddd41108393f2a74b"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/manage.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/manage.py",
+      "commit": "a8ab1e9",
+      "bytes": 45811,
+      "lines": 1034,
+      "sha256": "43ec2885f0a287d0d78abf675c31d7cf8647ede2c434294bd5bef7bb8abd9849"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/onboarding.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/onboarding.py",
+      "commit": "a8ab1e9",
+      "bytes": 13069,
+      "lines": 239,
+      "sha256": "16d3d771664ee3bd5e3709efee043e2615a6ffab5f26947f09b5fc8961459769"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/public_web.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/public_web.py",
+      "commit": "a8ab1e9",
+      "bytes": 4199,
+      "lines": 89,
+      "sha256": "17666cd9efa158737cdaffb8d9d1a341b0ce23d34193d9a2896d2065f9263e26"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/result.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/result.py",
+      "commit": "a8ab1e9",
+      "bytes": 5601,
+      "lines": 142,
+      "sha256": "42668a1529c8f94af93253f47df4a75f5e3bc292411929bf0b91d44c5459667f"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/run.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/run.py",
+      "commit": "a8ab1e9",
+      "bytes": 6843,
+      "lines": 173,
+      "sha256": "d6a52e6280af149e4813a2971acc0b757e6b65b34b4f356344222747fbdb870e"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/session_reuse.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/session_reuse.py",
+      "commit": "a8ab1e9",
+      "bytes": 7059,
+      "lines": 134,
+      "sha256": "3b4bd283f22f00d9d7759d718880ee61ef00e11685d4271c0aa121a1decaf3ae"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/sessions.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/sessions.py",
+      "commit": "a8ab1e9",
+      "bytes": 2837,
+      "lines": 75,
+      "sha256": "59b251271f80b5cc6f904541eeac10925c4258c477488f814657f50bff176c6a"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/state.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/state.py",
+      "commit": "a8ab1e9",
+      "bytes": 4400,
+      "lines": 127,
+      "sha256": "95cdbd77be092df5dfb5529b1701901661b6fe298a7c60e22a19d341262b8b52"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/tools.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/tools.py",
+      "commit": "a8ab1e9",
+      "bytes": 26742,
+      "lines": 639,
+      "sha256": "172cfa8ab39d4617134a26e5a125f4e60666ef94a4698a04b41c0609b94e3575"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/runtime/update_notice.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/runtime/update_notice.py",
+      "commit": "a8ab1e9",
+      "bytes": 2288,
+      "lines": 69,
+      "sha256": "6e47885ef8fee167ef18d95d521a3be2aff59a51c89d688d0d20ada2cf0be695"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/utils/paths.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/utils/paths.py",
+      "commit": "a8ab1e9",
+      "bytes": 6653,
+      "lines": 213,
+      "sha256": "3409f821e2f4bbe1f2472824e1604b53c37e81942d0878335551885e48a25362"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/utils/process.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/utils/process.py",
+      "commit": "a8ab1e9",
+      "bytes": 1185,
+      "lines": 35,
+      "sha256": "7a849edde1ee741ecb16af12fd1ab881c30036e7df75ac84f20ab914befe83f3"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/utils/text.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/utils/text.py",
+      "commit": "a8ab1e9",
+      "bytes": 804,
+      "lines": 27,
+      "sha256": "e99f4c506c7ac632027cc908dd7d39cf46a61ee6e0e2c919657ece0fb2b27aa1"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/utils/url.py",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/utils/url.py",
+      "commit": "a8ab1e9",
+      "bytes": 3700,
+      "lines": 121,
+      "sha256": "a5ad76ecc4ca641d497b01cc7e90f573c137d2e7acac4c45ade519b6a461e0e8"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/skill/SKILL.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/skill/SKILL.md",
+      "commit": "a8ab1e9",
+      "bytes": 7880,
+      "lines": 106,
+      "sha256": "c1ca4791098e4c4f93006639ef10aa5c4180e1b143229baf598a1b8ad1b0c794"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/skill/SKILL_en.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/skill/SKILL_en.md",
+      "commit": "a8ab1e9",
+      "bytes": 8608,
+      "lines": 107,
+      "sha256": "b5a7a034a116b39ebb292afebfab34cb4bb8f8397c9ee789dfdb20c189e75727"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/skill/references/capabilities.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/skill/references/capabilities.md",
+      "commit": "a8ab1e9",
+      "bytes": 3431,
+      "lines": 31,
+      "sha256": "36105d4686493e67eb2f6d7cb47479e06bef6fbfe7159f08d3a6b64314b1cd79"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/skill/references/maintenance.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/skill/references/maintenance.md",
+      "commit": "a8ab1e9",
+      "bytes": 1621,
+      "lines": 13,
+      "sha256": "316585c8837f3e12fd88cb1769cf9b00eed9c83c2fc70f46a6dcb791012121e1"
+    },
+    {
+      "vault_path": "05_agent_reach_zero_cost_connectors/agent_reach/skill/references/sessions.md",
+      "source_repo": "Agent-Reach",
+      "source_path": "agent_reach/skill/references/sessions.md",
+      "commit": "a8ab1e9",
+      "bytes": 3870,
+      "lines": 41,
+      "sha256": "2b15b340db21838680659b4694a419f6799036e49ddb4b8042e7b893a4dbadd3"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/X_VIRAL_ENGINEERING_PLAYBOOK_FA.md",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "01_x_algorithm_weights_and_formulas/X_VIRAL_ENGINEERING_PLAYBOOK_FA.md",
+      "commit": "local",
+      "bytes": 2696,
+      "lines": 19,
+      "sha256": "1bc5ec8a0ed20aa53cc1834abcafdba864d5e204a6effa2136f7f1a9d1eb1684"
+    },
+    {
+      "vault_path": "01_x_algorithm_weights_and_formulas/KIAN_MARKETPLACE_RANKER_SPEC.md",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "01_x_algorithm_weights_and_formulas/KIAN_MARKETPLACE_RANKER_SPEC.md",
+      "commit": "local",
+      "bytes": 968,
+      "lines": 10,
+      "sha256": "f224ce89c71ec09029d7a6f68fad87a4359179e66c347651a338e85df38143e2"
+    },
+    {
+      "vault_path": "06_kian_v2_integration_adapters/KIAN_STUDIO_UI_UX_PRO_MAX_PROMPT.md",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "06_kian_v2_integration_adapters/KIAN_STUDIO_UI_UX_PRO_MAX_PROMPT.md",
+      "commit": "local",
+      "bytes": 1424,
+      "lines": 12,
+      "sha256": "e128c7fc28788d9948bccb982288451020e5396150ccb4e85db4d3c1c7aad618"
+    },
+    {
+      "vault_path": "06_kian_v2_integration_adapters/KIAN_X_ALGO_RANKER.rs",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "06_kian_v2_integration_adapters/KIAN_X_ALGO_RANKER.rs",
+      "commit": "local",
+      "bytes": 2885,
+      "lines": 89,
+      "sha256": "a788342c779ee3cc96081699a95701e09ad614ae3a932f821c142f61141917aa"
+    },
+    {
+      "vault_path": "06_kian_v2_integration_adapters/KIAN_SCOUT_AGENT_REACH.md",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "06_kian_v2_integration_adapters/KIAN_SCOUT_AGENT_REACH.md",
+      "commit": "local",
+      "bytes": 1446,
+      "lines": 16,
+      "sha256": "ad1bb49810cb93d59b165f9c3d155ed0df5cd90618f3b1d830065efdc78ac530"
+    },
+    {
+      "vault_path": "06_kian_v2_integration_adapters/kian_kb_seed_5repos.sql",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "06_kian_v2_integration_adapters/kian_kb_seed_5repos.sql",
+      "commit": "local",
+      "bytes": 1586,
+      "lines": 7,
+      "sha256": "35f63252bc7cc8df374c45351c156dd5c8888d45a05b3fbebb3cb616147594d1"
+    },
+    {
+      "vault_path": "VAULT_INDEX_FA.md",
+      "source_repo": "KIAN-v2-Synthesis",
+      "source_path": "VAULT_INDEX_FA.md",
+      "commit": "local",
+      "bytes": 2380,
+      "lines": 10,
+      "sha256": "68abe9e4bca2a16d3ce15e8ee25c43c80e5799622e322844d20570649697b284"
+    }
+  ]
+}

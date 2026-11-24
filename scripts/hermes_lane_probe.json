@@ -1,0 +1,102 @@
+{
+  "probed_at": "2026-11-23T20:14:42+0000",
+  "our_r9": "https://9router-production-6f2225a3.up.railway.app/v1",
+  "sibling_r9": "https://9router-production-af2f3af2.up.railway.app/v1",
+  "lanes": [
+    {
+      "base": "https://9router-production-6f2225a3.up.railway.app/v1",
+      "model": "oc/deepseek-v4.1-flash-free",
+      "key": "(set, 13 chars)",
+      "ms": 657,
+      "status": 429,
+      "ok": false,
+      "err": "rate_limit_exceeded",
+      "group": "our-r9+our-key"
+    },
+    {
+      "base": "https://9router-production-6f2225a3.up.railway.app/v1",
+      "model": "oc/glm-5.3-flash-free",
+      "key": "(set, 13 chars)",
+      "ms": 304,
+      "status": 400,
+      "ok": false,
+      "err": "bad_request",
+      "group": "our-r9+our-key"
+    },
+    {
+      "base": "https://9router-production-6f2225a3.up.railway.app/v1",
+      "model": "oc/longcat-2.5-free",
+      "key": "(set, 13 chars)",
+      "ms": 300,
+      "status": 410,
+      "ok": false,
+      "err": "[410]: {\"type\":\"error\",\"error\":{\"type\":\"ModelDeprecated\",\"message\":\"Model longca",
+      "group": "our-r9+our-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/deepseek-v4.1-flash-free",
+      "key": "(none)",
+      "ms": 106,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"tOs",
+      "group": "sibling-r9+no-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/glm-5.3-flash-free",
+      "key": "(none)",
+      "ms": 114,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"Rs0",
+      "group": "sibling-r9+no-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/longcat-2.5-free",
+      "key": "(none)",
+      "ms": 66,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"Q2Q",
+      "group": "sibling-r9+no-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/deepseek-v4.1-flash-free",
+      "key": "(set, 13 chars)",
+      "ms": 62,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"QsC",
+      "group": "sibling-r9+our-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/glm-5.3-flash-free",
+      "key": "(set, 13 chars)",
+      "ms": 62,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"eDU",
+      "group": "sibling-r9+our-key"
+    },
+    {
+      "base": "https://9router-production-af2f3af2.up.railway.app/v1",
+      "model": "oc/longcat-2.5-free",
+      "key": "(set, 13 chars)",
+      "ms": 109,
+      "status": 404,
+      "ok": false,
+      "err": "{\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"cF-",
+      "group": "sibling-r9+our-key"
+    }
+  ],
+  "live_lanes": [],
+  "coarena_numes_creds": {
+    "env": {},
+    "files": []
+  }
+}

@@ -1,0 +1,12 @@
+# KIAN kernel server — minimal release image (REA: strip=true, no debug companions)
+FROM rust:1.100-alpine AS build
+WORKDIR /kian
+COPY . .
+RUN cargo build --release -p kian-server
+
+FROM scratch
+COPY --from=build /kian/target/release/kian-server /kian-server
+ENV KIAN_HOST=0.0.0.0
+ENV KIAN_PORT=8088
+EXPOSE 8088
+ENTRYPOINT ["/kian-server"]

@@ -1,0 +1,180 @@
+{
+  "repos": {
+    "firecrawl/firecrawl": "8538d3a",
+    "langgenius/dify": "a92a64aa",
+    "Snailclimb/JavaGuide": "992dae3"
+  },
+  "file_count": 28,
+  "total_bytes": 421178,
+  "total_lines": 9537,
+  "files": [
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/fetch.rs",
+      "bytes": 9839,
+      "lines": 327,
+      "sha256": "e43bd3996078dcda1bac3f19a3690062190b32513cf43687348dcc6dbaf4a275"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/guard.rs",
+      "bytes": 7674,
+      "lines": 252,
+      "sha256": "31711965d8608cb29e62495cfc77cf80e154901c13c1a89e62ab1e2201f1dead"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/html-to-markdown.ts",
+      "bytes": 5154,
+      "lines": 172,
+      "sha256": "aa782b1a5d59515694a30788e3eb6417e56f69bf29d98947e9c724f75a0e7150"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/html.rs",
+      "bytes": 30948,
+      "lines": 1104,
+      "sha256": "c4e7e15fab050e76eabd334876bae43decec21130fe84513b2cb36f8f7562693"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/llmExtract.ts",
+      "bytes": 54881,
+      "lines": 1604,
+      "sha256": "694930f22968d9272fc9f2bc54fb7bb687c534fdcc02983dc1408b4cc9e772c7"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/markdown.rs",
+      "bytes": 25626,
+      "lines": 947,
+      "sha256": "3d1b2935d3ab285ee209baef3cc14e1972dac5d1a0deae281c7c70e20acc36cd"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/netguard.rs",
+      "bytes": 12533,
+      "lines": 385,
+      "sha256": "e55aa0e506916864a39a520fa92180860651d254535ee22f8e2f83fabffce73d"
+    },
+    {
+      "path": "01_firecrawl_extraction_and_ssrf/removeUnwantedElements.ts",
+      "bytes": 5932,
+      "lines": 229,
+      "sha256": "ef8cea1631acf6d97b482558ff2ae5ee07bb6fd68f0f56f5c492dc411adda34a"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/fixed_text_splitter.py",
+      "bytes": 5161,
+      "lines": 128,
+      "sha256": "5873f9b382d2cd0c0ecc8fa7b69093acc9298363bcd29f623a1835a632b65757"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/graph_topology.py",
+      "bytes": 3172,
+      "lines": 86,
+      "sha256": "d9173a0b62054dbce68a6f9d7b67b045442b552e55d617eee8e0015ad62566ef"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/input_moderation.py",
+      "bytes": 4109,
+      "lines": 101,
+      "sha256": "540972f174fcb1a5a1a27bf6492fc35c22e1440ee2efccaed7a4d5acc728ca1a"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/llm_generator_prompts.py",
+      "bytes": 19878,
+      "lines": 446,
+      "sha256": "56755d48b3b066022a79a56d6c0a9eece61149d4fa96a81a463b729832da5ff5"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/node_builder_prompts.py",
+      "bytes": 5476,
+      "lines": 138,
+      "sha256": "382529d61ff3d53ec934633e6823e123e2a4f7a5457c4c2ce181e806865c793d"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/output_moderation.py",
+      "bytes": 6034,
+      "lines": 138,
+      "sha256": "6da1fba51f64712ca145f7a3edec0a6fb9f563497b6d67e1a45334d2b1ebb840"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/planner_prompts.py",
+      "bytes": 12522,
+      "lines": 234,
+      "sha256": "a4c892e179f31f29ca99ad82ea23549c44d0711e422b13c4a8b2f8f2b70e2b5e"
+    },
+    {
+      "path": "02_dify_workflow_rag_and_guardrails/token_buffer_memory.py",
+      "bytes": 15742,
+      "lines": 367,
+      "sha256": "57cfaba40b30153f4b144ad05913811ea8fa6dc5f1e7ac309c65b3671591629e"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/3-commonly-used-cache-read-and-write-strategies.md",
+      "bytes": 12406,
+      "lines": 168,
+      "sha256": "39de4abb0fff1c2be9f13fdfd3cd1b1fc620477e3149dfbfcdaf7041ced24dd3"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/distributed-id-design.md",
+      "bytes": 15239,
+      "lines": 182,
+      "sha256": "b71299a103f3777f7cb2b313c323672ce46bfb3af040633eb9087dd6e9bc7d3a"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/distributed-lock.md",
+      "bytes": 10716,
+      "lines": 130,
+      "sha256": "7c8b46279c7b68516f7141c3f7374a198f869fa0abfb438294fc41a88132842e"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/distributed-transaction.md",
+      "bytes": 42846,
+      "lines": 553,
+      "sha256": "509649d6ead0ca9f79605c9e6e9d7e9f9b028cd58eaeb8c3f388d32132332a25"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/fallback-and-circuit-breaker.md",
+      "bytes": 41204,
+      "lines": 591,
+      "sha256": "8feebcd1e46c62a04ed743d24907a4b1bd3a9c9c821e6dba6c7cc4437793465b"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/innodb-implementation-of-mvcc.md",
+      "bytes": 19058,
+      "lines": 264,
+      "sha256": "bfd68abbc3bef0af084b8da200f46fd3ac81483a4881de2095f7b3fd4732f743"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/mysql-high-performance-optimization-specification-recommendations.md",
+      "bytes": 21725,
+      "lines": 394,
+      "sha256": "ca7cbc52eddccd2b1df9115db81353bd7f03b53e35223309c32e1a60e2268a13"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/redis-common-blocking-problems-summary.md",
+      "bytes": 11195,
+      "lines": 183,
+      "sha256": "98053855f4936c0f7cf224b757ec87fbf6d8d53465c57491228fc85f65e5eecf"
+    },
+    {
+      "path": "03_javaguide_distributed_and_ledger/state-machine-and-workflow.md",
+      "bytes": 9673,
+      "lines": 108,
+      "sha256": "0bd3eb685daad433b34945cba8d07b962179482c7ba66a1526510524139a8bde"
+    },
+    {
+      "path": "04_kian_v2_rust_adapters/kian_dify_rag_and_idempotency.rs",
+      "bytes": 5581,
+      "lines": 169,
+      "sha256": "c27950929f1c650ccab33875635eb74806f045ed1d504fb54250f5dc2cf03bfe"
+    },
+    {
+      "path": "04_kian_v2_rust_adapters/kian_firecrawl_ssrf_and_md.rs",
+      "bytes": 4222,
+      "lines": 115,
+      "sha256": "dc0584d228a3e8c29980a549665c7b5f89dc37f11c5b70cad1fd547fdd0220eb"
+    },
+    {
+      "path": "VAULT_INDEX_FA.md",
+      "bytes": 2632,
+      "lines": 22,
+      "sha256": "f578a5ba8cb5e1250d0f0cab3ebbe78d51012093c4b9c629e8a523bbc4f1f492"
+    }
+  ]
+}
