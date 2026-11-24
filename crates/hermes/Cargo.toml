@@ -16,6 +16,7 @@ sha2 = { workspace = true }
 kian-ai = { path = "../ai" }
 kian-domain = { path = "../domain" }
 kian-db = { path = "../db" }
+kian-wallet = { path = "../wallet" }
 tokio = { workspace = true }
 
 [lints.rust]

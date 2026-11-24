@@ -18,6 +18,7 @@ pub mod deposits;
 pub mod escrows;
 pub mod hermes;
 pub mod market;
+pub mod monopoly;
 pub mod nation;
 pub mod quant;
 pub mod studio;

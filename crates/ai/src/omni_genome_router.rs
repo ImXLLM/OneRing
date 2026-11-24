@@ -764,7 +764,7 @@ impl HandoffPacket {
 mod tests {
     use super::*;
 
-    const MOUNTED_GENOME_DIR: &str = "OMNI-MODEL-GENOME/models/gpt-6-standard-free";
+    const MOUNTED_GENOME_DIR: &str = "OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free";
 
     #[test]
     fn genome_layer_filenames_are_canonical() {
@@ -968,7 +968,7 @@ mod tests {
     #[test]
     fn mounted_gemini_genome_loads_from_disk_with_full_scorecard() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../")
-            .join("OMNI-MODEL-GENOME/models/gemini-4-aragon-high");
+            .join("OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high");
         let profile = load_model_genome_from_dir(&dir).expect("mounted gemini genome must load");
         assert_eq!(profile.model_id, "gemini-4-aragon-high");
         assert!(profile.reasoning_paradigm.contains("hybrid_thinking"), "{}", profile.reasoning_paradigm);

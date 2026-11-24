@@ -20,6 +20,7 @@
 //!  * BEP20  — `0x55d398326f99059fF775485246999027B3197955` (EIP-55 کانونیک؛ `PancakeSwap`)
 #![forbid(unsafe_code)]
 
+pub mod base_treasury;
 pub mod ccxt_core;
 
 use sha2::{Digest, Sha256};

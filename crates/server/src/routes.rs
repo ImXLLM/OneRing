@@ -28,7 +28,7 @@ use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
     accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, hermes,
-    market, nation, quant, studio, system, wallet,
+    market, nation, monopoly, quant, studio, system, wallet,
 };
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -148,6 +148,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/quant/venues", get(quant::venues))
         .route("/quant/vibe-backtest", post(quant::vibe_backtest))
         .route("/quant/strategies", get(quant::strategies))
+        // monopoly — Wave 7: ژنومِ چهارمدلی، منشورِ روزِ اول، خزانهٔ Base 8453
+        .route("/monopoly/genome-matrix", get(monopoly::genome_matrix))
+        .route("/monopoly/charter-and-base", get(monopoly::charter_and_base))
+        .route("/monopoly/simulate-split", post(monopoly::simulate_split))
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
         // ۹-مدالیتیِ صفر-هزینه + ویترین پورتفولیو (۶ درمانِ قضایی)
         .route("/studio/ux-profiles", get(studio::ux_profiles))

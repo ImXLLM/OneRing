@@ -1275,6 +1275,7 @@ dependencies = [
  "kian-ai",
  "kian-db",
  "kian-domain",
+ "kian-wallet",
  "serde",
  "serde_json",
  "sha2 0.10.9",

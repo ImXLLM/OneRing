@@ -28,6 +28,7 @@ pub mod error;
 pub mod genesis;
 pub mod legacy;
 pub mod migrate;
+pub mod monopoly;
 pub mod nation;
 pub mod outbox;
 pub mod quant;
@@ -87,6 +88,9 @@ pub use studio::StudioCreationRow;
 
 // کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
 pub use quant::QuantStrategyRow;
+
+// خزانهٔ حاکم (Wave 7) — تقسیم‌های اتمیِ روزِ اول روی Base
+pub use monopoly::SovereignTreasurySplitRow;
 
 // کیف پول M5 + درخواست‌های برداشت کریپتو (فاز ۶)
 pub use wallet_chains::{UsdtDepositRow, WalletAddressRow, WithdrawalRequestRow};

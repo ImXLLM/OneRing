@@ -20,6 +20,7 @@ pub mod economy;
 pub mod error;
 pub mod escrows;
 pub mod market;
+pub mod monopoly;
 pub mod nation;
 pub mod quant;
 pub mod security;
@@ -79,6 +80,12 @@ pub use market::{
     CreateProductRequest, EscrowDeliveryView, MaironConfirmResponse, MAX_DELIVERY_PAYLOAD_BYTES,
     MAX_PREVIEW_HTML_BYTES, MyMarketResponse, ProductListResponse, ProductRatingSummaryResponse,
     ProductReviewSubmitRequest, ProductReviewView, ProductView, PurchaseRequest, PurchaseResponse,
+};
+pub use monopoly::{
+    MonopolyAuditPoint, MonopolyCharterAndBaseResponse, MonopolyCharterStreamView,
+    MonopolyContractAuditView, MonopolyGenomeMatrixResponse, MonopolyGenomeModelView,
+    MonopolyRoutingRuleView, MonopolySimulateSplitRequest, MonopolySimulateSplitResponse,
+    MonopolySplitLegView,
 };
 pub use builder::{
     BuilderChatRequest, BuilderChatResponse, BuilderMessageView, BuilderSessionListResponse,

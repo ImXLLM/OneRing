@@ -28,6 +28,7 @@ pub mod prompt;
 pub mod security;
 pub mod shield;
 pub mod skills;
+pub mod sovereign_monopoly_engine;
 pub mod studio_design_contract;
 pub mod super_studio_engine;
 pub mod token_saver;
@@ -99,6 +100,12 @@ pub use super_studio_engine::{
 };
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};
+pub use sovereign_monopoly_engine::{
+    DistilledClonePrompt, GenomeRouterError, GenomeVerification, ProductHuntCmcLaunchKit,
+    QuadModelGenome, QuadModelGenomeRouter, QuadTaskDomain, SovereignMonopolyOrchestrator,
+    TrinityAvatar, CANONICAL_GENOME_FILES, QUAD_GENOME_FILE_COUNT, QUAD_MODEL_COUNT,
+    SOVEREIGN_MONOPOLY_SIGNATURE,
+};
 pub use token_saver::compress_tool_output_preserving_secrets;
 pub use trinity_pipeline::{
     AlphaDiscoverySlots, AlphaIgnitionPersona, AlphaIntakeOutcome, AlphaIntakeRequest,

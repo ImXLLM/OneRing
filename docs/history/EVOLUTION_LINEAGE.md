@@ -140,15 +140,31 @@
 
 ------
 
+### Wave 7 — Quad-model genome matrix, Day-1 Base treasury & final MIT cut milestones
+
+| Milestone |
+| :--- |
+| DNA #16 [`16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md`](../../KIA-BRAIN-OS/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md) created + mirrored to `crates/hermes/KIA-BRAIN-OS/` and `docs/dna/kia-brain-os/` |
+| DNA #16 injected into `"KbEntry"` as `kb:dna-16-quad-genome-base-treasury` → **331 rows**, tagged `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
+| `KIA-BRAIN-OS` is now the **16-file** creator brain (`01_DNAme.md` … `16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md`) — the 4-step wave plan is complete |
+| `OMNI-MODEL-GENOME` v4 quad-model matrix: **4 frontier models × 9 canonical DNA files = 36 verified files** (`GPT 6-Web`, `GEMINI 4 ARAGON HIGH`, `DeepSeek-3.2-WEB-Think-mode`, `Cluade-sonnet-5.5-extra` with both exact+alias identifiers) + 20-workload champion matrix; legacy v1/v2 workspaces preserved under `legacy/` |
+| Day-1 Ironclad 4-Stream Sovereign Revenue Charter ("جنگ اول به از صلح آخر"): 1000 bps charter tax, 1000..=5000 bps programmable affiliate split with unreferred direct-sale rule (2000 bps platform / 8000 bps creator), 100%-margin instant boosts, 150 bps withdrawal spread — all zero-sum-verified with the Wave-6 `Precise` engine |
+| Production Solidity on Ethereum Base (`Chain ID 8453`): `ZeroXKiaToken.sol` (fixed 1B supply, EIP-2612 `permit`, `burn`, 100/100 GoPlus/TokenSniffer clean target) + `KiaBaseEscrowTreasury.sol` (non-custodial atomic 4-stream splitter, `nonReentrant`, closed asset whitelist) |
+| EIP-681 one-tap payment URIs bound to `@8453`; XTR/µKIAN refuse on-chain settlement (fail-closed) |
+| `sovereign_treasury_splits` live on migration `0011`; `GET /monopoly/genome-matrix`, `GET /monopoly/charter-and-base`, `POST /monopoly/simulate-split` on the wire |
+| `QuadModelGenomeRouter` (36-file disk verification, alias resolution, Trinity wiring `Alpha → Logic-Prime → Mairon`) + `SovereignMonopolyOrchestrator` + `ProductHuntCmcLaunchKit` (`docs/launch/PRODUCT_HUNT_AND_CMC_KIT.md`) |
+
+------
+
 ## Growth ledger
 
-| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) | Wave 5 (Studio) | Wave 6 (Quant) |
+| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) | Wave 5 (Studio) | Wave 6 (Quant) | **Wave 7 (Final)** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** | **607** | **641** |
-| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** | **329** | **330** |
-| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 |
-| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) | **92/100 PASS** + adaptive UX gate | **92/100 PASS** + sovereign quant gate (sharpe ≥ 1.20) |
-| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** | **0** | **0** |
+| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** | **607** | **641** | **661** |
+| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** | **329** | **330** | **331** |
+| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 |
+| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) | **92/100 PASS** + adaptive UX gate | **92/100 PASS** + sovereign quant gate (sharpe ≥ 1.20) | **92/100 PASS** + Day-1 treasury zero-sum gate (4 streams, `Precise`-verified) |
+| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** | **0** | **0** | **0** |
 
 *The trial balance over 58,700,200,000 micro-KIAN has been exactly zero at every milestone — the
 ledger has never moved out of balance.*

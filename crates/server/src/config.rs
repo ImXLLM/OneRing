@@ -71,9 +71,12 @@ pub struct ServerConfig {
     /// preflight نمی‌گیرد.
     pub cors_origins: Vec<String>,
     /// حالت توسعه/دمو — اندپوینت‌های `/auth/dev-login` و `/wallet/faucet` را
-    /// فعال می‌کند. از `KIAN_DEV_MODE` (`1`/`true`/`yes`/`on`)؛ وقتی تنظیم
-    /// نشده، تنها اگر توکن بات غایب باشد فعال است (تستِ محلی بدون تلگرام).
-    /// در استقرار واقعی با توکن بات، بدون این متغیر خاموش می‌ماند (fail-closed).
+    /// فعال می‌کند. قراردادِ سختِ fail-closed (کمیسیون فارنزیک D1): تنها مقدارِ
+    /// صریحِ `KIAN_DEV_MODE=1`/`true`/`yes` (بی‌توجه به بزرگی حروف) آن را روشن
+    /// می‌کند؛ تنظیم‌نشده یا هر مقدارِ دیگر (`0`، `false`، `no`، `on`، رشتهٔ
+    /// خالی) یعنی خاموش — حتی اگر توکن بات هم غایب باشد. غیاب توکن بات
+    /// هرگز dev_mode را روشن نمی‌کند؛ تست‌ها صراحتاً `config.dev_mode = true`
+    /// می‌گذارند ([`ServerConfig::base`] پایهٔ تست است، نه تولید).
     pub dev_mode: bool,
 }
 
@@ -108,7 +111,10 @@ impl ServerConfig {
             backup_dir: "/tmp/kian-test-backups".into(),
             keep_backups: 1,
             cors_origins: Vec::new(),
-            // پایهٔ تست — بدون توکن بات، حالت dev فعال است (اندپوینت‌های دمو)
+            // پایهٔ تست — اندپوینت‌های دمو روشن تا چرخهٔ سازنده→خرید بدون تلگرام
+            // باز شود. تولید هرگز از اینجا عبور نمی‌کند: `from_env` اکیداً
+            // fail-closed است (تنها `KIAN_DEV_MODE=1|true|yes` روشن می‌کند) و
+            // تست‌های دمو هم این فیلد را صراحتاً ست می‌کنند.
             dev_mode: true,
         }
     }
@@ -138,11 +144,10 @@ impl ServerConfig {
     pub fn from_env() -> Self {
         let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
         let bot_token = env("KIAN_BOT_TOKEN");
-        // حالت dev: پرچم صریح `KIAN_DEV_MODE`، یا غیاب توکن بات (تست محلی).
-        let dev_mode = std::env::var("KIAN_DEV_MODE").map_or(
-            bot_token.is_none(),
-            |v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
-        );
+        // D1 (کمیسیون فارنزیک #27): حالت dev اکیداً fail-closed — غیاب پرچم
+        // هرگز روشنش نمی‌کند، حتی بدون توکن بات (رفتار قدیمیِ «غیاب توکن بات
+        // یعنی dev روشن» حذف شد؛ درِ پشتی fail-open بسته شد).
+        let dev_mode = dev_mode_from_env(std::env::var("KIAN_DEV_MODE").ok());
         Self {
             admin_key: env("KIAN_ADMIN_KEY"),
             bot_token,
@@ -201,6 +206,19 @@ impl ServerConfig {
     }
 }
 
+/// D1 — هستهٔ خالصِ fail-closed حالت dev: تنها `1`/`true`/`yes`
+/// (بی‌توجه به بزرگی حروف، با trim) روشن می‌کند؛ `None` (تنظیم‌نشده) و
+/// هر مقدار دیگری — حتی بدون توکن بات — یعنی خاموش. تابع خالص تا تستِ
+/// بدون رقابتِ env ممکن باشد (env فرایند-گسترده است و تست‌های موازی مزاحم می‌شوند).
+fn dev_mode_from_env(raw: Option<String>) -> bool {
+    raw.is_some_and(|v| {
+        matches!(
+            v.trim().to_ascii_lowercase().as_str(),
+            "1" | "true" | "yes"
+        )
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,9 +238,9 @@ mod tests {
         assert!(cfg.keep_backups > 0);
     }
 
-    /// حالت dev: پرچم صریح یا غیاب توکن بات — مبنای اندپوینت‌های دمو.
+    /// حالت dev — پرچم صریح بر هر چیز غالب است؛ تست‌ها فیلد را صراحتاً ست می‌کنند.
     #[test]
-    fn dev_mode_follows_flag_or_missing_bot_token() {
+    fn dev_mode_is_explicit_field_on_test_base() {
         // پرچم صریح بر باتِ حاضر غالب است
         let mut cfg = ServerConfig::base();
         cfg.bot_token = Some("123:tok".into());
@@ -230,5 +248,30 @@ mod tests {
         assert!(!cfg.dev_mode);
         cfg.dev_mode = true;
         assert!(cfg.dev_mode);
+    }
+
+    /// D1 — کمیسیون فارنزیک #27: تنظیم‌نشدهٔ `KIAN_DEV_MODE` اکیداً fail-closed
+    /// است؛ غیاب توکن بات دیگر هرگز dev_mode را روشن نمی‌کند.
+    #[test]
+    fn dev_mode_is_strictly_fail_closed_when_unset_even_without_bot_token() {
+        // «تنظیم‌نشده» = None — با هر وضعیت توکن بات، خروجی false است
+        assert!(!dev_mode_from_env(None));
+        assert!(!dev_mode_from_env(Some(String::new())));
+        assert!(!dev_mode_from_env(Some("   ".into())));
+        // مقادیر شبیه-روشنِ ناقص هم خاموش می‌مانند (fail-closed سخت‌گیر)
+        for off in ["0", "false", "no", "off", "on", "enabled", "dev", "1,0", "yes please"] {
+            assert!(!dev_mode_from_env(Some(off.into())), "{off} must stay off");
+        }
+    }
+
+    /// D1 — تنها سه مقدار صریح روشن می‌کنند؛ هر مقدار دیگری خاموش است.
+    #[test]
+    fn dev_mode_only_explicit_truthy_values_enable_it() {
+        for on in ["1", "true", "TRUE", "True", "yes", "YES", " 1 ", "true "] {
+            assert!(dev_mode_from_env(Some(on.into())), "{on} must enable");
+        }
+        for off in ["0", "false", "no", "off", "on", "enabled", "dev", "1,0"] {
+            assert!(!dev_mode_from_env(Some(off.into())), "{off} must stay off");
+        }
     }
 }
