@@ -69,6 +69,61 @@ impl GenomeLayerId {
             Self::RoutingAndHandoffCard => "09_ROUTING_AND_HANDOFF_CARD.md",
         }
     }
+
+    /// نامِ فایلِ canonicalِ نسخهٔ v4 ماتریسِ حاکم — هم‌ارزِ هر لایه
+    /// (`01_IDENTITY_AND_PERSONA_GENOME.md` .. `09_DISTILLED_CLONE_SYSTEM_PROMPT.md`).
+    /// لودرِ دیسکی هر دو نام را می‌پذیرد (Commit #27).
+    #[must_use]
+    pub const fn canonical_v4_filename(self) -> &'static str {
+        match self {
+            Self::TopologyAndHarness => "01_IDENTITY_AND_PERSONA_GENOME.md",
+            Self::ReasoningAndLogicDna => "02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md",
+            Self::CodeAndPatchMechanics => "03_REASONING_AND_DECISION_TREE.md",
+            Self::ToolCallingAndState => "04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md",
+            Self::UiUxAestheticBias => "05_CODING_AND_ENGINEERING_DOCTRINE.md",
+            Self::GuardrailsAndFraming => "06_UI_UX_AND_ARTIFACT_CRAFT.md",
+            Self::PromptCompilerLexicon => "07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md",
+            Self::FailureModesAndPatches => "08_FAILURE_MODES_AND_BLINDSPOTS.md",
+            Self::RoutingAndHandoffCard => "09_DISTILLED_CLONE_SYSTEM_PROMPT.md",
+        }
+    }
+}
+
+/// پنج پوشهٔ canonical مدل‌هایِ حاکم — ترتیبِ ماتریس (Commit #27، ۴۵ فایل).
+pub const SOVEREIGN_MODEL_DIRS: [&str; 5] = [
+    "01-gpt-6-web",
+    "02-gemini-4-aragon-high",
+    "03-deepseek-3.2-web-think-mode",
+    "04-claude-sonnet-5.5-extra",
+    "05-glm-5.3-flash-max",
+];
+
+/// حلِ alias مدلِ حاکم — exact یا هر alias به پوشهٔ canonical.
+/// (`Cluade-sonnet-5.5-extra` و `Claude-sonnet-5.5-extra` هر دو → `04-...`؛
+/// `GLM 5.3 flash MAX` / `glm-5.3-flash-max` / `GLM-5.3-Flash-Max` → `05-...`.)
+#[must_use]
+pub fn resolve_sovereign_model_alias(id: &str) -> Option<&'static str> {
+    /// جدولِ alias — پوشهٔ canonical + همهٔ هجی‌هایِ پذیرفته‌شده.
+    const TABLE: &[(&str, &[&str])] = &[
+        ("01-gpt-6-web", &["GPT 6-Web", "gpt-6-web", "GPT-6", "gpt-6-standard-free"]),
+        ("02-gemini-4-aragon-high", &["GEMINI 4 ARAGON HIGH", "gemini-4-aragon-high", "ARAGON HIGH"]),
+        ("03-deepseek-3.2-web-think-mode", &["DeepSeek-3.2-WEB-Think-mode", "deepseek-3.2-web-think-mode", "DS-3.2-Think"]),
+        ("04-claude-sonnet-5.5-extra", &["Cluade-sonnet-5.5-extra", "Claude-sonnet-5.5-extra", "claude-sonnet-5-5", "Claude Sonnet 5.5"]),
+        ("05-glm-5.3-flash-max", &["GLM 5.3 flash MAX", "glm-5.3-flash-max", "GLM-5.3-Flash-Max", "GLM 5.3 Flash Max"]),
+    ];
+    let needle = id.trim();
+    if needle.is_empty() {
+        return None;
+    }
+    TABLE.iter().find_map(|(dir, aliases)| {
+        if dir.eq_ignore_ascii_case(needle)
+            || aliases.iter().any(|a| a.eq_ignore_ascii_case(needle))
+        {
+            Some(*dir)
+        } else {
+            None
+        }
+    })
 }
 
 // ─────────────────────────── ۲۰ تسک مهندسی ───────────────────────────
@@ -285,9 +340,28 @@ fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f3
     out
 }
 
+/// هر لایه با legacy شروع می‌شود؛ canonical v4 جایگزینِ فایلِ غایب است —
+/// لودرِ دومُدِ نام‌ها (Commit #27).
+fn resolve_layer_path(dir: &Path, layer: GenomeLayerId) -> Option<std::path::PathBuf> {
+    let legacy = dir.join(layer.filename());
+    if legacy.is_file() {
+        return Some(legacy);
+    }
+    let canonical = dir.join(layer.canonical_v4_filename());
+    if canonical.is_file() {
+        return Some(canonical);
+    }
+    None
+}
+
 /// بارگذاری ژنوم یک مدل از پوشهٔ `models/<model_id>/` روی دیسک:
-/// هر ۹ فایل `01..09` باید موجود باشند؛ frontmatter فایل ۰۱ خوانده می‌شود و
-/// کارت ۰۹ به نقشهٔ امتیاز ۲۰تسکی تبدیل می‌گردد.
+/// هر ۹ لایه باید موجود باشند — با **هر دو نام‌گذاری** (Commit #27):
+/// نامِ legacy (`01_TOPOLOGY_AND_HARNESS.md`..`09_ROUTING_AND_HANDOFF_CARD.md`)
+/// یا نامِ canonical v4 ماتریسِ حاکم
+/// (`01_IDENTITY_AND_PERSONA_GENOME.md`..`09_DISTILLED_CLONE_SYSTEM_PROMPT.md`)
+/// — legacy اولویت دارد و canonical جایگزینِ فایلِ غایب می‌شود.
+/// frontmatter فایل ۰۱ خوانده می‌شود و کارت ۰۹ به نقشهٔ امتیاز ۲۰تسکی
+/// تبدیل می‌گردد.
 ///
 /// # Errors
 /// `UnreadableDirectory`/`MissingLayer`/`MissingFrontmatter`.
@@ -302,13 +376,12 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
 
     let mut first_frontmatter: Option<BTreeMap<String, String>> = None;
     for layer in GenomeLayerId::ALL {
-        let path = dir.join(layer.filename());
-        if !path.is_file() {
+        let Some(path) = resolve_layer_path(dir, layer) else {
             return Err(GenomeError::MissingLayer {
                 path: dir.display().to_string(),
                 layer: layer.filename(),
             });
-        }
+        };
         if first_frontmatter.is_none() {
             let text = std::fs::read_to_string(&path).map_err(|_| GenomeError::UnreadableDirectory {
                 path: dir.display().to_string(),
@@ -321,7 +394,13 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
         }
     }
 
-    let routing_text = std::fs::read_to_string(dir.join(GenomeLayerId::RoutingAndHandoffCard.filename()))
+    let routing_path = resolve_layer_path(dir, GenomeLayerId::RoutingAndHandoffCard).ok_or_else(|| {
+        GenomeError::MissingLayer {
+            path: dir.display().to_string(),
+            layer: GenomeLayerId::RoutingAndHandoffCard.filename(),
+        }
+    })?;
+    let routing_text = std::fs::read_to_string(routing_path)
         .map_err(|_| GenomeError::UnreadableDirectory { path: dir.display().to_string() })?;
     let routing_fm = parse_frontmatter(&routing_text);
     let calibration = routing_fm
@@ -464,6 +543,108 @@ pub fn builtin_ecosystem_profiles() -> Vec<ModelGenomeProfile> {
         ));
     }
     out
+}
+
+// ── رجیستریِ پنتامدلیِ حاکم (Commit #27) ─────────────────────────────────
+
+/// امتیازهای اسکورکارد مدلِ #03 — `DeepSeek-3.2-WEB-Think-mode` (برآوردِ کیفی
+/// از کارت ۰۹؛ quantitative math و proof در سقف، UI/وب در کف).
+const DEEPSEEK_32_THINK_SCORES: [f32; 20] = [
+    0.80, 0.72, 0.68, 0.58, 0.50, 0.78, 0.93, 0.75, 0.72, 0.80, 0.62, 0.66, 0.88, 0.88, 0.86,
+    0.60, 0.66, 0.52, 0.58, 0.52,
+];
+
+/// امتیازهای اسکورکارد مدلِ #04 — `Cluade-sonnet-5.5-extra` (کپیِ کارت ۰۰
+/// مونت‌شده؛ surgical refactor، JSON extraction و agentic tooling در سقف).
+const CLAUDE_SONNET_55_EXTRA_SCORES: [f32; 20] = [
+    0.85, 0.70, 0.80, 0.75, 0.65, 0.82, 0.70, 0.55, 0.75, 0.75, 0.65, 0.85, 0.88, 0.82, 0.85,
+    0.75, 0.65, 0.40, 0.40, 0.65,
+];
+
+/// امتیازهای اسکورکارد مدلِ #05 — `GLM 5.3 flash MAX` (کپیِ کارت ۰۹ِ canonical
+/// به ترتیبِ استانداردِ ۲۰تسک؛ flash agentic routing در سقف، 1M repo
+/// archaeology در کف).
+const GLM_53_FLASH_MAX_SCORES: [f32; 20] = [
+    0.90, 0.88, 0.88, 0.85, 0.75, 0.88, 0.62, 0.55, 0.70, 0.85, 0.45, 0.93, 0.90, 0.83, 0.85,
+    0.85, 0.82, 0.78, 0.92, 0.65,
+];
+
+/// پروفایل داخلی مدلِ حاکم #03 — `03-deepseek-3.2-web-think-mode`.
+#[must_use]
+pub fn builtin_deepseek_32_think_profile() -> ModelGenomeProfile {
+    let mut p = scores_to_profile(
+        "03-deepseek-3.2-web-think-mode",
+        "explicit_chain_of_thought_with_think_blocks",
+        true,
+        &DEEPSEEK_32_THINK_SCORES,
+        "self_reported_09_scorecard_qualitative_provisional",
+    );
+    p.display_name = "DeepSeek-3.2-WEB-Think-mode".to_string();
+    p
+}
+
+/// پروفایل داخلی مدلِ حاکم #04 — `04-claude-sonnet-5.5-extra`
+/// (هر دو شناسهٔ `Cluade-...` و `Claude-...` در alias resolver حل می‌شوند).
+#[must_use]
+pub fn builtin_claude_sonnet_55_extra_profile() -> ModelGenomeProfile {
+    let mut p = scores_to_profile(
+        "04-claude-sonnet-5.5-extra",
+        "reflective_single_pass_with_self_verification_loops",
+        false,
+        &CLAUDE_SONNET_55_EXTRA_SCORES,
+        "legacy_00_ecosystem_index_card_normalized",
+    );
+    p.display_name = "Cluade-sonnet-5.5-extra".to_string();
+    p
+}
+
+/// پروفایل داخلی مدلِ حاکم #05 — `05-glm-5.3-flash-max`
+/// (aliases: `GLM 5.3 flash MAX`, `glm-5.3-flash-max`, `GLM-5.3-Flash-Max`).
+#[must_use]
+pub fn builtin_glm_53_flash_max_profile() -> ModelGenomeProfile {
+    let mut p = scores_to_profile(
+        "05-glm-5.3-flash-max",
+        "single_pass_flash_with_parallel_tool_batching",
+        false,
+        &GLM_53_FLASH_MAX_SCORES,
+        "canonical_09_scorecard_self_reported",
+    );
+    p.display_name = "GLM 5.3 flash MAX".to_string();
+    p
+}
+
+/// هر ۵ مدلِ حاکم به ترتیبِ ماتریس — پروفایل‌هایِ builtin (بدون IO؛ برای
+/// رانتایمِ بدون دیسک). شناسه‌ها همان پوشه‌هایِ canonical‌اند تا رجیستریِ
+/// دیسکی و builtin هم‌نام باشند. رجیستریِ دیسکی: [`load_sovereign_penta_registry`].
+#[must_use]
+pub fn builtin_sovereign_penta_profiles() -> Vec<ModelGenomeProfile> {
+    let mut gpt = builtin_gpt6_standard_profile();
+    gpt.model_id = "01-gpt-6-web".to_string();
+    gpt.display_name = "GPT 6-Web".to_string();
+    let mut gemini = builtin_gemini_aragon_high_profile();
+    gemini.model_id = "02-gemini-4-aragon-high".to_string();
+    gemini.display_name = "GEMINI 4 ARAGON HIGH".to_string();
+    vec![
+        gpt,
+        gemini,
+        builtin_deepseek_32_think_profile(),
+        builtin_claude_sonnet_55_extra_profile(),
+        builtin_glm_53_flash_max_profile(),
+    ]
+}
+
+/// رجیستریِ دیسکیِ پنتامدلی — هر ۵ پوشهٔ [`SOVEREIGN_MODEL_DIRS`] زیرِ
+/// `<genome_root>/models/` بارگذاری می‌شود (لودرِ دومُدِ نام‌ها؛ ۴۵ فایل).
+///
+/// # Errors
+/// [`GenomeError`] برای پوشهٔ ناخوانا / لایهٔ غایب / frontmatterِ غایب —
+/// fail-closed؛ هیچ مدلِ ناقصی در رجیستری نمی‌نشیند.
+pub fn load_sovereign_penta_registry(genome_root: &Path) -> Result<Vec<ModelGenomeProfile>, GenomeError> {
+    let models_root = genome_root.join("models");
+    SOVEREIGN_MODEL_DIRS
+        .iter()
+        .map(|dir| load_model_genome_from_dir(&models_root.join(dir)))
+        .collect()
 }
 
 #[allow(clippy::cast_precision_loss)] // امتیازهای ثابت 0..=1 — دقت f32 کافی
@@ -781,6 +962,106 @@ mod tests {
                 "canonical genome layer file must end with .md"
             );
         }
+    }
+
+    // ── رجیستریِ پنتامدلی + لودرِ دومُدِ نام‌ها (Commit #27) ─────────────
+
+    /// نام‌هایِ canonical v4 با لایه‌ها هم‌ترازند و از `01..09` پیروی می‌کنند.
+    #[test]
+    fn canonical_v4_filenames_mirror_layers() {
+        assert_eq!(
+            GenomeLayerId::TopologyAndHarness.canonical_v4_filename(),
+            "01_IDENTITY_AND_PERSONA_GENOME.md"
+        );
+        assert_eq!(
+            GenomeLayerId::RoutingAndHandoffCard.canonical_v4_filename(),
+            "09_DISTILLED_CLONE_SYSTEM_PROMPT.md"
+        );
+        for (idx, layer) in GenomeLayerId::ALL.iter().enumerate() {
+            let name = layer.canonical_v4_filename();
+            assert_eq!(name.get(0..2).unwrap(), format!("{:02}", idx + 1));
+        }
+    }
+
+    /// alias resolver همهٔ ۵ مدل — شامل هر دو هجیِ #04 و هر سه هجیِ #05 —
+    /// را به پوشهٔ canonical حل می‌کند؛ ناشناخته `None` (هیچ حدسی زده نمی‌شود).
+    #[test]
+    fn sovereign_alias_resolver_covers_all_five_models() {
+        assert_eq!(SOVEREIGN_MODEL_DIRS.len(), 5);
+        for (id, dir) in [
+            ("GPT 6-Web", "01-gpt-6-web"),
+            ("gpt-6-web", "01-gpt-6-web"),
+            ("gpt-6-standard-free", "01-gpt-6-web"),
+            ("GEMINI 4 ARAGON HIGH", "02-gemini-4-aragon-high"),
+            ("DeepSeek-3.2-WEB-Think-mode", "03-deepseek-3.2-web-think-mode"),
+            ("Cluade-sonnet-5.5-extra", "04-claude-sonnet-5.5-extra"),
+            ("Claude-sonnet-5.5-extra", "04-claude-sonnet-5.5-extra"),
+            ("GLM 5.3 flash MAX", "05-glm-5.3-flash-max"),
+            ("glm-5.3-flash-max", "05-glm-5.3-flash-max"),
+            ("GLM-5.3-Flash-Max", "05-glm-5.3-flash-max"),
+        ] {
+            assert_eq!(resolve_sovereign_model_alias(id), Some(dir), "{id}");
+        }
+        assert_eq!(resolve_sovereign_model_alias("gpt-5-turbo"), None);
+        assert_eq!(resolve_sovereign_model_alias(""), None);
+    }
+
+    /// پروفایل‌هایِ builtin پنتامدلی — ۵ مدل با اسکورکاردِ کاملِ ۲۰تسکی.
+    #[test]
+    fn builtin_sovereign_penta_profiles_cover_five_models() {
+        let profiles = builtin_sovereign_penta_profiles();
+        assert_eq!(profiles.len(), 5);
+        for (p, dir) in profiles.iter().zip(SOVEREIGN_MODEL_DIRS) {
+            assert_eq!(p.model_id, dir);
+            assert_eq!(p.workload_scores.len(), 20, "{}", p.model_id);
+        }
+        let glm = &profiles[4];
+        assert_eq!(glm.display_name, "GLM 5.3 flash MAX");
+        assert_eq!(glm.workload_scores[&EngineeringWorkload::FastAgenticToolCalling], 0.93);
+        assert_eq!(glm.workload_scores[&EngineeringWorkload::MassiveRepoArchaeology], 0.45);
+        // روتینگِ فلشِ زیر-ثانیه: مدلِ حاکمِ #05 (0.92) اسلاتِ قدیمیِ
+        // `llama4-cerebras-fast` (0.80) و ARAGON (0.65) را کنار می‌زند.
+        let best_fast = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::SubSecondIntentRouting)
+            .expect("fast candidate");
+        assert_eq!(best_fast.model_id, "05-glm-5.3-flash-max", "0.92 beats ARAGON 0.65");
+    }
+
+    /// رجیستریِ دیسکیِ پنتامدلی — هر ۵ پوشه با نام‌هایِ canonical v4 لود
+    /// می‌شود (لودرِ دومُد؛ فایلِ legacy ناموجود است و canonical جانشین می‌شود).
+    #[test]
+    fn sovereign_penta_registry_loads_from_disk_via_canonical_names() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../OMNI-MODEL-GENOME");
+        let registry = load_sovereign_penta_registry(&root).expect("all 5 sovereign genomes must load");
+        assert_eq!(registry.len(), 5);
+        assert_eq!(
+            registry.iter().map(|p| p.model_id.as_str()).collect::<Vec<_>>(),
+            SOVEREIGN_MODEL_DIRS.to_vec()
+        );
+        for p in &registry {
+            assert!(!p.reasoning_paradigm.is_empty(), "{}", p.model_id);
+            assert!(p.display_name.len() > 3, "{}", p.model_id);
+        }
+        let glm = registry.iter().find(|p| p.model_id == "05-glm-5.3-flash-max").unwrap();
+        assert_eq!(glm.display_name, "GLM 5.3 flash MAX");
+        assert_eq!(
+            glm.reasoning_paradigm, "single_pass_flash_with_parallel_tool_batching",
+            "frontmatter of canonical 01 file must be read via dual-name loader"
+        );
+        assert_eq!(
+            glm.workload_scores[&EngineeringWorkload::FastAgenticToolCalling], 0.93,
+            "GLM 09 scorecard row 1 parsed from the canonical card"
+        );
+    }
+
+    /// لودرِ دومُد: پوشهٔ legacy (نام‌های `01_TOPOLOGY..09_ROUTING`) همچنان
+    /// بدون تغییر لود می‌شود — رفتارِ قدیمی هیچ رگرسیونی نمی‌بیند.
+    #[test]
+    fn legacy_layer_names_still_load_through_dual_name_loader() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../")
+            .join("OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high");
+        let profile = load_model_genome_from_dir(&dir).expect("legacy genome must load unchanged");
+        assert_eq!(profile.model_id, "gemini-4-aragon-high");
+        assert_eq!(profile.workload_scores.len(), 20);
     }
 
     #[test]

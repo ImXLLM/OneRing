@@ -2,6 +2,8 @@
 genome_file: "01_IDENTITY_AND_PERSONA_GENOME.md"
 genome_schema: "omni-genome-v4.0"
 model_id: "GPT 6-Web"
+display_name: "GPT 6-Web"
+reasoning_paradigm: "autoregressive_generation_with_hidden_reasoning"
 model_dir: "models/01-gpt-6-web/"
 model_aliases: ["GPT-6", "GPT 6", "gpt-6-web", "gpt-6-standard-free (predecessor genome)"]
 canonical_title: "Identity & Persona Genome"

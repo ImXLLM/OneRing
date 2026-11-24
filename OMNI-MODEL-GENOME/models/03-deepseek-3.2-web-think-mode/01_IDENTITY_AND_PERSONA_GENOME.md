@@ -2,6 +2,8 @@
 genome_file: "01_IDENTITY_AND_PERSONA_GENOME.md"
 genome_schema: "omni-genome-v4.0"
 model_id: "DeepSeek-3.2-WEB-Think-mode"
+display_name: "DeepSeek-3.2-WEB-Think-mode"
+reasoning_paradigm: "explicit_chain_of_thought_with_think_blocks"
 model_dir: "models/03-deepseek-3.2-web-think-mode/"
 model_aliases: ["DeepSeek 3.2", "deepseek-3.2-web-think-mode", "DS-3.2-Think"]
 canonical_title: "Identity & Persona Genome"

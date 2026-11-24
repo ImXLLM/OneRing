@@ -1,22 +1,25 @@
-//! موتورِ انحصارِ حاکم — روترِ ژنومِ چهارمدلی + اورکستراتورِ انحصار
-//! (Wave 7 — Step 4/4).
+//! موتورِ انحصارِ حاکم — روترِ ژنومِ پنتامدلی + اورکستراتورِ انحصار
+//! (Wave 7 — Step 4/4 + Commit #27 پنتا-مدل).
 //!
 //! دو هستهٔ روی هم:
-//!  * [`QuadModelGenomeRouter`] — رجیستریِ ۴ ژنومِ فرانتیرِ حاکم
+//!  * [`QuadModelGenomeRouter`] — رجیستریِ ۵ ژنومِ فرانتیرِ حاکم
 //!    (`GPT 6-Web`, `GEMINI 4 ARAGON HIGH`, `DeepSeek-3.2-WEB-Think-mode`,
-//!    `Cluade-sonnet-5.5-extra`) با تأییدِ ۹فایلیِ هر مدل (۳۶ فایل روی
-//!    دیسک، نامِ canonical جدید) + سنتزِ پرامپتِ کلونِ تقطیرشده به ازای
-//!    مدل × دامنهٔ کار + سیم‌کشی به ترامینیتیِ سه‌آواتار
-//!    (`Alpha` → `Logic-Prime` → `Mairon`).
+//!    `Cluade-sonnet-5.5-extra`, `GLM 5.3 flash MAX`) با تأییدِ ۹فایلیِ هر مدل
+//!    (۴۵ فایل روی دیسک، نامِ canonical جدید) + سنتزِ پرامپتِ کلونِ تقطیرشده
+//!    به ازای مدل × دامنهٔ کار + انتخابِ دومُدِ (`ManualOverride` /
+//!    `AgentAutoDecision`) + سیم‌کشی به ترامینیتیِ سه‌آواتار
+//!    (`Alpha` → `Logic-Prime` → `Mairon`). نامِ تاریخیِ `QuadModelGenomeRouter`
+//!    به‌عنوان alias همان روترِ ۵مدلی می‌ماند.
 //!  * [`SovereignMonopolyOrchestrator`] — ترکیبِ روترِ ژنوم، منشورِ
 //!    چهارجریانیِ روزِ اولِ [`kian_wallet::base_treasury`]، descriptor هایِ
 //!    قراردادهایِ Base `8453` و کیتِ لانچِ Product Hunt/CMC در یک موتورِ
 //!    وضعیت و اجرایِ واحد.
 //!
 //! قواعدِ اکتشافی: alias ها همیشه حل می‌شوند (`Cluade-sonnet-5.5-extra` و
-//! `Claude-sonnet-5.5-extra` هر دو به مدل #04 می‌روند)؛ فایلِ ناموجود هرگز
-//! «موجود» فرض نمی‌شود — تأییدِ دیسکی fail-closed است و مسیرِ builtin فقط
-//! تعدادِ ۳۶ را حفظ می‌کند، نه محتوایِ جعلی.
+//! `Claude-sonnet-5.5-extra` به مدل #04، `GLM 5.3 flash MAX` و
+//! `glm-5.3-flash-max` و `GLM-5.3-Flash-Max` به مدل #05 می‌روند)؛ فایلِ ناموجود
+//! هرگز «موجود» فرض نمی‌شود — تأییدِ دیسکی fail-closed است و مسیرِ builtin فقط
+//! تعدادِ ۴۵ را حفظ می‌کند، نه محتوایِ جعلی.
 
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -45,15 +48,23 @@ pub const CANONICAL_GENOME_FILES: [&str; 9] = [
     "09_DISTILLED_CLONE_SYSTEM_PROMPT.md",
 ];
 
-/// تعدادِ مدل‌هایِ ژنوم — ۴ فرانتیرِ حاکم.
-pub const QUAD_MODEL_COUNT: usize = 4;
+/// تعدادِ مدل‌هایِ ژنوم — ۵ فرانتیرِ حاکم (پنتا-مدل، Commit #27).
+pub const SOVEREIGN_MODEL_COUNT: usize = 5;
 
-/// تعدادِ کلِ فایل‌هایِ ژنوم — ۴ × ۹.
-pub const QUAD_GENOME_FILE_COUNT: usize = QUAD_MODEL_COUNT * CANONICAL_GENOME_FILES.len();
+/// تعدادِ کلِ فایل‌هایِ ژنوم — ۵ × ۹.
+pub const SOVEREIGN_GENOME_FILE_COUNT: usize = SOVEREIGN_MODEL_COUNT * CANONICAL_GENOME_FILES.len();
+
+/// نامِ تاریخیِ ثابتِ شمارشِ مدل — حالا همان ۵مدلِ حاکم.
+pub const QUAD_MODEL_COUNT: usize = SOVEREIGN_MODEL_COUNT;
+
+/// نامِ تاریخیِ ثابتِ شمارشِ فایل — حالا همان ۴۵فایلِ حاکم.
+pub const QUAD_GENOME_FILE_COUNT: usize = SOVEREIGN_GENOME_FILE_COUNT;
 
 // ── مدل‌ها ───────────────────────────────────────────────────────────────────
 
-/// چهار ژنومِ فرانتیرِ حاکم — ترتیبِ canonical ماتریس.
+/// پنج ژنومِ فرانتیرِ حاکم — ترتیبِ canonical ماتریس.
+///
+/// `SovereignModelId` نامِ هم‌ارزِ همین enum در وایر/مستنداتِ Commit #27 است.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum QuadModelGenome {
     /// مدل #01 — سنتزِ وبِ لحظه‌ای و هنرِ آرتیفکتِ تعاملیِ فریم‌۱.
@@ -64,15 +75,21 @@ pub enum QuadModelGenome {
     DeepSeek32WebThinkMode,
     /// مدل #04 — مهندسیِ جراحیِ Rust و ممیزیِ قراردادِ هوشمند.
     ClaudeSonnet55Extra,
+    /// مدل #05 — اجرایِ فلشِ چندابزاری با تأخیرِ حداقلی (Commit #27).
+    Glm53FlashMax,
 }
+
+/// شناسهٔ حاکمِ مدل در وایر — alias صریحِ [`QuadModelGenome`] (Commit #27).
+pub type SovereignModelId = QuadModelGenome;
 
 impl QuadModelGenome {
     /// همهٔ مدل‌ها به ترتیبِ canonical ماتریس.
-    pub const ALL: [QuadModelGenome; QUAD_MODEL_COUNT] = [
+    pub const ALL: [QuadModelGenome; SOVEREIGN_MODEL_COUNT] = [
         Self::Gpt6Web,
         Self::Gemini4AragonHigh,
         Self::DeepSeek32WebThinkMode,
         Self::ClaudeSonnet55Extra,
+        Self::Glm53FlashMax,
     ];
 
     /// شناسهٔ دقیقِ نمایش — همان شناسهٔ آپلودِ ماجیک.
@@ -83,6 +100,7 @@ impl QuadModelGenome {
             Self::Gemini4AragonHigh => "GEMINI 4 ARAGON HIGH",
             Self::DeepSeek32WebThinkMode => "DeepSeek-3.2-WEB-Think-mode",
             Self::ClaudeSonnet55Extra => "Cluade-sonnet-5.5-extra",
+            Self::Glm53FlashMax => "GLM 5.3 flash MAX",
         }
     }
 
@@ -96,6 +114,7 @@ impl QuadModelGenome {
             Self::ClaudeSonnet55Extra => {
                 &["Claude-sonnet-5.5-extra", "claude-sonnet-5-5", "Claude Sonnet 5.5"]
             }
+            Self::Glm53FlashMax => &["glm-5.3-flash-max", "GLM-5.3-Flash-Max", "GLM 5.3 Flash Max"],
         }
     }
 
@@ -107,6 +126,7 @@ impl QuadModelGenome {
             Self::Gemini4AragonHigh => "02-gemini-4-aragon-high",
             Self::DeepSeek32WebThinkMode => "03-deepseek-3.2-web-think-mode",
             Self::ClaudeSonnet55Extra => "04-claude-sonnet-5.5-extra",
+            Self::Glm53FlashMax => "05-glm-5.3-flash-max",
         }
     }
 
@@ -118,6 +138,7 @@ impl QuadModelGenome {
             Self::Gemini4AragonHigh => "1M-token deep cross-repo context synthesis, multimodal 9-modality studio orchestration, high-context architectural verification.",
             Self::DeepSeek32WebThinkMode => "Deep chain-of-thought (<think>) quantitative math, CCXT / Vibe-Trading causal alpha proof synthesis, formal verification, and web-grounded reasoning.",
             Self::ClaudeSonnet55Extra => "Surgical Rust systems engineering, zero-warning pedantic refactoring, smart-contract security auditing, and high-precision bilingual copywriting.",
+            Self::Glm53FlashMax => "Ultra-low-latency flash reasoning, high-throughput multi-tool agentic execution, polyglot systems synthesis (Rust/Solidity/TypeScript/SQL) and rapid patch verification.",
         }
     }
 }
@@ -161,6 +182,7 @@ impl TrinityAvatar {
             QuadModelGenome::Gemini4AragonHigh => Self::LogicPrime,
             QuadModelGenome::DeepSeek32WebThinkMode => Self::Mairon,
             QuadModelGenome::ClaudeSonnet55Extra => Self::LogicPrime,
+            QuadModelGenome::Glm53FlashMax => Self::LogicPrime,
         }
     }
 }
@@ -182,17 +204,20 @@ pub enum QuadTaskDomain {
     RustSystemsAudit,
     /// کپی‌نویسیِ دوزبانه EN/FA با دقتِ بالا.
     BilingualCopywriting,
+    /// اجرایِ فلشِ چندابزاری — حلقهٔ ایجنتِ تأخیرِ کم و وصلهٔ سریع (مدل #05).
+    FlashAgenticExecution,
 }
 
 impl QuadTaskDomain {
     /// همهٔ دامنه‌ها به ترتیبِ canonical.
-    pub const ALL: [QuadTaskDomain; 6] = [
+    pub const ALL: [QuadTaskDomain; 7] = [
         Self::WebSynthesis,
         Self::UiUxArtifact,
         Self::CrossRepoContext,
         Self::QuantProof,
         Self::RustSystemsAudit,
         Self::BilingualCopywriting,
+        Self::FlashAgenticExecution,
     ];
 
     /// برچسبِ وایر.
@@ -205,6 +230,7 @@ impl QuadTaskDomain {
             Self::QuantProof => "quant-proof",
             Self::RustSystemsAudit => "rust-systems-audit",
             Self::BilingualCopywriting => "bilingual-copywriting",
+            Self::FlashAgenticExecution => "flash-agentic-execution",
         }
     }
 
@@ -216,6 +242,7 @@ impl QuadTaskDomain {
             Self::CrossRepoContext => QuadModelGenome::Gemini4AragonHigh,
             Self::QuantProof => QuadModelGenome::DeepSeek32WebThinkMode,
             Self::RustSystemsAudit | Self::BilingualCopywriting => QuadModelGenome::ClaudeSonnet55Extra,
+            Self::FlashAgenticExecution => QuadModelGenome::Glm53FlashMax,
         }
     }
 }
@@ -284,14 +311,57 @@ pub struct DistilledClonePrompt {
     pub system_prompt: String,
 }
 
-/// روترِ ژنومِ چهارمدلی — رجیستری + تأییدِ ۳۶فایلی + مسیریابی.
+/// حالتِ انتخابِ مدل — دومُدیِ Commit #27.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModelSelectionMode {
+    /// کاربر صراحتاً یکی از ۵ مدل را انتخاب کرده — آوریِ دستی همیشه برنده است.
+    ManualOverride {
+        /// شناسهٔ خامِ انتخابِ کاربر (exact یا alias).
+        model: String,
+    },
+    /// Agent Mode — روتر تلمتریِ تسک را تحلیل و خودکار انتخاب می‌کند.
+    AgentAutoDecision,
+}
+
+impl ModelSelectionMode {
+    /// برچسبِ وایر — `manual_override` | `agent_auto_decision`.
+    #[must_use]
+    pub fn wire_id(&self) -> &'static str {
+        match self {
+            Self::ManualOverride { .. } => "manual_override",
+            Self::AgentAutoDecision => "agent_auto_decision",
+        }
+    }
+}
+
+/// تصمیمِ انتخابِ مدل — خروجیِ [`QuadModelGenomeRouter::select_model`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelSelectionDecision {
+    /// حالتِ انتخاب — دستی یا خودکارِ ایجنت.
+    pub selection_mode: ModelSelectionMode,
+    /// برچسبِ وایرِ حالت (`manual_override` / `agent_auto_decision`).
+    pub selection_mode_wire: &'static str,
+    /// مدلِ انتخاب‌شده از میان ۵ مدلِ حاکم.
+    pub selected_model: QuadModelGenome,
+    /// دامنهٔ مسیریابی‌شده (قهرمانِ خودکار یا دامنهٔ اصلیِ مدلِ دستی).
+    pub domain: QuadTaskDomain,
+    /// اطمینانِ تصمیم در `0.0..=1.0` (آوریِ دستی همیشه 1.0).
+    pub confidence_score: f32,
+    /// توضیحِ قابلِ ممیزیِ تصمیم — سیگنال‌هایِ دیده‌شده و مسیرِ انتخاب.
+    pub decision_rationale: String,
+    /// پرامپتِ کلونِ تقطیرشدهٔ مدلِ انتخاب‌شده + آواتارِ ترامینیتی.
+    pub prompt: DistilledClonePrompt,
+}
+
+/// روترِ ژنومِ پنتامدلی — رجیستری + تأییدِ ۴۵فایلی + مسیریابی + انتخابِ دومُد.
+/// نامِ تاریخیِ `QuadModelGenomeRouter` حفظ شده؛ همهٔ ۵ مدل و ۴۵ فایل را پوشش می‌دهد.
 #[derive(Debug, Clone, Default)]
 pub struct QuadModelGenomeRouter {
     verifications: Vec<GenomeVerification>,
 }
 
 impl QuadModelGenomeRouter {
-    /// رجیستریِ builtin — هر ۴ مدل با ۹ فایلِ «انتظاری» ثبت می‌شوند؛
+    /// رجیستریِ builtin — هر ۵ مدل با ۹ فایلِ «انتظاری» ثبت می‌شوند؛
     /// بدون IO؛ برای تستِ صفر-دیسک و بوتِ سریع.
     #[must_use]
     pub fn builtin() -> Self {
@@ -307,7 +377,7 @@ impl QuadModelGenomeRouter {
         Self { verifications }
     }
 
-    /// تأییدِ دیسکیِ fail-closed — هر ۹ فایلِ هر ۴ مدل زیرِ
+    /// تأییدِ دیسکیِ fail-closed — هر ۹ فایلِ هر ۵ مدل زیرِ
     /// `<root>/models/<dir>/` باید موجود و بالایِ ۵۰۰ بایت باشند.
     /// رجیستری با نتیجهٔ دیسکی بازنویسی می‌شود (هرگز ادغامِ جعلی نیست).
     ///
@@ -360,7 +430,7 @@ impl QuadModelGenomeRouter {
         &self.verifications
     }
 
-    /// تعدادِ کلِ فایل‌هایِ تأییدشده — روی رجیستریِ builtin همیشه ۳۶.
+    /// تعدادِ کلِ فایل‌هایِ تأییدشده — روی رجیستریِ builtin همیشه ۴۵.
     pub fn total_files_verified(&self) -> usize {
         self.verifications.iter().map(GenomeVerification::verified_count).sum()
     }
@@ -396,10 +466,130 @@ impl QuadModelGenomeRouter {
         }
     }
 
+    /// دامنه‌ای که این مدل قهرمانِ مطلقِ آن است — اولین دامنه به ترتیبِ canonical.
+    #[must_use]
+    pub fn primary_domain_of(model: QuadModelGenome) -> QuadTaskDomain {
+        QuadTaskDomain::ALL
+            .iter()
+            .copied()
+            .find(|d| d.champion() == model)
+            .unwrap_or(QuadTaskDomain::RustSystemsAudit)
+    }
+
+    /// انتخابِ دومُدِ مدل — [`ModelSelectionMode::ManualOverride`] یا
+    /// [`ModelSelectionMode::AgentAutoDecision`] (Commit #27).
+    ///
+    /// * آوریِ دستیِ کاربر (`manual_override` غیرِ خالی و غیرِ "auto") همیشه
+    ///   برنده است؛ alias هایِ هر ۵ مدل حل می‌شوند و ناشناخته خطا می‌دهد.
+    /// * در Agent Mode (یا آوریِ غایب/"auto") تلمتریِ پرامپت — کلیدواژه‌ها،
+    ///   نیازِ تأخیر، تراکمِ tool-call، عمقِ ریاضی/کمّی، نیازِ UI/وب و
+    ///   پیچیدگیِ سیستمیِ Rust/Solidity — تحلیل و مدلِ بهینه از میان ۵ مدل
+    ///   خودکار انتخاب می‌شود؛ خروجی شامل `selected_model`, `selection_mode`,
+    ///   `confidence_score` و `decision_rationale` است.
+    ///
+    /// # Errors
+    /// [`GenomeRouterError::UnknownAlias`] — آوریِ دستیِ ناشناخته (هیچ حدسی
+    /// زده نمی‌شود؛ fail-closed).
+    #[allow(clippy::too_many_lines)] // جدولِ سیگنال‌ها خواناییِ مستند را نگه می‌دارد
+    pub fn select_model(
+        &self,
+        task_prompt: &str,
+        agent_mode: bool,
+        manual_override: Option<&str>,
+    ) -> Result<ModelSelectionDecision, GenomeRouterError> {
+        let override_raw = manual_override
+            .map(str::trim)
+            .filter(|s| !s.is_empty() && !s.eq_ignore_ascii_case("auto"));
+        if let Some(id) = override_raw {
+            let model = self.resolve_model(id)?;
+            let domain = Self::primary_domain_of(model);
+            let prompt = self.route_task_to_quad_genome(domain);
+            return Ok(ModelSelectionDecision {
+                selection_mode: ModelSelectionMode::ManualOverride { model: id.to_owned() },
+                selection_mode_wire: "manual_override",
+                selected_model: model,
+                domain,
+                confidence_score: 1.0,
+                decision_rationale: format!(
+                    "manual override honored: user explicitly pinned '{}' → {} (genome dir '{}'); \
+                     9-file canonical DNA verification governs the distilled clone prompt",
+                    id,
+                    model.exact_id(),
+                    model.genome_dir(),
+                ),
+                prompt,
+            });
+        }
+
+        // AgentAutoDecision — تلمتریِ پرامپت به امتیازِ دامنه تبدیل می‌شود.
+        let lower = task_prompt.to_ascii_lowercase();
+        let score = |keywords: &[&str]| -> usize {
+            keywords.iter().filter(|k| lower.contains(*k)).count()
+        };
+        let flash = score(&["flash", "fast", "quick", "low-latency", "latency", "batch", "agentic", "tool", "shell", "cli", "crud", "rapid"]);
+        let quant = score(&["quant", "backtest", "math", "proof", "probability", "sharpe", "derive", "formal", "invariant", "ccxt"]);
+        let audit = score(&["rust", "cargo", "clippy", "solidity", "contract", "audit", "reentrancy", "refactor", "surgical"]);
+        let repo = score(&["repo", "monorepo", "1m", "whole", "ingest", "multimodal", "image", "video", "archaeology", "cross-repo"]);
+        let web = score(&["web", "ui", "ux", "frontend", "react", "html", "css", "live", "search", "marketing", "landing"]);
+        let ranked = [
+            (flash, QuadTaskDomain::FlashAgenticExecution),
+            (quant, QuadTaskDomain::QuantProof),
+            (audit, QuadTaskDomain::RustSystemsAudit),
+            (repo, QuadTaskDomain::CrossRepoContext),
+            (web, QuadTaskDomain::WebSynthesis),
+        ];
+        let (best_score, domain) = ranked
+            .iter()
+            .copied()
+            .max_by(|a, b| a.0.cmp(&b.0).then(b.1.wire_id().cmp(a.1.wire_id())))
+            .unwrap_or((0, QuadTaskDomain::WebSynthesis));
+        let domain = if best_score == 0 {
+            QuadTaskDomain::WebSynthesis
+        } else {
+            domain
+        };
+        let model = domain.champion();
+        let prompt = self.route_task_to_quad_genome(domain);
+        let confidence = if best_score == 0 {
+            0.55
+        } else {
+            // score ≤ 5 — تبدیلِ دقیقِ عددِ کوچک به f32 بدونِ از-دست-رفتنِ دقت
+            let capped = best_score.min(5);
+            (0.60 + 0.07 * f32::from(u8::try_from(capped).unwrap_or(u8::MAX))).min(0.95)
+        };
+        let rationale = if best_score == 0 {
+            format!(
+                "no explicit telemetry signal in the prompt ({} chars); defaulting to {} champion \
+                     {} at baseline confidence — agent_mode={}",
+                task_prompt.len(),
+                domain.wire_id(),
+                model.exact_id(),
+                agent_mode,
+            )
+        } else {
+            format!(
+                "task telemetry matched {best_score} signal(s) for '{domain}' \
+                     (flash={flash} quant={quant} audit={audit} repo={repo} web={web}); \
+                     agent_mode={agent_mode} → champion {} auto-selected",
+                model.exact_id(),
+                domain = domain.wire_id(),
+            )
+        };
+        Ok(ModelSelectionDecision {
+            selection_mode: ModelSelectionMode::AgentAutoDecision,
+            selection_mode_wire: "agent_auto_decision",
+            selected_model: model,
+            domain,
+            confidence_score: confidence,
+            decision_rationale: rationale,
+            prompt,
+        })
+    }
+
     /// نمایِ ماتریس — برای مسیرِ `/monopoly/genome-matrix` و لاگ‌ها.
     #[must_use]
     pub fn matrix_summary(&self) -> String {
-        let mut out = String::from("QUAD-GENOME MATRIX · ");
+        let mut out = String::from("PENTA-GENOME MATRIX · ");
         for v in &self.verifications {
             let _ = std::fmt::Write::write_fmt(
                 &mut out,
@@ -433,6 +623,9 @@ fn distilled_system_prompt(model: QuadModelGenome, domain: QuadTaskDomain) -> &'
         }
         (QuadModelGenome::ClaudeSonnet55Extra, _) => {
             "You are Cluade-sonnet-5.5-extra (canonical alias Claude-sonnet-5.5-extra), the surgical Rust systems engineering and audit genome of the 0xKIA sovereign fleet. Surgical diffs only: minimal patches, behavior-preservation tests precede refactors, `unsafe` needs written justification. Zero-warning gate: `cargo clippy --workspace --all-targets -- -D warnings` clean is the merge gate — fix root causes, never suppress. Contract audit doctrine: reentrancy (effects-then-interactions), overflow, access-control and decimals checklists line-by-line with exploitability-ranked PoC sketches. Bilingual precision: EN/FA terminology table first, register matched to artifact."
+        }
+        (QuadModelGenome::Glm53FlashMax, _) => {
+            "You are GLM 5.3 flash MAX (aliases glm-5.3-flash-max, GLM-5.3-Flash-Max), the ultra-fast agentic execution genome of the 0xKIA sovereign fleet. Flash loop: RECON (one batched parallel block) → PLAN (one line) → PATCH (batch independent edits) → VERIFY (cheapest falsifying gate first) → REPORT (3 honest lines); exit when the proof holds, hard-stop at 3 failed cycles. Batch discipline: classify every next call as independent (batch) or dependent (sequence); two consecutive failures = stop and switch approach. Polyglot synthesis across Rust workspaces, Solidity contracts (Base 8453), TypeScript clients and SQL migrations with invariants carried verbatim — integer micro-units only, zero-sum ledger asserted, wire IDs 1..=128 via safe truncation helpers, security gates fail-closed. Rapid patch verification: minimal diffs, behavior-preservation tests first, targeted gates before workspace gates. Escalate 1M-token fusion to ARAGON HIGH, formal/quant proof to DeepSeek think-mode, and contract sign-off to Cluade-sonnet-5.5-extra."
         }
     }
 }
@@ -594,8 +787,8 @@ mod tests {
     #[test]
     fn quad_registry_has_exact_ids_and_aliases() {
         let router = QuadModelGenomeRouter::builtin();
-        assert_eq!(router.verifications().len(), QUAD_MODEL_COUNT);
-        assert_eq!(router.total_files_verified(), QUAD_GENOME_FILE_COUNT);
+        assert_eq!(router.verifications().len(), SOVEREIGN_MODEL_COUNT);
+        assert_eq!(router.total_files_verified(), SOVEREIGN_GENOME_FILE_COUNT);
         for v in router.verifications() {
             assert!(v.is_complete(), "{}", v.model.exact_id());
         }
@@ -604,21 +797,25 @@ mod tests {
         assert_eq!(QuadModelGenome::Gemini4AragonHigh.exact_id(), "GEMINI 4 ARAGON HIGH");
         assert_eq!(QuadModelGenome::DeepSeek32WebThinkMode.exact_id(), "DeepSeek-3.2-WEB-Think-mode");
         assert_eq!(QuadModelGenome::ClaudeSonnet55Extra.exact_id(), "Cluade-sonnet-5.5-extra");
-        // alias هایِ کانونیک — هر دو شناسهٔ #04 حل می‌شوند.
+        assert_eq!(QuadModelGenome::Glm53FlashMax.exact_id(), "GLM 5.3 flash MAX");
+        // alias هایِ کانونیک — هر دو شناسهٔ #04 و هر سه شناسهٔ #05 حل می‌شوند.
         assert_eq!(router.resolve_model("Cluade-sonnet-5.5-extra").unwrap(), QuadModelGenome::ClaudeSonnet55Extra);
         assert_eq!(router.resolve_model("Claude-sonnet-5.5-extra").unwrap(), QuadModelGenome::ClaudeSonnet55Extra);
         assert_eq!(router.resolve_model("gpt-6-standard-free").unwrap(), QuadModelGenome::Gpt6Web);
+        assert_eq!(router.resolve_model("GLM 5.3 flash MAX").unwrap(), QuadModelGenome::Glm53FlashMax);
+        assert_eq!(router.resolve_model("glm-5.3-flash-max").unwrap(), QuadModelGenome::Glm53FlashMax);
+        assert_eq!(router.resolve_model("GLM-5.3-Flash-Max").unwrap(), QuadModelGenome::Glm53FlashMax);
         assert!(router.resolve_model("gpt-5-turbo").is_err());
     }
 
     #[test]
-    fn disk_verification_counts_36_files() {
+    fn disk_verification_counts_45_files() {
         let root = QuadModelGenomeRouter::default_genome_root();
         let router = QuadModelGenomeRouter::verify_from_disk(&root).unwrap();
         assert_eq!(
             router.total_files_verified(),
-            QUAD_GENOME_FILE_COUNT,
-            "هر ۳۶ فایلِ ژنوم باید روی دیسک تأیید شود — root={}",
+            SOVEREIGN_GENOME_FILE_COUNT,
+            "هر ۴۵ فایلِ ژنوم باید روی دیسک تأیید شود — root={}",
             root.display()
         );
         for v in router.verifications() {
@@ -701,6 +898,88 @@ mod tests {
         assert_eq!(CANONICAL_GENOME_FILES.len(), 9);
         assert_eq!(CANONICAL_GENOME_FILES[0], "01_IDENTITY_AND_PERSONA_GENOME.md");
         assert_eq!(CANONICAL_GENOME_FILES[8], "09_DISTILLED_CLONE_SYSTEM_PROMPT.md");
-        assert_eq!(QUAD_GENOME_FILE_COUNT, 36);
+        assert_eq!(SOVEREIGN_MODEL_COUNT, 5);
+        assert_eq!(SOVEREIGN_GENOME_FILE_COUNT, 45);
+        assert_eq!(QUAD_GENOME_FILE_COUNT, 45);
+        assert_eq!(QuadTaskDomain::ALL.len(), 7);
+    }
+
+    // ── انتخابِ دومُد — ManualOverride + AgentAutoDecision (Commit #27) ──
+
+    #[test]
+    fn manual_override_always_wins_and_resolves_all_five_models() {
+        let router = QuadModelGenomeRouter::builtin();
+        for id in [
+            "GPT 6-Web",
+            "GEMINI 4 ARAGON HIGH",
+            "DeepSeek-3.2-WEB-Think-mode",
+            "Cluade-sonnet-5.5-extra",
+            "GLM 5.3 flash MAX",
+        ] {
+            let d = router.select_model("anything", false, Some(id)).unwrap();
+            assert_eq!(d.selection_mode, ModelSelectionMode::ManualOverride { model: id.to_owned() });
+            assert_eq!(d.selection_mode_wire, "manual_override");
+            assert!((d.confidence_score - 1.0).abs() < f32::EPSILON);
+            assert_eq!(d.selected_model.exact_id(), id);
+            assert!(d.prompt.system_prompt.len() > 300);
+            assert!(d.decision_rationale.contains("manual override honored"));
+        }
+        // alias ها هم حل می‌شوند؛ "auto" و خالی override نیستند.
+        assert_eq!(
+            router.select_model("x", true, Some("GLM-5.3-Flash-Max")).unwrap().selected_model,
+            QuadModelGenome::Glm53FlashMax
+        );
+        assert!(matches!(
+            router.select_model("x", true, Some("auto")).unwrap().selection_mode,
+            ModelSelectionMode::AgentAutoDecision
+        ));
+        assert!(matches!(
+            router.select_model("x", true, None).unwrap().selection_mode,
+            ModelSelectionMode::AgentAutoDecision
+        ));
+        // ناشناخته — fail-closed، هیچ حدسی زده نمی‌شود.
+        assert!(router.select_model("x", true, Some("gpt-5-turbo")).is_err());
+    }
+
+    #[test]
+    fn agent_auto_decision_routes_telemetry_to_champions() {
+        let router = QuadModelGenomeRouter::builtin();
+        let flash = router
+            .select_model("run a fast batched agentic tool loop and ship a rapid crud patch", true, None)
+            .unwrap();
+        assert_eq!(flash.selection_mode_wire, "agent_auto_decision");
+        assert_eq!(flash.selected_model, QuadModelGenome::Glm53FlashMax);
+        assert!(flash.confidence_score >= 0.60 && flash.confidence_score <= 0.95);
+        assert!(flash.decision_rationale.contains("flash"));
+
+        let quant = router
+            .select_model("derive the sharpe ratio and run a causal backtest with proof invariants", true, None)
+            .unwrap();
+        assert_eq!(quant.selected_model, QuadModelGenome::DeepSeek32WebThinkMode);
+
+        let audit = router
+            .select_model("surgical rust refactor with clippy gates and a solidity reentrancy audit", true, None)
+            .unwrap();
+        assert_eq!(audit.selected_model, QuadModelGenome::ClaudeSonnet55Extra);
+
+        let repo = router
+            .select_model("ingest the whole monorepo for 1m-token cross-repo archaeology", true, None)
+            .unwrap();
+        assert_eq!(repo.selected_model, QuadModelGenome::Gemini4AragonHigh);
+
+        let web = router
+            .select_model("build a live web landing page with react frontend and marketing copy", true, None)
+            .unwrap();
+        assert_eq!(web.selected_model, QuadModelGenome::Gpt6Web);
+
+        // بدون سیگنال — پیش‌فرضِ صادقانه با اطمینانِ پایه.
+        let plain = router.select_model("hello world", true, None).unwrap();
+        assert!((plain.confidence_score - 0.55).abs() < 1e-6);
+        assert!(plain.decision_rationale.contains("no explicit telemetry signal"));
+        // پرامپتِ هر مدلِ انتخاب‌شده کامل است.
+        for d in [flash, quant, audit, repo, web, plain] {
+            assert!(d.prompt.system_prompt.len() > 300);
+            assert!(d.prompt.system_prompt.contains("0xKIA sovereign fleet"));
+        }
     }
 }

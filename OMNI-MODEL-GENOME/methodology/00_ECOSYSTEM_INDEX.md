@@ -1,5 +1,7 @@
 # MASTER SYNTHESIS PROMPT — BUILD `00_ECOSYSTEM_INDEX.md`
 
+> **Penta-model registry (Commit #27):** the fleet is now 5 sovereign models — `models/01-gpt-6-web/`, `models/02-gemini-4-aragon-high/`, `models/03-deepseek-3.2-web-think-mode/`, `models/04-claude-sonnet-5.5-extra/` (alias `Claude-sonnet-5.5-extra`) and `models/05-glm-5.3-flash-max/` (aliases `GLM 5.3 flash MAX`, `glm-5.3-flash-max`, `GLM-5.3-Flash-Max`) — 45/45 canonical DNA files. The canonical loader (`crates/ai/src/omni_genome_router.rs`) accepts both these canonical 9-file names and the legacy layer names below.
+
 Read all `models/*/01_TOPOLOGY_AND_HARNESS.md` through `models/*/09_ROUTING_AND_HANDOFF_CARD.md` files currently present in the workspace.
 Synthesize the root `00_ECOSYSTEM_INDEX.md` file containing:
 1. **Registered Model Fleet Inventory Table:** Model ID, Reasoning Paradigm, Optimal Context Sweet Spot, Cost/Speed Tier, and Top 3 Assigned Roles.

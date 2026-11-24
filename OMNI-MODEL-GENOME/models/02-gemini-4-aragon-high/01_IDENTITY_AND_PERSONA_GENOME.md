@@ -2,6 +2,8 @@
 genome_file: "01_IDENTITY_AND_PERSONA_GENOME.md"
 genome_schema: "omni-genome-v4.0"
 model_id: "GEMINI 4 ARAGON HIGH"
+display_name: "GEMINI 4 ARAGON HIGH"
+reasoning_paradigm: "long_context_retrieval_fused_multimodal_reasoning"
 model_dir: "models/02-gemini-4-aragon-high/"
 model_aliases: ["Gemini 4 Aragon High", "gemini-4-aragon-high", "ARAGON HIGH"]
 canonical_title: "Identity & Persona Genome"

@@ -2,6 +2,8 @@
 genome_file: "01_IDENTITY_AND_PERSONA_GENOME.md"
 genome_schema: "omni-genome-v4.0"
 model_id: "Cluade-sonnet-5.5-extra"
+display_name: "Cluade-sonnet-5.5-extra"
+reasoning_paradigm: "reflective_single_pass_with_self_verification_loops"
 model_dir: "models/04-claude-sonnet-5.5-extra/"
 model_aliases: ["Claude-sonnet-5.5-extra", "claude-sonnet-5-5", "Claude Sonnet 5.5"]
 canonical_title: "Identity & Persona Genome"

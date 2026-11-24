@@ -1,7 +1,7 @@
-# 00 — MASTER MODEL COMPARISON MATRIX (Quad-Model Genome, omni-genome-v4)
+# 00 — MASTER MODEL COMPARISON MATRIX (Penta-Model Genome, omni-genome-v4)
 
-**Wave:** WAVE 7 (Step 4 of 4 — FINAL WAVE) · **Generated:** 2026-11-25 · **License:** MIT
-**Fleet size:** 4 frontier models × 9 canonical DNA files = **36 genome files** (all verified non-empty).
+**Wave:** WAVE 7 HARDENED (Commit #27 — penta-model extension) · **Generated:** 2026-11-25 · **License:** MIT
+**Fleet size:** 5 frontier models × 9 canonical DNA files = **45 genome files** (all verified non-empty).
 
 ## 1. Sovereign Fleet Inventory
 
@@ -11,16 +11,26 @@
 | 02 | **GEMINI 4 ARAGON HIGH** | `models/02-gemini-4-aragon-high/` | long_context_retrieval_fused_multimodal_reasoning | ARAGON HIGH compute tier; full-repo / full-media context fusion | 200k-1M tokens; whole-monorepo ingestion in one pass | `high_context_archival_frontier` | context_archaeologist, multimodal_orchestrator, architectural_verifier |
 | 03 | **DeepSeek-3.2-WEB-Think-mode** | `models/03-deepseek-3.2-web-think-mode/` | explicit_chain_of_thought_with_think_blocks | DeepSeek web harness, Think-mode (visible <think> reasoning channel) + web search | dense numeric/proof workloads; think budget scales with proof depth | `reasoning_density_value` | quant_proof_synthesizer, formal_verifier, numeric_auditor |
 | 04 | **Cluade-sonnet-5.5-extra** | `models/04-claude-sonnet-5.5-extra/` | reflective_single_pass_with_self_verification_loops | agentic CLI/file-system harness; tool-first, patch-minimal edits | 40-50% context; compact over long tasks preserves surgical precision | `balanced_workhorse_audit` | rust_surgeon, smart_contract_auditor, bilingual_copywriter |
+| 05 | **GLM 5.3 flash MAX** | `models/05-glm-5.3-flash-max/` | single_pass_flash_with_parallel_tool_batching | agentic CLI/file-system harness; batched tool calls, minimal round-trips | 20-40% context; flash passes stay sharpest on a pruned working set | `ultra_fast_flash_agentic` | flash_exec_runner, multi_tool_orchestrator, polyglot_synthesizer, rapid_patch_verifier |
 
-**Aliases:** `GPT 6-Web` ≡ `gpt-6-web` (supersedes legacy `gpt-6-standard-free`); `Cluade-sonnet-5.5-extra` ≡ `Claude-sonnet-5.5-extra` (both exact identifiers accepted everywhere in the fleet router).
+**Aliases:** `GPT 6-Web` ≡ `gpt-6-web` (supersedes legacy `gpt-6-standard-free`); `Cluade-sonnet-5.5-extra` ≡ `Claude-sonnet-5.5-extra` (both exact identifiers accepted everywhere in the fleet router); `GLM 5.3 flash MAX` ≡ `glm-5.3-flash-max` ≡ `GLM-5.3-Flash-Max` (all accepted).
+
+## 1.b Dual-Mode Model Selection (`ModelSelectionMode`)
+
+| Mode | Trigger | Behavior |
+|---|---|---|
+| `ManualOverride { model }` | user explicitly picks any of the 5 sovereign models | override always wins; router verifies the chosen genome (9 files) and returns its distilled clone prompt |
+| `AgentAutoDecision` | Agent Mode, or `preferred_model` omitted / `"auto"` | router analyzes prompt/task telemetry (keywords, latency requirement, tool-call density, math/quant depth, UI/web need, Rust/Solidity systems complexity) and autonomously picks the optimal model among the 5; returns `selected_model`, `selection_mode`, `confidence_score`, `decision_rationale` |
+
+Wire surface: `POST /api/v1/monopoly/route-model` executes either mode; `GET /api/v1/monopoly/genome-matrix` reports the 45/45 matrix and both selection capabilities. Flash-tier work (high-speed multi-tool agentic execution, rapid builds/patches) auto-routes to `GLM 5.3 flash MAX`; quant/backtest math to `DeepSeek-3.2-WEB-Think-mode`; Rust/Solidity audits to `Cluade-sonnet-5.5-extra`; 1M-context multimodal synthesis to `GEMINI 4 ARAGON HIGH`; live web/UI to `GPT 6-Web`.
 
 ## 2. Specialty Champion Matrix (20 workload classes)
 
 | # | Workload class | Primary champion | Verifier / reviewer | Zero-cost fallback |
 |---|---|---|---|---|
 | 1 | Real-time web-grounded synthesis | **GPT 6-Web** | DeepSeek-3.2 (web cross-check) | ARAGON (cached context) |
-| 2 | Frame-1 interactive UI artifact (390px zero-overflow) | **GPT 6-Web** | Claude-5.5 (layout audit) | — |
-| 3 | Rapid full-stack product generation | **GPT 6-Web** | Claude-5.5 (lint/tests) | — |
+| 2 | Frame-1 interactive UI artifact (390px zero-overflow) | **GPT 6-Web** | Claude-5.5 (layout audit) | GLM 5.3 flash MAX |
+| 3 | Rapid full-stack product generation | **GLM 5.3 flash MAX** (batched agentic loop) | GPT 6-Web (frame craft) | — |
 | 4 | 1M-token whole-repo archaeology | **GEMINI 4 ARAGON HIGH** | grep/tree tooling | — |
 | 5 | 9-modality studio orchestration | **GEMINI 4 ARAGON HIGH** | per-modality schema gates | — |
 | 6 | High-context architectural verification | **GEMINI 4 ARAGON HIGH** | Claude-5.5 (surgical read) | — |
@@ -30,20 +40,22 @@
 | 10 | Surgical Rust systems engineering | **Claude-sonnet-5.5-extra** | clippy -D warnings + tests | — |
 | 11 | Zero-warning pedantic refactoring | **Claude-sonnet-5.5-extra** | CI matrix | — |
 | 12 | Smart-contract security auditing | **Claude-sonnet-5.5-extra** | GoPlus/TokenSniffer checklists | — |
-| 13 | Bilingual EN/FA copywriting | **Claude-sonnet-5.5-extra** | human spot-check | — |
+| 13 | Bilingual EN/FA copywriting | **Claude-sonnet-5.5-extra** | human spot-check | GLM 5.3 flash MAX (draft speed) |
 | 14 | DB schema / WAL / ledger design | Claude-5.5 (build) | ARAGON (cross-invariant verify) | — |
 | 15 | Concurrency / Heisenbug RCA | Claude-5.5 | DeepSeek-3.2 (proof) | — |
 | 16 | Defensive security / sandbox design | Claude-5.5 | ARAGON (whole-tree attack surface) | — |
 | 17 | Marketing / launch copy (Product Hunt, CMC) | GPT 6-Web | Claude-5.5 (FA mirror) | — |
-| 18 | Multi-step shell/tool orchestration | Claude-5.5 | logs + CI | — |
+| 18 | Multi-step shell/tool orchestration | **GLM 5.3 flash MAX** (batched rounds + state ledger) | Claude-5.5 (surgical review) | logs + CI |
 | 19 | Long-horizon planning / roadmap | ARAGON HIGH | Mairon quant gate | — |
 | 20 | Trilingual DNA documentation synthesis | ARAGON HIGH | Claude-5.5 (precision pass) | — |
+| 21 | Ultra-low-latency flash builds & rapid patch verification | **GLM 5.3 flash MAX** | cheapest falsifying gate + targeted tests | — |
+| 22 | High-throughput batched recon (list/grep/read fan-out) | **GLM 5.3 flash MAX** | ARAGON HIGH (deep cross-check) | — |
 
 > Scores are qualitative role assignments from the forensic card set, not measured pass rates; replace with shared-eval pass rates (n ≥ 30 per class) when available. The same model never fills both Primary and Verifier on the same row.
 
 ## 3. Trinity Wiring (3-Avatar Sovereign Loop)
 
-`Alpha (ingest/ideate)` → `Logic-Prime (compile/verify)` → `Mairon (quant gate/judge)` — each avatar resolves to one or two genome members per task domain through `QuadModelGenomeRouter::route_task_to_quad_genome` in `crates/hermes/src/sovereign_monopoly_engine.rs`.
+`Alpha (ingest/ideate)` → `Logic-Prime (compile/verify)` → `Mairon (quant gate/judge)` — each avatar resolves to one or two genome members per task domain through the penta-model router in `crates/hermes/src/sovereign_monopoly_engine.rs` (`SovereignModelId::route_task` + dual-mode `ModelSelectionMode`), with `QuadModelGenomeRouter` retained as the type alias of the upgraded 5-model router.
 
 ## 4. Canonical File Schema (per model directory)
 

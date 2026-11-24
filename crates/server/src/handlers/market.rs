@@ -32,7 +32,7 @@ use kian_domain::{
 };
 
 use crate::error::{ApiFailure, ApiResult};
-use crate::handlers::parse_body;
+use crate::handlers::{parse_body, safe_prefixed_wire_id};
 use crate::middleware::require_session;
 use crate::state::AppState;
 use crate::views::{escrow_status_wire, escrow_view};
@@ -626,7 +626,9 @@ pub async fn release(
                 let now_dt = chrono::Utc::now();
                 let exp_dt = now_dt + chrono::Duration::hours(PURCHASE_TTL_HOURS);
                 let hitl = HitlRow {
-                    id: format!("hitl:{id}"),
+                    // D2 — شناسهٔ اسکرو تا ۱۲۸ کاراکتر است؛ «hitl:{id}» خام سقف
+                    // وایر را می‌شکند و ادمین را panic می‌کند — تبدیل امنِ قطعی:
+                    id: safe_prefixed_wire_id("hitl", &id),
                     kind: "ESCROW_RELEASE".to_owned(),
                     escrow_id: id.clone(),
                     amount: escrow.amount.as_i64(),

@@ -52,7 +52,16 @@ fn cors_for(origins: &[String]) -> CorsLayer {
     let allowed: Vec<HeaderValue> = origins.iter().filter_map(|o| o.parse().ok()).collect();
     CorsLayer::new()
         .allow_origin(allowed)
-        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        // D3 — DELETE/PUT/PATCH هم مجازند: «حذف محصول ادمین» بدون preflight
+        // مرده ماندن بود؛ مینی‌اپِ CRUD کامل اکنون از یک Allowlist واحد عبور می‌کند.
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::DELETE,
+            Method::PUT,
+            Method::PATCH,
+            Method::OPTIONS,
+        ])
         .allow_headers([
             header::AUTHORIZATION,
             header::CONTENT_TYPE,
@@ -148,8 +157,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/quant/venues", get(quant::venues))
         .route("/quant/vibe-backtest", post(quant::vibe_backtest))
         .route("/quant/strategies", get(quant::strategies))
-        // monopoly — Wave 7: ژنومِ چهارمدلی، منشورِ روزِ اول، خزانهٔ Base 8453
+        // monopoly — Wave 7: ژنومِ پنتامدلی، منشورِ روزِ اول، خزانهٔ Base 8453
         .route("/monopoly/genome-matrix", get(monopoly::genome_matrix))
+        .route("/monopoly/route-model", post(monopoly::route_model))
         .route("/monopoly/charter-and-base", get(monopoly::charter_and_base))
         .route("/monopoly/simulate-split", post(monopoly::simulate_split))
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
@@ -223,9 +233,96 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .layer(cors_for(&state.config.cors_origins))
         .layer(TraceLayer::new_for_http());
 
-    // کشف A2A — مسیر استاندارد well-known خارج از nest؛ بدون هیچ کلیدی
+    // کشف A2A — مسیر استاندارد well-known خارج از nest؛ بدون هیچ کلیدی.
+    // D4 — کارت ایجنت هم زیر نرخ‌سنج می‌رود: این مسیر روی روتر بیرونی است،
+    // پس لایهٔ نرخ‌سنج مستقیم روی زیرروترِ well-known اعمال می‌شود تا
+    // `/api/v1` دوباره‌نرخ‌سنجی نشود و blind-spot بسته بماند.
+    let well_known = Router::new()
+        .route("/.well-known/agent-card.json", get(agents::agent_card))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            rate_limit_middleware,
+        ));
     Router::new()
         .nest("/api/v1", api)
-        .route("/.well-known/agent-card.json", get(agents::agent_card))
+        .merge(well_known)
         .with_state(state)
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::body::Body;
+    use kian_db::V3Store;
+    use tower::ServiceExt;
+
+    use super::*;
+
+    async fn hardened_app(rate_limit: usize) -> Router {
+        let mut cfg = crate::config::ServerConfig::base();
+        cfg.admin_key = Some("test-admin-key-0123456789".to_owned());
+        cfg.rate_limit = rate_limit;
+        cfg.cors_origins = vec!["https://mini.0xkia.app".to_owned()];
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+        store.ensure_system_accounts().await.unwrap();
+        build_router(crate::state::AppState::new(store, cfg).shared())
+    }
+
+    /// D3 — preflight حذفِ محصول ادمین باید DELETE را تبلیغ کند.
+    #[tokio::test]
+    async fn preflight_for_admin_product_delete_advertises_delete() {
+        let app = hardened_app(10_000).await;
+        let req = axum::http::Request::builder()
+            .method("OPTIONS")
+            .uri("/api/v1/admin/products/p1")
+            .header("origin", "https://mini.0xkia.app")
+            .header("access-control-request-method", "DELETE")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200, "preflight must succeed for allowlisted origin");
+        let allow = res
+            .headers()
+            .get("access-control-allow-methods")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or_default()
+            .to_owned();
+        for method in ["DELETE", "PUT", "PATCH", "POST", "GET"] {
+            assert!(allow.contains(method), "preflight must advertise {method}, got: {allow}");
+        }
+    }
+
+    /// D3 — اوریجین ناشناخته همچنان fail-closed: بدون هدرهای CORS.
+    #[tokio::test]
+    async fn preflight_from_unknown_origin_stays_fail_closed() {
+        let app = hardened_app(10_000).await;
+        let req = axum::http::Request::builder()
+            .method("OPTIONS")
+            .uri("/api/v1/admin/products/p1")
+            .header("origin", "https://evil.example")
+            .header("access-control-request-method", "DELETE")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert!(res.headers().get("access-control-allow-origin").is_none());
+    }
+
+    /// D4 — کارت ایجنت دیگر blind-spot نیست: عبور از سقفِ نرخ روی این مسیر
+    /// باید 429 بدهد (قبل از وصله، این مسیر بدون نرخ‌سنج بود).
+    #[tokio::test]
+    async fn agent_card_is_covered_by_rate_limit_middleware() {
+        let app = hardened_app(2).await; // سقفِ ۲ درخواست در پنجره
+        let mut last = None;
+        for i in 0..4 {
+            let req = axum::http::Request::builder()
+                .method("GET")
+                .uri("/.well-known/agent-card.json")
+                .body(Body::empty())
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            last = Some((i, res.status().as_u16()));
+        }
+        let (idx, status) = last.expect("at least one probe");
+        assert_eq!(status, 429, "request #{idx} over the limit must be 429");
+    }
 }

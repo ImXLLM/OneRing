@@ -1,9 +1,12 @@
-//! قراردادهای وایرِ انحصارِ حاکم — ژنومِ چهارمدلی، منشورِ روزِ اول و خزانهٔ
-//! Base (Wave 7 — Step 4/4).
+//! قراردادهای وایرِ انحصارِ حاکم — ژنومِ پنتامدلی، منشورِ روزِ اول و خزانهٔ
+//! Base (Wave 7 — Step 4/4 + Commit #27 پنتا-مدل و انتخابِ دومُد).
 //!
-//! سه DTO روی وایر:
-//! - [`MonopolyGenomeMatrixResponse`] — ماتریسِ ۴مدل × ۹فایل با وضعیتِ
-//!   تأییدِ ۳۶فایلی و قواعدِ مسیریابی؛
+//! DTOهای روی وایر:
+//! - [`MonopolyGenomeMatrixResponse`] — ماتریسِ ۵مدل × ۹فایل با وضعیتِ
+//!   تأییدِ ۴۵فایلی، قواعدِ مسیریابی و هر دو قابلیتِ انتخابِ دومُد؛
+//! - [`MonopolyRouteModelRequest`] / [`MonopolyRouteModelResponse`] — اجرایِ
+//!   `ManualOverride` یا `AgentAutoDecision` روی ۵ مدلِ حاکم با پرامپتِ
+//!   کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی و rationale تصمیم؛
 //! - [`MonopolyCharterAndBaseResponse`] — منشورِ چهارجریانیِ روزِ اول +
 //!   پیکربندیِ Base Mainnet (`8453`) + خلاصهٔ ممیزیِ هر دو قراردادِ Solidity؛
 //! - [`MonopolySimulateSplitRequest`] / [`MonopolySimulateSplitResponse`] —
@@ -58,14 +61,59 @@ pub struct MonopolyRoutingRuleView {
 pub struct MonopolyGenomeMatrixResponse {
     /// امضایِ موتورِ انحصار.
     pub signature: String,
-    /// چهار مدل با وضعیتِ تأییدِ ۹فایلی.
+    /// پنج مدلِ حاکم با وضعیتِ تأییدِ ۹فایلی.
     pub models: Vec<MonopolyGenomeModelView>,
     /// قواعدِ مسیریابیِ دامنه → قهرمان.
     pub routing_rules: Vec<MonopolyRoutingRuleView>,
-    /// کلِ فایل‌هایِ تأییدشده (هدف: ۳۶).
+    /// کلِ فایل‌هایِ تأییدشده (هدف: ۴۵).
     pub total_files_verified: usize,
     /// هدفِ قراردادِ سخت.
     pub expected_file_count: usize,
+    /// حالت‌هایِ انتخابِ مدل روی این ماتریس — همیشه هر دو:
+    /// `manual_override` و `agent_auto_decision` (Commit #27).
+    pub selection_modes: Vec<String>,
+}
+
+// ── انتخابِ دومُدِ مدل (Commit #27) ───────────────────────────────────────
+
+/// درخواستِ `POST /api/v1/monopoly/route-model` — انتخابِ دومُد روی ۵ مدلِ حاکم.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MonopolyRouteModelRequest {
+    /// متنِ تسک — در `AgentAutoDecision` تلمتریِ آن تحلیل می‌شود.
+    pub task_prompt: String,
+    /// Agent Mode — وقتی `true` (یا آوریِ غایب/`"auto"`) انتخابِ خودکار اجرا می‌شود.
+    #[serde(default)]
+    pub agent_mode: bool,
+    /// آوریِ دستیِ کاربر — exact یا alias هر یک از ۵ مدل
+    /// (`GLM 5.3 flash MAX` | `GPT 6-Web` | …)؛ `null`/`"auto"` = خودکار.
+    pub manual_model_override: Option<String>,
+}
+
+/// پاسخِ `POST /api/v1/monopoly/route-model` — مدلِ انتخاب‌شده + اثباتِ تأیید.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MonopolyRouteModelResponse {
+    /// مدلِ انتخاب‌شده — شناسهٔ دقیق (`GLM 5.3 flash MAX`, …).
+    pub selected_model: String,
+    /// حالتِ انتخاب — `manual_override` | `agent_auto_decision`.
+    pub selection_mode: String,
+    /// اطمینانِ تصمیم در `0.0..=1.0` (آوریِ دستی همیشه 1.0).
+    pub confidence_score: f64,
+    /// توضیحِ قابلِ ممیزیِ تصمیم — سیگنال‌هایِ دیده‌شده و مسیرِ انتخاب.
+    pub decision_rationale: String,
+    /// دامنهٔ مسیریابی‌شده (`flash-agentic-execution`, …).
+    pub routed_domain: String,
+    /// آواتارِ ترامینیتیِ مقصد.
+    pub trinity_avatar: String,
+    /// پرامپتِ کلونِ تقطیرشدهٔ مدلِ انتخاب‌شده (از ژنومِ ۹فایلی).
+    pub distilled_system_prompt: String,
+    /// پوشهٔ ژنومِ مدلِ انتخاب‌شده (`models/05-glm-5.3-flash-max`, …).
+    pub genome_dir: String,
+    /// فایل‌هایِ تأییدشدهٔ مدلِ انتخاب‌شده — اثباتِ ۹فایلی.
+    pub files_verified: usize,
+    /// هدفِ قراردادِ سخت — همیشه ۹.
+    pub expected_files: usize,
 }
 
 // ── منشور + Base ─────────────────────────────────────────────────────────────

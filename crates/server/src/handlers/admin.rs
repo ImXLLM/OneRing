@@ -15,11 +15,12 @@ use std::sync::Arc;
 use kian_contracts::{
     AdminAuditEntry, AdminAuditListResponse, AdminDepositListResponse, AdminDepositView,
     AdminHitlListResponse, AdminHitlView, AdminOverviewResponse, AdminProductListResponse,
-    HitlDecisionRequest, HitlDecisionResponse, HttpFailure, Id, ProductSalesView, ProductView,
+    HitlDecisionRequest, HitlDecisionResponse, HttpFailure, ProductSalesView, ProductView,
     RevenuePoint, SellerSalesView,
 };
 
 use crate::error::{ApiFailure, ApiResult};
+use crate::handlers::safe_wire_id;
 use crate::middleware::require_admin;
 use crate::state::AppState;
 use crate::views::wire_din;
@@ -88,7 +89,7 @@ pub async fn hitl_list(
         items: rows
             .into_iter()
             .map(|r| AdminHitlView {
-                id: Id::new(r.id).expect("hitl ids are wire-safe"),
+                id: safe_wire_id(r.id, "hitl"),
                 kind: r.kind,
                 escrow_id: r.escrow_id,
                 amount: wire_din(r.amount),
@@ -127,7 +128,7 @@ pub async fn hitl_approve(
         .await
         .map_err(ApiFailure::from)?;
     Ok(Json(HitlDecisionResponse {
-        id: Id::new(decision.request.id).expect("hitl ids are wire-safe"),
+        id: safe_wire_id(decision.request.id, "hitl"),
         status: decision.request.status,
         decided_at: decision.request.decided_at.unwrap_or_default(),
         settled: decision.escrow.is_some(),
@@ -154,7 +155,7 @@ pub async fn hitl_reject(
     let note = req.note.as_deref().map(str::trim).filter(|n| !n.is_empty());
     let row = state.store.reject_hitl(&id, "admin", note).await.map_err(ApiFailure::from)?;
     Ok(Json(HitlDecisionResponse {
-        id: Id::new(row.id).expect("hitl ids are wire-safe"),
+        id: safe_wire_id(row.id, "hitl"),
         status: row.status,
         decided_at: row.decided_at.unwrap_or_default(),
         settled: false,
@@ -187,7 +188,7 @@ pub async fn audit_tail(
         items: rows
             .into_iter()
             .map(|r| AdminAuditEntry {
-                id: Id::new(r.id).expect("audit ids are wire-safe"),
+                id: safe_wire_id(r.id, "audit"),
                 actor: r.actor,
                 action: r.action,
                 target: r.target,
@@ -218,7 +219,7 @@ pub async fn deposits_list(
         items: rows
             .into_iter()
             .map(|d| AdminDepositView {
-                id: Id::new(d.id).expect("deposit ids are wire-safe"),
+                id: safe_wire_id(d.id, "deposit"),
                 user_id: d.user_id,
                 tx_hash: d.tx_hash,
                 wallet_address: d.wallet_address,

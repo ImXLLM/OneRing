@@ -16,12 +16,13 @@ use kian_agents::mcp::{tool_def, validate_args, TOOLS};
 use kian_agents::roles::{role_of, seed_agents as role_seed};
 use kian_contracts::{
     A2aInboxResponse, A2aMessageView, A2aSendRequest, AgentCardProvider, AgentCardResponse,
-    AgentCardSkill, AgentView, FleetResponse, HttpFailure, Id, McpInvokeRequest, McpInvokeResponse,
+    AgentCardSkill, AgentView, FleetResponse, HttpFailure, McpInvokeRequest, McpInvokeResponse,
     McpToolView,
 };
 use kian_db::A2aRow;
 
 use crate::error::{ApiFailure, ApiResult};
+use crate::handlers::safe_wire_id;
 use crate::middleware::require_admin;
 use crate::state::AppState;
 
@@ -147,7 +148,7 @@ pub async fn a2a_send(
     };
     state.store.insert_a2a_message(&row).await.map_err(ApiFailure::from)?;
     Ok(Json(A2aMessageView {
-        id: Id::new(row.id.clone()).expect("a2a ids are wire-safe"),
+        id: safe_wire_id(row.id.clone(), "a2a"),
         from_agent: row.from_agent,
         to_agent: row.to_agent,
         kind: row.kind,
@@ -178,7 +179,7 @@ pub async fn a2a_inbox(
         items: rows
             .into_iter()
             .map(|r| A2aMessageView {
-                id: Id::new(r.id).expect("a2a ids are wire-safe"),
+                id: safe_wire_id(r.id, "a2a"),
                 from_agent: r.from_agent,
                 to_agent: r.to_agent,
                 kind: r.kind,

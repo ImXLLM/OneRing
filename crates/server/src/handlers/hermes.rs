@@ -20,6 +20,7 @@ use kian_contracts::{
 use kian_db::SkillSeed;
 
 use crate::error::{ApiFailure, ApiResult};
+use crate::handlers::safe_wire_id;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
@@ -119,7 +120,7 @@ pub async fn run(
     }
 
     Ok(Json(HermesRunResponse {
-        run_id: Id::new(outcome.run_id).expect("engine ids are wire-safe"),
+        run_id: safe_wire_id(outcome.run_id, "hrun"),
         skill_id: outcome.skill_id,
         output: outcome.output,
         shield: ShieldView { verdict: outcome.shield_verdict.as_str().to_owned(), reason: outcome.shield_reason },
@@ -149,7 +150,7 @@ pub async fn my_runs(
         items: rows
             .into_iter()
             .map(|r| kian_contracts::HermesRunView {
-                id: Id::new(r.id.clone()).unwrap_or(Id::new("hrun:x").expect("static")),
+                id: safe_wire_id(r.id.clone(), "hrun"),
                 skill_id: r.skill_id,
                 shield: r.shield,
                 tokens: r.total_tokens,

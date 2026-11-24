@@ -84,8 +84,8 @@ pub use market::{
 pub use monopoly::{
     MonopolyAuditPoint, MonopolyCharterAndBaseResponse, MonopolyCharterStreamView,
     MonopolyContractAuditView, MonopolyGenomeMatrixResponse, MonopolyGenomeModelView,
-    MonopolyRoutingRuleView, MonopolySimulateSplitRequest, MonopolySimulateSplitResponse,
-    MonopolySplitLegView,
+    MonopolyRouteModelRequest, MonopolyRouteModelResponse, MonopolyRoutingRuleView,
+    MonopolySimulateSplitRequest, MonopolySimulateSplitResponse, MonopolySplitLegView,
 };
 pub use builder::{
     BuilderChatRequest, BuilderChatResponse, BuilderMessageView, BuilderSessionListResponse,

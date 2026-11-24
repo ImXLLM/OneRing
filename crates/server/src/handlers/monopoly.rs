@@ -1,9 +1,13 @@
-//! هندلرهای انحصارِ حاکم — ژنومِ چهارمدلی، منشورِ روزِ اول و خزانهٔ Base
-//! (Wave 7 — Step 4/4).
+//! هندلرهای انحصارِ حاکم — ژنومِ پنتامدلی، منشورِ روزِ اول و خزانهٔ Base
+//! (Wave 7 — Step 4/4 + Commit #27 پنتا-مدل و انتخابِ دومُد).
 //!
-//! سه مسیر additive:
-//! - `GET /monopoly/genome-matrix` — ماتریسِ ۴مدل × ۹فایل با تأییدِ
-//!   دیسکیِ fail-closed (۳۶ فایل) + قواعدِ مسیریابی — عمومی؛
+//! چهار مسیر additive:
+//! - `GET /monopoly/genome-matrix` — ماتریسِ ۵مدل × ۹فایل با تأییدِ
+//!   دیسکیِ fail-closed (۴۵ فایل) + قواعدِ مسیریابی + هر دو حالتِ انتخابِ
+//!   دومُد — عمومی؛
+//! - `POST /monopoly/route-model` — اجرایِ `ManualOverride` یا
+//!   `AgentAutoDecision` روی ۵ مدلِ حاکم؛ خروجی: مدلِ انتخاب‌شده،
+//!   پرامپتِ کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی و rationale تصمیم؛
 //! - `GET /monopoly/charter-and-base` — منشورِ چهارجریانیِ روزِ اول +
 //!   پیکربندیِ Base Mainnet (`8453`) + خلاصهٔ ممیزیِ `ZeroXKiaToken.sol` و
 //!   `KiaBaseEscrowTreasury.sol` — عمومی؛
@@ -21,13 +25,13 @@ use axum::Json;
 use kian_contracts::{
     MonopolyAuditPoint, MonopolyCharterAndBaseResponse, MonopolyCharterStreamView,
     MonopolyContractAuditView, MonopolyGenomeMatrixResponse, MonopolyGenomeModelView,
-    MonopolyRoutingRuleView, MonopolySimulateSplitRequest, MonopolySimulateSplitResponse,
-    MonopolySplitLegView,
+    MonopolyRouteModelRequest, MonopolyRouteModelResponse, MonopolyRoutingRuleView,
+    MonopolySimulateSplitRequest, MonopolySimulateSplitResponse, MonopolySplitLegView,
 };
 use kian_db::now_iso;
 use kian_hermes::sovereign_monopoly_engine::{
     QuadModelGenomeRouter, QuadTaskDomain, SovereignMonopolyOrchestrator, CANONICAL_GENOME_FILES,
-    QUAD_GENOME_FILE_COUNT, SOVEREIGN_MONOPOLY_SIGNATURE,
+    SOVEREIGN_GENOME_FILE_COUNT, SOVEREIGN_MONOPOLY_SIGNATURE,
 };
 use kian_wallet::base_treasury::{
     build_base_eip681_payment_uri, compute_day_one_atomic_split, compute_instant_boost_split,
@@ -66,7 +70,7 @@ fn genome_router() -> QuadModelGenomeRouter {
     QuadModelGenomeRouter::production()
 }
 
-/// `GET /monopoly/genome-matrix` — ماتریسِ ژنومِ چهارمدلی (عمومی).
+/// `GET /monopoly/genome-matrix` — ماتریسِ ژنومِ پنتامدلی (عمومی).
 ///
 /// # Errors
 /// رخ نمی‌دهد — خروجیِ قطعی از رجیستریِ تأییدشده.
@@ -108,10 +112,59 @@ pub async fn genome_matrix() -> Json<MonopolyGenomeMatrixResponse> {
     Json(MonopolyGenomeMatrixResponse {
         signature: SOVEREIGN_MONOPOLY_SIGNATURE.to_owned(),
         total_files_verified: router.total_files_verified(),
-        expected_file_count: QUAD_GENOME_FILE_COUNT,
+        expected_file_count: SOVEREIGN_GENOME_FILE_COUNT,
+        // انتخابِ دومُد — هر دو قابلیت روی این ماتریس حاضرند (Commit #27).
+        selection_modes: vec!["manual_override".to_owned(), "agent_auto_decision".to_owned()],
         models,
         routing_rules,
     })
+}
+
+/// `POST /monopoly/route-model` — انتخابِ دومُدِ مدل روی ۵ مدلِ حاکم
+/// (نشستِ شهروند).
+///
+/// `manualModelOverride` غیرِ خالی و غیرِ `"auto"` → `ManualOverride`
+/// (alias هایِ هر ۵ مدل حل می‌شوند؛ ناشناخته ۴۰۰)؛ در Agent Mode یا آوریِ
+/// غایب/`"auto"` → `AgentAutoDecision` با تحلیلِ تلمتریِ `taskPrompt`.
+/// خروجی: مدلِ انتخاب‌شده، پرامپتِ کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی
+/// و rationale تصمیم.
+///
+/// # Errors
+/// ۴۰۱ نشستِ غایب؛ ۴۰۰ آوریِ دستیِ ناشناخته.
+///
+/// # Panics
+/// تنها روی نقضِ ناورنِ داخلیِ رجیستری — مدلِ انتخاب‌شده همیشه در
+/// رجیستریِ پنتا حاضر است؛ این `expect` روی دادهٔ DB نیست و برای هر ورودیِ
+/// واقعی غیرِممکن است.
+#[allow(clippy::too_many_lines)]
+pub async fn route_model(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> ApiResult<Json<MonopolyRouteModelResponse>> {
+    require_session(&state, &headers).await?;
+    let req: MonopolyRouteModelRequest = parse_body(&body)?;
+    let router = genome_router();
+    let decision = router
+        .select_model(&req.task_prompt, req.agent_mode, req.manual_model_override.as_deref())
+        .map_err(|_| ApiFailure::from(kian_contracts::HttpFailure::invalid_request(1)))?;
+    let verification = router
+        .verifications()
+        .iter()
+        .find(|v| v.model == decision.selected_model)
+        .expect("selected model must exist in the penta registry");
+    Ok(Json(MonopolyRouteModelResponse {
+        selected_model: decision.selected_model.exact_id().to_owned(),
+        selection_mode: decision.selection_mode_wire.to_owned(),
+        confidence_score: f64::from(decision.confidence_score),
+        decision_rationale: decision.decision_rationale,
+        routed_domain: decision.domain.wire_id().to_owned(),
+        trinity_avatar: decision.prompt.trinity_avatar.wire_id().to_owned(),
+        distilled_system_prompt: decision.prompt.system_prompt,
+        genome_dir: format!("models/{}", verification.genome_dir),
+        files_verified: verification.verified_count(),
+        expected_files: CANONICAL_GENOME_FILES.len(),
+    }))
 }
 
 /// بندِ ممیزی — کلید/مقدار.
