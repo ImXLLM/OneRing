@@ -1,6 +1,6 @@
 //! gateway — استخرِ چندلِین + فال‌بک + گیت کیفیت + redaction + ثبت تلاش‌ها.
 //!
-//! معماری پورت‌شده از `brain.py` نسخهٔ ۱٫۲ هرمس (ShopifyHermes) — battle-tested:
+//! معماری پورت‌شده از `brain.py` نسخهٔ ۱٫۲ هرمس (`ShopifyHermes`) — `battle-tested`:
 //! * **استخر تخت**: هر ورودی یک ترکیب `(url, key, model)` است؛ اسلات‌های منطقی و
 //!   تامین‌کننده‌های سبک هرمس با ضرب دکارتیِ «هر مدل × هر کلید» باز می‌شوند و
 //!   سه‌تایی‌های تکراری حذف می‌شوند (حفظ ترتیب).
@@ -24,7 +24,7 @@ pub const SLOT_NAMES: [&str; 3] = ["primary", "secondary", "tertiary"];
 
 /// سقف توکن خروجی برای تولید آرتیفکت HTML کامل در سازندهٔ محصول.
 ///
-/// شواهد بنچمارک زندهٔ OpenRouter (۲۴ نوامبر ۲۰۲۶): مدل‌های reasoning-محورِ
+/// شواهد بنچمارک زندهٔ `OpenRouter` (۲۴ نوامبر ۲۰۲۶): مدل‌های reasoning-محورِ
 /// لِین رایگان، سهم `reasoning_tokens` را از همین سقف می‌خورند؛ در ۴۰۹۶ یا
 /// محتوا خالی می‌ماند (`finish_reason=length` روی فکر کردن) یا سند وسط راه
 /// بریده می‌شود. ۱۶۳۸۴ سند کامل + بلوک CAST JSON را با فاصلهٔ امن جا می‌دهد
@@ -536,7 +536,8 @@ impl AiGateway {
         for s in &self.config.slots {
             if let Some(group) = out.iter_mut().find(|g| g.name == s.name) {
                 if !group.model.split(',').any(|m| m.trim() == s.model) {
-                    group.model.push_str(&format!(",{}", s.model));
+                    group.model.push(',');
+                    group.model.push_str(&s.model);
                 }
                 group.enabled |= s.enabled();
             } else {
@@ -593,6 +594,8 @@ impl AiGateway {
     /// # Errors
     /// [`GatewayError::Disabled`] بدون لِین فعال؛ [`GatewayError::AllSlotsFailed`]
     /// وقتی هیچ لِینی پاسخ قابل‌قبول نداد.
+    // طولِ مجاز برای تابعِ ارکستراسیون لِین‌ها — خواناییِ ترتیبِ مراحل بر پراکنده‌سازی مقدم است
+    #[allow(clippy::too_many_lines)]
     pub async fn chat_with_quality(
         &self,
         messages: Vec<PacketMessage>,
@@ -635,8 +638,7 @@ impl AiGateway {
             .rev()
             .find(|m| m.role == "user")
             .or_else(|| redacted.last())
-            .map(|m| m.content.as_str())
-            .unwrap_or("");
+            .map_or("", |m| m.content.as_str());
 
         // ۳) اسکن استخر — گیت کیفیت + ذخیرهٔ کم‌ضررترین
         let mut attempts: Vec<AttemptFailure> = Vec::new();

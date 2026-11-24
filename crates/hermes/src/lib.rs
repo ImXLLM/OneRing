@@ -21,6 +21,7 @@ pub mod faq;
 pub mod identity;
 pub mod memory;
 pub mod prompt;
+pub mod security;
 pub mod shield;
 pub mod skills;
 pub mod token_saver;
@@ -46,7 +47,14 @@ pub use engine::{auto_route, identity_score, HermesEngine, HermesError, HermesEx
 pub use faq::{match_instant_faq, match_instant_faq_key, FaqTopic, FAQ_TOPICS};
 pub use identity::{classify, confidence, hash_state, UserArchetype, UserFeatures};
 pub use memory::MemoryLayer;
-pub use prompt::{apply_rtl_rule, ends_on_bare_latin, RTL_RULE_FA};
+pub use prompt::{
+    apply_rtl_rule, clip_skill_description, ends_on_bare_latin, validate_declarative_memory,
+    SkillIndexEntry, SKILLS_GUIDANCE, SKILL_PROMPT_DESC_LIMIT, ThreeLayerSystemPrompt, RTL_RULE_FA,
+};
+pub use security::{
+    contains_hidden_variation_selectors, redact_with_learned_propagation,
+    strip_shell_comments_preserving_quotes, StuckCallGate,
+};
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};
 pub use token_saver::compress_tool_output_preserving_secrets;

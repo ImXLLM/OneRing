@@ -18,9 +18,11 @@
 
 pub mod budget;
 pub mod client;
+pub mod compressor;
 pub mod gateway;
 pub mod history_repair;
 pub mod redaction;
+pub mod tool_parser;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-ai";
@@ -29,6 +31,15 @@ pub const NAME: &str = "kian-ai";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use budget::{BudgetDecision, BudgetEnvelope};
+pub use compressor::{
+    estimate_tokens, partition_for_micro_compaction, prune_old_tool_outputs,
+    should_trigger_cold_prune, CompressorMessage, ExchangeBlock, MicroCompactionPlan, PruneOutcome,
+    COLD_CACHE_MIN_RECLAIM_TOKENS, MIN_PRUNE_CHARS,
+};
+pub use tool_parser::{
+    extract_xml_tool_calls, AccumulatedToolCall, ParsedToolCall, ToolCallDelta,
+    ToolCallStreamAccumulator,
+};
 pub use history_repair::{
     is_settled_stream_arg, is_valid_studio_output, repair_unanswered_tool_calls, studio_defects,
     unanswered_tool_calls, validate_and_build_self_healing_feedback, MAX_A2UI_ATTEMPTS, RepairedMessage,

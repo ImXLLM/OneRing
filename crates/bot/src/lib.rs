@@ -21,12 +21,14 @@
 
 pub mod backlog;
 pub mod kernel_http;
+pub mod loop_guard;
 pub mod orchestrator;
 pub mod port;
 pub mod shell;
 pub mod update;
 
 pub use backlog::{drain_backlog_offset, next_offset, DrainOutcome};
+pub use loop_guard::{BotLoopGuard, LoopGuardDecision, LoopReason, MAX_CONSECUTIVE_BOT_TURNS};
 pub use orchestrator::{BotAction, BotCore, BotPolicy, LinkButton};
 pub use port::{BotEconomy, BotError, BotMe, KernelPort};
 pub use update::BotUpdate;

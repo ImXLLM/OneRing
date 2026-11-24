@@ -11,10 +11,10 @@ use std::time::Duration;
 
 use crate::gateway::{ChatPacket, CompletionOutcome, CompletionPacket, ModelClient, SlotConfig};
 
-/// سرصفحهٔ `HTTP-Referer` — شناسهٔ اپ روی روترهای attribution-محور (OpenRouter).
+/// سرصفحهٔ `HTTP-Referer` — شناسهٔ اپ روی روترهای attribution-محور (`OpenRouter`).
 pub const SITE_URL: &str = "https://kian.app";
 
-/// سرصفحهٔ `X-Title` — نام اپ روی روترهای attribution-محور (OpenRouter).
+/// سرصفحهٔ `X-Title` — نام اپ روی روترهای attribution-محور (`OpenRouter`).
 pub const SITE_TITLE: &str = "KIAN Studio";
 
 /// کلاینت HTTP تولیدی — rustls + webpki-roots، بدون openssl سیستمی.
