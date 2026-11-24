@@ -256,7 +256,7 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    /// سری رخدادها قرارداد رسمی AG-UI را رعایت می‌کند: `type` با SCREAMING_SNAKE
+    /// سری رخدادها قرارداد رسمی AG-UI را رعایت می‌کند: `type` با `SCREAMING_SNAKE`
     /// و بقیهٔ فیلدها camelCase؛ فیلد بی‌مقدار سری نمی‌شود.
     #[test]
     fn events_serialize_with_official_protocol_field_names() {

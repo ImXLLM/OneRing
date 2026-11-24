@@ -489,7 +489,7 @@ mod tests {
             mobile_zero_overflow_static: true,
         });
         assert!(a.passed());
-        assert!(a.failures().is_empty());
+        assert_eq!(a.failures(), [] as [&str; 0]);
     }
 
     #[test]

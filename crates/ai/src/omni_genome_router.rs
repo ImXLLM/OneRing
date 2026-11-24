@@ -19,6 +19,7 @@
 //! فال‌بک (رجیستری صفر-کارت) می‌افتد.
 
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -276,10 +277,10 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
     if !dir.is_dir() {
         return Err(GenomeError::UnreadableDirectory { path: dir.display().to_string() });
     }
-    let model_id = dir
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "unknown-model".to_string());
+    let model_id = dir.file_name().map_or_else(
+        || "unknown-model".to_string(),
+        |n| n.to_string_lossy().to_string(),
+    );
 
     let mut first_frontmatter: Option<BTreeMap<String, String>> = None;
     for layer in GenomeLayerId::ALL {
@@ -341,8 +342,7 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
         requires_external_state_trace: !think_mode_active,
         suppress_web_canvas_hijack: fm
             .get("suppress_web_canvas_hijack")
-            .map(|v| v == "true")
-            .unwrap_or(!think_mode_active),
+            .map_or(!think_mode_active, |v| v == "true"),
         max_simultaneous_rules_per_phase: max_rules,
         workload_scores,
         calibration_status: calibration,
@@ -465,9 +465,9 @@ pub fn compile_prompt_for_model(
     };
     out.push_str("## PHASE GATES (emit phases in order; preserve every rule verbatim)\n");
     for phase in 0..phases {
-        out.push_str(&format!("### Phase {} — Invariant Gate\n", phase + 1));
+        let _ = writeln!(out, "### Phase {} — Invariant Gate", phase + 1);
         for rule in &invariants[phase * batch..((phase + 1) * batch).min(invariants.len())] {
-            out.push_str(&format!("- {rule}\n"));
+            let _ = writeln!(out, "- {rule}");
         }
     }
     if phases == 0 {
@@ -556,7 +556,12 @@ mod tests {
         for (idx, layer) in GenomeLayerId::ALL.iter().enumerate() {
             let name = layer.filename();
             assert_eq!(name.get(0..2).unwrap(), format!("{:02}", idx + 1));
-            assert!(name.ends_with(".md"));
+            assert!(
+                std::path::Path::new(name)
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("md")),
+                "canonical genome layer file must end with .md"
+            );
         }
     }
 

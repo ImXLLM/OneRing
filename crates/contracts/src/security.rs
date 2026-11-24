@@ -422,10 +422,10 @@ mod tests {
         assert!(!verify_kian_key(Some(KEY), Some(&KEY[..15])));
 
         // کلید دمو با پیشوند صریح `dev-` — حداقل ۸ کاراکتر (تست محلی امشب)
-        const DEV: &str = "dev-admin-key"; // ۱۳ کاراکتر
-        assert!(verify_kian_key(Some(DEV), Some(DEV)));
-        assert!(!verify_kian_key(Some("dev-admin-keY"), Some(DEV))); // هم‌طول اما متفاوت
-        assert!(!verify_kian_key(Some(DEV), Some("dev-adm"))); // < ۸ کاراکتر دمو
+        let dev: &str = "dev-admin-key"; // ۱۳ کاراکتر
+        assert!(verify_kian_key(Some(dev), Some(dev)));
+        assert!(!verify_kian_key(Some("dev-admin-keY"), Some(dev))); // هم‌طول اما متفاوت
+        assert!(!verify_kian_key(Some(dev), Some("dev-adm"))); // < ۸ کاراکتر دمو
     }
 
     #[test]
@@ -579,7 +579,7 @@ mod tests {
     /// توزیع FNV — کلیدهای متفاوت روی چند shard پخش می‌شوند (نباید همه به یکی بروند).
     #[test]
     fn sharded_limiter_distributes_keys_across_shards() {
-        let lim = ShardedLimiter::new(10);
+        let _lim = ShardedLimiter::new(10);
         let mut shards_used = std::collections::HashSet::new();
         for i in 0..256usize {
             let k = format!("ip:10.0.0.{i}");
@@ -588,7 +588,8 @@ mod tests {
                 h ^= u64::from(*b);
                 h = h.wrapping_mul(0x0000_0100_0000_01b3);
             }
-            shards_used.insert((h % RATE_SHARD_COUNT as u64) as usize);
+            let shard_count = u64::try_from(RATE_SHARD_COUNT).expect("shard count fits u64");
+            shards_used.insert(usize::try_from(h % shard_count).expect("shard index fits usize"));
         }
         assert!(
             shards_used.len() >= RATE_SHARD_COUNT / 2,

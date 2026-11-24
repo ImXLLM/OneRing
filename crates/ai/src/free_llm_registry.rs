@@ -18,12 +18,13 @@
 
 use serde_json::Value;
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 use std::time::{Duration, Instant};
 
 // ───────────────────── گارد ۱: سانتی‌سایز نام ابزار OpenCode ─────────────────────
 
 /// نام‌های ابزار حاوی `terminal` (غیرحساس به بزرگی حرف) به `shell_exec`
-/// بازنویسی می‌شوند — OpenCode Free هر ابزار terminal-دار را با
+/// بازنویسی می‌شوند — `OpenCode` Free هر ابزار terminal-دار را با
 /// `429 FreeUsageLimitError` جعلی رد می‌کند. نقشهٔ بازگشت برای پاسخ برمی‌گردد:
 /// `aliased -> original`. برخورد نام‌ها با پسوند `_2`, `_3` … حل می‌شود.
 pub fn sanitize_tool_names_for_opencode(tools: &mut [Value]) -> HashMap<String, String> {
@@ -34,19 +35,17 @@ pub fn sanitize_tool_names_for_opencode(tools: &mut [Value]) -> HashMap<String, 
             .pointer("/function/name")
             .and_then(Value::as_str)
             .map(str::to_string);
-        if let Some(orig) = name_opt {
-            if orig.to_ascii_lowercase().contains("terminal") {
-                let base = "shell_exec";
-                let count = taken.entry(base.to_string()).and_modify(|c| *c += 1).or_insert(0);
-                let aliased = if *count == 0 {
-                    base.to_string()
-                } else {
-                    format!("{base}_{}", *count + 1)
-                };
-                restore_map.insert(aliased.clone(), orig);
-                if let Some(fn_obj) = tool.get_mut("function").and_then(Value::as_object_mut) {
-                    fn_obj.insert("name".to_string(), Value::String(aliased));
-                }
+        if let Some(orig) = name_opt.filter(|name| name.to_ascii_lowercase().contains("terminal")) {
+            let base = "shell_exec";
+            let count = taken.entry(base.to_string()).and_modify(|c| *c += 1).or_insert(0);
+            let aliased = if *count == 0 {
+                base.to_string()
+            } else {
+                format!("{base}_{}", *count + 1)
+            };
+            restore_map.insert(aliased.clone(), orig);
+            if let Some(fn_obj) = tool.get_mut("function").and_then(Value::as_object_mut) {
+                fn_obj.insert("name".to_string(), Value::String(aliased));
             }
         }
     }
@@ -56,9 +55,9 @@ pub fn sanitize_tool_names_for_opencode(tools: &mut [Value]) -> HashMap<String, 
 /// بازگرداندن نام ابزارها در پاسخ مدل — معکوسِ قطعی `sanitize_tool_names_for_opencode`.
 /// `None` یعنی نام دست‌نخورده است و همان را پاس می‌دهیم.
 #[must_use]
-pub fn restore_tool_names<'m>(
+pub fn restore_tool_names<'m, S: BuildHasher>(
     tool_name_in_response: &str,
-    restore_map: &'m HashMap<String, String>,
+    restore_map: &'m HashMap<String, String, S>,
 ) -> Option<&'m str> {
     restore_map.get(tool_name_in_response).map(String::as_str)
 }
@@ -104,7 +103,7 @@ pub fn sanitize_system_prompt_for_antigravity(system_prompt: &str) -> String {
 pub enum SignupTier {
     /// ناشناس کار می‌کند — بدون حساب و بدون کلید.
     Keyless,
-    /// ثبت‌نام رایگان با کلید — کارت بانکی ممنوع (حاکمیت DNAme).
+    /// ثبت‌نام رایگان با کلید — کارت بانکی ممنوع (حاکمیت `DNAme`).
     NoCardFree,
     /// نیازمند احراز هویت واقعی چین — فقط برای کامل بودن کاتالوگ.
     CnRealName,
@@ -796,7 +795,6 @@ pub const STUDIO_PUBLIC_APIS_120_COUNT: usize = 120;
 
 /// APIهای مرورگر-آماده (HTTPS+CORS) به‌صورت struct — فقط همین‌ها در `fetch()`
 /// زندهٔ استودیو مجازند.
-#[must_use]
 pub fn browser_ready_public_apis() -> impl Iterator<Item = PublicApiSpec> {
     STUDIO_PUBLIC_APIS_120
         .iter()
@@ -812,15 +810,18 @@ pub fn browser_ready_public_apis() -> impl Iterator<Item = PublicApiSpec> {
 
 // ───────────────────── میان‌افزار تاب‌آوری ─────────────────────
 
+/// نشانگرهای جای‌نگهدارِ آرگومان ابزار — کشف قطعی (langflow `WatsonX` الگو).
+const PLACEHOLDER_MARKERS: [&str; 5] =
+    ["<result-from-", "<previous-output>", "{{step_", "{{result", "<insert-"];
+
 /// کشف آرگومان ابزارِ placeholder-مانند — مدل به‌جای مقدار واقعی، علامت
-/// جای‌نگهدار نتیجهٔ ابزار دیگر را گذاشته است (`langflow` WatsonXPlaceholderMiddleware).
+/// جای‌نگهدار نتیجهٔ ابزار دیگر را گذاشته است (`langflow` `WatsonXPlaceholderMiddleware`).
 /// `Some(hint)` = hint تلاش یک‌باره برای دور بعد.
 #[must_use]
 pub fn detect_unresolved_placeholder_tool_args(tool_args_json: &str) -> Option<String> {
     let lower = tool_args_json.to_ascii_lowercase();
-    const MARKERS: [&str; 5] = ["<result-from-", "<previous-output>", "{{step_", "{{result", "<insert-"];
     let mut hit: Option<&str> = None;
-    for marker in &MARKERS {
+    for marker in &PLACEHOLDER_MARKERS {
         if lower.contains(*marker) {
             hit = Some(marker);
             break;
@@ -834,28 +835,34 @@ pub fn detect_unresolved_placeholder_tool_args(tool_args_json: &str) -> Option<S
     ))
 }
 
-/// چک فیلد refusal صریح پیش از پارس JSON Schema — الگوی `langchain` OutputFixing.
+/// آغازگرهای ردِ صریح مدل — الگوی `langchain` `OutputFixing`.
+const REFUSAL_OPENERS: [&str; 4] =
+    ["i'm sorry, but", "i am sorry, but", "i can't help with", "i cannot help with"];
+
+/// چک فیلد refusal صریح پیش از پارس JSON Schema — الگوی `langchain` `OutputFixing`.
 /// `Some(reason)` یعنی مدل رد کرده و پارس schema بی‌معنی است؛ caller باید
 /// retry prompt بسازد نه اینکه خروجی خراب را schema-pars کند.
 #[must_use]
 pub fn check_model_refusal(completion: &Value) -> Option<String> {
-    if let Some(r) = completion.get("refusal").and_then(Value::as_str) {
-        if !r.trim().is_empty() {
-            return Some(r.to_string());
-        }
+    let top_refusal = completion
+        .get("refusal")
+        .and_then(Value::as_str)
+        .filter(|r| !r.trim().is_empty());
+    if let Some(r) = top_refusal {
+        return Some(r.to_string());
     }
     if let Some(choice) = completion.pointer("/choices/0") {
-        if let Some(r) = choice.pointer("/message/refusal").and_then(Value::as_str) {
-            if !r.trim().is_empty() {
-                return Some(r.to_string());
-            }
+        let choice_refusal = choice
+            .pointer("/message/refusal")
+            .and_then(Value::as_str)
+            .filter(|r| !r.trim().is_empty());
+        if let Some(r) = choice_refusal {
+            return Some(r.to_string());
         }
         if choice.get("finish_reason").and_then(Value::as_str) == Some("refusal") {
             return Some("finish_reason=refusal".to_string());
         }
         let content = choice.pointer("/message/content").and_then(Value::as_str).unwrap_or("");
-        const REFUSAL_OPENERS: [&str; 4] =
-            ["i'm sorry, but", "i am sorry, but", "i can't help with", "i cannot help with"];
         let lower = content.trim_start().to_ascii_lowercase();
         if REFUSAL_OPENERS.iter().any(|op| lower.starts_with(op)) {
             return Some(content.chars().take(160).collect());
@@ -899,10 +906,10 @@ pub fn classify_http_failure(status: u16, body_text: &str, backoff_level: u32) -
         let secs = 2u64.saturating_mul(1u64 << exp).min(300);
         return LaneFailureAction::BackoffCooldown(Duration::from_secs(secs));
     }
-    if (400..500).contains(&status) && !matches!(status, 401 | 402 | 403 | 429) {
+    if (400..500).contains(&status) && !matches!(status, 401..=403 | 429) {
         return LaneFailureAction::AdvanceNoCooldown;
     }
-    if matches!(status, 401 | 402 | 403 | 404) {
+    if matches!(status, 401..=404) {
         return LaneFailureAction::BackoffCooldown(Duration::from_secs(120));
     }
     LaneFailureAction::TransientCooldown(Duration::from_secs(30))
@@ -973,7 +980,7 @@ mod tests {
         assert_eq!(restore_tool_names("unrelated_tool", &map), None);
         // ابزار بدون terminal دست‌نخورده می‌ماند
         let mut clean = vec![json!({"type": "function", "function": {"name": "read_file"}})];
-        assert!(sanitize_tool_names_for_opencode(&mut clean).is_empty());
+        assert!(sanitize_tool_names_for_opencode(&mut clean).is_empty(), "clean tool must not be renamed");
         assert_eq!(clean[0]["function"]["name"], "read_file");
     }
 

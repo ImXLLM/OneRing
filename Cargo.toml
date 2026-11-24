@@ -28,7 +28,8 @@ exclude = [
 edition = "2024"
 rust-version = "1.100.0"
 license = "MIT"
-authors = ["KiaAgentX"]
+# «authors» اینجا اعلان نمی‌شود — فقط کریت‌های عضو workspace آن را ارث می‌برند؛
+# vault_pro (خارج از workspace، مرجعِ خالص) مانیفست مستقل دارد.
 
 [workspace.dependencies]
 tokio = { version = "1.54", features = ["full"] }
@@ -49,7 +50,8 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "cors"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 anyhow = "1"
-http-body-util = "0.1"
+# «http-body-util» اینجا اعلان نمی‌شود — server نسخهٔ خودش را مستقل اعلام می‌کند
+# و vault_pro خارج از workspace است؛ ورودیِ بی‌مصرف هشدارِ manifest می‌داد.
 # امنیت قراردادی — مقایسهٔ زمان‌ثابت + احراز initData (M3)
 subtle = "2"
 hex = "0.4"

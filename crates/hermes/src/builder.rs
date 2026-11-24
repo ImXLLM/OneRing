@@ -887,7 +887,7 @@ mod tests {
         }];
         let t1 = synthesize_fallback_turn(&s, &h1, "سلام می‌خوام یک ابزار بفروشم", false);
         assert_eq!(t1.stage, "discovery");
-        assert!(t1.generated_html.is_empty());
+        assert_eq!(t1.generated_html, "");
         assert!(t1.used_fallback);
 
         let h2 = vec![

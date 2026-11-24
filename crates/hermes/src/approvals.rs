@@ -458,7 +458,7 @@ mod tests {
         }
     }
 
-    /// UUIDv8 ساب‌ایجنت: قطعی، شکل درست، اثر انگشت والد، و حساس به فراخوانی.
+    /// `UUIDv8` ساب‌ایجنت: قطعی، شکل درست، اثر انگشت والد، و حساس به فراخوانی.
     #[test]
     fn subagent_thread_id_is_deterministic_uuidv8_with_parent_fingerprint() {
         let parent = "11111111-2222-3333-4444-555555555555";
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(guard.evaluate("r1", 50_000, 50_000, 0), FireDecision::Fire);
     }
 
-    /// شش طبقه و سه حکم — سری‌شدن قرارداد SCREAMING_SNAKE را رعایت می‌کند.
+    /// شش طبقه و سه حکم — سری‌شدن قرارداد `SCREAMING_SNAKE` را رعایت می‌کند.
     #[test]
     fn categories_and_verdicts_serialize_stable() {
         let json = serde_json::to_string(&ApprovalCategory::MakePurchasesOrTransfers).expect("serialize");

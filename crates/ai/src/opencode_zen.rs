@@ -1,4 +1,4 @@
-//! `opencode_zen` — درگاه صفر-کارت OpenCode Zen (`crates/ai`, Wave 2 — Step 4/6).
+//! `opencode_zen` — درگاه صفر-کارت `OpenCode` Zen (`crates/ai`, Wave 2 — Step 4/6).
 //!
 //! تقطیر از `anomalyco/opencode` (`v2.4.1`, commit `18ff071`):
 //! - `packages/core/src/plugin/provider/opencode.ts` — لِین ناشناس با
@@ -13,7 +13,7 @@
 
 use std::collections::BTreeMap;
 
-/// درگاه استنتاج فعال OpenCode (پروتکل OpenAI Chat Completions).
+/// درگاه استنتاج فعال `OpenCode` (پروتکل `OpenAI` Chat Completions).
 pub const OPENCODE_OPENAI_BASE_URL: &str = "https://opencode.ai/inference/openai/v1";
 
 /// درگاه legacy Zen — فال‌بک وقتی درگاه اصلی ۴۰۴/۵۰۲ داد.
@@ -23,7 +23,7 @@ pub const OPENCODE_LEGACY_ZEN_BASE_URL: &str = "https://opencode.ai/zen/v1";
 /// توکنِ sentinel عمومی است، راز نیست و در گیت راز مجاز است.
 pub const OPENCODE_PUBLIC_API_KEY: &str = "public";
 
-/// UA مرجع که گیت OpenCode برای لِین ناشناس انتظار دارد.
+/// UA مرجع که گیت `OpenCode` برای لِین ناشناس انتظار دارد.
 pub const DEFAULT_USER_AGENT: &str = "opencode/latest/2.4.1/opencode";
 
 /// پروتکل پیام‌رسانی مدل.
@@ -142,6 +142,7 @@ pub const ACTIVE_FREE_MODELS: &[FreeModelSpec] = &[
 /// مدل‌های بازنشسته که پیش از ضربه‌زدن به درگاه باید بلاک شوند
 /// (`410 Gone` برای longcat، `400` برای glm و deepseek قدیمی،
 /// `402 Payment Required` برای sambanova پس از پایان دورهٔ رایگان).
+#[must_use]
 pub fn is_retired_model(model_id: &str) -> bool {
     let id = model_id.trim().trim_start_matches("oc/").to_ascii_lowercase();
     matches!(
@@ -163,8 +164,7 @@ pub fn resolve_active_free_model(requested_id: &str) -> &'static str {
     match requested_id.trim().trim_start_matches("oc/").to_ascii_lowercase().as_str() {
         "longcat-2.0-free" | "longcat-2.5-free" => "beam-free",
         "glm-4.7-free" | "glm-5.3-flash-free" => "big-pickle",
-        "deepseek-v4-flash-free" => "deepseek-v4.1-flash-free",
-        "kimi-k2.5-free" | "qwen3.6-plus-free" => "deepseek-v4.1-flash-free",
+        "deepseek-v4-flash-free" | "kimi-k2.5-free" | "qwen3.6-plus-free" => "deepseek-v4.1-flash-free",
         "sambanova" => "nemotron-3.5-lightning-free",
         other => ACTIVE_FREE_MODELS
             .iter()

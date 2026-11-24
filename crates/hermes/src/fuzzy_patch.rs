@@ -219,6 +219,7 @@ fn line_similarity(left: &str, right: &str) -> f32 {
 
 /// گذر ۵ ب — انکرِ بلوکی: برای الگوهای ≥۳ خط، خط اول و آخر (نرمال‌شدهٔ trim)
 /// باید عیناً برابر باشند و شباهت خطوط میانی ≥ ۰٫۵ شود.
+#[allow(clippy::cast_precision_loss)] // نسبت شباهت فازی بلوک — دقت f32 کافی است
 fn find_block_anchor_spans(haystack: &str, needle: &str) -> Vec<(usize, usize)> {
     let src_lines = split_lines_with_offsets(haystack);
     let pat: Vec<&str> = needle.trim_end_matches('\n').split('\n').collect();
@@ -275,10 +276,11 @@ pub fn miss_hint(source: &str, old_str: &str) -> Option<(usize, String)> {
             if needle_key.is_empty() {
                 continue;
             }
-            if let Some(target) = lines.get(start + offset) {
-                if key(target) == needle_key {
-                    votes += 1;
-                }
+            if lines
+                .get(start + offset)
+                .is_some_and(|target| key(target) == needle_key)
+            {
+                votes += 1;
             }
         }
         if votes > best_votes {
@@ -301,8 +303,8 @@ pub fn miss_hint(source: &str, old_str: &str) -> Option<(usize, String)> {
 
 /// اعمال پچ جراحی با آبشار ۵گذر و حفظ نشانه‌گذاری سطر فایل.
 ///
-/// ترتیب گذرها: Exact → LineEndTrimmed → BothSidesTrimmed →
-/// UnicodeNormalized → IndentationNormalized → BlockAnchor(≥۳ خط).
+/// ترتیب گذرها: `Exact` → `LineEndTrimmed` → `BothSidesTrimmed` →
+/// `UnicodeNormalized` → `IndentationNormalized` → `BlockAnchor` (≥۳ خط).
 /// اگر الگو در چند ناحیه تطبیق کند، پچ اجرا نمی‌شود (کد مبهم ممنوع).
 ///
 /// # Errors
@@ -353,18 +355,19 @@ pub fn apply_surgical_patch(source: &str, old_str: &str, new_str: &str) -> Resul
     }
 
     if spans.is_empty() {
-        let (closest_line, hint) = match miss_hint(source, old_str) {
-            Some((line, hint)) => (line, hint),
-            None => {
-                let norm_view = normalize_typographic(&view);
-                let norm_new = normalize_typographic(new_lf.trim());
-                if norm_new.chars().count() >= 20 && norm_view.contains(&norm_new) {
-                    (0, "newString is already present in the file, so this edit may already be applied.".to_string())
-                } else {
-                    (0, "no overlapping lines found".to_string())
-                }
+        let (closest_line, hint) = miss_hint(source, old_str).unwrap_or_else(|| {
+            let norm_view = normalize_typographic(&view);
+            let norm_new = normalize_typographic(new_lf.trim());
+            if norm_new.chars().count() >= 20 && norm_view.contains(&norm_new) {
+                (
+                    0,
+                    "newString is already present in the file, so this edit may already be applied."
+                        .to_string(),
+                )
+            } else {
+                (0, "no overlapping lines found".to_string())
             }
-        };
+        });
         return Err(PatchError::NotFound { closest_line, hint });
     }
     if spans.len() > 1 {
@@ -570,7 +573,7 @@ mod tests {
     fn miss_hint_reports_line_and_snippet() {
         let src = "fn a() {\n    let x = 1;\n    let y = kian_v2;\n}\n";
         let (line, hint) = miss_hint(src, "let z = missing;\nlet y = kian_v2;").expect("hint");
-        assert!(line >= 2 && line <= 4, "closest region line, got {line}");
+        assert!((2..=4).contains(&line), "closest region line, got {line}");
         assert!(hint.contains("closest"), "hint: {hint}");
         assert!(miss_hint("alpha\nbeta\ngamma", "unrelated tokens only").is_none());
     }

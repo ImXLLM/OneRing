@@ -151,13 +151,14 @@ pub fn compress_tool_output_preserving_secrets(text: &str, max_chars: usize) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fmt::Write as _;
 
     /// خروجی بیلد بزرگ را فشرده می‌کند و هیچ رازی در آن نیست.
     #[test]
     fn compresses_noisy_build_output() {
         let mut text = String::from("Compiling kian-server v2.0.0\nBuilding kernel\n");
         for i in 0..80 {
-            text.push_str(&format!("Compiling crate module_{i} v0.1.{i}\nCompiling crate module_{i} v0.1.{i}\nCompiling crate module_{i} v0.1.{i}\n"));
+            let _ = write!(text, "Compiling crate module_{i} v0.1.{i}\nCompiling crate module_{i} v0.1.{i}\nCompiling crate module_{i} v0.1.{i}\n");
             text.push_str("\n\n\n\n");
         }
         let out = compress_tool_output_preserving_secrets(&text, 12_000);
@@ -230,7 +231,7 @@ mod tests {
     fn recognizes_git_and_test_outputs() {
         let mut git = String::from("On branch main\nYour branch is up to date.\n");
         for i in 0..60 {
-            git.push_str(&format!("modified:   src/file_{i}.rs\nmodified:   src/file_{i}.rs\n"));
+            let _ = write!(git, "modified:   src/file_{i}.rs\nmodified:   src/file_{i}.rs\n");
             git.push('\n');
         }
         let out = compress_tool_output_preserving_secrets(&git, 12_000);
@@ -238,7 +239,7 @@ mod tests {
 
         let mut tests = String::new();
         for i in 0..30 {
-            tests.push_str(&format!("3{i} passed; 0 failed; 0 ignored\n3{i} passed; 0 failed; 0 ignored\n\n"));
+            let _ = write!(tests, "3{i} passed; 0 failed; 0 ignored\n3{i} passed; 0 failed; 0 ignored\n\n");
         }
         let out2 = compress_tool_output_preserving_secrets(&tests, 12_000);
         assert!(out2.chars().count() < tests.chars().count());

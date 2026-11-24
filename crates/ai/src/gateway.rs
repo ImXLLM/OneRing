@@ -1131,6 +1131,6 @@ mod tests {
             panic!("expected AllSlotsFailed");
         };
         assert_eq!(attempts.len(), 1);
-        assert!(attempts[0].detail.contains("quality gate"), "attempts: {:?}", attempts);
+        assert!(attempts[0].detail.contains("quality gate"), "attempts: {attempts:?}");
     }
 }

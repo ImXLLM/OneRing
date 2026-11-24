@@ -16,6 +16,11 @@
 //! - `agent/memory_manager.py` (`_StuckCallGate`) → [`StuckCallGate`]: مدارشکنِ
 //!   فراخوانیِ گیرکرده — پس از ۴ شکستِ پیاپی می‌بندد و هر ۶۰ ثانیه یک کاوشگر
 //!   نیمه‌باز می‌دهد؛ هرگز بک‌اندِ گیرکرده را با انبوهِ تلاش نمی‌کوبد.
+//! - `codex-rs/execpolicy` + `claude-code` sandbox → [`SandboxProfile`] +
+//!   [`SANDBOX_PROFILES`]: سه پروفایلِ مرجعِ ایزوله‌سازی — `VmSocketRestricted`
+//!   با `bubblewrap` و با فیلتر `seccomp`، و فایروالِ خروجی به سبک
+//!   `claude-code` با `iptables`/`ipset`. توصیف‌گرِ خالص برای لَگر و
+//!   نمایشِ `HITL` — اجرای واقعی در لایهٔ سیستم‌عامل است.
 //!
 //! همهٔ توابع قطعی‌اند؛ زمان به [`StuckCallGate`] از بیرون تزریق می‌شود.
 #![forbid(unsafe_code)]
@@ -328,6 +333,121 @@ impl Default for StuckCallGate {
     }
 }
 
+// ── توصیف‌گرهای جعبهٔ شنیِ سیاستِ اجرا (Wave 2 — Step 4) ────────────────────
+// قواعد پیشوندیِ [`crate::fuzzy_patch::evaluate_exec_policy`] فقط می‌گویند
+// «کدام فرمان مجاز/مشروط/ممنوع است»؛ «چطور ایزوله اجرا شود» را این سه پروفایل
+// مرجع توصیف می‌کنند — پورتِ منطقیِ `bubblewrap` (namespace)، فیلتر `seccomp`
+// و محدودسازیِ شبکهٔ `claude-code` (با `iptables`/`ipset`). این‌ها
+// **توصیف‌گرِ خالص**اند: `argv` قطعیِ اعمال برای لَگر، نمایشِ `HITL` و تست —
+// اجرای واقعی در لایهٔ سیستم‌عامل است و هیچ فرایندی از این کریت
+// `spawn` نمی‌شود.
+
+/// موتورِ اعمال‌کنندهٔ جعبهٔ شنی — سه سازوکارِ مرجعِ ایزوله‌سازی.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SandboxEngine {
+    /// `bubblewrap` (`bwrap`) — ایزوله‌سازیِ `namespace` فرایند، فایل‌سیستم و
+    /// شبکه؛ محدودسازیِ سوکت با جداسازیِ `netns`.
+    Bubblewrap,
+    /// فیلترِ `syscall` لینوکس — پروفایلِ `VmSocketRestricted` با
+    /// `SCMP_ACT_ERRNO` روی سوکتِ خارج از `AF_UNIX`.
+    Seccomp,
+    /// فایروالِ خروجی به سبک `claude-code` با `iptables` و `ipset` —
+    /// `loopback` مجاز، مقصدِ فهرست‌شده `DROP`.
+    IptablesIpset,
+}
+
+/// یک پروفایلِ جعبهٔ شنی — توصیف‌گرِ خالصِ متادیتا + رول‌ستِ `argv` قطعی.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SandboxProfile {
+    /// موتورِ اعمال‌کننده.
+    pub engine: SandboxEngine,
+    /// شناسهٔ پروفایل (`kebab-case`) — کلیدِ جست‌وجو در لَگرها و `HITL`.
+    pub profile_id: &'static str,
+    /// نامِ رسمیِ پروفایل — هر دو شکلِ محدودسازیِ سوکت، `VmSocketRestricted`.
+    pub display_name: &'static str,
+    /// دامنهٔ محدودسازی و دلیلِ وجودیِ پروفایل.
+    pub rationale: &'static str,
+    /// رول‌ستِ اعمال: هر ردیف یک `argv` قطعیِ ترتیبی (بدون اجرا از این کریت).
+    pub enforce_rules: &'static [&'static [&'static str]],
+}
+
+/// پرچم‌های پایهٔ `bwrap` برای `VmSocketRestricted` — هم در [`SANDBOX_PROFILES`]
+/// هم در [`socket_restricted_bwrap_argv`] استفاده می‌شود تا هرگز واگرا نشوند.
+const VM_SOCKET_RESTRICTED_BWRAP_FLAGS: &[&str] = &[
+    "bwrap",
+    "--unshare-all",
+    "--die-with-parent",
+    "--new-session",
+    "--ro-bind",
+    "/usr",
+    "/usr",
+    "--ro-bind",
+    "/bin",
+    "/bin",
+    "--proc",
+    "/proc",
+    "--dev",
+    "/dev",
+    "--tmpfs",
+    "/tmp",
+    "--unshare-net",
+    "--clearenv",
+    "--setenv",
+    "PATH",
+    "/usr/bin:/bin",
+];
+
+/// سه پروفایلِ مرجعِ کیان — `VmSocketRestricted` دو بار (با `bubblewrap` و با
+/// `seccomp`) و `EgressDenyList` به سبک `claude-code`. توالیِ رول‌های
+/// `iptables` مهم است: اول `ACCEPT` روی `lo`، بعد `DROP` با `match-set`.
+pub const SANDBOX_PROFILES: &[SandboxProfile] = &[
+    SandboxProfile {
+        engine: SandboxEngine::Bubblewrap,
+        profile_id: "vm-socket-restricted-bwrap",
+        display_name: "VmSocketRestricted",
+        rationale: "Vm namespace drops AF_INET/AF_INET6: socket() outside AF_UNIX fails; read-only /usr, private /tmp and /proc, cleared environment.",
+        enforce_rules: &[VM_SOCKET_RESTRICTED_BWRAP_FLAGS],
+    },
+    SandboxProfile {
+        engine: SandboxEngine::Seccomp,
+        profile_id: "vm-socket-restricted-seccomp",
+        display_name: "VmSocketRestricted",
+        rationale: "Seccomp BPF returns SCMP_ACT_ERRNO(EPERM) for socket(AF_INET)/socket(AF_INET6) and connect() to non-AF_UNIX; AF_UNIX stays reachable for the kernel broker.",
+        enforce_rules: &[
+            &["setpriv", "--no-new-privs", "--seccomp-filter", "vm_socket_restricted.bpf"],
+        ],
+    },
+    SandboxProfile {
+        engine: SandboxEngine::IptablesIpset,
+        profile_id: "egress-deny-list",
+        display_name: "EgressDenyList",
+        rationale: "claude-code-style egress guard: loopback accepted first, then destinations in the kian-egress ipset are dropped for the agent process.",
+        enforce_rules: &[
+            &["ipset", "create", "kian-egress", "hash:net", "-exist"],
+            &["iptables", "-N", "kian-egress-guard"],
+            &["iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"],
+            &["iptables", "-A", "OUTPUT", "-m", "set", "--match-set", "kian-egress", "dst", "-j", "DROP"],
+            &["iptables", "-A", "OUTPUT", "-j", "kian-egress-guard"],
+        ],
+    },
+];
+
+/// یافتنِ پروفایل با شناسه — برای لَگر، `HITL` و تست.
+#[must_use]
+pub fn sandbox_profile_by_id(profile_id: &str) -> Option<&'static SandboxProfile> {
+    SANDBOX_PROFILES.iter().find(|p| p.profile_id == profile_id)
+}
+
+/// ساختِ `argv` کاملِ اعمالِ `VmSocketRestricted` با `bwrap` روی یک فرمانِ
+/// کاربر — پرچم‌های پایه + خودِ فرمان در انتها؛ اجرا با لایهٔ سیستم‌عامل.
+#[must_use]
+pub fn socket_restricted_bwrap_argv(cmd: &[&str]) -> Vec<String> {
+    let mut out: Vec<String> =
+        VM_SOCKET_RESTRICTED_BWRAP_FLAGS.iter().map(|s| (*s).to_owned()).collect();
+    out.extend(cmd.iter().map(|s| (*s).to_owned()));
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -432,7 +552,7 @@ mod tests {
     fn clean_text_is_untouched_and_inputs_immutable() {
         let out = "plain output without secrets".to_owned();
         let original = out.clone();
-        let (s, c) = redact_with_learned_propagation(&[out.clone()], "reply mentions nothing");
+        let (s, c) = redact_with_learned_propagation(std::slice::from_ref(&out), "reply mentions nothing");
         assert_eq!(s[0], original);
         assert_eq!(c, "reply mentions nothing");
     }
@@ -480,5 +600,67 @@ mod tests {
         gate.record_failure();
         gate.record_failure();
         assert!(gate.is_tripped());
+    }
+
+    /// سه پروفایل مرجع، هر موتور دقیقاً یک‌بار؛ `seccomp` نامِ رسمی
+    /// `VmSocketRestricted` دارد و دلیلش سوکتِ خارج از `AF_UNIX` را می‌بندد.
+    #[test]
+    fn sandbox_profiles_are_canonical() {
+        assert_eq!(SANDBOX_PROFILES.len(), 3);
+        assert_eq!(
+            SANDBOX_PROFILES.iter().map(|p| p.engine).collect::<std::collections::HashSet<_>>(),
+            [
+                SandboxEngine::Bubblewrap,
+                SandboxEngine::Seccomp,
+                SandboxEngine::IptablesIpset,
+            ]
+            .into_iter()
+            .collect()
+        );
+        let seccomp = sandbox_profile_by_id("vm-socket-restricted-seccomp").expect("profile");
+        assert_eq!(seccomp.display_name, "VmSocketRestricted");
+        assert!(seccomp.rationale.contains("AF_INET"), "{}", seccomp.rationale);
+        assert!(seccomp.rationale.contains("SCMP_ACT_ERRNO"), "{}", seccomp.rationale);
+        assert!(sandbox_profile_by_id("nope").is_none());
+        let bwrap = sandbox_profile_by_id("vm-socket-restricted-bwrap").expect("profile");
+        assert_eq!(bwrap.display_name, "VmSocketRestricted");
+        assert_eq!(bwrap.enforce_rules[0][0], "bwrap");
+    }
+
+    /// رول‌ستِ `claude-code`: `ipset` می‌سازد، اول `ACCEPT` روی `lo`، بعد
+    /// `DROP` با `match-set` — ترتیبِ حیاتیِ فایروال.
+    #[test]
+    fn claude_code_egress_accepts_loopback_before_drop() {
+        let p = sandbox_profile_by_id("egress-deny-list").expect("profile");
+        let accept_idx = p
+            .enforce_rules
+            .iter()
+            .position(|r| r.contains(&"ACCEPT"))
+            .expect("loopback accept rule");
+        let drop_idx = p
+            .enforce_rules
+            .iter()
+            .position(|r| r.contains(&"DROP"))
+            .expect("drop rule");
+        assert!(accept_idx < drop_idx, "ACCEPT روی lo باید قبل از DROP بیاید");
+        assert!(p.enforce_rules[0].contains(&"ipset"));
+        assert!(p.enforce_rules[drop_idx].contains(&"iptables"));
+        assert!(p.enforce_rules[drop_idx].contains(&"kian-egress"));
+    }
+
+    /// کمکیِ `bwrap`: با `bwrap` شروع، `--unshare-net` دارد و فرمانِ کاربر
+    /// عیناً در انتها می‌نشیند — پرچم‌ها همیشه با پروفایلِ مرجع یکی‌اند.
+    #[test]
+    fn socket_restricted_bwrap_argv_wraps_command() {
+        let argv = socket_restricted_bwrap_argv(&["ls", "-la"]);
+        assert_eq!(argv.first().map(String::as_str), Some("bwrap"));
+        assert!(argv.iter().any(|a| a == "--unshare-net"), "محدودسازی سوکت");
+        let tail = &argv[argv.len() - 2..];
+        assert_eq!(tail, ["ls".to_owned(), "-la".to_owned()]);
+        // بدون فرمان — فقط پرچم‌های پایه
+        assert_eq!(
+            socket_restricted_bwrap_argv(&[]),
+            VM_SOCKET_RESTRICTED_BWRAP_FLAGS.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>()
+        );
     }
 }

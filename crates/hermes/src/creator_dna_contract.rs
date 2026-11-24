@@ -8,6 +8,7 @@
 //! - اولویت محصول #1 همیشه UX (تیر ۱) است — اسپلش مرده و stub خاموش ممنوع.
 //! - شخصیت استدلال «Aragon-4 Principal Architect» — صفر تملق، ادعای بی‌اثبات
 //!   (تست پاس‌شده بدون اجرا) تخلف است.
+//!
 //! لایهٔ audit قطعی و بدون شبکه است؛ فقط الگوها را روی متن می‌سنجد.
 
 use serde::Serialize;
@@ -64,7 +65,11 @@ impl CreatorDnaContract {
     }
 
     /// امضای قرارداد را می‌سنجد — نسخهٔ دست‌کاری‌شده را رد می‌کند.
-    #[must_use]
+    ///
+    /// # Errors
+    /// `SovereigntyMustStayTrue` اگر حاکمیت خاموش شده باشد،
+    /// `UxPriorityMustBeTierOne` اگر تیر UX غیر از ۱ باشد و
+    /// `PersonaIsImmutable` اگر شخصیت استدلال جایگزین شده باشد.
     pub fn validate(self) -> Result<(), DnaContractError> {
         if !self.zero_card_zero_kyc_sovereignty {
             return Err(DnaContractError::SovereigntyMustStayTrue);

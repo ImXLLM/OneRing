@@ -393,8 +393,9 @@ mod tests {
         }
         // هیچ بازهٔ جمع‌شدنی شامل user نیست و هیچ ردیفی دوبار شمرده نمی‌شود
         for block in &plan.foldable {
-            for i in block.start..block.end {
-                assert_ne!(msgs[i].role, "user", "user هرگز در بلوک جمع‌بندی نیست");
+            for (offset, msg) in msgs[block.start..block.end].iter().enumerate() {
+                let i = block.start + offset;
+                assert_ne!(msg.role, "user", "user هرگز در بلوک جمع‌بندی نیست");
                 assert!(!plan.keep.contains(&i), "ردیفِ جمع‌شدنی نباید در keep هم باشد: {i}");
             }
         }
@@ -424,7 +425,7 @@ mod tests {
             CompressorMessage::tool("tool", "shell", "خروجی"),
         ];
         let plan = partition_for_micro_compaction(&msgs, 1);
-        assert!(plan.foldable.is_empty(), "بلوکِ بدون بستنِ user جمع نمی‌شود");
+        assert_eq!(plan.foldable, [] as [_; 0], "بلوکِ بدون بستنِ user جمع نمی‌شود");
         assert!(plan.keep.contains(&2) && plan.keep.contains(&3));
     }
 
@@ -436,12 +437,12 @@ mod tests {
             CompressorMessage::new("assistant", "پاسخ"),
         ];
         let plan = partition_for_micro_compaction(&msgs, 1);
-        assert!(plan.foldable.is_empty());
+        assert_eq!(plan.foldable, [] as [_; 0]);
         let out = prune_old_tool_outputs(&msgs, 1);
         assert_eq!(out.pruned_count, 0);
     }
 
-    /// سری‌سازی گردش‌به‌گردان CompressorMessage — پایدار برای تاریخچهٔ ذخیره‌شده.
+    /// سری‌سازی گردش‌به‌گردان `CompressorMessage` — پایدار برای تاریخچهٔ ذخیره‌شده.
     #[test]
     fn compressor_message_roundtrips_serde() {
         let msg = CompressorMessage::tool("tool", "shell", "{\"exit_code\": 0}");

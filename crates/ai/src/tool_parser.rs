@@ -451,7 +451,7 @@ mod tests {
         assert_eq!(calls[0].id, "42");
     }
 
-    /// extract_xml_tool_calls — بلوک استاندارد هرمس با آرگومان‌های واقعی.
+    /// `extract_xml_tool_calls` — بلوک استاندارد هرمس با آرگومان‌های واقعی.
     #[test]
     fn extracts_standard_hermes_tool_call() {
         let text = "در حال جست‌وجو…\n<tool_call>\n{\"name\": \"web_search\", \"arguments\": {\"query\": \"KIAN\", \"limit\": 3}}\n</tool_call>\nخلاصهٔ نتیجه‌ها بعداً.";
@@ -497,14 +497,14 @@ mod tests {
     #[test]
     fn broken_blocks_are_skipped_stream_safe() {
         let bad = "<tool_call>{\"name\": } NOPE</tool_call>";
-        assert!(extract_xml_tool_calls(bad).is_empty());
+        assert_eq!(extract_xml_tool_calls(bad), [] as [_; 0]);
         let mixed = format!("{bad}<tool_call>{{\"name\": \"ok\", \"arguments\": {{}}}}</tool_call>");
         let calls = extract_xml_tool_calls(&mixed);
         assert_eq!(calls.len(), 1, "بلوکِ خراب بلوکِ سالم را نمی‌کشد");
         assert_eq!(calls[0].name, "ok");
         // استریم ناتمام: تگ بسته نیست → هیچ
-        assert!(extract_xml_tool_calls("<tool_call>{\"name\": \"x\"").is_empty());
+        assert_eq!(extract_xml_tool_calls("{\"name\": \"x\""), [] as [_; 0]);
         // متن معمولی بدون تگ → هیچ
-        assert!(extract_xml_tool_calls("پاسخ سادهٔ بدون ابزار").is_empty());
+        assert_eq!(extract_xml_tool_calls("پاسخ سادهٔ بدون ابزار"), [] as [_; 0]);
     }
 }
