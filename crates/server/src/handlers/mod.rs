@@ -9,6 +9,7 @@ pub mod accounts;
 pub mod admin;
 pub mod agents;
 pub mod ai;
+pub mod arda;
 pub mod auth;
 pub mod bot;
 pub mod builder;

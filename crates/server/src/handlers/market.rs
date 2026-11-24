@@ -15,13 +15,15 @@ use kian_contracts::{
     CreateProductRequest, DeliverEscrowRequest, DisputeEscrowRequest, EscrowActionResponse,
     EscrowDeliveryView, MaironConfirmResponse, MAX_DELIVERY_PAYLOAD_BYTES, MAX_PREVIEW_HTML_BYTES,
     MyMarketResponse, ProductListResponse, ProductRatingSummaryResponse, ProductReviewSubmitRequest,
-    ProductReviewView, ProductView, PurchaseRequest, PurchaseResponse, ReleaseEscrowRequest,
+    ProductReviewView, ProductSkillPackageResponse, ProductView, PurchaseRequest, PurchaseResponse,
+    ReleaseEscrowRequest,
 };
 use kian_db::{now_iso, ApplyOptions, CommandOutcome, HitlRow, ProductFilter, ProductReviewRow, ProductRow};
 use kian_domain::{
     confirm_and_publish_product, evaluate_user_product_with_mairon, submit_product_review,
     summarize_product_ratings, MaironReaPillarScores, ProductReview,
 };
+use kian_domain::mairon_rea_and_reviews::MARKETPLACE_APPROVAL_THRESHOLD;
 use kian_domain::{
     create_escrow_with_affiliate, deliver_escrow, dispute_escrow, fund_escrow, release_escrow,
     AccountKind, CreateEscrowCommand, DeliverEscrowCommand, DisputeEscrowCommand, DomainError,
@@ -124,6 +126,7 @@ pub async fn create_product(
         .into());
     }
 
+    let preview_html = req.preview_html.unwrap_or_default();
     let row = ProductRow {
         id: format!("prod:{}", uuid::Uuid::now_v7()),
         seller_id: user.account_id.clone(),
@@ -131,7 +134,7 @@ pub async fn create_product(
         description: req.description,
         category: req.category,
         price_din: req.price_din.get(),
-        preview_html: req.preview_html.unwrap_or_default(),
+        preview_html: preview_html.clone(),
         affiliate_bps,
         artifact_kind,
         delivery_payload: req.delivery_payload,
@@ -139,6 +142,12 @@ pub async fn create_product(
         created_at: now_iso(),
         mairon_score: 0,
         mairon_badge: String::new(),
+        origin_locale: kian_hermes::arda_fishkal_engine::detect_origin_locale(&preview_html)
+            .to_owned(),
+        supported_locales_json: "[\"en\",\"fa\",\"ar\"]".to_owned(),
+        skill_md: None,
+        skill_json: None,
+        arda_last_localized_at: None,
     };
     state.store.insert_product(&row).await.map_err(ApiFailure::from)?;
     Ok((StatusCode::CREATED, Json(product_view(&row))))
@@ -740,6 +749,111 @@ pub async fn mairon_confirm(
         mairon_visible_badge: listing.mairon_visible_badge,
         creator_confirmed: listing.creator_confirmed,
         published: true,
+    }))
+}
+
+/// `GET /market/products/{id}/skill` — بستهٔ مهارتِ مایرون + نوارِ پرچمِ
+/// دایره‌ایِ ARDA (عمومی — شفافیت مادهٔ ۶).
+///
+/// بستهٔ مُهرشده مستقیم برمی‌گردد؛ در غیابِ مُهر، داوریِ زندهٔ مایرون روی
+/// `preview_html` انجام می‌شود و اگر گیتِ `>= 85` عبور کند، بستهٔ
+/// `SKILL.md` + `skill.json` همان‌جا فورج و مُهر می‌شود
+/// (`forged_on_the_fly = true`). زیرِ گیت → ۴۲۲.
+///
+/// # Errors
+/// ۴۰۴ محصول ناموجود؛ ۴۲۲ زیرِ گیتِ REA مایرون؛ 500 SQL.
+#[allow(clippy::too_many_lines)]
+pub async fn product_skill(
+    State(state): State<Arc<AppState>>,
+    Path(product_id): Path<String>,
+) -> ApiResult<Json<ProductSkillPackageResponse>> {
+    let product = state
+        .store
+        .get_product(&product_id)
+        .await
+        .map_err(ApiFailure::from)?
+        .ok_or_else::<ApiFailure, _>(|| {
+            DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {product_id} does not exist"),
+            )
+                .into()
+        })?;
+    // زبانِ مبدأ و نوارِ پرچم — مبدأِ مُهرشده یا تشخیصِ قطعیِ اسکریپت.
+    let origin = if kian_hermes::arda_fishkal_engine::is_planetary_locale(&product.origin_locale) {
+        product.origin_locale.clone()
+    } else {
+        kian_hermes::arda_fishkal_engine::detect_origin_locale(&product.preview_html).to_owned()
+    };
+    let translated: Vec<String> =
+        crate::handlers::arda::parse_supported_locales(&product.supported_locales_json);
+    let strip_codes: Vec<&str> = translated.iter().map(String::as_str).collect();
+    let strip =
+        kian_hermes::arda_fishkal_engine::render_product_flag_strip(&origin, &strip_codes)
+            .unwrap_or_default();
+
+    // بستهٔ مُهرشده — تحویلِ مستقیم (قطعی، بدون داوریِ دوباره).
+    if let (Some(md), Some(js)) = (&product.skill_md, &product.skill_json) {
+        return Ok(Json(ProductSkillPackageResponse {
+            product_id,
+            rea_score: product.mairon_score,
+            mairon_visible_badge: product.mairon_badge.clone(),
+            origin_locale: origin,
+            supported_locales: translated,
+            circular_flag_strip_html: strip,
+            skill_md: md.clone(),
+            skill_json: js.clone(),
+            forged_on_the_fly: false,
+        }));
+    }
+
+    // فورجِ در-جا — داوریِ زندهٔ مایرون روی محتوای فعلی (نظمِ مطلق: هیچ
+    // حالتِ کهنه‌ای معتبر نیست؛ خودِ محتوا داوری می‌شود).
+    let verdict = kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html);
+    if verdict.total_score < MARKETPLACE_APPROVAL_THRESHOLD {
+        return Err(DomainError::new(
+            DomainErrorCode::InvalidTransition,
+            format!(
+                "Mairon REA gate: score {} is below the forge bar {MARKETPLACE_APPROVAL_THRESHOLD} — skill forge refused",
+                verdict.total_score
+            ),
+        )
+            .into());
+    }
+    let listing = confirm_and_publish_product(&verdict, true).map_err(|msg| {
+        DomainError::new(DomainErrorCode::InvalidTransition, msg.to_owned())
+    })?;
+    let forge_req = kian_hermes::arda_fishkal_engine::SkillForgeRequest {
+        product_id: product_id.clone(),
+        product_title: product.title.clone(),
+        rea_score: verdict.total_score,
+        origin_locale: origin.clone(),
+        translated_locales: translated.clone(),
+    };
+    let pkg = kian_hermes::arda_fishkal_engine::MaironSkillForge::forge_skill_package(&forge_req)
+        .map_err(|msg| DomainError::new(DomainErrorCode::InvalidTransition, msg.to_string()))?;
+    state
+        .store
+        .stamp_product_arda(
+            &product_id,
+            &origin,
+            &product.supported_locales_json,
+            Some(&pkg.skill_md),
+            Some(&pkg.skill_json),
+            &now_iso(),
+        )
+        .await
+        .map_err(ApiFailure::from)?;
+    Ok(Json(ProductSkillPackageResponse {
+        product_id,
+        rea_score: listing.mairon_rea_score,
+        mairon_visible_badge: listing.mairon_visible_badge,
+        origin_locale: origin,
+        supported_locales: translated,
+        circular_flag_strip_html: strip,
+        skill_md: pkg.skill_md,
+        skill_json: pkg.skill_json,
+        forged_on_the_fly: true,
     }))
 }
 
@@ -1791,4 +1905,166 @@ mod tests {
         assert!(stamp < 85, "fresh judgement must be honest: {stamp}");
     }
 
+    /// پیش‌نمایشِ غنیِ فارسی — از گیتِ REA مایرون (`>= 85`) می‌گذرد:
+    /// ۵ سکشن (معماری)، `dir="rtl"` + `max-width:390px` + Vazirmatn + viewport
+    /// (UX)، ۴ اسکریپت + ۲ پروب + aria (راستی‌آزمایی).
+    const RICH_FA_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
+<style>body{font-family:'Vazirmatn';max-width:390px}</style></head><body>\
+<section id=\"sod\">محاسبهٔ سود مرکب</section>\
+<section id=\"asset\">دارایی و بدهی</section>\
+<section id=\"market\">بازار لحظه‌ای</section>\
+<section id=\"risk\">مدیریت ریسک</section>\
+<section id=\"report\">گزارش ماهانه</section>\
+<div role=\"main\" aria-label=\"محاسبه‌گر مالی\"></div>\
+<div data-probe=\"p1\">پروبِ داده</div>\
+<div data-probe=\"p2\">پروبِ بازبینی</div>\
+<script>/* محاسبه */</script><script>/* نمودار */</script>\
+<script>/* ریسک */</script><script>/* گزارش */</script>\
+</body></html>";
+
+    async fn create_rich_product(app: &axum::Router, seller: &str) -> String {
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/market/products")
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from(
+                        json!({
+                            "title": "حسابدار — محاسبه‌گر سود کریپتو",
+                            "description": "ابزار تعاملی تک‌صفحه‌ای فارسی با گزارش ماهانه",
+                            "priceDin": 2_000,
+                            "previewHtml": RICH_FA_PREVIEW
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        json_body(res).await["id"].as_str().unwrap().to_owned()
+    }
+
+    #[tokio::test]
+    async fn skill_forges_on_the_fly_then_serves_stamped_package() {
+        let app = app().await;
+        let seller = auth(&app, "888001", "skill_seller").await;
+        let product_id = create_rich_product(&app, &seller).await;
+
+        // فراخوانیِ اول — فورجِ در-جا پس از داوریِ زندهٔ مایرون.
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{product_id}/skill"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = json_body(res).await;
+        assert_eq!(body["productId"], product_id);
+        assert_eq!(body["forgedOnTheFly"], true);
+        assert!(body["reaScore"].as_u64().unwrap() >= 85);
+        assert!(body["maironVisibleBadge"].as_str().unwrap().contains("⚒️"));
+        assert_eq!(body["originLocale"], "fa");
+        // SKILL.md با پیش‌مادهٔ YAML و گیت‌های راستی‌آزمایی.
+        let skill_md = body["skillMd"].as_str().unwrap();
+        assert!(skill_md.starts_with("---\n"));
+        assert!(skill_md.contains("mairon_certified: true"));
+        assert!(skill_md.contains("rea_score:"));
+        assert!(skill_md.contains("## Verification Gates"));
+        // skill.json — مانیفستِ رجیستری.
+        let manifest: serde_json::Value =
+            serde_json::from_str(body["skillJson"].as_str().unwrap()).unwrap();
+        assert_eq!(manifest["mairon_certified"], serde_json::Value::Bool(true));
+        assert_eq!(manifest["origin_locale"], "fa");
+        assert!(manifest["registry"]["compatible"].as_array().unwrap().len() >= 3);
+        // نوارِ پرچمِ دایره‌ای — مبدأ + ۲ ترجمهٔ پیش‌فرضِ مهاجرت 0008.
+        let strip = body["circularFlagStripHtml"].as_str().unwrap();
+        assert_eq!(strip.matches("arda-flag-badge").count(), 3);
+        assert!(strip.contains("data-origin=\"fa\""));
+
+        // فراخوانیِ دوم — بستهٔ مُهرشده بدون فورجِ دوباره (قطعی).
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{product_id}/skill"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let stamped = json_body(res).await;
+        assert_eq!(stamped["forgedOnTheFly"], false);
+        assert_eq!(stamped["skillMd"], body["skillMd"]);
+        assert_eq!(stamped["skillJson"], body["skillJson"]);
+    }
+
+    #[tokio::test]
+    async fn skill_refuses_below_rea_gate() {
+        let app = app().await;
+        let seller = auth(&app, "888002", "skill_poor").await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/market/products")
+                    .header("authorization", format!("Bearer {seller}"))
+                    .body(Body::from(
+                        json!({
+                            "title": "دموی ساده",
+                            "description": "پیش‌نمایشِ زیرِ گیتِ مایرون",
+                            "priceDin": 500,
+                            "previewHtml": "<div><h1>دموی رایگان</h1></div>"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 201);
+        let pid = json_body(res).await["id"].as_str().unwrap().to_owned();
+
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(format!("/api/v1/market/products/{pid}/skill"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 422);
+        let err = json_body(res).await;
+        assert!(err["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("below the forge bar"));
+    }
+
+    #[tokio::test]
+    async fn skill_unknown_product_is_404() {
+        let app = app().await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/market/products/prod:missing/skill")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 404);
+    }
 }

@@ -654,3 +654,4 @@ async fn read_only_connection_refuses_writes() {
     assert!(err.is_err());
     let _ = std::fs::remove_file(&path);
 }
+

@@ -15,6 +15,7 @@
 
 pub mod ag_ui;
 pub mod approvals;
+pub mod arda_fishkal_engine;
 pub mod builder;
 pub mod creator_dna_contract;
 pub mod discipline_gates;

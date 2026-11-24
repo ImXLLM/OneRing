@@ -87,17 +87,36 @@
 | Trinity Avatars: `ALPHA (136/122 · brake 0.04 · temp 0.88)` → `COMMAND CENTER (139/129 · strictness 0.96 · 3×9 OpenBot DNA)` → `MAIRON-150 (150/145 · lookahead 8 · ToM 3 · ambition 0.99)` |
 | Two-key marketplace gate live: `⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)` + 5-star Bayesian `combinedRankScore` |
 
+
+---
+
+## Wave 4 — Step 1/4: `ARDA` 24-Hour Planetary Localization Engine on authentic `Fishkal` architecture + Mairon's Autonomous `SKILL.md` Forge (`موتور بومی‌سازی سیعه‌ای آردا + فورج مهارت مایرون`)
+
+| Commit | Milestone |
+| :--- | :--- |
+| *(this release)* | **Wave 4 Step 1**: `Fishkal` (Kia's zero-dependency HTML5 engine — `3,616` lines, `667,241` bytes) industrialized into `ARDA` (`آردا`): `arda_fishkal_engine.rs` in `kian-hermes` — verbatim `viewBox="0 0 20 14"` vector flag dictionary for the original 13 locales + 7 planetary additions (`de/ru/it/he/ur/vi/th`) = exactly 20 locales with native-script glyphs (`'فا'`,`'ع'`,`'اردو'`,`'עב'`), Circular Mini-Flag Badges (`border-radius:50%`, defensive caret-rotation override) with `detect_origin_locale` script detection and `render_product_flag_strip`, `ArdaFishkalBundleGenerator` curing all **25 audit defects** (atomic 3-attribute root flip, per-script typography `.34em→.16em/.07em+text-indent` for RTL under Vazirmatn, unified 6-scope `ArdaLocaleCatalog` + mechanical 100%-parity validator with exact `coverage_score`, cached `Intl` engines with region subtags + `XTR/USD/AED/IRR/USDC` currencies, DOM & Canvas bidi isolation with the exact 4-step `drawBidiText` procedure, WAI-ARIA listbox switcher with `D-1..D-8` fixed — logical `inset-inline-start`, localized `aria-label`, idempotent builder, visible `✓`+`--gold` (WCAG 1.4.1), roving focus + `preventScroll`, outside `pointerdown` dismissal, 44px touch targets in 40px glass pill), `ArdaPlanetaryCronDaemon` (24h `86_400`s ticks with `sha256` content-delta guard), `MaironSkillForge::forge_skill_package` (autonomous `SKILL.md` + `skill.json` below-85 refusal) — live endpoints `GET /api/v1/arda/flags`, `POST /api/v1/arda/localize-now` (owner-only stamping), `GET /api/v1/market/products/{id}/skill` (auto-forge on the fly, `422` below gate), migration `0008_arda_locales_and_skill_forge.sql` (`originLocale`/`supportedLocalesJson`/`skillMd`/`skillJson`/`ardaLastLocalizedAt` on `"Product"`, all 20 rows preserved) + `build.rs` migration watcher — **583 tests green, `"KbEntry"` 328, trial balance `0`** |
+
+### Wave 4 — DNA & release milestones
+
+| Milestone |
+| :--- |
+| DNA #13 [`13_ARDA_FISHKAL_PLANETARY_ENGINE.md`](../../KIA-BRAIN-OS/13_ARDA_FISHKAL_PLANETARY_ENGINE.md) created + mirrored to `docs/dna/kia-brain-os/` |
+| DNA #13 injected into `"KbEntry"` as `kb:dna-13-arda-fishkal-planetary-engine` → **328 rows**, tagged `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
+| `KIA-BRAIN-OS` is now the **13-file** creator brain (`01_DNAme.md` … `13_ARDA_FISHKAL_PLANETARY_ENGINE.md`) |
+| `Fishkal` heritage test-pinned: `original_13_svgs_are_verbatim_fishkal` (byte-identical SVGs) + node-syntax-checked runtime bundle |
+| Marketplace cards carry circular flag strips; certified products self-publish `SKILL.md`/`skill.json` to agent registries |
+
 ------
 
 ## Growth ledger
 
-| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) |
+| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Workspace tests | 282 | 516 | **530** | 530 | **560** |
-| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** |
+| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** |
+| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** |
 | Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 |
-| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) |
-| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** |
+| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) |
+| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** |
 
 *The trial balance over 58,700,200,000 micro-KIAN has been exactly zero at every milestone — the
 ledger has never moved out of balance.*

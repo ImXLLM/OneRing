@@ -9,9 +9,9 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
-[![Workspace Tests](https://img.shields.io/badge/tests-560_passed_%7C_0_failed-success.svg)](#quickstart--verification)
+[![Workspace Tests](https://img.shields.io/badge/tests-583_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
-[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-327_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
+[![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-328_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -29,15 +29,16 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 4. [Core Engineering Pillars](#core-engineering-pillars)
 5. [The 7/7 Sovereign Agent Fleet](#the-77-sovereign-agent-fleet)
 6. [The Sovereign Trinity Studio Pipeline](#the-sovereign-trinity-studio-pipeline)
-7. [Mairon REA Quality Scorecard](#mairon-rea-quality-scorecard)
-8. [Knowledge Vault & Production Ledger Invariants](#knowledge-vault--production-ledger-invariants)
-9. [Core API Surface](#core-api-surface)
-10. [Quickstart & Verification](#quickstart--verification)
-11. [Deploy on Railway](#deploy-on-railway)
-12. [Telegram Bot & Mini-App Setup](#telegram-bot--mini-app-setup)
-13. [Security & Binary Hardening](#security--binary-hardening)
-14. [Documentation Map](#documentation-map)
-15. [License & Sovereignty](#license--sovereignty)
+7. [ARDA — the 24-Hour Planetary Localization Engine](#arda--the-24-hour-planetary-localization-engine-on-authentic-fishkal)
+8. [Mairon REA Quality Scorecard](#mairon-rea-quality-scorecard)
+9. [Knowledge Vault & Production Ledger Invariants](#knowledge-vault--production-ledger-invariants)
+10. [Core API Surface](#core-api-surface)
+11. [Quickstart & Verification](#quickstart--verification)
+12. [Deploy on Railway](#deploy-on-railway)
+13. [Telegram Bot & Mini-App Setup](#telegram-bot--mini-app-setup)
+14. [Security & Binary Hardening](#security--binary-hardening)
+15. [Documentation Map](#documentation-map)
+16. [License & Sovereignty](#license--sovereignty)
 
 ---
 
@@ -57,9 +58,9 @@ cryptographic ledger integrity, and deterministic quality verification**:
    mounted 104-platform / 454-chat-model catalog, and **120 zero-auth browser APIs** for studio
    artifacts — backed by forensic 9-file cognitive **`OMNI-MODEL-GENOME`** profiles and the
    `CavemanIntensity` output compressor (`Off` → `Lite` → `Full` → `Ultra`).
-2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — A 12-file executable constitution
+2. **Creator DNA Operating System (`KIA-BRAIN-OS`)** — A 13-file executable constitution
    (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md` …
-   `12_TRINITY_AVATAR_ENGINE.md`) compiled directly into the Rust kernel
+   `12_TRINITY_AVATAR_ENGINE.md` … `13_ARDA_FISHKAL_PLANETARY_ENGINE.md`) compiled directly into the Rust kernel
    (`crates/hermes/src/creator_dna_contract.rs`), enforcing Dual-Voice UX, anti-slop discipline,
    and architectural review before anything ships.
 3. **Hardened Agent Runtime (`kian-hermes` & `kian-agents`)** — A 3-layer cache-safe prompt builder
@@ -78,6 +79,14 @@ cryptographic ledger integrity, and deterministic quality verification**:
    cache-safe prompts × 9-fold stochastic genomes); and **`MAIRON-150`** (`IQ=150 / EQ=145`,
    lookahead `8`, ToM `3`, ambition `0.99`) judges the 4×25 REA pillars and drives the
    self-healing repair loop until the artifact clears the `>= 85` forge gate.
+6. **`ARDA` — the 24-Hour Planetary Localization Engine (`arda_fishkal_engine`)** — Kia's
+   zero-dependency HTML5 engine **`Fishkal`** (`3,616` lines) industrialized with all 25
+   forensic-audit defects cured: **20 planetary locales** with verbatim `viewBox="0 0 20 14"`
+   vector flags + Circular Mini-Flag Badges, unified 6-scope catalog with a mechanical 100%-parity
+   validator, cached `Intl` engines (`XTR/USD/AED/IRR/USDC`), DOM & Canvas bidi isolation (exact
+   4-step `drawBidiText`), a WAI-ARIA listbox language switcher (`D-1..D-8` fixed), the 24h
+   `sha256`-delta cron daemon, and Mairon's autonomous `SKILL.md` + `skill.json` forge wired to
+   the REA `>= 85` gate.
 5. **Bank-Grade Double-Entry Ledger (`kian-db` & `kian-wallet`)** — Optimistic concurrency control
    (`CAS` + `idempotency_key`), native Telegram Stars (`XTR`) and non-custodial multi-chain rails,
    and a zero-sum trial balance (`SUM(amount) == 0`) across a gross flow of

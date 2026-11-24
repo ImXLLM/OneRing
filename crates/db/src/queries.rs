@@ -428,6 +428,16 @@ pub struct ProductRow {
     pub mairon_score: u8,
     /// نشان مرئی مایرون (خالی = مُهر نشده)
     pub mairon_badge: String,
+    /// زبانِ مبدأ ARDA — پیش‌فرض `'en'` (مهاجرت 0008)
+    pub origin_locale: String,
+    /// JSON زبان‌های پشتیبانی‌شده — پیش‌فرض `["en","fa","ar"]` (مهاجرت 0008)
+    pub supported_locales_json: String,
+    /// سند `SKILL.md` فورج‌شدهٔ مایرون (`None` = هنوز فورج نشده)
+    pub skill_md: Option<String>,
+    /// مانیفست `skill.json` فورج‌شدهٔ مایرون (`None` = هنوز فورج نشده)
+    pub skill_json: Option<String>,
+    /// مُهرِ زمانِ آخرین تیکِ کرونِ ۲۴ساعتهٔ ARDA
+    pub arda_last_localized_at: Option<String>,
 }
 
 /// یک رأی ۵-ستارهٔ ثبت‌شدهٔ شهروند روی محصول (`"ProductReview"`) — مُهر مایرون
@@ -483,7 +493,10 @@ pub struct ProductFilter {
 }
 
 /// کوئری عمومی محصول — ستون `deliveryPayload` عمداً خوانده نمی‌شود تا هرگز لو نرود.
-const PRODUCT_PUBLIC_SELECT: &str = r#"SELECT "id","sellerId","title","description","category","priceDin","previewHtml","affiliateBps","artifactKind","active","createdAt","maironScore","maironBadge" FROM "Product""#;
+const PRODUCT_PUBLIC_SELECT: &str = r#"SELECT "id","sellerId","title","description","category","priceDin","previewHtml","affiliateBps","artifactKind","active","createdAt","maironScore","maironBadge","originLocale","supportedLocalesJson","skillMd","skillJson","ardaLastLocalizedAt" FROM "Product""#;
+
+/// ستون‌های پیش‌فرضِ ایمن ARDA — برای INSERTهای قدیمی و مسیر لگاسی.
+const ARDA_DEFAULT_LOCALES_JSON: &str = "[\"en\",\"fa\",\"ar\"]";
 
 fn product_row_public_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
     use sqlx::Row;
@@ -503,6 +516,11 @@ fn product_row_public_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
         created_at: row.get("createdAt"),
         mairon_score: u8::try_from(row.get::<i64, _>("maironScore")).unwrap_or(0),
         mairon_badge: row.get("maironBadge"),
+        origin_locale: row.get("originLocale"),
+        supported_locales_json: row.get("supportedLocalesJson"),
+        skill_md: row.get("skillMd"),
+        skill_json: row.get("skillJson"),
+        arda_last_localized_at: row.get("ardaLastLocalizedAt"),
     }
 }
 
@@ -524,6 +542,11 @@ fn product_row_with_delivery_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
         created_at: row.get("createdAt"),
         mairon_score: u8::try_from(row.get::<i64, _>("maironScore")).unwrap_or(0),
         mairon_badge: row.get("maironBadge"),
+        origin_locale: row.get("originLocale"),
+        supported_locales_json: row.get("supportedLocalesJson"),
+        skill_md: row.get("skillMd"),
+        skill_json: row.get("skillJson"),
+        arda_last_localized_at: row.get("ardaLastLocalizedAt"),
     }
 }
 
@@ -611,7 +634,8 @@ impl V3Store {
         let row = sqlx::query(
             r#"SELECT "id","sellerId","title","description","category","priceDin",
                "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt",
-               "maironScore","maironBadge"
+               "maironScore","maironBadge","originLocale","supportedLocalesJson",
+               "skillMd","skillJson","ardaLastLocalizedAt"
                FROM "Product" WHERE "id" = ?"#,
         )
         .bind(id)
@@ -629,9 +653,11 @@ impl V3Store {
             r#"INSERT INTO "Product"
                ("id","sellerId","title","description","category","priceDin",
                 "previewHtml","affiliateBps","artifactKind","deliveryPayload","active","createdAt",
-                "maironScore","maironBadge")
+                "maironScore","maironBadge","originLocale","supportedLocalesJson",
+                "skillMd","skillJson","ardaLastLocalizedAt")
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,
-                       COALESCE(?, 0), COALESCE(?, ''))"#,
+                       COALESCE(?, 0), COALESCE(?, ''),
+                       COALESCE(?, 'en'), COALESCE(?, ?), ?, ?, ?)"#,
         )
         .bind(&p.id)
         .bind(&p.seller_id)
@@ -647,6 +673,12 @@ impl V3Store {
         .bind(&p.created_at)
         .bind(i64::from(p.mairon_score))
         .bind(&p.mairon_badge)
+        .bind(&p.origin_locale)
+        .bind(&p.supported_locales_json)
+        .bind(ARDA_DEFAULT_LOCALES_JSON)
+        .bind(&p.skill_md)
+        .bind(&p.skill_json)
+        .bind(&p.arda_last_localized_at)
         .execute(self.pool_ref())
         .await?;
         self.audit_ext("server", "product.create", Some(&p.id), None).await?;
@@ -681,6 +713,46 @@ impl V3Store {
             .into());
         }
         self.audit_ext("server", "product.mairon_stamp", Some(id), None).await?;
+        Ok(())
+    }
+
+    /// مُهرِ بومی‌سازیِ ARDA — زبانِ مبدأ، نوارِ زبان‌های پشتیبانی‌شده، بستهٔ
+    /// مهارتِ فورج‌شدهٔ مایرون و مُهرِ زمانِ کرونِ ۲۴ساعته روی محصول می‌نشیند
+    /// (مهاجرت 0008 — Wave 4). هر ۲۰ ستونِ موجودِ محصول محفوظ می‌ماند.
+    ///
+    /// # Errors
+    /// محصول ناموجود → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    pub async fn stamp_product_arda(
+        &self,
+        id: &str,
+        origin_locale: &str,
+        supported_locales_json: &str,
+        skill_md: Option<&str>,
+        skill_json: Option<&str>,
+        localized_at: &str,
+    ) -> DbResult<()> {
+        let updated = sqlx::query(
+            r#"UPDATE "Product" SET "originLocale"=?, "supportedLocalesJson"=?,
+               "skillMd"=COALESCE(?, "skillMd"), "skillJson"=COALESCE(?, "skillJson"),
+               "ardaLastLocalizedAt"=? WHERE "id"=?"#,
+        )
+        .bind(origin_locale)
+        .bind(supported_locales_json)
+        .bind(skill_md)
+        .bind(skill_json)
+        .bind(localized_at)
+        .bind(id)
+        .execute(self.pool_ref())
+        .await?
+        .rows_affected();
+        if updated == 0 {
+            return Err(DomainError::new(
+                DomainErrorCode::ProductNotFound,
+                format!("Product {id} does not exist"),
+            )
+            .into());
+        }
+        self.audit_ext("server", "product.arda_stamp", Some(id), None).await?;
         Ok(())
     }
 

@@ -434,7 +434,7 @@ pub async fn publish(
         description: description.clone(),
         category: req.category.or_else(|| Some("html-app".to_owned())),
         price_din,
-        preview_html,
+        preview_html: preview_html.clone(),
         affiliate_bps,
         artifact_kind: "html".to_owned(),
         delivery_payload: Some(session.generated_html.clone()),
@@ -442,6 +442,12 @@ pub async fn publish(
         created_at: now_iso(),
         mairon_score: 0,
         mairon_badge: String::new(),
+        origin_locale: kian_hermes::arda_fishkal_engine::detect_origin_locale(&preview_html)
+            .to_owned(),
+        supported_locales_json: "[\"en\",\"fa\",\"ar\"]".to_owned(),
+        skill_md: None,
+        skill_json: None,
+        arda_last_localized_at: None,
     };
     state
         .store

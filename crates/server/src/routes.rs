@@ -27,8 +27,8 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
-    accounts, admin, agents, ai, auth, bot, builder, chains, deposits, escrows, hermes, market,
-    nation, system, wallet,
+    accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, hermes,
+    market, nation, system, wallet,
 };
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -125,6 +125,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             "/market/products/{id}/reviews",
             post(market::submit_review).get(market::list_reviews),
         )
+        // market — Wave 4: بستهٔ مهارتِ مایرون + نوارِ پرچمِ دایره‌ایِ ARDA
+        .route("/market/products/{id}/skill", get(market::product_skill))
         // builder — فاز ۴: استودیوی ساخت محصول HTML چندمرحله‌ای + انتشار یک‌کلیکه (نشست شهروند)
         .route(
             "/builder/sessions",
@@ -138,6 +140,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         //  → کالبد ۳ مایرون IQ=150/EQ=145 با حلقهٔ خودترمیمی تا گیت REA >= 85)
         .route("/builder/trinity/alpha", post(builder::trinity_alpha))
         .route("/builder/trinity/orchestrate", post(builder::trinity_orchestrate))
+        // arda — Wave 4: بومی‌سازیِ سیاره‌ایِ ۲۴ساعته روی معماری اصیل Fishkal
+        // (کاتالوگِ عمومیِ ۲۰ زبان + اجرای زندهٔ ARDA با تزریقِ ایدمپوتنت)
+        .route("/arda/flags", get(arda::flags_catalog))
+        .route("/arda/localize-now", post(arda::localize_now))
         // deposits — M3: واریز TON (اثبات PENDING → تأیید ادمین → ضرب مادهٔ ۳)
         .route(
             "/wallet/ton-deposits",
