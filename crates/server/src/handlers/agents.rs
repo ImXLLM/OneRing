@@ -356,16 +356,16 @@ mod tests {
         let agents = body["agents"].as_array().unwrap();
         assert_eq!(agents.len(), 7);
         assert_eq!(body["mcpTools"].as_array().unwrap().len(), 8);
-        // ناوگان ۶+۱ (پوشهٔ ۰۵ گنجینه): مغز + پنج متخصص فعال، نگهبان صادقانه
-        // registered — ترتیب دیتابیس الفبایی است
+        // ناوگان ۷/۷ فعال (گنجینهٔ strategic-5repos): مغز + پنج متخصص + نگهبانِ
+        // هندلر راستی‌آزمایی — ترتیب دیتابیس الفبایی است
         let orch = agents.iter().find(|a| a["role"] == "orchestrator").expect("orchestrator");
         assert_eq!(orch["status"], "active");
         let merchant = agents.iter().find(|a| a["role"] == "merchant").expect("merchant");
         assert_eq!(merchant["status"], "active");
         let guardian = agents.iter().find(|a| a["role"] == "guardian").expect("guardian");
-        assert_eq!(guardian["status"], "registered");
+        assert_eq!(guardian["status"], "active", "نگهبان با هندلر امنیت فعال است");
         let active_count = agents.iter().filter(|a| a["status"] == "active").count();
-        assert_eq!(active_count, 6, "ناوگان ۶عاملی فعال");
+        assert_eq!(active_count, 7, "ناوگان ۷/۷ فعال");
         let wire = body.to_string().to_lowercase();
         assert!(!wire.contains("test-admin-key"), "fleet must never leak the admin key");
     }

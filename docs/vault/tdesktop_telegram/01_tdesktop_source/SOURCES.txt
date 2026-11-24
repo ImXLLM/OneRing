@@ -1,0 +1,10 @@
+Audit snapshot: telegramdesktop/tdesktop @ 070dbc645c543ce8b9bbbb7b72ef842ffd7671da
+
+Flattened source file -> original repository path
+api_bot.cpp -> Telegram/SourceFiles/api/api_bot.cpp
+bot_attach_web_view.h -> Telegram/SourceFiles/inline_bots/bot_attach_web_view.h
+bot_attach_web_view.cpp -> Telegram/SourceFiles/inline_bots/bot_attach_web_view.cpp
+attach_bot_webview.h -> Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.h
+attach_bot_webview.cpp -> Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.cpp
+inline_bot_storage.cpp -> Telegram/SourceFiles/inline_bots/inline_bot_storage.cpp
+payments_checkout_process.cpp -> Telegram/SourceFiles/payments/payments_checkout_process.cpp

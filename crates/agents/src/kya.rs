@@ -65,6 +65,8 @@ impl KyaMetadata {
                 .into_iter().map(str::to_owned).collect(),
             "scout" => vec!["quests.run", "referrals.track", "catalog.discover"]
                 .into_iter().map(str::to_owned).collect(),
+            "guardian" => vec!["security.audit", "surface.verify", "stall.enforce"]
+                .into_iter().map(str::to_owned).collect(),
             other => vec![format!("{other}.pending")],
         };
         Ok(Self {
@@ -157,19 +159,22 @@ mod tests {
     use super::*;
     use crate::roles::{ROLES};
 
-    /// شناسنامهٔ KYA برای همهٔ ۶ ایجنت فعال ساخته می‌شود؛ نگهبان رد می‌شود.
+    /// شناسنامهٔ KYA برای همهٔ ۷ ایجنت فعال ساخته می‌شود — ناوگان ۷/۷ فعال.
     #[test]
     fn kya_metadata_for_active_fleet_only() {
         let fleet = KyaMetadata::for_fleet().expect("fleet");
-        assert_eq!(fleet.len(), 6, "فقط ایجنت‌های فعال شناسنامه می‌گیرند");
+        assert_eq!(fleet.len(), 7, "همهٔ ایجنت‌های فعال شناسنامه می‌گیرند");
         for m in &fleet {
             assert_eq!(m.algorithm, "ES256");
             assert_eq!(m.registry, "erc8004");
             assert!(m.jwks_path.starts_with("/.well-known/agents/"));
             assert!(!m.scopes.is_empty());
         }
+        // نگهبان حالا فعال است — اسکوپ‌های امنیت/راستی‌آزمایی دارد.
         let guardian = ROLES.iter().find(|r| r.role == "guardian").expect("guardian");
-        assert!(KyaMetadata::for_role(guardian).is_err(), "registered → بدون KYA");
+        let g = KyaMetadata::for_role(guardian).expect("guardian is now active");
+        assert!(g.scopes.contains(&"security.audit".to_owned()));
+        assert!(g.scopes.contains(&"surface.verify".to_owned()));
     }
 
     /// اسکوپ‌ها از نقش مشتق می‌شوند و بدون کلید خصوصی‌اند.

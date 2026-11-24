@@ -24,6 +24,7 @@ pub mod prompt;
 pub mod security;
 pub mod shield;
 pub mod skills;
+pub mod studio_design_contract;
 pub mod token_saver;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
@@ -54,6 +55,11 @@ pub use prompt::{
 pub use security::{
     contains_hidden_variation_selectors, redact_with_learned_propagation,
     strip_shell_comments_preserving_quotes, StuckCallGate,
+};
+pub use studio_design_contract::{
+    build_verbatim_user_messages_block, detect_persian_rtl, enforce_rtl, verbatim_budget_chars,
+    AstraAudit, AstraQualityGate, DesignDials, LTR_FONT_STACK, RTL_FONT_STACK, RTL_HTML_ATTRS,
+    VERBATIM_CLOSE, VERBATIM_OPEN,
 };
 pub use shield::{screen_input, screen_output, ShieldReport, ShieldVerdict};
 pub use skills::{find_skill, SkillDef, SkillKind, SKILLS};

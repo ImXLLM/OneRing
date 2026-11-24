@@ -7,6 +7,8 @@
  * - `?startapp=...` یا `?tgWebAppStartParam=...` یا `?ref=<refTgId>`
  */
 
+import { buildViralShareLink } from "@/lib/kian-tma-bridge";
+
 export const ACTIVE_REFERRER_KEY = "kian_active_referrer";
 const REDIRECTED_PRODUCT_KEY = "kian_viral_redirected_product";
 
@@ -159,4 +161,36 @@ export function buildTelegramViralLink(
 export function formatAffiliatePercent(bps: number): string {
   const pct = bps / 100;
   return `${pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}٪`;
+}
+
+/**
+ * لینک‌های وایرال یک‌کلیکی محصول — هم‌تراز با آداپتور `kian-tma-bridge.ts`
+ * و فرمت استاندارد کرنل Rust: `p_<productId>_r_<refTgId>`.
+ *
+ * * `startParam` — پارامتر خام برای `shareStartParam` کرنل
+ * * `telegramUrl` — لینک مستقیم `t.me/<bot>?startapp=…` (ورود خودکار با payload)
+ * * `webUrl` — لینک وب مینی‌اپ با همان payload
+ * * `shareUrl` — شیت اشتراک تلگرام (`t.me/share/url?…`) با متن پیشنهادی
+ */
+export function buildViralShareLinks(
+  productId: string,
+  referrerTgId: string,
+  shareText?: string,
+): {
+  startParam: string;
+  telegramUrl: string;
+  webUrl: string;
+  shareUrl: string;
+} {
+  const base = buildTelegramViralLink(productId, referrerTgId);
+  const botUsername = (
+    (typeof process !== "undefined" &&
+      process.env?.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME) ||
+    "KianAgentBot"
+  ).replace(/^@/, "");
+  const text =
+    shareText ??
+    `این ابزار را در بازار کیان ساختم — یک کلیک بازش کن و با هر خرید، پاداش معرفگری می‌گیری.`;
+  const shareUrl = buildViralShareLink(botUsername, productId, referrerTgId, text);
+  return { startParam: base.startParam, telegramUrl: base.telegramUrl, webUrl: base.webUrl, shareUrl };
 }

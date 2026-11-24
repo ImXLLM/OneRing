@@ -9,7 +9,7 @@
 //!   شبیه‌ساز سیاستِ قطعی «چه می‌شد اگر…» — همان ترتیب لایه‌ها که محصول اعمال
 //!   می‌کند، بدون شبکه و بدون شانس.
 //! - `shared/subagent.ts` → [`deterministic_subagent_thread_id`]: thread
-//!   ساب‌ایجنت «مشتق» است نه «ضرب‌شده» — از والد + فراخوانی، به‌صورت UUIDv8، تا
+//!   ساب‌ایجنت «مشتق» است نه «ضرب‌شده» — از والد + فراخوانی، به‌صورت `UUIDv8`، تا
 //!   رونوشت ساب‌ایجنت بعد از ری‌استارت هم پیدا شود و هرگز تولد دوباره رخ ندهد.
 //! - `docs/routines.md` → [`RoutineFatigueGuard`]: ضد اسپم روتین — کف ۱۵ دقیقه،
 //!   سقف ۲۰ روتین فعال، مدارشکن پس از ۱۰ شکست پیاپی، و پرش از پنجره‌های از دست
@@ -74,7 +74,7 @@ pub enum ApprovalOutcome {
 
 impl ApprovalOutcome {
     /// جمله‌ای که مدل می‌خواند — می‌گوید چه کسی تصمیم گرفت و بعد چه کند،
-    /// تا گزارشش صادق باشد و دنبال راه دور نگردد (پورت OpenBot).
+    /// تا گزارشش صادق باشد و دنبال راه دور نگردد (پورت `OpenBot`).
     #[must_use]
     pub const fn outcome_for_model(self) -> &'static str {
         match self {
@@ -150,7 +150,7 @@ impl PolicyVerdict {
 /// ترتیب لایه‌ها همان ترتیبی است که محصول اعمال می‌کند؛ اولین جوابِ قطعی برنده است:
 /// 1. **جعبهٔ راز:** `ManageCredentialsOrPermissions` همیشه [`PolicyVerdict::Blocked`]
 ///    است — رمز/توکن را فقط خود انسان وارد می‌کند و هیچ پاسخی از طرف او
-///    نمی‌تواند بنشیند (الگوی «خودم انجامش می‌دهم» در OpenBot).
+///    نمی‌تواند بنشیند (الگوی «خودم انجامش می‌دهم» در `OpenBot`).
 /// 2. **مخرب برچسب‌خورده:** `destructive` بدون توجه به نام ابزار کارت می‌خواهد.
 /// 3. **دروازهٔ منشور کیان:** خرید/انتقال بالای آستانهٔ HITL منشور (۵۰٬۰۰۰ Đ)
 ///    تأیید انسانی می‌خواهد؛ زیر آستانه، لِین اسکروی خودکار آزاد می‌شود
@@ -213,7 +213,7 @@ fn looks_like_uuid(value: &str) -> bool {
 ///
 /// هش SHA-256 روی `subagent\n{parent_thread_id}\n{tool_call_id}`؛ اگر والد
 /// UUID است، ۶ بایت اول با بایت‌های والد جایگزین می‌شود تا ساب‌ایجنت همان
-/// اثر انگشت استقرار گفتگوی خودش را حمل کند. نسخه روی ۸ قفل می‌شود (UUIDv8:
+/// اثر انگشت استقرار گفتگوی خودش را حمل کند. نسخه روی ۸ قفل می‌شود (`UUIDv8`:
 /// این بیت‌ها تصادفی نیستند) و واریانت RFC هم رعایت می‌شود.
 ///
 /// هر دو سمت (سرور و کلاینت) همین derivation را می‌دانند، پس کلاینت می‌تواند
@@ -223,6 +223,8 @@ fn looks_like_uuid(value: &str) -> bool {
 /// هیچ‌چیز اینجا راز نیست؛ دانستن شناسه به هیچ‌چیز نمی‌رسد.
 #[must_use]
 pub fn deterministic_subagent_thread_id(parent_thread_id: &str, tool_call_id: &str) -> String {
+    use std::fmt::Write as _;
+
     let digest = Sha256::digest(
         format!("subagent\n{parent_thread_id}\n{tool_call_id}").as_bytes(),
     );
@@ -236,7 +238,10 @@ pub fn deterministic_subagent_thread_id(parent_thread_id: &str, tool_call_id: &s
     }
     bytes[6] = (bytes[6] & 0x0f) | 0x80; // نسخه ۸
     bytes[8] = (bytes[8] & 0x3f) | 0x80; // واریانت RFC
-    let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    let mut hex = String::with_capacity(bytes.len() * 2);
+    for b in &bytes {
+        let _ = write!(hex, "{b:02x}");
+    }
     format!(
         "{}-{}-{}-{}-{}",
         &hex[..8],
@@ -277,7 +282,7 @@ impl FireDecision {
     }
 }
 
-/// گارد ضد اسپم روتین — پورت سیاست روتین‌های OpenBot با ثابت‌های مأموریت:
+/// گارد ضد اسپم روتین — پورت سیاست روتین‌های `OpenBot` با ثابت‌های مأموریت:
 /// - [`Self::MIN_INTERVAL_SECS`] = ۹۰۰ (کف ۱۵ دقیقه بین دو شلیک یک روتین)؛
 /// - [`Self::MAX_ACTIVE_ROUTINES`] = ۲۰ (سقف روتین‌های فعال)؛
 /// - [`Self::MAX_CONSECUTIVE_FAILURES`] = ۱۰ (مدارشکن: خاموشی خودکار).

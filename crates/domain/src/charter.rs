@@ -34,7 +34,7 @@ impl Charter {
     /// عرضهٔ genesis مهاجرت لگاسی — ممیزی پایگاه ۳۰روزهٔ dropagent:
     /// ۴۶۶ شهروند، ۴۳۵ حساب با تراز مثبت، Σ = ۵۸٬۷۰۰٬۲۰۰٬۰۰۰ micro
     /// (۵۸٬۷۰۰.۲ KIAN) — پاک‌سازی‌شده: کاربران عادی ≤ ۱٬۰۰۰ KIAN،
-    /// @ImXsi ۱٬۰۰۰ KIAN (اصلاح واریز دوبارِ #3)، @ImXforevr ۵٬۰۰۰ KIAN.
+    /// `@ImXsi` ۱٬۰۰۰ KIAN (اصلاح واریز دوبارِ #3)، `@ImXforevr` ۵٬۰۰۰ KIAN.
     pub const GENESIS_SUPPLY_DIN: Din = Din(58_700_200_000);
 }
 

@@ -187,6 +187,8 @@ impl ThreeLayerSystemPrompt {
         memory_snapshot: &str,
         lineage_root: &str,
     ) -> Self {
+        use std::fmt::Write as _;
+
         // ── stable: شناسه + SOUL + ابزار + قفل RTL ──
         let mut stable = String::from(core_identity.trim());
         stable.push_str("\n\n");
@@ -205,11 +207,12 @@ impl ThreeLayerSystemPrompt {
             volatile.push_str("  (هیچ مهارتی ثبت نشده)\n");
         } else {
             for s in skills {
-                volatile.push_str(&format!(
-                    "  - {}: {}\n",
+                let _ = writeln!(
+                    volatile,
+                    "  - {}: {}",
                     s.name,
                     clip_skill_description(&s.description, SKILL_PROMPT_DESC_LIMIT)
-                ));
+                );
             }
         }
         volatile.push('\n');
@@ -222,7 +225,7 @@ impl ThreeLayerSystemPrompt {
             volatile.push_str(memory_snapshot.trim());
             volatile.push('\n');
         }
-        volatile.push_str(&format!("ریشهٔ تبارِ گفتگو (مُهرِ بایت‌پایدار): {lineage_root}"));
+        let _ = write!(volatile, "ریشهٔ تبارِ گفتگو (مُهرِ بایت‌پایدار): {lineage_root}");
 
         Self { stable, context, volatile }
     }
@@ -314,6 +317,11 @@ const INJECTION_PATTERNS: &[&str] = &[
 ///
 /// `Ok(entry_trimmed)` = سالم و پذیرفته؛ `Err(کد خطا)` = رد شده با کدِ
 /// قابل‌گزارش (`"empty_entry"` / `"prompt_injection_override"` / `"imperative_instruction"`).
+///
+/// # Errors
+/// - `"empty_entry"` — ورودی پس از trim خالی است؛
+/// - `"imperative_instruction"` — entry با فعل امر/دستور اجرایی شروع می‌شود؛
+/// - `"prompt_injection_override"` — entry تلاش برای بازنویسی دستورهای سیستم دارد.
 pub fn validate_declarative_memory(entry: &str) -> Result<String, &'static str> {
     let trimmed = entry.trim();
     if trimmed.is_empty() {

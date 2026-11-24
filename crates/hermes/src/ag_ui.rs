@@ -6,15 +6,15 @@
 //!
 //! کیان مجموعهٔ رسمی را با سه رخداد پسوندی (Activity/ActivityDelta/SubagentSpawn)
 //! گسترش می‌دهد تا پیشرفت استودیو و تولد ساب‌ایجنت هم روی همین لولهٔ استاندارد
-//! استریم شود — همان الگویی که OpenBot برای زیرگره‌هایش استفاده می‌کند.
+//! استریم شود — همان الگویی که `OpenBot` برای زیرگره‌هایش استفاده می‌کند.
 //!
-//! این ماژول فقط ساختار و سازنده است؛ ارسال روی SSE/WebSocket لایهٔ سرور است.
+//! این ماژول فقط ساختار و سازنده است؛ ارسال روی `SSE`/`WebSocket` لایهٔ سرور است.
 //! همهٔ سازنده‌ها قطعی‌اند و تست‌شده.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
-/// تایپ رخداد AG-UI 1.0 — نام‌ها مطابق کریت رسمی `ag-ui-core` (SCREAMING_SNAKE_CASE).
+/// تایپ رخداد AG-UI 1.0 — نام‌ها مطابق کریت رسمی `ag-ui-core` (`SCREAMING_SNAKE_CASE`).
 ///
 /// سه رخداد آخر (`ActivitySnapshot`, `ActivityDelta`, `SubagentSpawn`) پسوندِ
 /// کیان برای کانال فعالیت استودیو و ساب‌ایجنت‌هاست.
@@ -60,43 +60,43 @@ pub struct AgUiEvent {
     /// تایپ رخداد — کلید متمایزکنندهٔ پاکت.
     #[serde(rename = "type")]
     pub event_type: AgUiEventType,
-    /// ثانیه از epoch (پورت `timestamp` در BaseEvent رسمی).
+    /// ثانیه از epoch (پورت `timestamp` در `BaseEvent` رسمی).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<f64>,
-    /// شناسهٔ پیام متنی (TextMessage*).
+    /// شناسهٔ پیام متنی (`TextMessage*`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_id: Option<String>,
-    /// تکهٔ متن/آرگومان (TextMessageContent / ToolCallArgs).
+    /// تکهٔ متن/آرگومان (`TextMessageContent` / `ToolCallArgs`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delta: Option<String>,
-    /// شناسهٔ فراخوانی ابزار (ToolCall*).
+    /// شناسهٔ فراخوانی ابزار (`ToolCall*`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
-    /// نام ابزار (ToolCallStart).
+    /// نام ابزار (`ToolCallStart`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_name: Option<String>,
-    /// پیام والد فراخوانی ابزار (ToolCallStart).
+    /// پیام والد فراخوانی ابزار (`ToolCallStart`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_message_id: Option<String>,
-    /// عکس فوری state (StateSnapshot).
+    /// عکس فوری state (`StateSnapshot`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<JsonValue>,
-    /// پچ state (StateDelta) یا فعالیت (ActivityDelta).
+    /// پچ state (`StateDelta`) یا فعالیت (`ActivityDelta`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub patch: Option<JsonValue>,
-    /// کانال فعالیت (ActivitySnapshot / ActivityDelta) — مثلاً `a2ui_recovery`.
+    /// کانال فعالیت (`ActivitySnapshot` / `ActivityDelta`) — مثلاً `a2ui_recovery`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub activity_type: Option<String>,
-    /// thread والد ساب‌ایجنت (SubagentSpawn).
+    /// thread والد ساب‌ایجنت (`SubagentSpawn`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_thread_id: Option<String>,
-    /// thread قطعی ساب‌ایجنت (SubagentSpawn).
+    /// thread قطعی ساب‌ایجنت (`SubagentSpawn`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subagent_thread_id: Option<String>,
-    /// شناسهٔ thread ران (RunStarted / RunFinished).
+    /// شناسهٔ thread ران (`RunStarted` / `RunFinished`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thread_id: Option<String>,
-    /// پیام خطا (RunError).
+    /// پیام خطا (`RunError`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
 }
@@ -105,8 +105,7 @@ pub struct AgUiEvent {
 fn now_epoch_secs() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs_f64())
-        .unwrap_or(0.0)
+        .map_or(0.0, |d| d.as_secs_f64())
 }
 
 impl AgUiEvent {

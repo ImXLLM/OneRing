@@ -1,9 +1,13 @@
 //! نقش‌های ۷گانهٔ ناوگان — منبع حقیقت ردیف‌های بذر جدول `Agent`.
 //!
-//! فعال‌سازی ناوگان ۶عاملی (پوشهٔ ۰۵ گنجینه — `AgentX`): پنج نقش متخصص
-//! (بازرگان، خزانه‌دار، پشتیبان، تحلیل‌گر، کاوشگر) به‌همراه مغز هرمس
-//! **فعال**اند؛ نگهبان هنوز صادقانه `registered` است تا کرنل واقعاً از آن
-//! استفاده نکرده، خودش را فعال وانمود نکند (اصل صادق‌بودن).
+//! فعال‌سازی کامل ناوگان ۷عاملی (گنجینهٔ strategic-5repos — پوشهٔ ۰۵
+//! `Agent-Reach` + `starnet`): پنج نقش متخصص (بازرگان، خزانه‌دار، پشتیبان،
+//! تحلیل‌گر، کاوشگر) به‌همراه مغز هرمس و **نگهبان** فعال‌اند؛ نگهبان با
+//! هندلر امنیت/راستی‌آزمایی واقعی ([`crate::agent_reach::GuardianSecurityHandler`])
+//! سیم شده — دیوار چالش antِibot را رد می‌کند، مدارشکن توقف ساب‌ایجنت را
+//! اعمال می‌کند و صدور قابلیت فرزند را همیشه تضعیف یکنواخت نگه می‌دارد.
+//! وضعیت هر نقش همچنان صادقانه است: `active` فقط برای نقش‌هایی که کرنل
+//! واقعاً از آن‌ها استفاده می‌کند — و اینک هر هفت نقش استفادهٔ واقعی دارند.
 
 /// یک نقش ناوگان.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,12 +24,12 @@ pub struct AgentRole {
     pub description: &'static str,
 }
 
-/// ۷ نقش ناوگان — ۶ فعال + نگهبان ثبت‌شده (صداقت وضعیت).
+/// ۷ نقش ناوگان — همگی فعال (ناوگان ۷/۷).
 ///
 /// توصیف‌ها از پورتال `AgentX` (پوشهٔ ۰۵ — `src/agents/base.ts`) غنی‌تر شده‌اند:
 /// ارکستراتور = مسیریابِ اصلی؛ بازرگان = فروش مشاوره‌ای؛ خزانه‌دار = ولت و
 /// آشتی دفتر؛ پشتیبان = میز کمک و داوری؛ تحلیل‌گر = BI فقط-کارمند؛ کاوشگر =
-/// رشد و کوئست.
+/// رشد و کوئست؛ نگهبان = امنیت و راستی‌آزمایی (پورت `Agent-Reach` + `starnet`).
 pub const ROLES: [AgentRole; 7] = [
     AgentRole {
         id: "agent:orchestrator",
@@ -73,13 +77,12 @@ pub const ROLES: [AgentRole; 7] = [
         id: "agent:guardian",
         role: "guardian",
         name: "نگهبان",
-        status: "registered",
-        description: "ایجنت امنیت — ممیزی، سپر و پاسخ به تهدید (وایر در M5+؛ هنوز صادقانه ثبت‌شده)",
+        status: "active",
+        description: "ایجنت امنیت — هندلر راستی‌آزمایی فعال: رد دیوار چالش antِibot، مدارشکن توقف ساب‌ایجنت و تضعیف یکنواخت قابلیت‌ها (پورت Agent-Reach + starnet)",
     },
 ];
 
-/// شمار نقش‌های فعال — ۶/۷ (مأموریت ناوگان ۶عاملی).
-#[must_use]
+/// شمار نقش‌های فعال — ۷/۷ (مأموریت ناوگان ۷عاملی).
 pub fn active_roles() -> impl Iterator<Item = &'static AgentRole> {
     ROLES.iter().filter(|r| r.status == "active")
 }
@@ -103,21 +106,17 @@ pub fn seed_agents() -> Vec<(&'static str, &'static str, &'static str, &'static 
 mod tests {
     use super::*;
 
-    /// دقیقاً ۷ نقش، شناسه و نقش یکتا، وضعیت صادقانه — ناوگان ۶+۱.
+    /// دقیقاً ۷ نقش، شناسه و نقش یکتا، وضعیت صادقانه — ناوگان ۷/۷ فعال.
     #[test]
     fn roles_are_seven_unique_and_honest() {
         assert_eq!(ROLES.len(), 7);
         let mut ids: Vec<&str> = ROLES.iter().map(|r| r.id).collect();
         ids.sort_unstable();
         assert!(ids.windows(2).all(|w| w[0] != w[1]));
-        // شش نقش فعال — مغز + پنج متخصص؛ نگهبان صادقانه registered
-        assert_eq!(active_roles().count(), 6, "ناوگان ۶عاملی باید فعال باشد");
+        // هفت نقش فعال — مغز + پنج متخصص + نگهبانِ هندلر امنیت.
+        assert_eq!(active_roles().count(), 7, "ناوگان ۷/۷ باید فعال باشد");
         for r in &ROLES {
-            if r.role == "guardian" {
-                assert_eq!(r.status, "registered", "guardian must stay honest");
-            } else {
-                assert_eq!(r.status, "active", "role {} must be active", r.role);
-            }
+            assert_eq!(r.status, "active", "role {} must be active", r.role);
         }
         assert!(role_of("agent:orchestrator").is_some());
         assert!(role_of("agent:nope").is_none());
@@ -144,6 +143,7 @@ mod tests {
             ("analyst", "رتبه‌بندی XP"),
             ("scout", "کوئست"),
             ("orchestrator", "واگذاری"),
+            ("guardian", "راستی‌آزمایی"),
         ];
         for (role, marker) in expectations {
             let r = ROLES.iter().find(|r| r.role == *role).expect("role exists");

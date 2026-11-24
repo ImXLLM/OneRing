@@ -277,6 +277,9 @@ pub fn create_escrow(
 /// # Errors
 /// `ESCROW_ALREADY_EXISTS`، `UNKNOWN_ACCOUNT`، `INVALID_ACCOUNT_KIND`،
 /// `DUPLICATE_ACCOUNT`، `BPS_OUT_OF_RANGE`.
+// امضای عمومی مهاجرت‌یافته (ADR-009) منجمد است؛ `referrer` فقط با اتصال
+// `ref` خوانده می‌شود و مصرف نمی‌شود — کلون صریح در شاخهٔ Some انجام می‌گیرد.
+#[allow(clippy::needless_pass_by_value)]
 pub fn create_escrow_with_affiliate(
     ledger: &LedgerState,
     registry: &EscrowRegistry,

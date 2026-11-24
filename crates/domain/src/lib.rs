@@ -12,6 +12,7 @@
 //! - [`charter`] — منشور ۱۰ ماده‌ای کشور دیجیتال (مالیات ۱۰٪ + آستانه HITL)
 //! - [`errors`] — ۲۰ کد خطا + Result
 //! - [`events`] — رویدادهای دامنه با شناسه دترمینیستیک
+//! - [`viral_ranker`] — رتبه‌سنج وایرال بازار (پورت `xai-org/x-algorithm` ۲۰۲۶)
 #![forbid(unsafe_code)]
 
 pub mod charter;
@@ -20,6 +21,7 @@ pub mod escrow;
 pub mod events;
 pub mod ledger;
 pub mod money;
+pub mod viral_ranker;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-domain";
@@ -55,6 +57,10 @@ pub use ledger::{
     TREASURY_ACCOUNT_ID,
 };
 pub use money::{format_din, Din, MAX_DIN};
+pub use viral_ranker::{
+    fuse_score, inject_cold_start, score_with_defaults, ColdStartCandidate, ColdStartPolicy,
+    ProductSignals, RankedProduct, ViralEngagementWeights,
+};
 
 #[cfg(test)]
 mod tests {

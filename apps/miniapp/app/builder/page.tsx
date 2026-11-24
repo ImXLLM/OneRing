@@ -21,6 +21,7 @@ import {
   Plus,
   Rocket,
   Send,
+  Share2,
   Sparkles,
   Zap,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import { GuestGate, PreviewBanner } from "@/components/kian/guest-gate";
 import { useSession } from "@/components/kian/session";
 import { friendlyError, friendlyErrorTitle } from "@/lib/friendly";
 import { sanitizePartialStudioHtml } from "@/lib/studio-html-guard";
+import { haptics, setSwipeBehavior } from "@/lib/kian-tma-bridge";
 import {
   api,
   ApiError,
@@ -37,7 +39,11 @@ import {
   type BuilderSessionView,
   type PublishBuilderResponse,
 } from "@kian/sdk";
-import { buildTelegramViralLink, formatAffiliatePercent } from "@/lib/referral";
+import {
+  buildTelegramViralLink,
+  buildViralShareLinks,
+  formatAffiliatePercent,
+} from "@/lib/referral";
 
 const AFFILIATE_PRESETS = [1000, 1500, 2000, 2500, 3000, 4000, 5000] as const;
 
@@ -143,6 +149,7 @@ export default function BuilderPage() {
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState<PublishBuilderResponse | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
@@ -249,6 +256,14 @@ export default function BuilderPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [active?.messages.length, sending]);
+
+  // قفل کشیدن عمودی تلگرام فقط در استودیو (پورت tdesktop-telegram-gems):
+  // درگِ لمسی داخل canvas استودیو هرگز مینی‌اپ را نمی‌بندد؛ با خروج از
+  // استودیو، کشیدن عمودی تلگرام برمی‌گردد (قرارداد KB: بازگردانی پس از تعامل).
+  useEffect(() => {
+    setSwipeBehavior(false);
+    return () => setSwipeBehavior(true);
+  }, []);
 
   if (state.phase === "loading") {
     return (
@@ -394,6 +409,23 @@ export default function BuilderPage() {
         description: viralLink.telegramUrl,
         variant: "destructive",
       });
+    }
+  };
+
+  // کپی یک‌کلیکی لینک وایرال با شیت اشتراک تلگرام (پورت tdesktop-telegram-gems —
+  // `buildViralShareLinks` / `p_<productId>_r_<refTgId>`):
+  const copyViralShareLink = async () => {
+    if (!viralProductId) return;
+    const links = buildViralShareLinks(viralProductId, me.user.telegramId);
+    try {
+      await navigator.clipboard.writeText(links.shareUrl);
+      setCopiedShare(true);
+      haptics.success();
+      toast({ title: "لینک وایرال کپی شد — بفرست و پاداش بگیر 🚀", variant: "success" });
+      window.setTimeout(() => setCopiedShare(false), 2000);
+    } catch {
+      // کلیپ‌بورد در دسترس نیست — شیت اشتراک تلگرام باز می‌شود
+      window.location.href = links.shareUrl;
     }
   };
 
@@ -751,6 +783,21 @@ export default function BuilderPage() {
                 {copiedLink ? "کپی شد" : "کپی لینک"}
               </button>
             </div>
+            {/* یک‌کلیکی وایرال — شیت اشتراک تلگرام با payload پورسانت معرف
+                (پورت tdesktop-telegram-gems: buildViralShareLinks /
+                p_<productId>_r_<refTgId>) */}
+            <button
+              type="button"
+              onClick={() => void copyViralShareLink()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-4 py-3 text-sm font-black text-zinc-950 shadow-lg shadow-emerald-600/30 ring-1 ring-gold-400/40 hover:opacity-90"
+            >
+              {copiedShare ? (
+                <Check className="size-4" aria-hidden />
+              ) : (
+                <Share2 className="size-4" aria-hidden />
+              )}
+              {copiedShare ? "لینک وایرال کپی شد" : "کپی لینک وایرال (۲۵٪ پاداش)"}
+            </button>
             <p className="flex flex-wrap items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-bold leading-5 text-emerald-300 ring-1 ring-emerald-400/25">
               💰 با هر خرید از این لینک{" "}
               {formatAffiliatePercent(published?.product.affiliateBps ?? affiliateBps)}{" "}

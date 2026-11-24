@@ -109,22 +109,16 @@ impl ToolCallStreamAccumulator {
         let idx = self.active_slot_by_idx[&raw_idx];
 
         let entry = self.slots.entry(idx).or_default();
-        if let Some(id) = delta.id.as_deref() {
-            if !id.is_empty() {
-                entry.id = id.to_string();
-            }
+        if let Some(id) = delta.id.as_deref().filter(|id| !id.is_empty()) {
+            entry.id = id.to_string();
         }
-        if let Some(name) = delta.name.as_deref() {
-            if !name.is_empty() {
-                // انتساب، نه الحاق — اصلاح MiniMax / NVIDIA NIM / OpenRouter
-                // «read_fileread_file» اینجاست.
-                entry.name = name.to_string();
-            }
+        if let Some(name) = delta.name.as_deref().filter(|name| !name.is_empty()) {
+            // انتساب، نه الحاق — اصلاح MiniMax / NVIDIA NIM / OpenRouter
+            // «read_fileread_file» اینجاست.
+            entry.name = name.to_string();
         }
-        if let Some(args) = delta.arguments.as_deref() {
-            if !args.is_empty() {
-                self.argument_parts.entry(idx).or_default().push(args.to_owned());
-            }
+        if let Some(args) = delta.arguments.as_deref().filter(|args| !args.is_empty()) {
+            self.argument_parts.entry(idx).or_default().push(args.to_owned());
         }
 
         let name = entry.name.clone();

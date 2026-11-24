@@ -1,5 +1,5 @@
 //! `loop_guard` — گارد حلقهٔ بات‌به‌بات (پورت `gateway/bot_loop_guard.py` گنجینهٔ
-//! NousResearch — Wave 2 - Step 2).
+//! `NousResearch` — Wave 2 - Step 2).
 //!
 //! دو پروفایل هرمس که همدیگر را جواب می‌دهند هرگز خودشان متوقف نمی‌شوند؛
 //! `{PLATFORM}_ALLOW_BOTS` فقط ورود را می‌گذراند. این گارد سرعتِ پیام‌های
@@ -120,10 +120,12 @@ impl BotLoopGuard {
 
         // ── سنجهٔ ۱: سیلاب از یک فرستنده در پنجره ──
         let vel_key = (chat_id.to_owned(), sender_id.to_owned());
-        if let Some(stamps) = self.velocity.get(&vel_key) {
-            if stamps.len() >= MAX_EVENTS_PER_WINDOW {
-                return LoopGuardDecision::Suppress(LoopReason::RateLimit);
-            }
+        if self
+            .velocity
+            .get(&vel_key)
+            .is_some_and(|stamps| stamps.len() >= MAX_EVENTS_PER_WINDOW)
+        {
+            return LoopGuardDecision::Suppress(LoopReason::RateLimit);
         }
 
         // ── انقضای زنجیرهٔ خاموش — گپِ بیش از پنجره = زنجیرهٔ جدید

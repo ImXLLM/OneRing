@@ -1,4 +1,4 @@
-//! `security` — سپر امنیت چندلایهٔ هرمس (پورت گنجینهٔ NousResearch).
+//! `security` — سپر امنیت چندلایهٔ هرمس (پورت گنجینهٔ `NousResearch`).
 //!
 //! پورت خط‌به‌خط از Wave 2 - Step 2:
 //! - `tools/approval_variation_selectors.py` → [`contains_hidden_variation_selectors`]:
@@ -32,7 +32,7 @@
 #[must_use]
 pub fn contains_hidden_variation_selectors(input: &str) -> bool {
     let chars: Vec<(usize, char)> = input.char_indices().collect();
-    for (i, ch) in chars.iter() {
+    for (i, ch) in &chars {
         let is_vs = matches!(ch, '\u{FE00}'..='\u{FE0F}' | '\u{E0100}'..='\u{E01EF}');
         if !is_vs {
             continue;
@@ -40,7 +40,7 @@ pub fn contains_hidden_variation_selectors(input: &str) -> bool {
         // دنبالهٔ کی‌کیپ مجاز: رقم/#/* + VS16 + U+20E3
         let prev = if *i == 0 { None } else { prev_char(input, *i) };
         let next = next_char(input, *i + ch.len_utf8());
-        if matches!(prev, Some('0'..='9') | Some('#') | Some('*'))
+        if matches!(prev, Some('0'..='9' | '#' | '*'))
             && *ch == '\u{FE0F}'
             && next == Some('\u{20E3}')
         {
@@ -205,6 +205,7 @@ fn find_secret_spans(text: &str) -> Vec<(usize, usize)> {
 ///    اول جایگزین می‌شود تا زیررشته‌ها ناقص نمانند)؛ ۳. هر رخدادِ توکنِ آموخته در
 ///    `assistant_reply` هم با `"[redacted]"` جایگزین می‌شود — رازی که مدل یک‌بار
 ///    دیده، حتی در نثرِ خودش برنمی‌گردد. ورودی‌ها هرگز در‌جا تغییر نمی‌کنند.
+#[must_use]
 pub fn redact_with_learned_propagation(
     tool_outputs: &[String],
     assistant_reply: &str,

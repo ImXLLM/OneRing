@@ -73,7 +73,7 @@ struct RawTelegramUser {
     username: Option<String>,
 }
 
-/// اشتقاق کلید رسمی Telegram MiniApp: `HMAC-SHA256(key = "WebAppData", data = bot_token)`.
+/// اشتقاق کلید رسمی `Telegram MiniApp`: `HMAC-SHA256(key = "WebAppData", data = bot_token)`.
 fn webapp_secret_key(bot_token: &str) -> [u8; 32] {
     let mut mac = Hmac::<Sha256>::new_from_slice(b"WebAppData")
         .unwrap_or_else(|_| unreachable!("WebAppData is a valid HMAC key"));
@@ -147,7 +147,7 @@ pub fn verify_telegram_init_data_at(
     let auth_date_raw = params.iter().find(|(k, _)| k == "auth_date").map(|(_, v)| v.as_str())?;
     let auth_date: i64 = auth_date_raw.parse().ok()?;
     let age = now_secs.checked_sub(auth_date)?;
-    if age > INIT_DATA_MAX_AGE_SECS || age < -INIT_DATA_MAX_FUTURE_SECS {
+    if !(-INIT_DATA_MAX_FUTURE_SECS..=INIT_DATA_MAX_AGE_SECS).contains(&age) {
         return None;
     }
 
@@ -312,8 +312,10 @@ impl RateLimiter {
         // که آخرین hit‌شان بیرون پنجره است — تخلیه می‌شوند: کاربر فعال هرگز
         // ریست نمی‌شود و حافظه به اندازهٔ مجموعهٔ فعال باقی می‌ماند.
         if self.windows.len() > 10_000 {
-            let cutoff = now - window;
-            self.windows.retain(|_, h| h.last().is_some_and(|t| *t > cutoff));
+            // پنجرهٔ کامل سپری نشده باشد، تخلیه‌ای رخ نمی‌دهد (بدون پانیک) —
+            if let Some(cutoff) = now.checked_sub(window) {
+                self.windows.retain(|_, h| h.last().is_some_and(|t| *t > cutoff));
+            }
         }
         Ok(())
     }

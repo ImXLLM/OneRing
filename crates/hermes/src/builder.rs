@@ -369,6 +369,7 @@ fn detect_fallback_kind(context: &str) -> FallbackKind {
 
 /// ساخت قالب HTML تک‌صفحه‌ای تعاملی، زیبا، ریسپانسیو و دارای `localStorage` در حالت Fallback.
 #[must_use]
+#[allow(clippy::too_many_lines)] // قالب HTML سه‌شاخه‌ای — یکجا خوانا و قطعی
 fn synthesize_fallback_html(kind: FallbackKind, title: &str, topic_hint: &str) -> String {
     let safe_title = escape_html(title);
     let safe_hint = escape_html(topic_hint);
@@ -607,26 +608,26 @@ fn synthesize_fallback_turn(
     }
 
     let kind = detect_fallback_kind(&combined_context);
-    let title = if !session.title.trim().is_empty() {
-        session.title.clone()
-    } else {
+    let title = if session.title.trim().is_empty() {
         match kind {
             FallbackKind::Calculator => "محاسبه‌گر هوشمند سود و سناریو".to_owned(),
             FallbackKind::Tracker => "پیگیر هوشمند کارها و عادت‌ها".to_owned(),
             FallbackKind::StudioTool => "میزکار تعاملی و مدیریت ایده‌ها".to_owned(),
         }
+    } else {
+        session.title.clone()
     };
     let topic_hint: String = user_message.trim().chars().take(140).collect();
     let html = synthesize_fallback_html(kind, &title, &topic_hint);
     let preview_html = build_preview_html(&html, &title);
-    let description = if !session.description.trim().is_empty() {
-        session.description.clone()
-    } else {
+    let description = if session.description.trim().is_empty() {
         format!(
             "🚀 {title} — ابزار تک‌صفحه‌ای تعاملی و آمادهٔ اجرا روی موبایل و دسکتاپ.\n\
              دیگر نیازی به فایل‌های پراکنده و ابزارهای پیچیده نیست؛ این مینی‌اپ سبک با رابط سایبرپانکی مدرن و ذخیرهٔ خودکار در مرورگر، کار شما را در چند ثانیه انجام می‌دهد.\n\
              تحویل آنی بلافاصله پس از خرید با تضمین اسکرو کیان."
         )
+    } else {
+        session.description.clone()
     };
     let suggested_price = if session.suggested_price > 0 && session.suggested_price != 100 {
         session.suggested_price

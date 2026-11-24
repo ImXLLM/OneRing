@@ -25,10 +25,15 @@ pub mod loop_guard;
 pub mod orchestrator;
 pub mod port;
 pub mod shell;
+pub mod telegram_api9;
 pub mod update;
 
 pub use backlog::{drain_backlog_offset, next_offset, DrainOutcome};
 pub use loop_guard::{BotLoopGuard, LoopGuardDecision, LoopReason, MAX_CONSECUTIVE_BOT_TURNS};
 pub use orchestrator::{BotAction, BotCore, BotPolicy, LinkButton};
 pub use port::{BotEconomy, BotError, BotMe, KernelPort};
+pub use telegram_api9::{
+    validate_init_data, InitDataError, StartAppPayload, StartAppPayloadError,
+    StarsInvoicePayload, StarsPayloadError, ValidatedInitData,
+};
 pub use update::BotUpdate;
