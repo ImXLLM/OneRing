@@ -25,6 +25,7 @@ pub mod nation;
 pub mod quant;
 pub mod security;
 pub mod studio;
+pub mod supremacy;
 pub mod system;
 pub mod trinity;
 pub mod wallet;
@@ -86,6 +87,14 @@ pub use monopoly::{
     MonopolyContractAuditView, MonopolyGenomeMatrixResponse, MonopolyGenomeModelView,
     MonopolyRouteModelRequest, MonopolyRouteModelResponse, MonopolyRoutingRuleView,
     MonopolySimulateSplitRequest, MonopolySimulateSplitResponse, MonopolySplitLegView,
+};
+pub use supremacy::{
+    SupremacyCheckpointForkRequest, SupremacyCheckpointForkResponse, SupremacyMaironSealView,
+    SupremacyMcpErrorView, SupremacyMcpRequest, SupremacyMcpResponse,
+    SupremacySandboxBundleView, SupremacySweCheckView, SupremacySweVerifyRequest,
+    SupremacySweVerifyResponse, SupremacyWorkflowExecuteRequest, SupremacyWorkflowExecuteResponse,
+    SupremacyWorkflowNodeDto, SupremacyWorkflowNodeResultView, SupremacyWorkflowSpecDto,
+    SupremacySurgicalPatchRequest, SupremacySurgicalPatchResponse,
 };
 pub use builder::{
     BuilderChatRequest, BuilderChatResponse, BuilderMessageView, BuilderSessionListResponse,

@@ -149,6 +149,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         //  → کالبد ۳ مایرون IQ=150/EQ=145 با حلقهٔ خودترمیمی تا گیت REA >= 85)
         .route("/builder/trinity/alpha", post(builder::trinity_alpha))
         .route("/builder/trinity/orchestrate", post(builder::trinity_orchestrate))
+        // Gate 3 (Commit #28) — aliasهایِ مستقیمِ ترامینیتی: هر دو مسیرِ
+        // `/builder/trinity/*` و `/trinity/*` روی همان هندلرهایِ قطعی می‌نشینند.
+        .route("/trinity/alpha", post(builder::trinity_alpha))
+        .route("/trinity/orchestrate", post(builder::trinity_orchestrate))
         // arda — Wave 4: بومی‌سازیِ سیاره‌ایِ ۲۴ساعته روی معماری اصیل Fishkal
         // (کاتالوگِ عمومیِ ۲۰ زبان + اجرای زندهٔ ARDA با تزریقِ ایدمپوتنت)
         .route("/arda/flags", get(arda::flags_catalog))
@@ -162,6 +166,14 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/monopoly/route-model", post(monopoly::route_model))
         .route("/monopoly/charter-and-base", get(monopoly::charter_and_base))
         .route("/monopoly/simulate-split", post(monopoly::simulate_split))
+        // supremacy — Wave 8 (Commit #28): چهار ستونِ برتریِ رقابتی
+        // (Bolt/Lovable live-diff · LangGraph time-travel · Dify/n8n DAG ·
+        //  OpenHands SWE self-heal) + پلِ MCP JSON-RPC 2.0
+        .route("/supremacy/surgical-patch", post(hermes::supremacy_surgical_patch))
+        .route("/supremacy/checkpoint/fork", post(hermes::supremacy_checkpoint_fork))
+        .route("/supremacy/workflow/execute", post(hermes::supremacy_workflow_execute))
+        .route("/supremacy/mcp", post(hermes::supremacy_mcp))
+        .route("/supremacy/swe-verify", post(hermes::supremacy_swe_verify))
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
         // ۹-مدالیتیِ صفر-هزینه + ویترین پورتفولیو (۶ درمانِ قضایی)
         .route("/studio/ux-profiles", get(studio::ux_profiles))
@@ -324,5 +336,33 @@ mod tests {
         }
         let (idx, status) = last.expect("at least one probe");
         assert_eq!(status, 429, "request #{idx} over the limit must be 429");
+    }
+
+    /// Gate 3 (Commit #28) — alias مستقیمِ `/api/v1/trinity/alpha` باید روی
+    /// همان هندلرِ `/builder/trinity/alpha` برسد: ۴۰۱ (گوارِ نشست)، نه ۴۰۴.
+    #[tokio::test]
+    async fn trinity_alpha_direct_alias_is_registered() {
+        let app = hardened_app(10_000).await;
+        for path in ["/api/v1/trinity/alpha", "/api/v1/builder/trinity/alpha"] {
+            let req = axum::http::Request::builder()
+                .method("POST")
+                .uri(path)
+                .header("content-type", "application/json")
+                .body(Body::from(r#"{"vision":"probe"}"#))
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            let status = res.status().as_u16();
+            assert_ne!(status, 404, "{path} must be routed");
+            assert_eq!(status, 401, "{path} must hit the same session guard");
+        }
+        // orchestrate هم همان قرارداد را دارد
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/trinity/orchestrate")
+            .header("content-type", "application/json")
+            .body(Body::from("{}"))
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_ne!(res.status(), 404, "orchestrate alias must be routed");
     }
 }

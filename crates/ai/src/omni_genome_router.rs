@@ -647,6 +647,206 @@ pub fn load_sovereign_penta_registry(genome_root: &Path) -> Result<Vec<ModelGeno
         .collect()
 }
 
+// ── انتخابِ دومُدِ قطعی — ManualOverride / AgentAutoDecision (Commit #28) ──
+
+/// حالتِ انتخابِ مدل روی ماتریسِ پنتامدلی — هر دو نمادِ دقیقِ وایر:
+/// `ManualOverride { model }` (کاربر صراحتاً یکی از ۵ مدل را قفل می‌کند؛
+/// alias ها حل می‌شوند؛ ناشناخته fail-closed) و `AgentAutoDecision`
+/// (روتر تلمتریِ تسک را تحلیل و خودِ آن مدلِ بهینه را برمی‌گزیند).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelSelectionMode {
+    /// آوریِ دستی — مدلِ exact یا alias (`GLM 5.3 flash MAX`, `gpt-6-web`, …).
+    ManualOverride {
+        /// شناسهٔ مدلِ انتخابیِ کاربر.
+        model: String,
+    },
+    /// تصمیمِ خودِ ایجنت — تحلیلِ تلمتریِ پرامپت و انتخابِ خودکار.
+    AgentAutoDecision,
+}
+
+/// خطایِ انتخابِ مدل — تنها شکستِ ممکن: alias/شناسهٔ ناشناخته.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RouterModeError {
+    /// هیچ مدلِ حاکمی با این شناسه/alias هم‌خوان نیست — هیچ حدسی زده نمی‌شود.
+    UnknownModelAlias {
+        /// شناسهٔ ردشده.
+        model: String,
+    },
+}
+
+impl std::fmt::Display for RouterModeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownModelAlias { model } => {
+                write!(f, "unknown sovereign model alias: {model}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for RouterModeError {}
+
+/// تصمیمِ انتخابِ دومُد — خروجیِ قطعیِ [`manual_override`] و
+/// [`agent_auto_decision`].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DualModeDecision {
+    /// پوشهٔ canonical مدلِ انتخاب‌شده (`05-glm-5.3-flash-max`, …).
+    pub selected_dir: &'static str,
+    /// نامِ نمایشیِ مدل (`GLM 5.3 flash MAX`, …).
+    pub selected_model: String,
+    /// حالتِ انتخاب — `manual_override` | `agent_auto_decision`.
+    pub selection_mode: &'static str,
+    /// اطمینان — آوریِ دستی همیشه `1.0`؛ خودکار `0.55..=0.95`.
+    pub confidence_score: f32,
+    /// توضیحِ قابلِ ممیزیِ تصمیم.
+    pub decision_rationale: String,
+    /// aliasِ تطبیق‌یافته — فقط در آوریِ دستیِ غیر-exact معنا دارد.
+    pub matched_alias: Option<String>,
+}
+
+/// سیگنال‌هایِ تلمتریِ روترِ خودکار — `(signal, keywords, champion_dir)`.
+/// ترتیبِ جدول = ترتیبِ شکستِ تساوی (اولینِ ماتریس می‌برد).
+const ROUTER_TELEMETRY_SIGNALS: &[(&str, &[&str], &str)] = &[
+    (
+        "flash_agentic_tool_density",
+        &["flash", "fast", "quick", "agentic", "tool", "batch", "rapid", "patch", "multi-tool", "instant"],
+        "05-glm-5.3-flash-max",
+    ),
+    (
+        "quant_math_backtest_depth",
+        &["quant", "backtest", "math", "sharpe", "candle", "strategy", "numeric", "derivation", "proof"],
+        "03-deepseek-3.2-web-think-mode",
+    ),
+    (
+        "rust_solidity_systems_audit",
+        &["rust", "solidity", "audit", "borrow", "gas", "reentrancy", "refactor", "unsafe", "compiler"],
+        "04-claude-sonnet-5.5-extra",
+    ),
+    (
+        "long_context_multimodal",
+        &["1m", "context", "multimodal", "vision", "audio", "document", "video", "long-form"],
+        "02-gemini-4-aragon-high",
+    ),
+    (
+        "live_web_and_ui_craft",
+        &["web", "live", "search", "browser", "ui", "html", "css", "landing", "frame"],
+        "01-gpt-6-web",
+    ),
+];
+
+/// **`manual_override`** — آوریِ دستیِ کاربر روی ۵ مدلِ حاکم: alias حل می‌شود،
+/// مدلِ ناشناخته fail-closed رد می‌شود، اطمینان همیشه `1.0`.
+///
+/// # Errors
+/// [`RouterModeError::UnknownModelAlias`] برایِ شناسه/aliasِ ناشناخته.
+pub fn manual_override(model: &str) -> Result<DualModeDecision, RouterModeError> {
+    let Some(dir) = resolve_sovereign_model_alias(model) else {
+        return Err(RouterModeError::UnknownModelAlias {
+            model: model.trim().to_owned(),
+        });
+    };
+    let exact = SOVEREIGN_MODEL_DIRS.contains(&dir) && dir.eq_ignore_ascii_case(model.trim());
+    let matched_alias = (!exact || !dir.eq(model.trim())).then(|| model.trim().to_owned());
+    Ok(DualModeDecision {
+        selected_dir: dir,
+        selected_model: display_name_for_dir(dir).to_owned(),
+        selection_mode: "manual_override",
+        confidence_score: 1.0,
+        decision_rationale: format!(
+            "manual override: user pinned `{}` → resolved to `{dir}` across the 5-model 45-file genome matrix",
+            model.trim()
+        ),
+        matched_alias: if dir.eq(model.trim()) { None } else { matched_alias },
+    })
+}
+
+/// **`agent_auto_decision`** — روترِ خودکار: تلمتریِ پرامپت (کلیدواژه‌ها،
+/// چگالیِ ابزار، عمقِ ریاضی/کوانت، نیازِ UI/وب، پیچیدگیِ Rust/Solidity) تحلیل
+/// و مدلِ قهرمانِ سیگنالِ غالب انتخاب می‌شود؛ تساوی → ترتیبِ ماتریس؛
+/// بدونِ سیگنال → قهرمانِ عمومیِ وب/UI (`01-gpt-6-web`) با rationale صادقانه.
+#[must_use]
+#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)] // امتیاز کوچکِ کران‌شده
+pub fn agent_auto_decision(task_prompt: &str) -> DualModeDecision {
+    let needle = task_prompt.to_ascii_lowercase();
+    let mut scores: [i64; 5] = [0; 5];
+    let mut matched_signals: Vec<&str> = Vec::new();
+    let mut total_hits = 0i64;
+    for (signal, keywords, dir) in ROUTER_TELEMETRY_SIGNALS {
+        let hits: i64 = keywords
+            .iter()
+            .filter(|kw| needle.contains(**kw))
+            .count()
+            .try_into()
+            .unwrap_or(0);
+        if hits > 0 {
+            matched_signals.push(signal);
+            total_hits += hits;
+        }
+        if let Some(idx) = SOVEREIGN_MODEL_DIRS.iter().position(|d| *d == *dir) {
+            scores[idx] += hits;
+        }
+    }
+    let mut best_idx = 0usize;
+    for (idx, &score) in scores.iter().enumerate() {
+        if score > scores[best_idx] {
+            best_idx = idx;
+        }
+    }
+    let dir = SOVEREIGN_MODEL_DIRS[best_idx];
+    let rationale = if matched_signals.is_empty() {
+        format!(
+            "agent auto decision: no telemetry signals matched in prompt — defaulting to general \
+             web/UI champion `{dir}` (matrix fallback, fail-honest)"
+        )
+    } else {
+        format!(
+            "agent auto decision: telemetry signals [{}] with {total_hits} keyword \
+             hit(s) → champion `{dir}` (ties broken by matrix order)",
+            matched_signals.join(", ")
+        )
+    };
+    let confidence = if matched_signals.is_empty() {
+        0.55_f32
+    } else {
+        (0.55 + 0.08 * f64::from(u32::try_from(total_hits).unwrap_or(u32::MAX)).min(5.0)) as f32
+    };
+    DualModeDecision {
+        selected_dir: dir,
+        selected_model: display_name_for_dir(dir).to_owned(),
+        selection_mode: "agent_auto_decision",
+        confidence_score: confidence.min(0.95),
+        decision_rationale: rationale,
+        matched_alias: None,
+    }
+}
+
+/// اجرایِ [`ModelSelectionMode`] — تنها نقطهٔ ورودِ رویِ وایر (`route-model`).
+///
+/// # Errors
+/// [`RouterModeError::UnknownModelAlias`] فقط در آوریِ دستیِ ناشناخته.
+pub fn route_with_selection_mode(
+    mode: &ModelSelectionMode,
+    task_prompt: &str,
+) -> Result<DualModeDecision, RouterModeError> {
+    match mode {
+        ModelSelectionMode::ManualOverride { model } => manual_override(model),
+        ModelSelectionMode::AgentAutoDecision => Ok(agent_auto_decision(task_prompt)),
+    }
+}
+
+/// نامِ نمایشیِ پوشهٔ canonical — هم‌خوان با رجیستریِ builtin.
+fn display_name_for_dir(dir: &str) -> &'static str {
+    match dir {
+        "01-gpt-6-web" => "GPT 6-Web",
+        "02-gemini-4-aragon-high" => "GEMINI 4 ARAGON HIGH",
+        "03-deepseek-3.2-web-think-mode" => "DeepSeek-3.2-WEB-Think-mode",
+        "04-claude-sonnet-5.5-extra" => "Cluade-sonnet-5.5-extra",
+        "05-glm-5.3-flash-max" => "GLM 5.3 flash MAX",
+        _ => "unknown-sovereign-model",
+    }
+}
+
 #[allow(clippy::cast_precision_loss)] // امتیازهای ثابت 0..=1 — دقت f32 کافی
 fn scores_to_profile(
     model_id: &str,
@@ -1349,5 +1549,141 @@ mod tests {
         // شدت‌ها نسبت به هم سخت‌گیرترند — رشتهٔ متمایز هر چهار حالت
         assert_ne!(lite, full);
         assert_ne!(full, ultra);
+    }
+
+    // ── انتخابِ دومُدِ قطعی — ManualOverride / AgentAutoDecision (Commit #28) ─
+
+    /// `manual_override` — alias ها همهٔ ۵ مدل حل می‌شوند؛ exact پوشه می‌ماند
+    /// (`matched_alias` = None)؛ ناشناخته fail-closed؛ اطمینان همیشه 1.0.
+    #[test]
+    fn manual_override_resolves_all_five_models_and_fails_closed() {
+        for (alias, dir) in [
+            ("gpt-6-web", "01-gpt-6-web"),
+            ("GLM 5.3 flash MAX", "05-glm-5.3-flash-max"),
+            ("glm-5.3-flash-max", "05-glm-5.3-flash-max"),
+            ("Cluade-sonnet-5.5-extra", "04-claude-sonnet-5.5-extra"),
+            ("Claude-sonnet-5.5-extra", "04-claude-sonnet-5.5-extra"),
+            ("DeepSeek-3.2-WEB-Think-mode", "03-deepseek-3.2-web-think-mode"),
+            ("GEMINI 4 ARAGON HIGH", "02-gemini-4-aragon-high"),
+        ] {
+            let d = manual_override(alias).expect("known alias");
+            assert_eq!(d.selected_dir, dir, "{alias}");
+            assert_eq!(d.selection_mode, "manual_override");
+            assert!((d.confidence_score - 1.0).abs() < f32::EPSILON);
+            if d.selected_dir.eq_ignore_ascii_case(alias) {
+                assert!(d.matched_alias.is_none(), "exact dir pin has no alias");
+            } else {
+                assert_eq!(d.matched_alias.as_deref(), Some(alias));
+            }
+        }
+        // exact مسیرِ پوشه نیز پذیرفته می‌شود
+        let exact = manual_override("05-glm-5.3-flash-max").expect("exact dir");
+        assert_eq!(exact.selected_dir, "05-glm-5.3-flash-max");
+        assert!(exact.matched_alias.is_none());
+        // ناشناخته → fail-closed
+        assert_eq!(
+            manual_override("gpt-5-turbo"),
+            Err(RouterModeError::UnknownModelAlias {
+                model: "gpt-5-turbo".to_owned()
+            })
+        );
+        assert!(matches!(
+            manual_override("   "),
+            Err(RouterModeError::UnknownModelAlias { .. })
+        ));
+    }
+
+    /// `agent_auto_decision` — تلمتریِ پرامپت روی هر ۵ قهرمان قطعی است؛
+    /// تساوی → ترتیبِ ماتریس؛ بدونِ سیگنال → فال‌بکِ صادقانه؛ سقفِ اطمینان ۰.۹۵.
+    #[test]
+    fn agent_auto_decision_routes_telemetry_deterministically_across_five() {
+        let cases = [
+            (
+                "batch agentic tool loop with rapid patch verification, keep it fast",
+                "05-glm-5.3-flash-max",
+            ),
+            (
+                "backtest this quant strategy: sharpe, candles and numeric proof",
+                "03-deepseek-3.2-web-think-mode",
+            ),
+            (
+                "audit this rust borrow checker issue and the solidity gas reentrancy",
+                "04-claude-sonnet-5.5-extra",
+            ),
+            (
+                "summarize a long-form multimodal document with vision and audio context",
+                "02-gemini-4-aragon-high",
+            ),
+            (
+                "build a live web ui landing frame with html css search",
+                "01-gpt-6-web",
+            ),
+        ];
+        for (prompt, dir) in cases {
+            let d = agent_auto_decision(prompt);
+            assert_eq!(d.selected_dir, dir, "prompt: {prompt}");
+            assert_eq!(d.selection_mode, "agent_auto_decision");
+            assert!(d.confidence_score > 0.55, "signal confidence: {}", d.confidence_score);
+            assert!(
+                d.decision_rationale.contains("telemetry signals"),
+                "{}",
+                d.decision_rationale
+            );
+        }
+        // قطعیت — همان ورودی، همان تصمیم
+        let a = agent_auto_decision("agentic tool batch");
+        let b = agent_auto_decision("agentic tool batch");
+        assert_eq!(a, b);
+        // بدونِ سیگنال → فال‌بکِ ماتریس با rationale صادقانه
+        let fallback = agent_auto_decision("hello world");
+        assert_eq!(fallback.selected_dir, "01-gpt-6-web");
+        assert!(fallback.decision_rationale.contains("no telemetry signals"));
+        assert!((fallback.confidence_score - 0.55).abs() < f32::EPSILON);
+        // سقفِ اطمینان — ۰.۹۵
+        let saturated =
+            agent_auto_decision("fast flash quick agentic tool batch rapid patch multi-tool instant");
+        assert!((saturated.confidence_score - 0.95).abs() < 1e-6);
+    }
+
+    /// `route_with_selection_mode` — `ManualOverride` بر تلمتری غالب است و
+    /// `AgentAutoDecision` همان روترِ قطعی را اجرا می‌کند؛ وایر `snake_case`.
+    #[test]
+    fn route_with_selection_mode_manual_beats_auto_and_serializes() {
+        let manual = route_with_selection_mode(
+            &ModelSelectionMode::ManualOverride {
+                model: "GLM 5.3 flash MAX".to_owned(),
+            },
+            "quant backtest please",
+        )
+        .expect("manual wins");
+        assert_eq!(manual.selected_dir, "05-glm-5.3-flash-max");
+        assert_eq!(manual.selection_mode, "manual_override");
+        let auto = route_with_selection_mode(
+            &ModelSelectionMode::AgentAutoDecision,
+            "quant backtest please",
+        )
+        .expect("auto");
+        assert_eq!(auto.selected_dir, "03-deepseek-3.2-web-think-mode");
+        assert_eq!(auto.selection_mode, "agent_auto_decision");
+        // خطایِ دستی روی وایر هم fail-closed می‌ماند
+        assert!(matches!(
+            route_with_selection_mode(
+                &ModelSelectionMode::ManualOverride { model: "nope".to_owned() },
+                "anything"
+            ),
+            Err(RouterModeError::UnknownModelAlias { .. })
+        ));
+        // سریال‌سازیِ snake_case روی وایر
+        assert_eq!(
+            serde_json::to_value(&ModelSelectionMode::AgentAutoDecision).unwrap(),
+            serde_json::json!("agent_auto_decision")
+        );
+        assert_eq!(
+            serde_json::to_value(&ModelSelectionMode::ManualOverride {
+                model: "GLM 5.3 flash MAX".to_owned()
+            })
+            .unwrap(),
+            serde_json::json!({ "manual_override": { "model": "GLM 5.3 flash MAX" } })
+        );
     }
 }

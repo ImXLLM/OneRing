@@ -274,4 +274,105 @@ mod tests {
             assert!(!dev_mode_from_env(Some(off.into())), "{off} must stay off");
         }
     }
+
+    // ── D6 — پاریتیِ قطعیِ ۶۹کلیدیِ P0 تا P5 روی هر سه فایلِ env (Commit #28) ──
+
+    /// ریشهٔ ورک‌اسپیس از `CARGO_MANIFEST_DIR` (`crates/server` → ریشه).
+    fn workspace_root() -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(2)
+            .expect("workspace root is two levels above crates/server")
+            .to_path_buf()
+    }
+
+    /// کلیدهایِ `KEY=VALUE` یک فایلِ env به ترتیبِ ظاهری — کامنت/سطرِ خالی نادیده.
+    fn parse_env_keys(path: &std::path::Path) -> Vec<String> {
+        std::fs::read_to_string(path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+            .lines()
+            .filter_map(|line| {
+                let t = line.trim();
+                if t.is_empty() || t.starts_with('#') {
+                    return None;
+                }
+                let key = t.split('=').next()?.trim();
+                let is_key = !key.is_empty()
+                    && key
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_');
+                is_key.then(|| key.to_owned())
+            })
+            .collect()
+    }
+
+    /// هر سه فایلِ env باید دقیقاً همان ۶۹ کلیدِ کانونیک را در همان ترتیبِ
+    /// P0 → P5 حمل کنند — قفلِ قطعیِ Gate 2 (D6).
+    #[test]
+    fn env_files_have_exact_69_key_p0_to_p5_parity() {
+        let root = workspace_root();
+        let env_path = root.join(".env.example");
+        let railway_path = root.join("railway.env.example");
+        let json_path = root.join("railway-env-v1.0.0.json");
+
+        let canonical = parse_env_keys(&env_path);
+        assert_eq!(canonical.len(), 69, ".env.example must carry exactly 69 keys");
+        let p0 = ["KIAN_DATABASE_URL", "KIAN_HOST", "KIAN_PORT", "KIAN_SEED_DATABASE_PATH", "KIAN_BACKUP_DIR", "KIAN_KEEP_BACKUPS"];
+        for (idx, key) in p0.iter().enumerate() {
+            assert_eq!(canonical[idx], *key, "P0 block must open .env.example in order");
+        }
+
+        // railway.env.example — همان ترتیبِ بایت‌به‌بایت
+        let railway = parse_env_keys(&railway_path);
+        assert_eq!(railway.len(), 69, "railway.env.example must carry exactly 69 keys");
+        assert_eq!(railway, canonical, "railway.env.example key order must mirror .env.example exactly");
+
+        // railway-env-v1.0.0.json — گروه‌هایِ P0..P5 با همان مجموعهٔ کلید
+        let raw = std::fs::read_to_string(&json_path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", json_path.display()));
+        let parsed: serde_json::Value = serde_json::from_str(&raw)
+            .unwrap_or_else(|e| panic!("railway-env json must parse: {e}"));
+        let groups = [
+            "P0_critical_boot_network_storage",
+            "P1_sovereign_security_fail_closed",
+            "P2_ai_inference_mesh",
+            "P3_telegram_bridge",
+            "P4_non_custodial_treasury_rails",
+            "P5_runtime_governance_build_vars",
+        ];
+        let mut json_keys = Vec::new();
+        for g in groups {
+            let obj = parsed
+                .get(g)
+                .unwrap_or_else(|| panic!("missing priority group {g}"))
+                .as_object()
+                .unwrap_or_else(|| panic!("group {g} must be an object"));
+            json_keys.extend(obj.keys().cloned());
+        }
+        assert_eq!(json_keys.len(), 69, "json must carry exactly 69 env keys");
+        let mut sorted_json = json_keys.clone();
+        sorted_json.sort();
+        let mut sorted_canonical = canonical.clone();
+        sorted_canonical.sort();
+        assert_eq!(sorted_json, sorted_canonical, "json key set must equal the 69 canonical keys");
+        // KIAN_DEV_MODE=0 و کلیدِ ادمینِ ≥۱۶ کاراکتری روی وایرِ JSON
+        assert_eq!(parsed["P1_sovereign_security_fail_closed"]["KIAN_DEV_MODE"], "0");
+        assert_eq!(
+            parsed["P1_sovereign_security_fail_closed"]["KIAN_ADMIN_KEY"],
+            "replace-with-32-char-sovereign-admin-key-min16"
+        );
+
+        // ترتیبِ فیزیکیِ فایلِ JSON — اولینِ وقوعِ هر کلید باید در همان ترتیبِ
+        // P0 → P5 بیاید (گروه‌ها پیش از _notes می‌آیند).
+        let mut last: Option<usize> = None;
+        for key in &canonical {
+            let needle = format!("\"{key}\"");
+            let pos = raw.find(&needle).unwrap_or_else(|| panic!("key {key} absent from json"));
+            if let Some(prev) = last {
+                assert!(pos > prev, "json key {key} appears out of P0→P5 order");
+            }
+            last = Some(pos);
+        }
+    }
+
 }

@@ -1,14 +1,14 @@
 {
   "_meta": {
     "project": "KIAN",
-    "version": "1.0.0",
+    "version": "1.0.0-wave8",
     "platform": "Railway (Railpack 0.43 builder · startCommand: ./bin/kian-server · healthcheck: /health · public port: 8088)",
     "source_of_truth": [
       "crates/server/src/config.rs",
       "crates/ai/src/gateway.rs",
       "crates/bot/src/main.rs",
-      "crates/server/src/main.rs (RUST_LOG)",
-      "crates/bot/src/main.rs (RUST_LOG)",
+      "crates/server/src/main.rs (log filter)",
+      "crates/bot/src/main.rs (log filter)",
       "apps/web/lib/api.ts",
       "apps/web/app/layout.tsx",
       "apps/web/components/kian/ton-connect.tsx",
@@ -16,37 +16,44 @@
       "apps/admin/lib/admin-api.ts",
       "packages/sdk/src/index.ts",
       "railpack.json",
-      "railway.env.example"
+      "railway.env.example",
+      ".env.example"
     ],
     "dna_env_keys": 69,
+    "key_layout": "exactly the same 69 canonical keys in the exact same P0 -> P5 order as .env.example and railway.env.example — enforced by the unit test env_files_have_exact_69_key_p0_to_p5_parity in crates/server/src/config.rs",
     "railpack_build_keys": 1,
     "volume_warning": "KIAN_DATABASE_URL=/app/data/kian.sqlite فقط وقتی کار می‌کند که در Railway یک Volume روی مسیر /app/data سرویس mount شده باشد؛ وگرنه بعد از هر deploy دیتابیس پاک می‌شود.",
     "railpack_already_sets": {
       "ROCKET_ADDRESS": "0.0.0.0 (اتومات Railpack — KIAN از axum استفاده می‌کند و این متغیر را نمی‌خواند؛ بی‌ضرر)",
       "RAILPACK_VERSION": "0.43.0"
     },
-    "note": "نقشهٔ کامل env — گروه‌بندی اولویت‌دار. پوشش ۱۰۰٪: کد دقیقاً همین ۳۶ کلید را می‌خواند (۲۱ در server/config.rs + ۱۰ در ai/gateway.rs + ۱ در bot/main.rs + ۴ متغیر بیلد Next.js) به‌علاوهٔ RUST_LOG برای tracing و RAILPACK_CARGO_WORKSPACE برای بیلد. هیچ مقدار واقعی/سکرتی در این فایل نیست؛ جای‌نماها با <> مشخص‌اند. گروه‌های optional_advanced و never_set_in_production عمداً خالی‌اند — KIAN هیچ تیون پنهانی و هیچ درِ پشتی env-محوری ندارد؛ طراحی fail-closed است.",
-    "companion": "README.md §Deploy on Railway · railway.env.example (نسخهٔ Raw Editor)",
-    "d6_hardening": "D6 — همگام با .env.example و railway.env.example: KIAN_DEV_MODE=0 صریح در P1، کلید ادمین ≥۱۶ کاراکتر، KIAN_SEED_DATABASE_PATH و همهٔ کلیدهای Wave 3-7 (استودیو/کوانت/انحصار) در این قالب حاضرند."
+    "note": "نقشهٔ کامل env — گروه‌بندی اولویت‌دار P0 تا P5. پوشش ۱۰۰٪ کد: همهٔ ۶۹ کلید در همین فایل، بی‌هیچ کلیدِ اضافه‌ای (drift) و بی‌هیچ کلیدِ گمشده. هیچ مقدار واقعی/سکرتی در این فایل نیست؛ جای‌نماها با <> مشخص‌اند. طراحی fail-closed است.",
+    "companion": "README.md §Deploy on Railway · railway.env.example (نسخهٔ Raw Editor) · .env.example (شبِ تستِ محلی)",
+    "d6_hardening": "D6 — پاریتیِ کاملِ ۶۹کلیدیِ P0 تا P5 با .env.example و railway.env.example؛ KIAN_DEV_MODE=0 صریح در P1؛ کلید ادمین ≥۱۶ کاراکتر؛ KIAN_SEED_DATABASE_PATH و همهٔ کلیدهای Wave 3-8 در همین گروه‌ها حاضرند.",
+    "wave8": "Commit #28 — Gate 2 D6 closure: این فایل اکنون دقیقاً همان ۶۹ کلیدِ کانونیک را با همان ترتیبِ P0 تا P5 حمل می‌کند؛ گروه‌هایِ drift حذف شدند."
   },
-  "required": {
+  "P0_critical_boot_network_storage": {
     "KIAN_DATABASE_URL": "/app/data/kian.sqlite",
     "KIAN_HOST": "0.0.0.0",
     "KIAN_PORT": "8088",
     "KIAN_SEED_DATABASE_PATH": "/app/seed/kian-production.db",
-    "KIAN_TRUST_PROXY": "true",
-    "KIAN_ADMIN_KEY": "replace-with-32-char-sovereign-admin-key-min16",
-    "KIAN_DEV_MODE": "0",
-    "KIAN_BOT_TOKEN": "<از @BotFather>",
-    "KIAN_BOT_WEBHOOK_SECRET": "<خروجی: openssl rand -hex 16>",
-    "KIAN_MINIAPP_URL": "<لینک مینی‌اپ — مثال: https://t.me/ZeroXmain_Bot>"
+    "KIAN_BACKUP_DIR": "/app/data/backups",
+    "KIAN_KEEP_BACKUPS": "7"
   },
-  "high": {
+  "P1_sovereign_security_fail_closed": {
+    "KIAN_ADMIN_KEY": "replace-with-32-char-sovereign-admin-key-min16",
+    "KIAN_TRUST_PROXY": "true",
+    "KIAN_CORS_ORIGIN": "<دامنه‌های مجاز با کاما — مثال: https://kian-web.up.railway.app>",
+    "KIAN_DEV_MODE": "0"
+  },
+  "P2_ai_inference_mesh": {
     "OPENCODE_API_KEY": "",
     "KIAN_AI_BASE_URL": "",
     "KIAN_AI_API_KEY": "",
     "KIAN_AI_MODEL": "",
     "KIAN_AI_FALLBACK_MODEL": "",
+    "KIAN_AI_FALLBACK_URL": "",
+    "KIAN_AI_FALLBACK_KEY": "",
     "KIAN_AI_PRIMARY_URL": "<مثال: https://generativelanguage.googleapis.com/v1beta/openai>",
     "KIAN_AI_PRIMARY_KEY": "<کلید اسلات اول>",
     "KIAN_AI_PRIMARY_MODEL": "<مثال: gemini-2.0-flash>",
@@ -56,8 +63,6 @@
     "KIAN_AI_TERTIARY_URL": "",
     "KIAN_AI_TERTIARY_KEY": "",
     "KIAN_AI_TERTIARY_MODEL": "",
-    "KIAN_AI_FALLBACK_URL": "",
-    "KIAN_AI_FALLBACK_KEY": "",
     "KIAN_AI_COARENA_URL": "",
     "KIAN_AI_COARENA_KEY": "",
     "KIAN_AI_COARENA_KEYS": "",
@@ -70,7 +75,17 @@
     "KIAN_AI_ROUTER9_KEY": "",
     "KIAN_AI_ROUTER9_KEYS": "",
     "KIAN_AI_ROUTER9_MODELS": "",
-    "KIAN_AI_DAILY_TOKENS": "50000",
+    "KIAN_AI_DAILY_TOKENS": "50000"
+  },
+  "P3_telegram_bridge": {
+    "KIAN_BOT_TOKEN": "<از @BotFather>",
+    "KIAN_BOT_WEBHOOK_SECRET": "<خروجی: openssl rand -hex 16>",
+    "KIAN_MINIAPP_URL": "<لینک مینی‌اپ — مثال: https://t.me/ZeroXmain_Bot>",
+    "KIAN_KERNEL_URL": "",
+    "NEXT_PUBLIC_KIAN_API": "<URL API کرنل برای web و @kian/sdk>",
+    "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME": ""
+  },
+  "P4_non_custodial_treasury_rails": {
     "KIAN_TON_TREASURY": "",
     "KIAN_TON_TO_DIN": "1000",
     "KIAN_USDT_TO_DIN": "1000",
@@ -80,45 +95,23 @@
     "KIAN_TREASURY_BSC": "",
     "KIAN_NATION_QUORUM": "3"
   },
-  "medium": {
-    "KIAN_CORS_ORIGIN": "<دامنه‌های مجاز با کاما — مثال: https://kian-web.up.railway.app>",
+  "P5_runtime_governance_build_vars": {
     "KIAN_SESSION_TTL_HOURS": "168",
     "KIAN_RATE_LIMIT": "120",
-    "KIAN_STUDIO_DEFAULT_TIER": "auto",
-    "KIAN_STUDIO_MAX_ARTIFACT_BYTES": "",
-    "KIAN_STUDIO_STOREFRONT_DEFAULT_XTR": "50",
-    "KIAN_PORTFOLIO_CATALOG_PATH": "",
-    "KIAN_GENOME_ROOT_PATH": "",
-    "KIAN_MONOPOLY_MAX_LIST": "100",
-    "KIAN_QUANT_DEFAULT_BARS": "720",
-    "KIAN_QUANT_DEFAULT_SEED": "2026",
-    "KIAN_QUANT_MAX_LIST": "100"
-  },
-  "low": {
-    "KIAN_BACKUP_DIR": "/app/data/backups",
-    "KIAN_KEEP_BACKUPS": "7",
-    "KIAN_KERNEL_URL": "",
-    "RUST_LOG": "info"
-  },
-  "frontend_separate_services": {
+    "RUST_LOG": "info",
+    "RAILPACK_CARGO_WORKSPACE": "kian-server",
     "NEXT_PUBLIC_SITE_URL": "<URL عمودی apps/web — متا/کاننیکال>",
     "NEXT_PUBLIC_KIAN_URL": "<URL کرنل برای TonConnect در web و miniapp>",
-    "NEXT_PUBLIC_KIAN_API": "<URL API کرنل برای web و @kian/sdk>",
     "NEXT_PUBLIC_KERNEL_URL": "<URL کرنل برای apps/admin — مثال: https://kian.up.railway.app>",
-    "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME": ""
-  },
-  "railpack_build": {
-    "RAILPACK_CARGO_WORKSPACE": "kian-server"
-  },
-  "optional_advanced": {},
-  "never_set_in_production": {},
-  "auto_do_not_set": {
-    "PORT": "<خودکار: Railway تزریق می‌کند؛ KIAN آن را نمی‌خواند — یا پورت عمومی سرویس را روی 8088 بگذارید یا KIAN_PORT=${{PORT}}> ",
-    "ROCKET_ADDRESS": "<خودکار: Railpack ست می‌کند — KIAN (axum) نمی‌خواند؛ دستی ست نکن>",
-    "RAILWAY_ENVIRONMENT": "<خودکار: Railway>",
-    "RAILWAY_PUBLIC_DOMAIN": "<خودکار: Railway — می‌توانید دستی در KIAN_CORS_ORIGIN ارجاعش بدهید>",
-    "KIAN_DATABASE_URL=پیش‌فرض": "<اگر خالی بماند: data/kian.sqlite نسبی — با cwd=/app و Volume روی /app/data عملاً همان مسیر است؛ ولی صریح ست کنید>",
-    "KIAN_BACKUP_DIR=پیش‌فرض": "<اگر خالی بماند: data/backups — روی Volume نگهش دارید: /app/data/backups>"
+    "KIAN_STUDIO_DEFAULT_TIER": "auto",
+    "KIAN_STUDIO_MAX_ARTIFACT_BYTES": "",
+    "KIAN_PORTFOLIO_CATALOG_PATH": "",
+    "KIAN_STUDIO_STOREFRONT_DEFAULT_XTR": "50",
+    "KIAN_QUANT_DEFAULT_BARS": "720",
+    "KIAN_QUANT_DEFAULT_SEED": "2026",
+    "KIAN_QUANT_MAX_LIST": "100",
+    "KIAN_GENOME_ROOT_PATH": "",
+    "KIAN_MONOPOLY_MAX_LIST": "100"
   },
   "_notes": {
     "KIAN_BOT_TOKEN": "مبنای HMAC احراز initData کلاینت‌های تلگرام (crates/server/src/handlers/auth.rs). fail-closed: خالی بماند هیچ کلاینتی احراز نمی‌شود و کل اکوسیستم قفل است. همچنین بات (crates/bot) با همان توکن بالا می‌آید. هرگز لاگ یا روی سیم نمی‌رود.",

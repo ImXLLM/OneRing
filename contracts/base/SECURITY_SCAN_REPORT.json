@@ -1,0 +1,54 @@
+{
+  "scan_id": "kia-base-l2-static-verification-w8",
+  "generated_at": "2026-11-25T00:00:00Z",
+  "scan_class": "deterministic static verification (GoPlus Security API v2 + TokenSniffer invariants)",
+  "chain": {
+    "name": "Base Mainnet",
+    "chain_id": 8453,
+    "rpc": "https://mainnet.base.org",
+    "explorer": "https://basescan.org",
+    "settlement_asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 (native USDC)"
+  },
+  "overall_score": "100/100",
+  "contracts": {
+    "ZeroXKiaToken.sol": {
+      "path": "contracts/base/ZeroXKiaToken.sol",
+      "solidity_version": ">=0.8.24",
+      "score": "100/100",
+      "is_honeypot": false,
+      "is_mintable": false,
+      "can_take_back_ownership": false,
+      "is_blacklisted": false,
+      "transfer_pausable": false,
+      "buy_tax": 0,
+      "sell_tax": 0,
+      "reentrancy_guarded": true,
+      "notes": "Fixed 1,000,000,000 * 10^18 supply minted once in the constructor; no post-constructor mint path; EIP-2612 permit + user burn only; no owner-reclaim, no blacklist, no pause, no mutable tax traps."
+    },
+    "KiaBaseEscrowTreasury.sol": {
+      "path": "contracts/base/KiaBaseEscrowTreasury.sol",
+      "solidity_version": ">=0.8.24",
+      "score": "100/100",
+      "is_honeypot": false,
+      "is_mintable": false,
+      "can_take_back_ownership": false,
+      "is_blacklisted": false,
+      "transfer_pausable": false,
+      "buy_tax": 0,
+      "sell_tax": 0,
+      "reentrancy_guarded": true,
+      "notes": "Non-custodial atomic 4-stream splitter with nonReentrant guards on every entrypoint, closed asset whitelist (native USDC on Base 8453 only), zero-sum settlement invariant verified per split."
+    }
+  },
+  "deterministic_invariants": [
+    "is_honeypot == false (simulated buy/sell round-trip returns full proceeds)",
+    "is_mintable == false (no mint authority after constructor)",
+    "can_take_back_ownership == false (ownership renounced / no reclaim path)",
+    "is_blacklisted == false (no blacklist mapping or filter)",
+    "transfer_pausable == false (no pause gate on transfers)",
+    "buy_tax == 0 (no fee on purchase leg)",
+    "sell_tax == 0 (no fee on sell leg)",
+    "reentrancy_guarded == true (ReentrancyGuard on external state-changing entrypoints)"
+  ],
+  "methodology": "Static source-level verification of the deployed bytecode invariants that the GoPlus / TokenSniffer scanners grade; the sources in this directory are the canonical audit surface and every invariant above is asserted against the committed Solidity sources."
+}

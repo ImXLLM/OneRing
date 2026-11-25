@@ -17,6 +17,7 @@ pub mod ag_ui;
 pub mod approvals;
 pub mod arda_fishkal_engine;
 pub mod builder;
+pub mod competitive_supremacy_engine;
 pub mod creator_dna_contract;
 pub mod discipline_gates;
 pub mod engine;
@@ -51,6 +52,16 @@ pub use builder::{
     sanitize_and_wrap_user_message, BuilderEngine, BuilderTurnOutcome, ExtractedArtifact,
     BUILDER_ESTIMATE_TOKENS, BUILDER_HISTORY_WINDOW, BUILDER_MAX_HTML_BYTES,
     BUILDER_MAX_PREVIEW_BYTES, BUILDER_WELCOME_MESSAGE,
+};
+pub use competitive_supremacy_engine::{
+    apply_search_replace_blocks, build_live_sandbox_inspector_bundle, build_mcp_tools_list_response,
+    build_repair_prompt, execute_mcp_tool_call, mcp_tool_descriptors, run_swe_verify_repair_loop,
+    DynamicWorkflowDagEngine, DagError, DagNodeResult, DagRunOutcome, LiveSandboxBundle,
+    MaironVerifiedSeal, McpJsonRpcRequest, McpJsonRpcResponse, McpRpcError, McpToolDescriptor,
+    PatchMatchMode, SweLanguage, SweVerifyCheck, SweVerifyOutcome, TimeTravelError,
+    TimeTravelLedger, AgentStateCheckpoint, SurgicalPatchOutcome, WorkflowDagSpec, WorkflowNode,
+    WorkflowNodeKind, COMPETITIVE_SUPREMACY_SIGNATURE, DOM_INSPECT_MESSAGE_TYPE, DOM_NODE_ATTR,
+    MAIRON_SEAL_MIN_REA,
 };
 pub use creator_dna_contract::{
     audit_against_creator_dna, build_creator_dna_system_anchor, CreatorDnaContract, DnaContractError,

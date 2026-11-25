@@ -37,6 +37,7 @@ pub mod queries;
 pub mod sqlsafe;
 pub mod store;
 pub mod studio;
+pub mod supremacy;
 pub mod users;
 pub mod wallet_chains;
 pub mod wire;
@@ -85,6 +86,7 @@ pub use nation::{BillRow, VoteRow};
 
 // استودیوی ادراک‌سیار (Wave 5) — آفرینش‌های ۹-مدالیتی
 pub use studio::StudioCreationRow;
+pub use supremacy::{AgentCheckpointRow, SweSandboxAuditRow, WorkflowDagRunRow};
 
 // کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
 pub use quant::QuantStrategyRow;
