@@ -1,0 +1,57 @@
+═══════════════════════════════════════════════════════════════════════════════
+ 0xKIA / xA — Wave 10: The Grand UI Update (Commit #30 + tooling follow-up)
+ Sovereign Founder War-Room & Day-0 → Day-1 Real-Time Simulation Engine
+═══════════════════════════════════════════════════════════════════════════════
+ Packaged: 2026-11-26 · verified green before packaging
+
+ 1) GIT STATE
+    HEAD #1  c3631d3  tools(wave10): add render_war_room.py canonical generator
+                       — byte-exact war_room.html reproduction (sha256 e823914f)
+    HEAD #2  3caa933  feat(wave10-grand-ui): Sovereign Founder War-Room &
+                       Day-0 to Day-1 real-time simulation engine (4-quadrant
+                       OLED command deck, 24 honest causal ticks, 20/80 charter)
+    Base     f754aa2  feat(wave9-master)  …  full lineage in EVOLUTION_LINEAGE.md
+
+ 2) VERIFICATION EVIDENCE (rerun inside this sandbox, pinned rustc 1.100.0)
+    cargo test --workspace        → 779 passed / 0 failed (26 "test result" suites)
+    cargo clippy --workspace
+      --all-targets -D warnings   → exit 0, zero warnings
+    seed/kian-production.db
+      PRAGMA integrity_check      → ok
+      FounderWarRoomTick          → 24 canonical ticks (tick 0 → tick 23)
+      ChairmanDirectiveLog        → 2 seeded directives
+      causality audit             → Σ wallet_delta = +9.55 USDC on $33.00 seed
+                                    ⇒ max total = 42,550,000 micro-USDC = $42.55
+    DNA lineage (KbEntry = 334)
+      dna:wave9:neural-hud-…      → [EXEC_WEIGHT: 0.00 | HISTORICAL_LINEAGE]
+      dna:wave10:founder-war-…    → [EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]
+
+ 3) WAVE-10 ARTIFACT SHA-256 (first 16 hex shown; full digest = sha256sum)
+    e823914fbae9021c  tools/war-room/war_room.html               (122,393 B)
+    0d3cee2dee524aac  tools/war-room/render_war_room.py          (generator)
+    6376391a4452c2ab  seed/kian-production.db                    (4,665,344 B)
+    b9c28eba171486f8  crates/hermes/src/war_room_simulation_engine.rs
+    71dfa2616a8d50e3  crates/server/src/handlers/war_room.rs
+
+ 4) HOW TO RUN THE WAR-ROOM
+    # standalone zero-dependency desktop app (opens offline via file://)
+    xdg-open tools/war-room/war_room.html
+    # canonical regeneration (byte-exact, guards against truncation)
+    python3 tools/war-room/render_war_room.py --out tools/war-room/war_room.html
+    python3 tools/war-room/render_war_room.py --check
+    # backend API (axum)
+    GET  /api/v1/war-room/state
+    POST /api/v1/war-room/step
+    POST /api/v1/war-room/directive
+    GET  /api/v1/war-room/explain-simple
+
+ 5) HONEST DAY-0 STARTING STATE (never fabricated)
+    Platform revenue $0.00 · crypto seed wallet $33.00 (Base/Solana/BNB/
+    USDC/USDD @ Trust Wallet) · $15.00 cash · $350 paper reserve locked.
+    Day-1 earned: +$9.55 via the 4 revenue streams ⇒ wallet $42.55.
+    Every micro-USDC delta is causally triggered by a Q1 founder action,
+    enforced by 26 engine unit tests (no tick ever jumps > 3600 s).
+
+ 6) ZIP EXCLUSIONS
+    target/ (cargo build cache), .git*, node_modules, *.log — source-only pack.
+═══════════════════════════════════════════════════════════════════════════════
