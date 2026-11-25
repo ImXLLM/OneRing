@@ -28,7 +28,7 @@ use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
     accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, hermes,
-    market, nation, monopoly, quant, studio, system, wallet,
+    market, nation, monopoly, quant, studio, system, wallet, war_room,
 };
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -189,6 +189,15 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route(
             "/admin/export-training-dataset",
             post(admin::export_training_dataset),
+        )
+        // war-room — Wave 10 (Commit #30): اتاقِ جنگِ بنیان‌گذارِ حاکم
+        // (وضعیتِ روزِ صفر عمومی؛ گامِ علّی و دستورِ رئیس با نشستِ شهروند)
+        .route("/war-room/state", get(war_room::war_room_state))
+        .route("/war-room/step", post(war_room::war_room_step))
+        .route("/war-room/directive", post(war_room::war_room_directive))
+        .route(
+            "/war-room/explain-simple",
+            get(war_room::war_room_explain_simple),
         )
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
         // ۹-مدالیتیِ صفر-هزینه + ویترین پورتفولیو (۶ درمانِ قضایی)
@@ -380,5 +389,47 @@ mod tests {
             .unwrap();
         let res = app.oneshot(req).await.unwrap();
         assert_ne!(res.status(), 404, "orchestrate alias must be routed");
+    }
+
+    /// Wave 10 (Commit #30) — چهار مسیرِ اتاقِ جنگِ بنیان‌گذار ثبت شده‌اند:
+    /// state/explain-simple عمومی (200)، step/directive با گوارِ نشست (401).
+    #[tokio::test]
+    async fn war_room_routes_are_registered() {
+        let app = hardened_app(10_000).await;
+        // عمومی — باید ۲۰۰ بدهد، نه ۴۰۴.
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/state")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "war-room/state is public");
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/explain-simple?locale=fa")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "explain-simple is public");
+        // نوشتن — گوارِ نشست: ۴۰۱، نه ۴۰۴.
+        for (method, path, body) in [
+            ("POST", "/api/v1/war-room/step", r#"{"tickCursor":0,"speedMultiplier":1}"#),
+            (
+                "POST",
+                "/api/v1/war-room/directive",
+                r#"{"directiveText":"probe","locale":"fa","triggeredTick":0}"#,
+            ),
+        ] {
+            let req = axum::http::Request::builder()
+                .method(method)
+                .uri(path)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            let status = res.status().as_u16();
+            assert_ne!(status, 404, "{path} must be routed");
+            assert_eq!(status, 401, "{path} must be session-guarded");
+        }
     }
 }

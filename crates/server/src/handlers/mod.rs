@@ -23,6 +23,7 @@ pub mod nation;
 pub mod quant;
 pub mod studio;
 pub mod system;
+pub mod war_room;
 pub mod wallet;
 
 use serde::de::DeserializeOwned;

@@ -28,6 +28,7 @@ pub mod studio;
 pub mod supremacy;
 pub mod system;
 pub mod trinity;
+pub mod wave10;
 pub mod wave9;
 pub mod wallet;
 

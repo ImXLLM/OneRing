@@ -1,5 +1,34 @@
 # CHANGELOG — KIAN Ecosystem
 
+## v1.1.0-wave10 (2026-11-25) — موج ۱۰: «به‌روزرسانیِ عظیمِ UI» — اتاق جنگِ بنیان‌گذارِ حاکم + موتورِ شبیه‌سازیِ واقعیِ زمانیِ «روزِ ۰ → روزِ ۱»
+
+Commit #30 — سه هم‌بنیان‌گذارِ افسانه‌ای (ایلان ماسک، CZ، جف بزوس) ۲۴/۷ دورکار زیرِ ریاستِ
+`0xKIA` مخزنِ `KiaAgentX/xA` را از «روزِ صفر، ثانیهٔ ۰۰:۰۰:۰۰» تجاری می‌کنند — بدونِ هیچ
+جهشِ زمانیِ جعلی و با `$0.00` درآمدِ شروع و `$33.00` بذرِ کریپتوی واقعی.
+
+### جدید
+
+* **موتورِ Rust** `crates/hermes/src/war_room_simulation_engine.rs` — `FounderPersona`،
+  `OrganizationWalletLedger`، `SimulationTickEvent`، `WarRoomState` با `advance_single_tick`
+  (گاردِ ضدِ-جهش ۳۶۰۰ ثانیه)، `inject_chairman_directive` + `ChairmanChatEngine` (جدولِ
+  ۳×۷ پاسخِ در-شخصیتِ دوزبانه)، `ChairmanIntent::classify` (قطعیِ آفلاین)،
+  `canonical_day0_scenario()` — منبعِ واحدِ حقیقتِ seed/تست/HTML — و
+  `explain_zero_to_hundred_elif5`؛ **۲۶ تستِ واحد** روی صراحتِ علّیِ منشورِ ۲۰/۸۰.
+* **اپِ دسکتاپِ تعاملیِ مستقل** `tools/war-room/war_room.html` (خروجیِ
+  `tools/war-room/render_war_room.py`) — چهار ربعِ شیشه‌ایِ OLED (`#050508`)،
+  سوییچِ زندهٔ فارسی (RTL) ↔ انگلیسی (LTR)، ساعتِ تهران/UTC/شبیه‌سازی، کنترل‌هایِ
+  `Play 1x / Pause / Next Step / 2x / 5x / Reset`، چتِ سه شریک با ۲۴ تیکِ دوزبانه،
+  ولتِ صادقانه + چارتِ زنده + فیدِ تراکنشِ EIP-681/XTR، سه تب (ELI5 متحرک، ترمینال
+  زنده، فیدِ سوشال) و چتِ رئیس با ۶ چیپِ تاکتیکی + مودالِ اختیاریِ LLMِ زنده.
+* **مهاجرتِ `0014`** — `"FounderWarRoomTick"` + `"ChairmanDirectiveLog"` (additive،
+  صفرِ لمسِ دفتر) + لایهٔ `crates/db/src/wave10.rs`.
+* **چهار اندپوینت** — `GET /war-room/state` · `POST /war-room/step` ·
+  `POST /war-room/directive` · `GET /war-room/explain-simple` (+ تستِ ثبتِ مسیر).
+* **seed** — ۲۴ تیکِ کانونی روی `kian-production.db` (جمعِ علّیِ دقیقِ `$9.55`
+  درآمدِ روزِ اول روی `$33.00` بذر ⇒ `$42.55`) + ۲ دستورِ نمونه؛ DNA #18 تاریخی
+  شد و DNA #19 (`dna:wave10:founder-war-room-grand-ui`) فعالِ اصلی شد —
+  `"KbEntry"` = **۳۳۴**؛ **۷۷۹ تستِ workspace سبز** (۷۵۰→۷۷۹).
+
 ## v1.1.0-final (2025-11-21) — آپدیت فرانتاند: مینی‌اپ مستقل + SDK
 
 پر کردن دو گپ واقعی فرانتاند: `packages/sdk` خالی بود و `apps/miniapp` فقط یک

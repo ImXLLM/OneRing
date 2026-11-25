@@ -40,6 +40,7 @@ pub mod studio;
 pub mod supremacy;
 pub mod users;
 pub mod wallet_chains;
+pub mod wave10;
 pub mod wave9;
 pub mod wire;
 
@@ -91,6 +92,9 @@ pub use supremacy::{AgentCheckpointRow, SweSandboxAuditRow, WorkflowDagRunRow};
 
 // Wave 9 — لاگِ آزمایشگاه، ثبتِ لوکال و رانِ رندرِ HUD
 pub use wave9::{LocalePatchRegistryRow, NeuralHudRenderJobRow, UserLabTelemetryLogRow};
+
+// اتاقِ جنگِ بنیان‌گذار (Wave 10) — گام‌هایِ روزِ صفر + دستورهایِ رئیس
+pub use wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow};
 
 // کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
 pub use quant::QuantStrategyRow;

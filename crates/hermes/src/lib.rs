@@ -37,6 +37,7 @@ pub mod super_studio_engine;
 pub mod token_saver;
 pub mod trinity_pipeline;
 pub mod vibe_trading_engine;
+pub mod war_room_simulation_engine;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
 pub const NAME: &str = "kian-hermes";
@@ -54,6 +55,16 @@ pub use builder::{
     sanitize_and_wrap_user_message, BuilderEngine, BuilderTurnOutcome, ExtractedArtifact,
     BUILDER_ESTIMATE_TOKENS, BUILDER_HISTORY_WINDOW, BUILDER_MAX_HTML_BYTES,
     BUILDER_MAX_PREVIEW_BYTES, BUILDER_WELCOME_MESSAGE,
+};
+pub use war_room_simulation_engine::{
+    canonical_day0_scenario, charter_split, explain_zero_to_hundred_elif5, featured_boost_split,
+    format_usd_cents, format_usd_micros, settlement_spread_split, ChairmanChatEngine,
+    ChairmanDirectiveLog, ChairmanIntent, CharterSplit, FounderPersona, FounderReply, Locale,
+    OrganizationWalletLedger, PipelineStage, RevenueStream, SimulationTickEvent,
+    WarRoomError, WarRoomState, ZeroLiteracyPipelineStep, ZeroToHundredExplainer,
+    BASE_CHAIN_ID, BASE_USDC_CONTRACT, CASH_SEED_CENTS, CRYPTO_SEED_MICROS, DAY1_TOTAL_EARNED_MICROS,
+    GITHUB_COMMIT_SHORT, GITHUB_REPO, MAX_TICK_DELTA_SECONDS, PAPER_RESERVE_LOCKED_CENTS,
+    PLATFORM_TAKE_BPS_UNREFERRED, TELEGRAM_STARS_CURRENCY, WAR_ROOM_SIGNATURE,
 };
 pub use competitive_supremacy_engine::{
     apply_search_replace_blocks, build_live_sandbox_inspector_bundle, build_mcp_tools_list_response,
