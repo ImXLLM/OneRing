@@ -9,7 +9,7 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
-[![Workspace Tests](https://img.shields.io/badge/tests-750_passed_%7C_0_failed-success.svg)](#quickstart--verification)
+[![Workspace Tests](https://img.shields.io/badge/tests-779_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
 [![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-333_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
