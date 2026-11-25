@@ -18,6 +18,8 @@ pub mod approvals;
 pub mod arda_fishkal_engine;
 pub mod builder;
 pub mod competitive_supremacy_engine;
+pub mod grok_ux_and_lab_engine;
+pub mod neural_hud_studio_engine;
 pub mod creator_dna_contract;
 pub mod discipline_gates;
 pub mod engine;
@@ -62,6 +64,31 @@ pub use competitive_supremacy_engine::{
     TimeTravelLedger, AgentStateCheckpoint, SurgicalPatchOutcome, WorkflowDagSpec, WorkflowNode,
     WorkflowNodeKind, COMPETITIVE_SUPREMACY_SIGNATURE, DOM_INSPECT_MESSAGE_TYPE, DOM_NODE_ATTR,
     MAIRON_SEAL_MIN_REA,
+};
+pub use grok_ux_and_lab_engine::{
+    apply_locale_translation_patch, build_admin_telemetry_dashboard,
+    build_day1_ecosystem_i18n_matrix, build_grok_signature_ui_bundle,
+    export_rlhf_training_dataset_jsonl, locale_direction, run_24h_ten_dna_ux_lab_simulation,
+    AdminLabDashboard, CohortHealth, DeepSearchCitation, DeepSearchCitationBar,
+    DnaCohortSummary, EcosystemI18nMatrix, EcosystemLocale, GrokChatTurnOutcome,
+    GrokChatTurnSpec, GrokSignatureUxEngine, GrokThinkAccordion, GrokUiBundle,
+    GrokPersonaMode, I18nError, LabSimulation24hReport, LabUxTier,
+    LocaleActivationState, LocalePatchEntry, LocalePatchOutcome,
+    TrainingDatasetExport, UserLabTelemetryEntry, GROK_COSMIC_CSS_SIGNATURE,
+    GROK_LAB_SIGNATURE, GROK_QUICK_CHIPS, LAB_SIMULATION_ANCHOR_DATE,
+    PATCH_READY_LOCALES, PANEL_MODULES,
+};
+pub use neural_hud_studio_engine::{
+    build_ffmpeg_hud_audio_command, build_ffmpeg_mjpeg_pipe_command,
+    build_neural_hud_html_bundle, fibonacci_shell, find_hud_preset, hud_mesh_edges,
+    hud_mesh_nodes, hud_preset_catalog, hud_timeline_phases, json_for_script,
+    synthesize_custom_repo_hud_preset, HudAspect, HudAudioCommand, HudEdgeGeometry,
+    HudError, HudFps, HudNodeGeometry, HudPhase, HudPreset, HudPresetSource,
+    HudRenderSpec, HudResolution, NeuralHudHtmlBundle, CAMERA_Z, DEFAULT_DURATION_SEC,
+    FADE_IN_SEC, FADE_OUT_SEC, FOV, HUD_CALLOUTS, INNER_SHELL_RADIUS_SCALE,
+    MASTER_LIMITER, MAX_DURATION_SEC, NEURAL_HUD_SIGNATURE, PHASE_TITLES,
+    RADAR_PING_HZ, ROT_X_AMPLITUDE, ROT_X_RATE, ROT_Y_RATE, SHELL_NODE_COUNT,
+    SPHERE_RADIUS, SUB_BASS_HZ, UPSTREAM_DEFECTS_CURED,
 };
 pub use creator_dna_contract::{
     audit_against_creator_dna, build_creator_dna_system_anchor, CreatorDnaContract, DnaContractError,

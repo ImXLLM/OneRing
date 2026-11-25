@@ -28,6 +28,7 @@ pub mod studio;
 pub mod supremacy;
 pub mod system;
 pub mod trinity;
+pub mod wave9;
 pub mod wallet;
 
 /// شناسه کرِیت — برای smoke test و لاگ‌ها.
@@ -95,6 +96,15 @@ pub use supremacy::{
     SupremacySweVerifyResponse, SupremacyWorkflowExecuteRequest, SupremacyWorkflowExecuteResponse,
     SupremacyWorkflowNodeDto, SupremacyWorkflowNodeResultView, SupremacyWorkflowSpecDto,
     SupremacySurgicalPatchRequest, SupremacySurgicalPatchResponse,
+};
+pub use wave9::{
+    AdminExportTrainingDatasetRequest, AdminExportTrainingDatasetResponse,
+    AdminLabDashboardView, AdminLabTelemetryResponse, CohortHealthView,
+    GrokChatTurnRequest, GrokChatTurnResponse, GrokCitationView, GrokThinkStepView,
+    GrokUiBundleQuery, GrokUiBundleResponse, HudPresetView, HudPresetsResponse,
+    HudSynthesizeRequest, HudSynthesizeResponse, I18nApplyPatchRequest,
+    I18nApplyPatchResponse, I18nLocaleView, I18nMatrixResponse, I18nPatchEntryDto,
+    LabTelemetryEntryView,
 };
 pub use builder::{
     BuilderChatRequest, BuilderChatResponse, BuilderMessageView, BuilderSessionListResponse,

@@ -14,8 +14,10 @@ use std::sync::Arc;
 
 use kian_contracts::{
     AdminAuditEntry, AdminAuditListResponse, AdminDepositListResponse, AdminDepositView,
-    AdminHitlListResponse, AdminHitlView, AdminOverviewResponse, AdminProductListResponse,
-    HitlDecisionRequest, HitlDecisionResponse, HttpFailure, ProductSalesView, ProductView,
+    AdminExportTrainingDatasetRequest, AdminExportTrainingDatasetResponse,
+    AdminHitlListResponse, AdminHitlView, AdminLabDashboardView, AdminLabTelemetryResponse,
+    AdminOverviewResponse, AdminProductListResponse, CohortHealthView, HitlDecisionRequest,
+    HitlDecisionResponse, HttpFailure, LabTelemetryEntryView, ProductSalesView, ProductView,
     RevenuePoint, SellerSalesView,
 };
 
@@ -24,6 +26,10 @@ use crate::handlers::safe_wire_id;
 use crate::middleware::require_admin;
 use crate::state::AppState;
 use crate::views::wire_din;
+use kian_hermes::grok_ux_and_lab_engine::{
+    build_admin_telemetry_dashboard, export_rlhf_training_dataset_jsonl, GROK_LAB_SIGNATURE,
+};
+use crate::handlers::hermes::load_lab_telemetry_entries;
 
 /// `GET /admin/overview` — نمای کلی — همهٔ اعداد از کوئری‌های زندهٔ دفتر.
 ///
@@ -284,6 +290,109 @@ pub async fn product_delete(
     Ok(axum::http::StatusCode::NO_CONTENT)
 }
 
+
+// ── Wave 9 (Commit #29): رصدخانهٔ آزمایشگاهِ ۱۰-DNA + صادراتِ RLHF/SFT ─────
+//
+// دو اندپوینتِ ادمین روی تلمتریِ ماندگارِ `UserLabTelemetryLog`:
+// - [`lab_telemetry`] — لاگِ هر ۱۰ کوهورت + داشبوردِ تجمیعیِ قطعی؛
+// - [`export_training_dataset`] — صادراتِ SFT (ChatML/ShareGPT) و DPO
+//   (`prompt/chosen/rejected`) برای فاین‌تیونِ مدل‌ها روی تلمتریِ واقعی.
+
+/// `GET /admin/lab-telemetry` — رصدخانهٔ لاگِ آزمایشگاه + داشبوردِ سلامتِ
+/// کوهورت‌ها (X-KIAN-Key).
+///
+/// # Errors
+/// ۴۰۱ کلیدِ ادمینِ غایب؛ ۵۰۰ db.
+pub async fn lab_telemetry(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> ApiResult<Json<AdminLabTelemetryResponse>> {
+    require_admin(&headers, state.config.admin_key.as_deref())?;
+    let entries = load_lab_telemetry_entries(&state)
+        .await
+        .map_err(ApiFailure::from)?;
+    let dashboard = build_admin_telemetry_dashboard(&entries);
+    Ok(Json(AdminLabTelemetryResponse {
+        entries: entries
+            .iter()
+            .map(|e| LabTelemetryEntryView {
+                id: e.id.clone(),
+                dna_code: e.dna_code.clone(),
+                user_handle: e.user_handle.clone(),
+                hour_offset: e.hour_offset,
+                ux_tier: e.ux_tier.clone(),
+                locale: e.locale.clone(),
+                grok_persona: e.grok_persona.clone(),
+                model_slug: e.model_slug.clone(),
+                routing_mode: e.routing_mode.clone(),
+                prompt_text: e.prompt_text.clone(),
+                thinking_trace_json: e.thinking_trace_json.clone(),
+                response_text: e.response_text.clone(),
+                rea_score: e.rea_score,
+                latency_ms: e.latency_ms,
+                usable_for_training: e.usable_for_training,
+                created_at: e.created_at.clone(),
+            })
+            .collect(),
+        dashboard: AdminLabDashboardView {
+            total_entries: dashboard.total_entries,
+            cohort_health: dashboard
+                .cohort_health
+                .iter()
+                .map(|c| CohortHealthView {
+                    dna_code: c.dna_code.clone(),
+                    user_handle: c.user_handle.clone(),
+                    turns: c.turns,
+                    avg_rea_score: c.avg_rea_score,
+                    unusable: c.unusable,
+                    friction_events: c.friction_events,
+                    friction_recovered: c.friction_recovered,
+                    dominant_model: c.dominant_model.clone(),
+                    locales: c.locales.clone(),
+                })
+                .collect(),
+            by_model: dashboard.by_model.clone(),
+            by_locale: dashboard.by_locale.clone(),
+            by_ux_tier: dashboard.by_ux_tier.clone(),
+            by_persona: dashboard.by_persona.clone(),
+            avg_rea_score: dashboard.avg_rea_score,
+            min_rea_score: dashboard.min_rea_score,
+            max_rea_score: dashboard.max_rea_score,
+            unusable_entries: dashboard.unusable_entries,
+            friction_events: dashboard.friction_events,
+            friction_recovered: dashboard.friction_recovered,
+        },
+        signature: GROK_LAB_SIGNATURE.to_owned(),
+    }))
+}
+
+/// `POST /admin/export-training-dataset` — صادراتِ دیتاستِ RLHF از تلمتریِ
+/// واقعی؛ فقط مدخل‌هایِ قابلِ آموزش با `rea_score >= min_rea_score`
+/// (X-KIAN-Key).
+///
+/// # Errors
+/// ۴۰۱ کلیدِ ادمینِ غایب؛ ۵۰۰ db.
+pub async fn export_training_dataset(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    bytes: axum::body::Bytes,
+) -> ApiResult<Json<AdminExportTrainingDatasetResponse>> {
+    require_admin(&headers, state.config.admin_key.as_deref())?;
+    let req: AdminExportTrainingDatasetRequest = crate::handlers::parse_body(&bytes)?;
+    let entries = load_lab_telemetry_entries(&state)
+        .await
+        .map_err(ApiFailure::from)?;
+    let export = export_rlhf_training_dataset_jsonl(&entries, req.min_rea_score);
+    Ok(Json(AdminExportTrainingDatasetResponse {
+        sft_jsonl: export.sft_jsonl,
+        dpo_jsonl: export.dpo_jsonl,
+        sft_records: export.sft_records,
+        dpo_records: export.dpo_records,
+        min_rea_score: export.min_rea_score,
+        signature: export.signature,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use axum::body::Body;
@@ -431,6 +540,117 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 404);
         assert_eq!(body_json(res).await["error"]["code"], "PRODUCT_NOT_FOUND");
+    }
+
+
+    /// رصدخانهٔ آزمایشگاه — بدونِ کلید ۴۰۱؛ با کلید: مدخل‌هایِ ۱۰ کوهورت +
+    /// داشبوردِ تجمیعی (fallbackِ شبیه‌سازی روی store خالی).
+    #[tokio::test]
+    async fn lab_telemetry_requires_admin_and_serves_dashboard() {
+        // ادمینِ غیرفعال → ۵۰۳ fail-closed؛ کلیدِ اشتباه → ۴۰۱
+        let app_anon = app(None).await;
+        let res = app_anon
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/lab-telemetry")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 503);
+        let app_wrong = app(Some(ADMIN)).await;
+        let res = app_wrong
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/lab-telemetry")
+                    .header("x-kian-key", "wrong-key-0123456789")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 401);
+
+        let app = app(Some(ADMIN)).await;
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/admin/lab-telemetry")
+                    .header("x-kian-key", ADMIN)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["signature"], "KIA-GROK-UX-LAB-W9");
+        let entries = body["entries"].as_array().unwrap();
+        assert!(entries.len() >= 30, "30+ telemetry entries, got {}", entries.len());
+        let dashboard = &body["dashboard"];
+        assert_eq!(dashboard["cohortHealth"].as_array().unwrap().len(), 10);
+        assert_eq!(dashboard["totalEntries"], entries.len());
+        let models = dashboard["byModel"].as_object().unwrap();
+        assert_eq!(
+            models.values().map(|v| v.as_u64().unwrap_or(0)).sum::<u64>(),
+            u64::try_from(entries.len()).unwrap_or(0),
+            "model distribution partitions entries"
+        );
+        assert!(dashboard["avgReaScore"].as_u64().unwrap_or(0) >= 85, "REA gate >= 85");
+    }
+
+    /// صادراتِ RLHF — بدونِ کلید ۴۰۱؛ با کلید: JSONLِ SFT/DPO معتبر با
+    /// آستانهٔ REA؛ آستانهٔ سخت‌گیرتر → رکوردهایِ کمتر.
+    #[tokio::test]
+    async fn export_training_dataset_requires_admin_and_emits_jsonl() {
+        let app_anon = app(None).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/admin/export-training-dataset")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"minReaScore":85}"#))
+            .unwrap();
+        assert_eq!(app_anon.oneshot(req).await.unwrap().status(), 503);
+
+        let app = app(Some(ADMIN)).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/admin/export-training-dataset")
+            .header("x-kian-key", ADMIN)
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"minReaScore":85}"#))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["minReaScore"], 85);
+        let sft = body["sftJsonl"].as_str().unwrap_or("");
+        let dpo = body["dpoJsonl"].as_str().unwrap_or("");
+        let sft_count = body["sftRecords"].as_u64().unwrap_or(0);
+        assert!(sft_count > 0, "SFT records exported");
+        for line in sft.lines().take(3) {
+            let value: serde_json::Value = serde_json::from_str(line).expect("valid SFT JSONL");
+            assert_eq!(value["messages"].as_array().unwrap().len(), 3);
+        }
+        for line in dpo.lines().take(3) {
+            let value: serde_json::Value = serde_json::from_str(line).expect("valid DPO JSONL");
+            assert!(value.get("chosen").is_some());
+            assert!(value.get("rejected").is_some());
+        }
+        // آستانهٔ ۹۹ → رکوردهایِ کمتر یا برابر
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/admin/export-training-dataset")
+            .header("x-kian-key", ADMIN)
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"minReaScore":99}"#))
+            .unwrap();
+        let body = body_json(app.oneshot(req).await.unwrap()).await;
+        assert!(
+            body["sftRecords"].as_u64().unwrap_or(0) <= sft_count,
+            "stricter gate never grows the dataset"
+        );
     }
 
     /// واریزهای ادمین — فهرست خالی سالم.

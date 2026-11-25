@@ -174,6 +174,22 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/supremacy/workflow/execute", post(hermes::supremacy_workflow_execute))
         .route("/supremacy/mcp", post(hermes::supremacy_mcp))
         .route("/supremacy/swe-verify", post(hermes::supremacy_swe_verify))
+        // hud — Wave 9 (Commit #29): استودیوی HUD عصبی (کاتالوگ عمومی؛
+        //  سنتزِ پیش‌تن و رانِ رندر با نشستِ شهروند)
+        .route("/hud/presets", get(hermes::hud_presets))
+        .route("/hud/synthesize", post(hermes::hud_synthesize))
+        // grok — Wave 9: امضایِ UXِ Grok (بستهٔ UI عمومی؛ چتِ نشست‌دار)
+        .route("/grok/ui-bundle", get(hermes::grok_ui_bundle))
+        .route("/grok/chat-turn", post(hermes::grok_chat_turn))
+        // i18n — Wave 9: ماتریسِ ۲۰ لوکالِ اکوسیستم (عمومی) + پچِ داغ (نشست)
+        .route("/i18n/ecosystem-matrix", get(hermes::i18n_ecosystem_matrix))
+        .route("/i18n/apply-patch", post(hermes::i18n_apply_patch))
+        // admin — Wave 9: رصدخانهٔ آزمایشگاهِ ۱۰-DNA + صادراتِ RLHF/SFT
+        .route("/admin/lab-telemetry", get(admin::lab_telemetry))
+        .route(
+            "/admin/export-training-dataset",
+            post(admin::export_training_dataset),
+        )
         // studio — Wave 5: استودیوی ادراک‌سیارِ سه‌لایه + ابراستودیوی
         // ۹-مدالیتیِ صفر-هزینه + ویترین پورتفولیو (۶ درمانِ قضایی)
         .route("/studio/ux-profiles", get(studio::ux_profiles))

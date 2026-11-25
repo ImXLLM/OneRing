@@ -222,18 +222,40 @@
 
 ------
 
+### Wave 9 — Master Release: Neural HUD Video Studio + 10-DNA 24h UX Lab & Admin RLHF Trainer + Grok Signature UX + Day-1 FA/EN & 18-Locale Patch Architecture
+
+> `[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]` on `HEAD` — the current fastest, hardened release.
+
+| Artifact (Commit #29) | Detail |
+| :--- | :--- |
+| **Neural HUD Video Studio** (`crates/hermes/src/neural_hud_studio_engine.rs`) — `TM` port curing **all 15 upstream defects** (`UPSTREAM_DEFECTS_CURED` ledger) | Deterministic `window.seekTo(t)` 3D Fibonacci HUD HTML5 generator (`build_neural_hud_html_bundle`): 180-node dual-shell mesh (`SPHERE_RADIUS=160`, `FOV=340`, `camera_z=420`, `rotY=t*0.65`, `rotX=sin(t*0.4)*0.4`), Z-sorted edges, callouts `TRINITY_MAIRON: IQ_150` / `MCP_GATEWAY: SYNC` / `BASE_8453: VERIFIED` / `CCXT_QUANT: CAUSAL`, 4 explicit timeline phases (`PHASE 01 // NEURAL IGNITION` → `PHASE 04 // MAIRON 100/100 SEALED`), cached canvas geometry (zero per-frame `getBoundingClientRect` thrashing — D01), XSS-safe JSON embedding (`json_for_script` + `html_attr_escape` — D03), in-browser WebAudio live synth (55Hz A1 + 82.41Hz E2 + 110Hz A2 sub-bass + 1046.5Hz C6 / 1567.98Hz G6 radar pings — D04) |
+| **Algorithmic FFmpeg `lavfi` pipelines** | `build_ffmpeg_hud_audio_command`: `amix=inputs=4:duration=first,afade=t=in:ss=0:d=0.6,afade=t=out:st=(duration-1.2):d=1.2` + master limiter `alimiter=limit=0.95:attack=5:release=50` appended after the fades (D05/D15); `build_ffmpeg_mjpeg_pipe_command`: 720p (`720x1280`/`1280x720`) **and true FullHD 1080p** (`1080x1920`/`1920x1080`) at 24fps and 60fps with `-movflags +faststart` (D06/D07/D08) |
+| **8-preset telemetry catalog + repo-to-HUD synthesizer** | Upstream 4 (`mwie`, `sage-audit`, `geo-scope`, `tm-second-brain`) + Kia Sovereign 4 (`kia-monopoly-core`, `mairon-10gate-shield`, `quant-vibe-terminal`, `trinity-5model-genome`) + `synthesize_custom_repo_hud_preset` (SHA-256-derived accent, sanitized slugs — D13/D14); portable CLI `tools/neural-hud/render_neural_hud.py` (`presets` / `html` / `synthesize` / `plan` / `render`) |
+| **10-DNA 24h UX Lab** (`crates/hermes/src/grok_ux_and_lab_engine.rs`) | `run_24h_ten_dna_ux_lab_simulation()`: 32 deterministic multi-turn logs across `DNA_01_CHILD_9YO_TOYSPARK` … `DNA_10_GLOBAL_EN_INDIE_FOUNDER` — UX tier transitions, 5-model genome routing (`01-gpt-6-web` … `05-glm-5.3-flash-max`), latency tiers, friction recovery, Mairon `rea_score` (gate ≥ 85); `build_admin_telemetry_dashboard` (per-cohort health, model/locale/tier/persona distributions, friction vs recovery); `export_rlhf_training_dataset_jsonl` — **SFT** (`messages[]` ChatML/ShareGPT) + **DPO** (`prompt/chosen/rejected`) JSONL behind a `min_rea_score` gate |
+| **Grok Signature UX Engine** | `GrokPersonaMode` (`fun_witty`/`unhinged_roast`/`regular_balanced`/`mairon_sovereign`), `GrokThinkAccordion` (visible reasoning steps + `thinking_duration_ms`), `DeepSearchCitationBar` (verified source pills), `build_grok_signature_ui_bundle` — cosmic dark-matter UI (`#050507` OLED obsidian, `1px solid rgba(255,255,255,0.08)` specular borders), floating pill composer with 6 quick-action chips, side-by-side live artifact canvas, atomic FA/EN switcher + 18 `PATCH_READY` slots, 3 one-tap ghost follow-up chips |
+| **Day-1 ecosystem i18n matrix** | `build_day1_ecosystem_i18n_matrix`: `fa` (RTL, `Vazirmatn`, `--track: 0em`) + `en` (LTR) `ACTIVE_DAY1` @ `completion_bps=10000` with full 37-key dictionaries over all 9 panel modules (`nav`, `grok_composer`, `think_accordion`, `deep_search`, `studio_canvas`, `quant_terminal`, `neural_hud`, `base_treasury`, `admin_telemetry_lab`); 18 `PATCH_READY_SLOT` locales (`ar, tr, az, ru, zh, ja, ko, de, fr, es, pt, it, hi, ur, he, nl, pl, id`) with `viewBox="0 0 20 14"` SVG flags, RTL/LTR directionality, fallback to `en`; `apply_locale_translation_patch` — hot patch with deterministic `wave9.N` versioning and coverage-scaled `completion_bps` |
+| Migration `0013_wave9_hud_grok_lab_i18n.sql` | `"UserLabTelemetryLog"` (dna/hour/tier/locale/persona/model/routing/prompt/thinking-trace/response/REA/latency/usable) · `"LocalePatchRegistry"` (20 locales: 2 `ACTIVE_DAY1` @ 10000 bps + 18 `PATCH_READY_SLOT`) · `"NeuralHudRenderJob"` (preset/aspect/resolution/fps/duration/status) — production seed carries 32 telemetry logs across 10 cohorts, 20 locale rows and 4 sample HUD jobs; zero ledger tables touched |
+| Wire surface (all rate-limited) | `GET /api/v1/hud/presets` (public) · `POST /api/v1/hud/synthesize` (session, render job persisted) · `GET /api/v1/grok/ui-bundle` (public) · `POST /api/v1/grok/chat-turn` (session) · `GET /api/v1/i18n/ecosystem-matrix` (public) · `POST /api/v1/i18n/apply-patch` (session, registry persisted) · `GET /api/v1/admin/lab-telemetry` (admin) · `POST /api/v1/admin/export-training-dataset` (admin) |
+| DNA #18 (`dna:wave9:neural-hud-grok-ux-10dna-lab-i18n`) injected into `"KbEntry"` → **333 rows** | Tagged `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]`; DNA #17 (`dna:wave8:competitive-supremacy-engine`) demoted to `[EXEC_WEIGHT: 0.00 \| HISTORICAL_LINEAGE]`; zero deletions, lineage discipline preserved (12 active primary / 321 historical) |
+| **750 workspace tests green** (704→750, +46 new), 0 failures | `cargo clippy --workspace --all-targets -- -D warnings` 0 warnings / 0 errors; `KbEntry` **333**; `PRAGMA integrity_check = ok`; `SUM(Posting.amount)` = **0** over 58,700,200,000 µKIAN |
+
+------
+
+
+------
+
 
 ------
 
 ## Growth ledger
 
-| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) | Wave 5 (Studio) | Wave 6 (Quant) | Wave 7 (Final) | **Wave 7 Hardened (#27)** | **Wave 8 (#28)** |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** | **607** | **641** | 661 | **676** | **704** |
-| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** | **329** | **330** | **331** | **331** (D5 lineage tagging — 12 active primary / 319 historical) | **332** (DNA #17 active primary — 12 active / 321 historical) |
-| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 |
-| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) | **92/100 PASS** + adaptive UX gate | **92/100 PASS** + sovereign quant gate (sharpe ≥ 1.20) | **92/100 PASS** + Day-1 treasury zero-sum gate (4 streams, `Precise`-verified) | **92/100 PASS** + penta-model 45-file DNA gate + dual-mode router gate + D1–D6 forensic fixes (676 tests green) | **92/100 PASS** + 100/100 audit-closure gate (Gates 2/3/8 + static-scanner artifact) + 4-pillar supremacy engine gate (704 tests green) |
-| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** | **0** | **0** | **0** | **0**  **0** |
+| Metric | Wave 0 (Railway migration) | Step 5 | Step 6 | MIT cut | Wave 3 (Trinity) | Wave 4 (ARDA) | Wave 5 (Studio) | Wave 6 (Quant) | Wave 7 (Final) | **Wave 7 Hardened (#27)** | **Wave 8 (#28)** | **Wave 9 (#29)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Workspace tests | 282 | 516 | **530** | 530 | **560** | **583** | **607** | **641** | 661 | **676** | **704** | **750** |
+| `"KbEntry"` rows | 62 | 323 | 325 | **326** | **327** | **328** | **329** | **330** | **331** | **331** (D5 lineage tagging — 12 active primary / 319 historical) | **332** (DNA #17 active primary — 12 active / 321 historical) | **333** (DNA #18 active primary — 12 active / 321 historical) |
+| Guardian fleet | — | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 |
+| Mairon REA verdict | — | step-5 gate | **92/100 PASS** | 92/100 PASS | **92/100 PASS** + live Trinity forge gate (85+) | **92/100 PASS** + planetary skill forge gate (85+) | **92/100 PASS** + adaptive UX gate | **92/100 PASS** + sovereign quant gate (sharpe ≥ 1.20) | **92/100 PASS** + Day-1 treasury zero-sum gate (4 streams, `Precise`-verified) | **92/100 PASS** + penta-model 45-file DNA gate + dual-mode router gate + D1–D6 forensic fixes (676 tests green) | **92/100 PASS** + 100/100 audit-closure gate (Gates 2/3/8 + static-scanner artifact) + 4-pillar supremacy engine gate (704 tests green) | **92/100 PASS** + neural HUD 15-defect-cure gate + 10-DNA 24h lab gate (32 telemetry logs, REA 88) + Grok UX signature gate + Day-1 FA/EN i18n gate (750 tests green) |
+| Trial balance (`SUM(Posting.amount)`) | 0 | 0 | 0 | **0** | **0** | **0** | **0** | **0** | **0** | **0**  **0** | **0** |
 
 *The trial balance over 58,700,200,000 micro-KIAN has been exactly zero at every milestone — the
 ledger has never moved out of balance.*

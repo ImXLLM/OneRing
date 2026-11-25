@@ -40,6 +40,7 @@ pub mod studio;
 pub mod supremacy;
 pub mod users;
 pub mod wallet_chains;
+pub mod wave9;
 pub mod wire;
 
 #[cfg(test)]
@@ -87,6 +88,9 @@ pub use nation::{BillRow, VoteRow};
 // استودیوی ادراک‌سیار (Wave 5) — آفرینش‌های ۹-مدالیتی
 pub use studio::StudioCreationRow;
 pub use supremacy::{AgentCheckpointRow, SweSandboxAuditRow, WorkflowDagRunRow};
+
+// Wave 9 — لاگِ آزمایشگاه، ثبتِ لوکال و رانِ رندرِ HUD
+pub use wave9::{LocalePatchRegistryRow, NeuralHudRenderJobRow, UserLabTelemetryLogRow};
 
 // کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
 pub use quant::QuantStrategyRow;

@@ -462,6 +462,371 @@ pub async fn supremacy_swe_verify(
     }))
 }
 
+
+// ── Wave 9 (Commit #29): HUD عصبی + Grok + i18n ────────────────────────────
+//
+// شش اندپوینتِ تازه روی موتورهایِ قطعیِ `neural_hud_studio_engine` و
+// `grok_ux_and_lab_engine`:
+// - [`hud_presets`] — کاتالوگِ ۸ پیش‌تن (عمومی)؛
+// - [`hud_synthesize`] — سنتزِ پیش‌تنِ مخزن + بستهٔ HTML + ماندگاریِ ران؛
+// - [`grok_ui_bundle`] — بستهٔ UIِ «مادهٔ تاریکِ کیهانی» (عمومی)؛
+// - [`grok_chat_turn`] — نوبتِ چتِ امضایی با تفکر/استناد/روح‌ها (نشست)؛
+// - [`i18n_ecosystem_matrix`] — ماتریسِ ۲۰ لوکال (عمومی)؛
+// - [`i18n_apply_patch`] — پچِ داغِ ترجمه + ماندگاری (نشست).
+
+use kian_contracts::{
+    GrokChatTurnRequest, GrokChatTurnResponse, GrokCitationView, GrokThinkStepView,
+    GrokUiBundleQuery, GrokUiBundleResponse, HudPresetView, HudPresetsResponse,
+    HudSynthesizeRequest, HudSynthesizeResponse, I18nApplyPatchRequest, I18nApplyPatchResponse,
+    I18nLocaleView, I18nMatrixResponse,
+};
+use kian_db::{LocalePatchRegistryRow, NeuralHudRenderJobRow, UserLabTelemetryLogRow};
+use kian_hermes::grok_ux_and_lab_engine::{
+    apply_locale_translation_patch, build_day1_ecosystem_i18n_matrix,
+    build_grok_signature_ui_bundle, locale_direction, run_24h_ten_dna_ux_lab_simulation,
+    GrokChatTurnSpec, GrokPersonaMode, GrokSignatureUxEngine, LabUxTier, LocalePatchEntry,
+    UserLabTelemetryEntry,
+};
+use kian_hermes::neural_hud_studio_engine::{
+    build_ffmpeg_hud_audio_command, build_ffmpeg_mjpeg_pipe_command,
+    build_neural_hud_html_bundle, hud_preset_catalog, synthesize_custom_repo_hud_preset,
+    HudAspect, HudFps, HudPreset, HudRenderSpec, HudResolution, NEURAL_HUD_SIGNATURE,
+};
+
+/// پارسِ قطعیِ نسبت از وایر — ناشناخته → `9:16`.
+fn hud_aspect_from(wire: Option<&str>) -> HudAspect {
+    if wire == Some("16:9") {
+        HudAspect::SixteenByNine
+    } else {
+        HudAspect::NineBySixteen
+    }
+}
+
+/// پارسِ قطعیِ رزولوشن از وایر — ناشناخته → `1080p`.
+fn hud_resolution_from(wire: Option<&str>) -> HudResolution {
+    if wire == Some("720p") {
+        HudResolution::Hd720
+    } else {
+        HudResolution::FullHd1080
+    }
+}
+
+/// پارسِ قطعیِ فریم‌ریت از وایر — ناشناخته → `24`.
+fn hud_fps_from(wire: Option<&str>) -> HudFps {
+    if wire == Some("60") {
+        HudFps::Sixty
+    } else {
+        HudFps::TwentyFour
+    }
+}
+
+/// نمایِ وایرِ یک پیش‌تن.
+fn hud_preset_view(preset: &HudPreset) -> HudPresetView {
+    HudPresetView {
+        slug: preset.slug.clone(),
+        title: preset.title.clone(),
+        tagline: preset.tagline.clone(),
+        accent_hex: preset.accent_hex.clone(),
+        badge: preset.badge.clone(),
+        source: preset.source.wire_id().to_owned(),
+        node_labels: preset.node_labels.clone(),
+    }
+}
+
+/// `GET /hud/presets` — کاتالوگِ ۸ پیش‌تنِ تلمتری (عمومی).
+///
+/// # Errors
+/// هرگز — خروجیِ ثابت.
+pub async fn hud_presets() -> ApiResult<Json<HudPresetsResponse>> {
+    Ok(Json(HudPresetsResponse {
+        presets: hud_preset_catalog().iter().map(hud_preset_view).collect(),
+        signature: NEURAL_HUD_SIGNATURE.to_owned(),
+    }))
+}
+
+/// `POST /hud/synthesize` — سنتزِ قطعیِ پیش‌تنِ مخزن + بستهٔ HTML
+/// (`window.seekTo` + `WebAudio`) + فرمان‌هایِ `FFmpeg` + ماندگاریِ رانِ رندر
+/// (نشستِ شهروند؛ سقفِ ورودی ۱۶ کیلوبایت).
+///
+/// # Errors
+/// ۴۰۱ نشستِ غایب؛ ۴۰۰ ورودیِ نامعتبر (نامِ خالی، رنگِ بد، مدتِ خارج از
+/// بازه)؛ ۵۰۰ db.
+pub async fn hud_synthesize(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    bytes: axum::body::Bytes,
+) -> ApiResult<Json<HudSynthesizeResponse>> {
+    let _user = require_session(&state, &headers).await?;
+    let req: HudSynthesizeRequest = crate::handlers::parse_body(&bytes)?;
+    if req.repo_name.len() > 128 || req.tagline.as_ref().is_some_and(|t| t.len() > 256) {
+        return Err(HttpFailure::invalid_request(1).into());
+    }
+    let preset = synthesize_custom_repo_hud_preset(
+        &req.repo_name,
+        req.tagline.as_deref().unwrap_or(""),
+        req.accent_hex.as_deref(),
+    )
+    .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
+    let spec = HudRenderSpec {
+        aspect: hud_aspect_from(req.aspect.as_deref()),
+        resolution: hud_resolution_from(req.resolution.as_deref()),
+        fps: hud_fps_from(req.fps.as_deref()),
+        duration_sec: req.duration_sec.unwrap_or(kian_hermes::neural_hud_studio_engine::DEFAULT_DURATION_SEC),
+    };
+    let bundle = build_neural_hud_html_bundle(&preset, &spec)
+        .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
+    let audio = build_ffmpeg_hud_audio_command(spec.duration_sec)
+        .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
+    let video = build_ffmpeg_mjpeg_pipe_command(&spec, Some("hud_audio.wav"))
+        .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
+    // ماندگاریِ رانِ رندر — قطعی و ایدمپوتنت روی id
+    let job_id = format!("hudjob:{}", bundle.html_sha256.get(..16).unwrap_or("0"));
+    let row = NeuralHudRenderJobRow {
+        id: job_id,
+        preset_slug: preset.slug.clone(),
+        aspect_ratio: spec.aspect.wire_id().to_owned(),
+        resolution: spec.resolution.wire_id().to_owned(),
+        fps: i64::from(spec.fps.as_u32()),
+        duration_sec: i64::from(spec.duration_sec),
+        status: "queued".to_owned(),
+        created_at: kian_db::now_iso(),
+    };
+    let persisted = state.store.insert_hud_render_job(&row).await.is_ok();
+    Ok(Json(HudSynthesizeResponse {
+        preset: hud_preset_view(&preset),
+        html: bundle.html,
+        html_sha256: bundle.html_sha256,
+        frame_width: bundle.frame_width,
+        frame_height: bundle.frame_height,
+        fps: bundle.fps,
+        duration_sec: bundle.duration_sec,
+        node_count: bundle.node_count,
+        edge_count: bundle.edge_count,
+        audio_command_argv: audio.argv,
+        video_command_argv: video,
+        persisted,
+        signature: NEURAL_HUD_SIGNATURE.to_owned(),
+    }))
+}
+
+/// `GET /grok/ui-bundle` — بستهٔ UIِ امضاییِ Grok برای (لوکال، لایه، پرسونا)
+/// (عمومی؛ نرخ‌سنجی‌شده).
+///
+/// # Errors
+/// هرگز — ورودیِ ناشناخته به پیش‌فرضِ قطعی سقوط می‌کند.
+pub async fn grok_ui_bundle(
+    axum::extract::Query(query): axum::extract::Query<GrokUiBundleQuery>,
+) -> ApiResult<Json<GrokUiBundleResponse>> {
+    let locale = query.locale.as_deref().unwrap_or("fa").trim().to_lowercase();
+    let locale = if locale.is_empty() { "fa".to_owned() } else { locale };
+    let tier = LabUxTier::parse(query.ux_tier.as_deref().unwrap_or("pro_terminal"));
+    let persona = GrokPersonaMode::parse(query.persona.as_deref().unwrap_or("regular_balanced"));
+    let bundle = build_grok_signature_ui_bundle(&locale, tier, persona);
+    Ok(Json(GrokUiBundleResponse {
+        html: bundle.html,
+        locale: bundle.locale,
+        direction: bundle.direction,
+        ux_tier: bundle.ux_tier,
+        persona: bundle.persona,
+        chips: bundle.chips,
+        ghost_follow_ups: bundle.ghost_follow_ups,
+        css_signature: bundle.css_signature,
+        locale_slots: bundle.locale_slots,
+    }))
+}
+
+/// `POST /grok/chat-turn` — یک نوبتِ چتِ امضایی: آکاردئونِ تفکر + نوارِ
+/// `DeepSearch` + پاسخِ پرسونا + سه چیپِ روحِ بعدی (نشستِ شهروند؛ سقفِ
+/// پرامپت ۴ کیلوبایت).
+///
+/// # Errors
+/// ۴۰۱ نشستِ غایب؛ ۴۰۰ پرامپتِ خالی/بزرگ‌تر از سقف.
+pub async fn grok_chat_turn(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    bytes: axum::body::Bytes,
+) -> ApiResult<Json<GrokChatTurnResponse>> {
+    let _user = require_session(&state, &headers).await?;
+    let req: GrokChatTurnRequest = crate::handlers::parse_body(&bytes)?;
+    let prompt = req.prompt.trim().to_owned();
+    if prompt.is_empty() || prompt.len() > 4_000 {
+        return Err(HttpFailure::invalid_request(1).into());
+    }
+    let locale = req.locale.as_deref().unwrap_or("fa").trim().to_lowercase();
+    let tier = LabUxTier::parse(req.ux_tier.as_deref().unwrap_or("pro_terminal"));
+    let persona = GrokPersonaMode::parse(req.persona.as_deref().unwrap_or("regular_balanced"));
+    let outcome = GrokSignatureUxEngine::run_chat_turn(&GrokChatTurnSpec {
+        prompt,
+        locale: if locale.is_empty() { "fa".to_owned() } else { locale },
+        ux_tier: tier,
+        persona,
+        deep_search: req.deep_search.unwrap_or(false),
+        think: req.think.unwrap_or(true),
+    });
+    Ok(Json(GrokChatTurnResponse {
+        thinking_steps: outcome
+            .thinking
+            .steps
+            .iter()
+            .map(|s| GrokThinkStepView { step: s.clone() })
+            .collect(),
+        thinking_duration_ms: outcome.thinking.thinking_duration_ms,
+        citations: outcome
+            .citations
+            .map_or(Vec::new(), |bar| {
+                bar.sources
+                    .iter()
+                    .map(|c| GrokCitationView {
+                        title: c.title.clone(),
+                        domain: c.domain.clone(),
+                        verified: c.verified,
+                    })
+                    .collect()
+            }),
+        response_text: outcome.response_text,
+        ghost_follow_ups: outcome.ghost_follow_ups,
+        persona: outcome.persona.wire_id().to_owned(),
+        model_slug: outcome.model_slug,
+        locale: outcome.locale,
+        ux_tier: outcome.ux_tier.wire_id().to_owned(),
+    }))
+}
+
+/// `GET /i18n/ecosystem-matrix` — ماتریسِ ۲۰ لوکالِ اکوسیستمِ روزِ اول
+/// (عمومی).
+///
+/// # Errors
+/// هرگز — خروجیِ ثابت.
+pub async fn i18n_ecosystem_matrix() -> ApiResult<Json<I18nMatrixResponse>> {
+    let matrix = build_day1_ecosystem_i18n_matrix();
+    Ok(Json(I18nMatrixResponse {
+        locales: matrix
+            .locales
+            .iter()
+            .map(|l| I18nLocaleView {
+                code: l.code.clone(),
+                name: l.name.clone(),
+                native_name: l.native_name.clone(),
+                direction: l.direction.clone(),
+                font_family: l.font_family.clone(),
+                flag_svg: l.flag_svg.clone(),
+                glyph_sample: l.glyph_sample.clone(),
+                state: l.state.wire_id().to_owned(),
+                completion_bps: l.completion_bps,
+                fallback: l.fallback.clone(),
+            })
+            .collect(),
+        active_day1: matrix.active_day1,
+        patch_ready: matrix.patch_ready,
+        signature: matrix.signature,
+    }))
+}
+
+/// `POST /i18n/apply-patch` — پچِ داغِ ترجمه روی یک لوکال + ماندگاریِ وضعیت
+/// در `LocalePatchRegistry` (نشستِ شهروند؛ سقفِ ۲۰۰ مدخل).
+///
+/// # Errors
+/// ۴۰۱ نشستِ غایب؛ ۴۰۰ لوکال/ماژولِ ناشناخته یا مدخلِ خالی؛ ۵۰۰ db.
+#[allow(clippy::too_many_lines)]
+pub async fn i18n_apply_patch(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    bytes: axum::body::Bytes,
+) -> ApiResult<Json<I18nApplyPatchResponse>> {
+    let _user = require_session(&state, &headers).await?;
+    let req: I18nApplyPatchRequest = crate::handlers::parse_body(&bytes)?;
+    if req.patch_entries.len() > 200 || req.patch_entries.iter().any(|e| e.value.len() > 4_000) {
+        return Err(HttpFailure::invalid_request(1).into());
+    }
+    let entries: Vec<LocalePatchEntry> = req
+        .patch_entries
+        .iter()
+        .map(|e| LocalePatchEntry {
+            module: e.module.clone(),
+            key: e.key.clone(),
+            value: e.value.clone(),
+        })
+        .collect();
+    let outcome = apply_locale_translation_patch(&req.locale_code, &entries)
+        .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
+    let matrix = build_day1_ecosystem_i18n_matrix();
+    let meta = matrix
+        .locales
+        .iter()
+        .find(|l| l.code == outcome.locale_code)
+        .cloned()
+        .unwrap_or_else(|| kian_hermes::grok_ux_and_lab_engine::EcosystemLocale {
+            code: outcome.locale_code.clone(),
+            name: String::new(),
+            native_name: String::new(),
+            direction: locale_direction(&outcome.locale_code).to_owned(),
+            font_family: "Noto Sans".to_owned(),
+            flag_svg: String::new(),
+            glyph_sample: String::new(),
+            state: kian_hermes::grok_ux_and_lab_engine::LocaleActivationState::PatchReadySlot,
+            completion_bps: 0,
+            fallback: "en".to_owned(),
+        });
+    let row = LocalePatchRegistryRow {
+        locale_code: outcome.locale_code.clone(),
+        direction: meta.direction.clone(),
+        activation_state: outcome.activation_state.clone(),
+        completion_bps: i64::from(outcome.completion_bps),
+        patch_version: outcome.patch_version.clone(),
+        updated_at: kian_db::now_iso(),
+    };
+    let persisted = state.store.upsert_locale_patch_registry(&row).await.is_ok();
+    Ok(Json(I18nApplyPatchResponse {
+        locale_code: outcome.locale_code,
+        activation_state: outcome.activation_state,
+        completion_bps: outcome.completion_bps,
+        applied_count: outcome.applied_count,
+        patch_version: outcome.patch_version,
+        applied_entries: outcome.applied_entries,
+        persisted,
+    }))
+}
+
+/// بارگذاریِ تلمتریِ آزمایشگاه — از `UserLabTelemetryLog`؛ اگر store خالی بود
+/// (دویدنِ آزمون روی store درون‌حافظه‌ای)، تلمتریِ قطعیِ شبیه‌سازیِ ۱۰-DNA
+/// به‌عنوانِ fallback استفاده می‌شود تا داشبورد و صادراتِ RLHF همیشه
+/// out-of-the-box کار کنند.
+///
+/// # Errors
+/// خطای SQL.
+pub(crate) async fn load_lab_telemetry_entries(
+    state: &Arc<AppState>,
+) -> Result<Vec<UserLabTelemetryEntry>, kian_db::DbError> {
+    let rows = state.store.list_lab_telemetry_logs(1000).await?;
+    if rows.is_empty() {
+        return Ok(run_24h_ten_dna_ux_lab_simulation().telemetry);
+    }
+    Ok(rows.iter().map(lab_row_to_entry).collect())
+}
+
+/// تبدیلِ ردیفِ db به مدخلِ موتور.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // ستون‌هایِ اطمینان‌شدهٔ SQLite
+pub(crate) fn lab_row_to_entry(row: &UserLabTelemetryLogRow) -> UserLabTelemetryEntry {
+    UserLabTelemetryEntry {
+        id: row.id.clone(),
+        dna_code: row.dna_code.clone(),
+        user_handle: row.user_handle.clone(),
+        hour_offset: u32::try_from(row.hour_offset).unwrap_or(0),
+        ux_tier: row.ux_tier.clone(),
+        locale: row.locale.clone(),
+        grok_persona: row.grok_persona.clone(),
+        model_slug: row.model_slug.clone(),
+        routing_mode: row.routing_mode.clone(),
+        prompt_text: row.prompt_text.clone(),
+        thinking_trace_json: row.thinking_trace_json.clone(),
+        response_text: row.response_text.clone(),
+        rea_score: u8::try_from(row.rea_score).unwrap_or(0),
+        latency_ms: u32::try_from(row.latency_ms).unwrap_or(0),
+        usable_for_training: row.usable_for_training,
+        created_at: row.created_at.clone(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::seed_skills;
@@ -528,6 +893,240 @@ mod tests {
     async fn body_json(res: axum::response::Response) -> serde_json::Value {
         let bytes = res.into_body().collect().await.unwrap().to_bytes();
         serde_json::from_slice(&bytes).unwrap()
+    }
+
+
+    // ── Wave 9 (Commit #29): HUD عصبی + Grok + i18n ─────────────────────────
+
+    /// کاتالوگِ HUD عمومی — ۸ پیش‌تن با امضا؛ بدونِ نشست.
+    #[tokio::test]
+    async fn hud_presets_is_public_with_eight() {
+        let app = app().await;
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/hud/presets")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["presets"].as_array().unwrap().len(), 8);
+        assert_eq!(body["signature"], "KIA-NEURAL-HUD-W9");
+    }
+
+    /// سنتزِ HUD بدونِ نشست → ۴۰۱؛ با نشست → ۲۰۰ با بستهٔ HTML قطعی +
+    /// فرمان‌هایِ `FFmpeg` (محدودگر + faststart)؛ رنگِ نامعتبر → ۴۰۰.
+    #[tokio::test]
+    async fn hud_synthesize_requires_session_and_renders_bundle() {
+        let app = app().await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/hud/synthesize")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"repoName":"quant-core"}"#))
+            .unwrap();
+        assert_eq!(app.clone().oneshot(req).await.unwrap().status(), 401);
+
+        let tok = token(&app).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/hud/synthesize")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"repoName":"quant-core","tagline":"causal telemetry","resolution":"1080p","aspect":"9:16","fps":"24","durationSec":60}"#,
+            ))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["preset"]["slug"], "quant-core");
+        assert_eq!(body["preset"]["source"], "synthesized");
+        assert_eq!(body["nodeCount"], 180);
+        assert_eq!(body["frameWidth"], 1080);
+        assert_eq!(body["frameHeight"], 1920);
+        assert!(body["persisted"].as_bool().unwrap_or(false), "render job persisted");
+        let html = body["html"].as_str().unwrap_or("");
+        assert!(html.contains("window.seekTo"));
+        assert!(html.contains("window.__KIA_HUD_GEO"));
+        assert_eq!(body["htmlSha256"].as_str().unwrap_or("").len(), 64);
+        let audio_argv = body["audioCommandArgv"].as_array().unwrap();
+        let audio_join: Vec<&str> = audio_argv.iter().map(|s| s.as_str().unwrap_or("")).collect();
+        assert!(audio_join.concat().contains("alimiter=limit=0.95:attack=5:release=50"));
+        let video_join: String = body["videoCommandArgv"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s.as_str().unwrap_or(""))
+            .collect::<Vec<&str>>()
+            .join("\n");
+        assert!(video_join.contains("+faststart"));
+        assert!(video_join.contains("1080x1920"));
+        // رنگِ نامعتبر → ۴۰۰
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/hud/synthesize")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"repoName":"x","accentHex":"zzz"}"#))
+            .unwrap();
+        assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
+    }
+
+    /// بستهٔ UIِ Grok عمومی — RTL فارسی پیش‌فرض، ۶ چیپ، ۲۰ اسلاتِ لوکال،
+    /// سوییچِ LTR برای `en`.
+    #[tokio::test]
+    async fn grok_ui_bundle_is_public_and_localized() {
+        let app = app().await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/grok/ui-bundle")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["direction"], "rtl");
+        assert_eq!(body["chips"].as_array().unwrap().len(), 6);
+        assert_eq!(body["ghostFollowUps"].as_array().unwrap().len(), 3);
+        assert_eq!(body["localeSlots"], 20);
+        assert!(body["html"].as_str().unwrap_or("").contains("#050507"));
+        let res = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/grok/ui-bundle?locale=en&uxTier=pro_terminal&persona=mairon_sovereign")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = body_json(res).await;
+        assert_eq!(body["direction"], "ltr");
+        assert_eq!(body["persona"], "mairon_sovereign");
+    }
+
+    /// نوبتِ چتِ Grok بدونِ نشست → ۴۰۱؛ با نشست → گام‌هایِ تفکر + روح‌ها +
+    /// روتینگِ ژنوم؛ پرامپتِ خالی → ۴۰۰.
+    #[tokio::test]
+    async fn grok_chat_turn_requires_session_and_answers() {
+        let app = app().await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/grok/chat-turn")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"prompt":"route the genome"}"#))
+            .unwrap();
+        assert_eq!(app.clone().oneshot(req).await.unwrap().status(), 401);
+
+        let tok = token(&app).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/grok/chat-turn")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"prompt":"ماتریس ژنوم را نشان بده","locale":"fa","uxTier":"pro_terminal","persona":"mairon_sovereign","deepSearch":true,"think":true}"#,
+            ))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["thinkingSteps"].as_array().unwrap().len(), 4);
+        assert!(body["thinkingDurationMs"].as_u64().unwrap_or(0) >= 380);
+        assert_eq!(body["citations"].as_array().unwrap().len(), 3);
+        assert_eq!(body["ghostFollowUps"].as_array().unwrap().len(), 3);
+        assert_eq!(body["modelSlug"], "02-gemini-4-aragon-high");
+        // پرامپتِ خالی → ۴۰۰
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/grok/chat-turn")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"prompt":"   "#))
+            .unwrap();
+        assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
+    }
+
+    /// ماتریسِ i18n عمومی — ۲۰ لوکال، `fa`/`en` فعالِ ۱۰۰٪؛ پچِ داغِ `ar` با
+    /// نشست → ۵۵۵ bps؛ لوکالِ ناشناخته → ۴۰۰.
+    #[tokio::test]
+    async fn i18n_matrix_public_and_hot_patch_requires_session() {
+        let app = app().await;
+        let res = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/i18n/ecosystem-matrix")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["locales"].as_array().unwrap().len(), 20);
+        assert_eq!(body["activeDay1"], 2);
+        assert_eq!(body["patchReady"], 18);
+        let fa = body["locales"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|l| l["code"] == "fa")
+            .expect("fa present");
+        assert_eq!(fa["state"], "ACTIVE_DAY1");
+        assert_eq!(fa["completionBps"], 10000);
+        assert_eq!(fa["direction"], "rtl");
+        assert!(fa["flagSvg"].as_str().unwrap_or("").contains("viewBox=\"0 0 20 14\""));
+
+        // پچ بدونِ نشست → ۴۰۱
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/i18n/apply-patch")
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"مرحبا"}]}"#,
+            ))
+            .unwrap();
+        assert_eq!(app.clone().oneshot(req).await.unwrap().status(), 401);
+
+        // پچ با نشست → ۵۵۵ bps + ماندگاری
+        let tok = token(&app).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/i18n/apply-patch")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"مرحبا کیان"},{"module":"nav","key":"market","value":"السوق"}]}"#,
+            ))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200);
+        let body = body_json(res).await;
+        assert_eq!(body["completionBps"], 555);
+        assert_eq!(body["appliedCount"], 2);
+        assert_eq!(body["patchVersion"], "wave9.2");
+        assert!(body["persisted"].as_bool().unwrap_or(false));
+        assert_eq!(body["appliedEntries"]["nav.brand"], "مرحبا کیان");
+
+        // لوکالِ ناشناخته → ۴۰۰
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/i18n/apply-patch")
+            .header("authorization", format!("Bearer {tok}"))
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"localeCode":"xx","patchEntries":[{"module":"nav","key":"brand","value":"y"}]}"#,
+            ))
+            .unwrap();
+        assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
     }
 
     /// فهرست عمومی مهارت‌ها — ۱۶ مهارت پس از seed؛ بدون قالب پرامپت.
