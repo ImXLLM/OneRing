@@ -5,7 +5,7 @@
  Packaged: 2026-11-26 · verified green before packaging (rustc 1.100.0 pinned)
 
  1) GIT STATE
-    Step-1 kernel commit: <STEP1_SHA>  (recorded post-commit — the MANIFEST
+    Step-1 kernel commit: 651c1193a5de53eda4eb32b8940afd00287adaf0 (651c119)  (recorded post-commit — the MANIFEST
                        commit lands immediately after this file)
     Base     e820955  docs(intl): bilingual+multilingual README set
                        (EN/FA native + 中文 + Español, language switcher)
