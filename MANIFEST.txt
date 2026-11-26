@@ -3,6 +3,7 @@
  LAW Enforcement Commit: Pure-English Source Purge + Sovereign Brand Alignment
 ═══════════════════════════════════════════════════════════════════════════════
  Packaged: 2026-11-26 · base kernel 1c313dd (Step-1 gates all closed, 100/100)
+ Enforcement commit: 4d9dc6d4731441f8fbe7cba3348ab7e8e35b42bc (4d9dc6d)
 
  1) LAWS ENFORCED IN THIS COMMIT
     LAW 1  Sovereign brand identity = MAIRON. All v1/v2/Wave/Step developmental
