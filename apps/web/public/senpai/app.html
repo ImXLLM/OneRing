@@ -192,7 +192,7 @@
 
             <!-- Search Bar -->
             <div class="search-bar" id="searchBar">
-                <input type="text" id="searchInput" placeholder="Search messages…" autocomplete="off">
+                <input type="text" id="searchInput" aria-label="Search messages…" autocomplete="off">
                 <button class="search-regex-toggle" id="searchRegexToggle" title="Enable regex">.*</button>
                 <span class="search-count" id="searchCount"></span>
                 <button class="search-close" id="searchClose"><svg class="btn-icon"><use href="#icon-x" xlink:href="#icon-x"/></svg></button>
@@ -236,7 +236,7 @@
                     <button class="icon-btn" id="attachBtn" title="Attach file / image"><svg class="btn-icon"><use href="#icon-paperclip" xlink:href="#icon-paperclip"/></svg></button>
                     <button class="icon-btn" id="cancelBtn" title="Cancel current request" style="display:none;"><svg class="btn-icon"><use href="#icon-x" xlink:href="#icon-x"/></svg></button>
                     <div class="input-wrapper">
-                        <textarea class="chat-input" id="chatInput" rows="1" placeholder="&#x67e;&#x6cc;&#x627;&#x645;&#x62a;&#x648; &#x628;&#x646;&#x648;&#x6cc;&#x633;… / Type your message…" dir="auto"></textarea>
+                        <textarea class="chat-input" id="chatInput" rows="1" aria-label="&#x67e;&#x6cc;&#x627;&#x645;&#x62a;&#x648; &#x628;&#x646;&#x648;&#x6cc;&#x633;… / Type your message…" dir="auto"></textarea>
                     </div>
                     <button class="send-btn" id="sendBtn" title="Send (Enter)">
                         <svg viewBox="0 0 24 24"><polygon points="4,4 20,12 4,20 6,12"/></svg>
@@ -259,7 +259,7 @@
     <!-- Command Palette -->
     <div class="command-palette" id="commandPalette">
         <div class="cp-box">
-            <input class="cp-input" id="cpInput" placeholder="Type a command…" autocomplete="off">
+            <input class="cp-input" id="cpInput" aria-label="Type a command…" autocomplete="off">
             <div class="cp-results" id="cpResults"></div>
         </div>
     </div>
@@ -273,7 +273,7 @@
                     <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:6px;">
                         Describe a multi-step goal. SenPai will break it into sub-tasks and work through them one by one.
                     </label>
-                    <textarea id="missionGoalInput" placeholder="e.g. Build a dashboard that analyzes live gold prices…"></textarea>
+                    <textarea id="missionGoalInput" aria-label="e.g. Build a dashboard that analyzes live gold prices…"></textarea>
                     <div class="mission-actions">
                         <button class="hud-btn" id="missionStartBtn" style="flex:1;"><svg class="btn-icon"><use href="#icon-play" xlink:href="#icon-play"/></svg> Decompose &amp; Start</button>
                     </div>
@@ -295,7 +295,7 @@
         <div class="council-panel">
             <h3>⚖️ Council Mode <button class="hud-btn icon-only" id="councilCloseBtn"><svg class="btn-icon"><use href="#icon-x" xlink:href="#icon-x"/></svg></button></h3>
             <div class="council-prompt-row">
-                <textarea id="councilPromptInput" placeholder="Ask both models the same question…" rows="2"></textarea>
+                <textarea id="councilPromptInput" aria-label="Ask both models the same question…" rows="2"></textarea>
                 <button class="hud-btn active-btn" id="councilRunBtn">Ask Both</button>
             </div>
             <div class="council-columns">
@@ -390,14 +390,14 @@
                 <div class="setting-group" id="apiKeyGroup">
                     <label>API Key</label>
                     <div class="password-wrapper">
-                        <input type="password" id="apiKeyInput" placeholder="Enter API key…">
+                        <input type="password" id="apiKeyInput" aria-label="Enter API key…">
                         <button class="password-toggle" id="toggleApiKey">SHOW</button>
                     </div>
                     <div class="hint">Stored in local storage (encrypted with Web Crypto API). Never sent except to your provider.</div>
                 </div>
                 <div class="setting-group" id="baseUrlGroup" style="display:none;">
                     <label id="baseUrlLabel">Local Server URL</label>
-                    <input type="text" id="baseUrlInput" placeholder="http://localhost:11434">
+                    <input type="text" id="baseUrlInput" aria-label="http://localhost:11434">
                     <div class="ollama-url-hint" id="baseUrlHint">Default Ollama URL: http://localhost:11434</div>
                 </div>
             </div>
@@ -415,7 +415,7 @@
                 <div class="setting-group">
                     <label>Or enter any model ID manually</label>
                     <div class="custom-model-row">
-                        <input type="text" id="customModelInput" placeholder="e.g. llama3.3:70b, qwen2.5-coder:32b…">
+                        <input type="text" id="customModelInput" aria-label="e.g. llama3.3:70b, qwen2.5-coder:32b…">
                         <button id="addCustomModelBtn">Use This</button>
                     </div>
                     <div class="hint">Works with any model string your provider accepts.</div>
@@ -423,11 +423,11 @@
                 <div class="setting-group pricing-grid">
                     <div>
                         <label>Input $ / 1M tokens</label>
-                        <input type="number" id="priceInInput" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" id="priceInInput" step="0.01" min="0" aria-label="0.00">
                     </div>
                     <div>
                         <label>Output $ / 1M tokens</label>
-                        <input type="number" id="priceOutInput" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" id="priceOutInput" step="0.01" min="0" aria-label="0.00">
                     </div>
                 </div>
             </div>
@@ -437,11 +437,11 @@
                 <div class="setting-group token-budget-row">
                     <div>
                         <label>Session Token Budget</label>
-                        <input type="number" id="tokenBudgetInput" step="1000" min="0" placeholder="128000">
+                        <input type="number" id="tokenBudgetInput" step="1000" min="0" aria-label="128000">
                     </div>
                     <div>
                         <label>Context Window (max)</label>
-                        <input type="number" id="contextWindowInput" step="1000" min="0" placeholder="128000">
+                        <input type="number" id="contextWindowInput" step="1000" min="0" aria-label="128000">
                     </div>
                 </div>
                 <div class="hint" style="margin-top:-6px;margin-bottom:10px;">The gauge tracks cumulative tokens used this session. Alerts at 80% and 95%.</div>
@@ -451,7 +451,7 @@
                 </div>
                 <div class="setting-group">
                     <label>Sliding Window (max messages in context)</label>
-                    <input type="number" id="slidingWindowInput" min="1" max="200" placeholder="20">
+                    <input type="number" id="slidingWindowInput" min="1" max="200" aria-label="20">
                     <div class="hint">Limits the number of past messages sent to the model. Helps control token usage.</div>
                 </div>
                 <button class="hud-btn" id="resetTokenMeterBtn" style="margin-top:6px;">Reset counters to zero</button>
@@ -461,7 +461,7 @@
             <div class="settings-tabpanel" data-tabpanel="behavior">
                 <div class="setting-group">
                     <label>System Prompt</label>
-                    <textarea id="systemPromptInput" placeholder="Custom system instructions…">You are SenPai, an advanced AI debugging assistant with a living neural network interface. Respond concisely and precisely. Use markdown and code blocks when helpful. Be analytical and professional.</textarea>
+                    <textarea id="systemPromptInput" aria-label="Custom system instructions…">You are SenPai, an advanced AI debugging assistant with a living neural network interface. Respond concisely and precisely. Use markdown and code blocks when helpful. Be analytical and professional.</textarea>
                 </div>
                 <div class="setting-group">
                     <label>Temperature: <span class="temp-display" id="tempDisplay">0.8</span></label>
@@ -469,20 +469,20 @@
                 </div>
                 <div class="setting-group">
                     <label>Max Output Tokens</label>
-                    <input type="number" id="maxTokensInput" step="256" min="1" placeholder="4096">
+                    <input type="number" id="maxTokensInput" step="256" min="1" aria-label="4096">
                 </div>
                 <div class="setting-group">
                     <label>Top-P (optional)</label>
-                    <input type="number" id="topPInput" step="0.01" min="0" max="1" placeholder="0.95">
+                    <input type="number" id="topPInput" step="0.01" min="0" max="1" aria-label="0.95">
                     <div class="hint">Nucleus sampling parameter. Leave empty for default.</div>
                 </div>
                 <div class="setting-group">
                     <label>Frequency Penalty (optional)</label>
-                    <input type="number" id="freqPenaltyInput" step="0.01" min="0" max="2" placeholder="0.0">
+                    <input type="number" id="freqPenaltyInput" step="0.01" min="0" max="2" aria-label="0.0">
                 </div>
                 <div class="setting-group">
                     <label>Presence Penalty (optional)</label>
-                    <input type="number" id="presPenaltyInput" step="0.01" min="0" max="2" placeholder="0.0">
+                    <input type="number" id="presPenaltyInput" step="0.01" min="0" max="2" aria-label="0.0">
                 </div>
             </div>
 
@@ -532,7 +532,7 @@
                 <div class="setting-group">
                     <label>Save Current System Prompt</label>
                     <div style="display:flex;gap:6px;">
-                        <input type="text" id="promptNameInput" placeholder="Give this prompt a name…">
+                        <input type="text" id="promptNameInput" aria-label="Give this prompt a name…">
                         <button class="hud-btn active-btn" id="savePromptBtn">Save</button>
                     </div>
                 </div>
@@ -543,12 +543,12 @@
             <div class="settings-tabpanel" data-tabpanel="advanced">
                 <div class="setting-group">
                     <label>Stop Sequences (comma separated, optional)</label>
-                    <input type="text" id="stopSequencesInput" placeholder="e.g. 'end', 'stop'">
+                    <input type="text" id="stopSequencesInput" aria-label="e.g. 'end', 'stop'">
                     <div class="hint">Model will stop generating when any of these sequences are encountered.</div>
                 </div>
                 <div class="setting-group">
                     <label>Seed (optional, for deterministic output)</label>
-                    <input type="number" id="seedInput" step="1" min="0" placeholder="e.g. 42">
+                    <input type="number" id="seedInput" step="1" min="0" aria-label="e.g. 42">
                     <div class="hint">Set a fixed seed to make responses reproducible.</div>
                 </div>
                 <div class="setting-group">
@@ -618,8 +618,8 @@
                 </div>
                 <div class="setting-group">
                     <label>Council API key / endpoint (if different from main)</label>
-                    <input type="password" id="councilApiKeyInput" placeholder="Leave blank to reuse main API key">
-                    <input type="text" id="councilBaseUrlInput" placeholder="Leave blank to reuse main base URL" style="margin-top:6px;">
+                    <input type="password" id="councilApiKeyInput" aria-label="Leave blank to reuse main API key">
+                    <input type="text" id="councilBaseUrlInput" aria-label="Leave blank to reuse main base URL" style="margin-top:6px;">
                 </div>
                 <div class="setting-group checkbox-row">
                     <input type="checkbox" id="tickerEnabledCheckbox">
@@ -653,7 +653,7 @@
                 <div class="hint" style="margin-bottom:8px;">This is a <b>local-device lock</b>, not an account or server login — it only hides sensitive settings from someone glancing at your screen, and the passphrase is checked entirely inside this browser tab. Anyone with access to your browser's dev tools can still bypass it. It is not a real security boundary.</div>
                 <div class="setting-group" id="securitySetupBlock">
                     <label>Set a local passphrase</label>
-                    <input type="password" id="localLockPassInput" placeholder="Choose a passphrase">
+                    <input type="password" id="localLockPassInput" aria-label="Choose a passphrase">
                     <button class="hud-btn" id="localLockSetBtn" style="margin-top:8px;">Enable local lock</button>
                 </div>
                 <div class="setting-group" id="securityRemoveBlock" style="display:none;">

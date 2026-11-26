@@ -54,7 +54,7 @@ export function Toaster() {
             <button
               type="button"
               onClick={() => dismiss(t.id)}
-              aria-label="\u0628\u0633\u062a\u0646 \u0627\u0639\u0644\u0627\u0646"
+              aria-label="Dismiss the announcement"
               className="mt-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="size-4" aria-hidden />

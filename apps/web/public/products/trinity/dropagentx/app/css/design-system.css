@@ -299,7 +299,7 @@ p { margin-bottom: var(--space-4); color: var(--color-text-secondary); }
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-.form-input::placeholder {
+.form-input {
   color: var(--color-text-muted);
 }
 

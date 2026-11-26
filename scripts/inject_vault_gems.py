@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""inject_vault_gems.py — \u062a\u0632\u0631\u06cc\u0642 \u06af\u0646\u062c\u06cc\u0646\u0647\u0654 Hidden Gems \u0628\u0647 KIAN v2 (STEP 2 \u0645\u0623\u0645\u0648\u0631\u06cc\u062a \u06f9\u067e\u0648\u0634\u0647‌\u0627\u06cc).
+"""inject_vault_gems.py — inject the Hidden Gems vault into MAIRON (the 9-folder mission, phase 2).
 
 Sections:
   1. Static mount verification/patch for apps/web/public/products/trinity/
@@ -40,131 +40,131 @@ AFFILIATE_BPS = 2500  # 25% affiliate commission
 PRODUCTS: list[dict] = [
     dict(
         id="prod:trinity-sc-workbench",
-        title="\u0645\u06cc\u0632 \u06a9\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f SC (\u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 RTL)",
+        title="The SC smart workbench (full version)",
         file="sc.html",
         price=1_200_000_000,
         category="AI Tool",
-        tagline="\u0627\u0632 \u0627\u06cc\u062f\u0647 \u062a\u0627 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0631\u0648\u0634\u0646 — \u0645\u06cc\u0632\u06a9\u0627\u0631 \u06a9\u0627\u0645\u0644 \u0627\u0633\u062a\u0648\u062f\u06cc\u0648 SC",
+        tagline="From raw idea to a clear requirement — the complete SC studio workbench",
         accent="#22d3ee",
         icon="🧭",
         features=[
-            "\u062a\u0628\u062f\u06cc\u0644 \u0627\u06cc\u062f\u0647\u0654 \u062e\u0627\u0645 \u0628\u0647 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0633\u0627\u062e\u062a\u0627\u0631\u06cc\u0627\u0641\u062a\u0647 \u0648 \u062a\u0633\u062a‌\u067e\u0630\u06cc\u0631",
-            "\u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u06a9\u0627\u0645\u0644 RTL \u0641\u0627\u0631\u0633\u06cc \u0648 \u0642\u0627\u0644\u0628‌\u0647\u0627\u06cc \u0622\u0645\u0627\u062f\u0647\u0654 \u0645\u062d\u0635\u0648\u0644",
-            "\u062e\u0631\u0648\u062c\u06cc \u0645\u0633\u062a\u0642\u06cc\u0645 \u0628\u0631\u0627\u06cc \u0627\u0633\u062a\u0648\u062f\u06cc\u0648\u06cc \u0633\u0627\u062e\u062a \u0647\u0631\u0645\u0633",
+            "Turn a raw idea into structured, testable requirements",
+            "Full RTL support and ready-made product templates",
+            "Direct output into the build studio",
         ],
-        desc="\u0645\u06cc\u0632 \u06a9\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f SC \u06a9\u0627\u0645\u0644‌\u062a\u0631\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0627\u06cc\u062f\u0647 \u0648 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0627\u0633\u062a\u061b \u0627\u06cc\u062f\u0647 \u0631\u0627 \u0648\u0627\u0631\u062f \u0645\u06cc‌\u06a9\u0646\u06cc\u062f \u0648 \u062e\u0631\u0648\u062c\u06cc\u060c \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0631\u0648\u0634\u0646 \u0648 \u0642\u0627\u0628\u0644 \u0627\u062c\u0631\u0627\u0633\u062a. \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 RTL \u0628\u0627 \u062a\u0645 \u062a\u06cc\u0631\u0647 \u0648 \u0631\u0627\u0628\u0637 \u0641\u0627\u0631\u0633\u06cc.",
+        desc="The SC smart workbench is the most complete idea-and-requirement management tool: you enter an idea and the output is a clear, executable requirement. The full version ships a dark theme and a complete interface.",
     ),
     dict(
         id="prod:trinity-fishkal-game",
-        title="\u0628\u0627\u0632\u06cc \u0622\u0631\u06a9\u06cc\u062f \u0641\u06cc\u0632\u06cc\u06a9\u06cc FISHKAL — Deep Catch",
+        title="The FISHKAL physics arcade game — Deep Catch",
         file="fishkal.html",
         price=640_000_000,
         category="Game",
-        tagline="\u0634\u06cc\u0631\u062c\u0647 \u0628\u0632\u0646\u060c \u0639\u0645\u06cc\u0642‌\u062a\u0631\u06cc\u0646 \u0634\u06a9\u0627\u0631 \u0631\u0627 \u0628\u06a9\u0646!",
+        tagline="Dive in and make the deepest catch!",
         accent="#38bdf8",
         icon="🐟",
         features=[
-            "\u0641\u06cc\u0632\u06cc\u06a9 \u0648\u0627\u0642\u0639\u06cc \u0634\u0646\u0627 \u0648 \u067e\u0631\u062a\u0627\u0628 \u0642\u0644\u0627\u0628 \u0628\u0627 \u0622\u0628‌\u0634\u0646\u0627\u0633\u06cc \u0632\u0646\u062f\u0647",
-            "\u0628\u06cc\u0634 \u0627\u0632 \u06f3\u06f0 \u06af\u0648\u0646\u0647\u0654 \u0645\u0627\u0647\u06cc \u0628\u0627 \u0631\u0641\u062a\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f \u0641\u0631\u0627\u0631",
-            "\u062c\u062f\u0648\u0644 \u0631\u06a9\u0648\u0631\u062f \u0645\u062d\u0644\u06cc \u0648 \u0627\u0631\u062a\u0642\u0627\u06cc \u0642\u0644\u0627\u0628 \u0648 \u0637\u0639\u0645\u0647",
+            "Real swimming and hook-throwing physics with live water dynamics",
+            "More than 30 fish species with smart escape behavior",
+            "A local leaderboard plus hook and bait upgrades",
         ],
-        desc="FISHKAL \u06cc\u06a9 \u0628\u0627\u0632\u06cc \u0622\u0631\u06a9\u06cc\u062f \u0641\u06cc\u0632\u06cc\u06a9\u06cc \u062a\u06a9‌\u0635\u0641\u062d\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0628\u0627 \u0642\u0644\u0627\u0628 \u0634\u06cc\u0631\u062c\u0647 \u0645\u06cc‌\u0632\u0646\u06cc\u060c \u0645\u0627\u0647\u06cc‌\u0647\u0627 \u0631\u0627 \u0634\u06a9\u0627\u0631 \u0645\u06cc‌\u06a9\u0646\u06cc \u0648 \u0627\u0631\u062a\u0642\u0627 \u0645\u06cc‌\u06af\u06cc\u0631\u06cc. \u06af\u0631\u0627\u0641\u06cc\u06a9 Canvas \u06a9\u0627\u0645\u0644 \u0648 \u0622\u0641\u0644\u0627\u06cc\u0646.",
+        desc="FISHKAL is a one-page physics arcade game: dive with the hook, catch fish and collect upgrades. Complete offline Canvas graphics.",
     ),
     dict(
         id="prod:trinity-trading-arena-v10",
-        title="\u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632 \u0645\u0639\u0627\u0645\u0644\u0627\u062a\u06cc Trading God Arena v10",
+        title="The Trading God Arena v10 trading simulator",
         file="trading-god-arena.html",
         price=980_000_000,
         category="Trading",
-        tagline="\u0648\u06cc\u0631\u0627\u06cc\u0634 Elon Musk — \u0622\u0648\u0631\u062f\u06af\u0627\u0647 \u0622\u0645\u0648\u0632\u0634 \u0645\u0639\u0627\u0645\u0644\u0647",
+        tagline="A trading-practice arena with live market feedback",
         accent="#fbbf24",
         icon="📈",
         features=[
-            "\u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632\u06cc \u06a9\u0646\u062f\u0644\u060c \u0645\u0627\u0631\u062c\u06cc\u0646 \u0648 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0631\u06cc\u0633\u06a9 \u0628\u062f\u0648\u0646 \u0631\u06cc\u0633\u06a9 \u0648\u0627\u0642\u0639\u06cc",
-            "\u062d\u0627\u0644\u062a \u062f\u0633\u06a9\u062a\u0627\u067e \u0628\u0647\u06cc\u0646\u0647 \u0628\u0627 \u0645\u06cc\u0627\u0646‌\u0628\u0631\u0647\u0627\u06cc \u0635\u0641\u062d\u0647‌\u06a9\u0644\u06cc\u062f",
-            "\u0622\u0645\u0627\u0631 \u062c\u0644\u0633\u0647\u060c \u0627\u0634\u062a\u0628\u0627\u0647\u0627\u062a \u0631\u0627\u06cc\u062c \u0648 \u0628\u0627\u0632\u062e\u0648\u0631\u062f \u0622\u0645\u0648\u0632\u0634\u06cc",
+            "Candle, margin and risk-management simulation with no real risk",
+            "An optimized desktop mode with keyboard shortcuts",
+            "Session stats, common mistakes and coaching feedback",
         ],
-        desc="Trading God Arena v10 \u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632 \u0645\u0639\u0627\u0645\u0644\u0627\u062a\u06cc \u062d\u0631\u0641\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0627\u0633\u062a\u0631\u0627\u062a\u0698\u06cc‌\u0627\u062a \u0631\u0627 \u0628\u062f\u0648\u0646 \u067e\u0648\u0644 \u0648\u0627\u0642\u0639\u06cc \u062a\u0633\u062a \u0645\u06cc‌\u06a9\u0646\u06cc \u0648 \u0628\u0627 \u0628\u0627\u0632\u062e\u0648\u0631\u062f \u0644\u062d\u0638\u0647‌\u0627\u06cc \u06cc\u0627\u062f \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.",
+        desc="Trading God Arena v10 is a professional trading simulator: test your strategy without real money and learn from instant feedback.",
     ),
     dict(
         id="prod:trinity-nova-messenger",
-        title="\u067e\u06cc\u0627\u0645‌\u0631\u0633\u0627\u0646 \u0641\u0648\u0642‌\u067e\u0648\u06cc\u0627 Nova Messenger RTL",
+        title="The hyper-dynamic Nova Messenger",
         file="nova-messenger.html",
         price=450_000_000,
         category="UI Kit",
-        tagline="\u0631\u0627\u0628\u0637 \u0686\u062a \u067e\u0648\u06cc\u0627 \u0628\u0627 \u0627\u0646\u06cc\u0645\u06cc\u0634\u0646‌\u0647\u0627\u06cc \u0646\u0631\u0645",
+        tagline="A dynamic chat interface with smooth animations",
         accent="#a78bfa",
         icon="💬",
         features=[
-            "\u0627\u0646\u06cc\u0645\u06cc\u0634\u0646 \u0648\u0631\u0648\u062f \u067e\u06cc\u0627\u0645\u060c \u062a\u0627\u06cc\u067e\u06cc\u0646\u06af \u0648 \u0648\u0627\u06a9\u0646\u0634‌\u0647\u0627\u06cc \u0632\u0646\u062f\u0647",
-            "\u062a\u0645 \u062a\u06cc\u0631\u0647 \u0648 \u0631\u0648\u0634\u0646 \u0628\u0627 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u06a9\u0627\u0645\u0644 RTL",
-            "\u0646\u0645\u0648\u0646\u0647‌\u0647\u0627\u06cc \u0686\u062a\u060c \u06af\u0631\u0648\u0647 \u0648 \u067e\u0627\u0633\u062e \u0633\u0631\u06cc\u0639 \u0622\u0645\u0627\u062f\u0647",
+            "Message-entry animations, typing indicators and live reactions",
+            "Dark and light themes with full RTL support",
+            "Ready-made chat, group and quick-reply samples",
         ],
-        desc="Nova Messenger \u06cc\u06a9 \u0631\u0627\u0628\u0637 \u067e\u06cc\u0627\u0645‌\u0631\u0633\u0627\u0646 \u0641\u0648\u0642‌\u067e\u0648\u06cc\u0627 \u0627\u0633\u062a\u061b \u0628\u0631\u0627\u06cc \u067e\u0631\u0648\u0698\u0647‌\u0647\u0627\u06cc \u0686\u062a \u062e\u0648\u062f\u062a \u0627\u0632 \u0622\u0646 \u0628\u0647‌\u0639\u0646\u0648\u0627\u0646 \u067e\u0627\u06cc\u0647\u0654 \u0631\u0627\u0628\u0637 \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u06a9\u0646 \u0648 \u0633\u0627\u0639\u062a‌\u0647\u0627 \u0637\u0631\u0627\u062d\u06cc \u0631\u0627 \u0647\u062f\u0631 \u0646\u062f\u0647.",
+        desc="Nova Messenger is a hyper-dynamic chat interface: use it as the base for your own chat projects and skip hours of design work.",
     ),
     dict(
         id="prod:trinity-liquid-glass",
-        title="\u0631\u0627\u0628\u0637 \u0634\u06cc\u0634\u0647‌\u0627\u06cc \u0645\u0627\u06cc\u0639 Liquid Glass UI (\u06f5 \u0628\u0648\u0645 Canvas)",
+        title="The Liquid Glass UI (5 canvas canvases)",
         file="liquid-glass.html",
         price=520_000_000,
         category="UI Kit",
-        tagline="\u067e\u0646\u062c \u0628\u0648\u0645 \u0634\u06cc\u0634\u0647‌\u0627\u06cc \u0645\u0627\u06cc\u0639 \u0628\u0627 \u0641\u06cc\u0632\u06cc\u06a9 \u0648\u0627\u0642\u0639\u06cc",
+        tagline="Five liquid-glass canvases with real physics",
         accent="#34d399",
         icon="🫧",
         features=[
-            "\u06f5 \u0628\u0648\u0645 Canvas \u0645\u0633\u062a\u0642\u0644 \u0628\u0627 \u062f\u06cc\u0646\u0627\u0645\u06cc\u06a9 \u0633\u06cc\u0627\u0644 \u0648 \u0634\u06a9\u0633\u062a \u0646\u0648\u0631",
-            "\u06a9\u0646\u062a\u0631\u0644 \u0632\u0646\u062f\u0647\u0654 \u06af\u0631\u0627\u0646\u0631\u0648\u06cc\u060c \u0631\u0646\u06af \u0648 \u0634\u062f\u062a \u0627\u0646\u0639\u06a9\u0627\u0633",
-            "\u06a9\u062f \u062a\u0645\u06cc\u0632 \u0628\u0631\u0627\u06cc \u0627\u0633\u062a\u0641\u0627\u062f\u0647\u0654 \u0645\u0633\u062a\u0642\u06cc\u0645 \u062f\u0631 \u0645\u062d\u0635\u0648\u0644 \u062e\u0648\u062f\u062a",
+            "5 independent canvases with fluid dynamics and light refraction",
+            "Live control of viscosity, color and reflection intensity",
+            "Clean code ready to drop into your own product",
         ],
-        desc="\u067e\u06a9\u06cc\u062c Liquid Glass \u067e\u0646\u062c \u0628\u0648\u0645 \u062a\u0639\u0627\u0645\u0644\u06cc \u0634\u06cc\u0634\u0647\u0654 \u0645\u0627\u06cc\u0639 \u0645\u06cc‌\u062f\u0647\u062f\u061b \u0628\u0631\u0627\u06cc \u0644\u0646\u062f\u06cc\u0646\u06af\u060c \u0645\u06cc\u0646\u06cc‌\u0627\u067e \u0648 \u062f\u0627\u0634\u0628\u0648\u0631\u062f\u060c \u062c\u0644\u0648\u0647‌\u0627\u06cc \u0645\u062f\u0631\u0646 \u0648 \u0633\u0628\u06a9 \u0645\u06cc‌\u0633\u0627\u0632\u062f.",
+        desc="The Liquid Glass pack ships five interactive liquid-glass canvases: a modern, light effect for landings, mini-apps and dashboards.",
     ),
     dict(
         id="prod:trinity-ocean-webgl",
-        title="\u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u0641\u06cc\u0632\u06cc\u06a9 \u062f\u0631\u06cc\u0627 \u0648 \u0634\u06cc\u062f\u0631 WebGL (Ocean Test Lab)",
+        title="The ocean physics and WebGL shader lab (Ocean Test Lab)",
         file="ocean-test-lab.html",
         price=480_000_000,
         category="3D/WebGL",
-        tagline="\u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u0634\u06cc\u062f\u0631 \u0622\u0628\u060c \u0645\u0648\u062c \u0648 \u0646\u0648\u0631 \u062e\u0648\u0631\u0634\u06cc\u062f",
+        tagline="A water, wave and sunlight shader laboratory",
         accent="#2dd4bf",
         icon="🌊",
         features=[
-            "\u0634\u06cc\u062f\u0631 \u0622\u0628 \u0628\u0627 \u06a9\u0646\u062a\u0631\u0644 \u0645\u0648\u062c\u060c \u0628\u0627\u062f \u0648 \u0639\u0645\u0642 \u0628\u0647‌\u0635\u0648\u0631\u062a \u0632\u0646\u062f\u0647",
-            "\u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u0646\u0648\u0631\u060c \u0627\u0641\u0642 \u0648 \u0645\u062a\u0631\u06cc\u0627\u0644 \u0628\u0627 \u062e\u0631\u0648\u062c\u06cc \u06a9\u062f GLSL",
-            "\u0645\u062e\u0635\u0648\u0635 \u062a\u0648\u0633\u0639\u0647‌\u062f\u0647\u0646\u062f\u06af\u0627\u0646 WebGL \u0648 \u0628\u0627\u0632\u06cc‌\u0633\u0627\u0632\u0647\u0627",
+            "A water shader with live wave, wind and depth controls",
+            "Light, horizon and material settings with GLSL code output",
+            "Built for WebGL developers and game makers",
         ],
-        desc="Ocean Test Lab \u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u062a\u0639\u0627\u0645\u0644\u06cc \u0641\u06cc\u0632\u06cc\u06a9 \u062f\u0631\u06cc\u0627\u0633\u062a\u061b \u067e\u0627\u0631\u0627\u0645\u062a\u0631\u0647\u0627\u06cc \u0634\u06cc\u062f\u0631 \u0622\u0628 \u0631\u0627 \u0632\u0646\u062f\u0647 \u062a\u063a\u06cc\u06cc\u0631 \u0645\u06cc‌\u062f\u0647\u06cc \u0648 \u06a9\u062f GLSL \u0622\u0645\u0627\u062f\u0647 \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.",
+        desc="Ocean Test Lab is an interactive ocean-physics lab: tweak the water shader parameters live and get ready-made GLSL code.",
     ),
     dict(
         id="prod:trinity-fable-bazaar-3d",
-        title="\u0628\u0627\u0632\u0627\u0631 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u062a\u0639\u0627\u0645\u0644\u06cc Fable Bazaar 3D",
+        title="The interactive 3D Fable Bazaar",
         file="fable-bazaar.html",
         price=760_000_000,
         category="3D/WebGL",
-        tagline="\u0642\u062f\u0645 \u0628\u0632\u0646 \u062f\u0631 \u0628\u0627\u0632\u0627\u0631 \u0633\u0646\u062a\u06cc \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0648 \u0642\u0635\u0647 \u0628\u0633\u0627\u0632",
+        tagline="Walk a 3D traditional bazaar and build stories",
         accent="#f472b6",
         icon="🏰",
         features=[
-            "\u062f\u0646\u06cc\u0627\u06cc \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0628\u0627 \u06a9\u0646\u062a\u0631\u0644 \u0642\u062f\u0645‌\u0632\u062f\u0646 \u0648 \u0646\u0645\u0627\u06cc \u0627\u0648\u0644‌\u0634\u062e\u0635",
-            "\u062f\u06a9\u0627\u0646‌\u0647\u0627\u060c \u0628\u0627\u0632\u06cc\u06af\u0631\u0627\u0646 \u0648 \u062f\u06cc\u0627\u0644\u0648\u06af‌\u0647\u0627\u06cc \u062a\u0639\u0627\u0645\u0644\u06cc",
-            "\u0633\u0627\u062e\u062a \u0628\u0627 Three.js \u0648 \u0631\u0627\u0628\u0637 \u0641\u0627\u0631\u0633\u06cc \u06a9\u0627\u0645\u0644",
+            "A 3D world with walk controls and first-person view",
+            "Shops, characters and interactive dialogues",
+            "Built with Three.js and a complete interface",
         ],
-        desc="Fable Bazaar \u06cc\u06a9 \u0628\u0627\u0632\u0627\u0631 \u0633\u0646\u062a\u06cc\u0650 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0642\u0627\u0628\u0644 \u0642\u062f\u0645‌\u0632\u062f\u0646 \u0627\u0633\u062a\u061b \u0628\u06cc\u0646 \u062f\u06a9\u0627\u0646‌\u0647\u0627 \u0628\u06af\u0631\u062f\u060c \u0628\u0627 \u0641\u0631\u0648\u0634\u0646\u062f\u0647‌\u0647\u0627 \u062d\u0631\u0641 \u0628\u0632\u0646 \u0648 \u0641\u0636\u0627\u06cc \u0642\u0635\u0647‌\u0627\u06cc \u0631\u0627 \u062a\u062c\u0631\u0628\u0647 \u06a9\u0646.",
+        desc="Fable Bazaar is a walkable 3D traditional bazaar: wander between shops, talk to vendors and soak in the storybook atmosphere.",
     ),
     dict(
         id="prod:trinity-dropagentx-suite",
-        title="\u067e\u06a9\u06cc\u062c \u06a9\u0627\u0645\u0644 \u06f1\u06f2 \u0635\u0641\u062d\u0647‌\u0627\u06cc \u0633\u0648\u067e\u0631\u0627\u067e \u0648 \u0645\u063a\u0632 \u0633\u0647‌\u0628\u0639\u062f\u06cc DropAgentX",
+        title="The 12-page super-app package and 3D brain of DropAgentX",
         file="dropagentx/showcase3d.html",
         price=1_100_000_000,
         category="Super-App",
-        tagline="\u0633\u0648\u067e\u0631\u0627\u067e \u06f1\u06f2 \u0635\u0641\u062d\u0647‌\u0627\u06cc + \u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a",
+        tagline="A 12-page super-app + a 3D product showcase",
         accent="#fb7185",
         icon="🚀",
         features=[
-            "\u06f1\u06f2 \u0635\u0641\u062d\u0647\u0654 \u06a9\u0627\u0645\u0644: \u0644\u0646\u062f\u06cc\u0646\u06af\u060c \u0641\u0631\u0648\u0634\u06af\u0627\u0647\u060c \u0627\u062f\u0645\u06cc\u0646\u060c \u0644\u0627\u06cc\u0648 \u0648 \u0627\u06cc\u0646\u0633\u0627\u06cc\u062a",
-            "\u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a \u0628\u0627 Three.js \u0648 \u0641\u0648\u0646\u062a \u0648\u0632\u06cc\u0631\u0645\u062a\u0646",
-            "PWA \u0628\u0627 manifest \u0648 \u0633\u0631\u0648\u06cc\u0633‌\u0648\u0631\u06a9\u0631 \u0622\u0641\u0644\u0627\u06cc\u0646",
+            "12 complete pages: landing, store, admin, live and insight",
+            "A 3D product showcase with Three.js",
+            "A PWA with a manifest and an offline service worker",
         ],
-        desc="\u0633\u0648\u0626\u06cc\u062a DropAgentX \u06cc\u06a9 \u0633\u0648\u067e\u0631\u0627\u067e \u06a9\u0627\u0645\u0644 \u062f\u0648\u0627\u0632\u062f\u0647‌\u0635\u0641\u062d\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0647\u0645\u0631\u0627\u0647 \u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a\u060c \u0645\u063a\u0632 SenPai \u0648 \u0627\u067e \u0622\u0641\u0644\u0627\u06cc\u0646‌\u067e\u0630\u06cc\u0631 PWA.",
+        desc="The DropAgentX suite is a complete twelve-page super-app with a 3D product showcase, the SenPai brain and an installable offline PWA.",
     ),
 ]
 
@@ -175,7 +175,7 @@ LAUNCHER_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646</title>
+<title>{title} — MAIRON market preview</title>
 <style>
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{font-family:Vazirmatn,Tahoma,'Segoe UI',sans-serif;background:#0b0e14;color:#e6edf3;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}}
@@ -205,37 +205,37 @@ li b{{color:{accent}}}
 </head>
 <body>
 <main class="card">
-  <span class="badge">{icon} {category} — \u0645\u062d\u0635\u0648\u0644 \u067e\u0631\u0686\u0645‌\u062f\u0627\u0631 \u062a\u0631\u06cc\u0646\u06cc\u062a\u06cc</span>
+  <span class="badge">{icon} {category} — a Trinity flagship product</span>
   <h1>{title}</h1>
   <p class="tagline">{tagline}</p>
-  <div class="preview"><iframe id="pv" title="\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647" src="{launch_url}" loading="lazy" referrerpolicy="no-referrer"></iframe><span class="zoom">\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647\u0654 \u062a\u0639\u0627\u0645\u0644\u06cc</span></div>
-  <div class="zoom-ctrl"><span>\u0628\u0632\u0631\u06af‌\u0646\u0645\u0627\u06cc\u06cc \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634:</span><button type="button" onclick="zm(-.1)">−</button><span id="zv">\u06f3\u06f2\u06f0</span><button type="button" onclick="zm(.1)">+</button></div>
+  <div class="preview"><iframe id="pv" title="Live preview" src="{launch_url}" loading="lazy" referrerpolicy="no-referrer"></iframe><span class="zoom">Preview</span></div>
+  <div class="zoom-ctrl"><span>Preview zoom:</span><button type="button" onclick="zm(-.1)">-</button><span id="zv">320</span><button type="button" onclick="zm(.1)">+</button><button type="button" onclick="zr()">reset</button></div>
   <ul>
     {features}
   </ul>
   <div class="meta">
-    <div class="price">{price_din} Đ<small>{price_fa} — \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0622\u0646\u06cc \u0627\u0633\u06a9\u0631\u0648\u060c \u0628\u062f\u0648\u0646 \u062a\u0648\u0642\u0641 \u0627\u0646\u0633\u0627\u0646\u06cc</small></div>
-    <a class="btn" href="{launch_url}" target="_blank" rel="noopener">\u0627\u062c\u0631\u0627\u06cc \u0641\u0648\u0631\u06cc \u0645\u062d\u0635\u0648\u0644 ↗</a>
+    <div class="price">{price_din} Đ<small>{price_fa} — instant escrow release, no human hold</small></div>
+    <a class="btn" href="{launch_url}" target="_blank" rel="noopener">Launch the product now ↗</a>
   </div>
-  <p class="foot">\u0627\u06cc\u0646 \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647 \u0645\u0633\u062a\u0642\u06cc\u0645\u0627\u064b \u0645\u062d\u0635\u0648\u0644 \u0648\u0627\u0642\u0639\u06cc \u0631\u0627 \u0627\u062c\u0631\u0627 \u0645\u06cc‌\u06a9\u0646\u062f\u061b \u067e\u0633 \u0627\u0632 \u062e\u0631\u06cc\u062f\u060c \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 \u062a\u062d\u0648\u06cc\u0644 \u062f\u0627\u062f\u0647 \u0645\u06cc‌\u0634\u0648\u062f. \u0641\u0631\u0648\u0634\u0646\u062f\u0647: <span>@ImXforevr</span> — \u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0645\u0639\u0631\u0641: <span>\u06f2\u06f5\u066a</span></p>
+  <p class="foot">This live preview runs the real product directly; the full version is delivered after purchase. Seller: <span>@ImXforevr</span> — a 25 percent referral commission on every purchase.</p>
 </main>
 <script>
 var h=320;
 function zm(d){{h=Math.max(200,Math.min(700,Math.round(h*(1+d))));document.getElementById('pv').style.height=h+'px';document.getElementById('zv').textContent=fa(h);}}
-function fa(n){{return String(n).replace(/\\d/g,function(d){{return '\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9'[d];}});}}
-document.getElementById('pv').addEventListener('error',function(){{document.querySelector('.preview').innerHTML='<p style="padding:24px;color:#94a3b8;font-size:13px;line-height:2">\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u062f\u0631 \u0627\u06cc\u0646 \u0645\u062d\u06cc\u0637 \u062f\u0631 \u062f\u0633\u062a\u0631\u0633 \u0646\u06cc\u0633\u062a\u061b \u062f\u06a9\u0645\u0647\u0654 «\u0627\u062c\u0631\u0627\u06cc \u0641\u0648\u0631\u06cc \u0645\u062d\u0635\u0648\u0644» \u0631\u0627 \u0628\u0627\u0632 \u06a9\u0646\u06cc\u062f.</p>';}});
+function fa(n){{return String(n);}}
+document.getElementById('pv').addEventListener('error',function(){{document.querySelector('.preview').innerHTML='<p style="padding:24px;color:#94a3b8;font-size:14px">Preview failed to load — open the product page.</p>';}});
 </script>
 </body>
 </html>"""
 
 
 def _fa_num(n: int) -> str:
-    digits = "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9"
+    digits = "0123456789"
     return "".join(digits[int(c)] if c.isdigit() else c for c in str(n))
 
 
 def _price_fa(price: int) -> str:
-    return f"{_fa_num(price // 1_000_000)} \u062f\u06cc\u06cc\u0646 (Đ) \u0627\u0632 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646"
+    return f"{price // 1_000_000} Din (Đ) on the MAIRON market"
 
 
 def build_launcher(p: dict) -> str:
@@ -479,7 +479,7 @@ def _kb_items() -> list[tuple[str, str, str]]:
         name, desc = parse_frontmatter(body)
         slug = d.name
         title = desc if desc else (name or slug)
-        items.append((f"kb:skill:{slug}", f"\u0645\u0647\u0627\u0631\u062a \u062a\u062c\u0627\u0631\u06cc: {title}", body))
+        items.append((f"kb:skill:{slug}", f"Business skill: {title}", body))
 
     skills09 = VAULT / "09_recovered_playbooks_skills_valuation" / "kia_skills"
     for d in sorted((skills09 / "skills").iterdir()):
@@ -490,18 +490,18 @@ def _kb_items() -> list[tuple[str, str, str]]:
         name, desc = parse_frontmatter(body)
         slug = d.name
         title = desc if desc else (name or slug)
-        items.append((f"kb:eng:{slug}", f"\u0645\u0647\u0627\u0631\u062a \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627: {title}", body))
+        items.append((f"kb:eng:{slug}", f"MAIRON engineering skill: {title}", body))
 
     for extra_id, extra_title, path in [
-        ("kb:eng:soul", "\u0645\u0646\u0634\u0648\u0631 \u0647\u0648\u06cc\u062a\u06cc SOUL — \u0631\u0648\u062d \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627", skills09 / "SOUL.md"),
-        ("kb:eng:pricing", "\u0642\u06cc\u0645\u062a‌\u06af\u0630\u0627\u0631\u06cc \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627 (PRICING)", skills09 / "PRICING.md"),
-        ("kb:playbook:day1-sales-kit", "\u06a9\u06cc\u0641 \u0641\u0631\u0648\u0634 \u0631\u0648\u0632 \u0627\u0648\u0644 (DAY1 Sales Kit)",
+        ("kb:eng:soul", "The SOUL identity charter — the spirit of MAIRON engineering", skills09 / "SOUL.md"),
+        ("kb:eng:pricing", "MAIRON engineering pricing (PRICING)", skills09 / "PRICING.md"),
+        ("kb:playbook:day1-sales-kit", "The day-1 sales kit (DAY1 Sales Kit)",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "DAY1-SALES-KIT.md"),
-        ("kb:playbook:marketing-fa", "\u0628\u0627\u0632\u06cc‌\u0646\u0627\u0645\u0647\u0654 \u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628\u06cc \u0641\u0627\u0631\u0633\u06cc",
+        ("kb:playbook:marketing-fa", "The Persian marketing playbook",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "docs" / "MARKETING-PLAYBOOK-FA.md"),
-        ("kb:playbook:v3-blueprint", "\u0646\u0642\u0634\u0647\u0654 \u0631\u0627\u0647 \u06cc\u06a9\u067e\u0627\u0631\u0686\u0647\u0654 V3",
+        ("kb:playbook:v3-blueprint", "The unified V3 blueprint",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "V3_UNIFIED_BLUEPRINT.md"),
-        ("kb:playbook:valuation", "\u0627\u0631\u0632\u0634‌\u06af\u0630\u0627\u0631\u06cc \u067e\u0631\u062a\u0641\u0648\u06cc \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627 (~$758K)",
+        ("kb:playbook:valuation", "The MAIRON engineering portfolio valuation (~$758K)",
          VAULT / "09_recovered_playbooks_skills_valuation" / "portfolio" / "VALUATION.md"),
     ]:
         body = read_text_lenient(path)
@@ -515,7 +515,7 @@ def read_text_lenient(path: Path) -> str:
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError:
-        return raw.decode("utf-8", errors="replace").replace("\ufffd", "—")
+        return raw.decode("utf-8", errors="replace").replace("�", "—")
 
 
 def upsert_kb(db: sqlite3.Connection) -> dict:
@@ -549,7 +549,7 @@ def verify(db: sqlite3.Connection) -> dict:
     trial = cur.execute("SELECT COALESCE(SUM(amount),0) FROM Posting").fetchone()[0]
     credits = cur.execute("SELECT COALESCE(SUM(amount),0) FROM Posting WHERE amount>0").fetchone()[0]
     timings = []
-    for q in ("\u0627\u0633\u06a9\u0631\u0648", "\u067e\u0648\u0631\u0633\u0627\u0646\u062a", "\u062a\u062a\u0631", "\u0642\u06cc\u0645\u062a‌\u06af\u0630\u0627\u0631\u06cc", "persian-rtl"):
+    for q in ("escrow", "commission", "tether", "pricing", "persian-rtl"):
         t0 = time.perf_counter()
         rows = cur.execute(
             'SELECT COUNT(*) FROM "KbEntry" WHERE "title" LIKE ? OR "body" LIKE ?',

@@ -10,15 +10,15 @@ export function SiteFooter() {
           </span>
           <div>
             <p className="font-black">KIAN</p>
-            <p className="text-xs text-zinc-500">&#x67e;&#x627;&#x62f;&#x634;&#x627;&#x647;&#x6cc; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627; — &#x633;&#x627;&#x62e;&#x62a;&#x647;‌&#x634;&#x62f;&#x647; &#x62a;&#x648;&#x633;&#x637; KiaAgentX</p>
+            <p className="text-xs text-zinc-500">The Kingdom of Agents — built by KiaAgentX</p>
           </div>
         </div>
 
-        <nav aria-label="&#x67e;&#x6cc;&#x648;&#x646;&#x62f;&#x647;&#x627;&#x6cc; &#x67e;&#x627;&#x6cc;&#x6cc;&#x646; &#x635;&#x641;&#x62d;&#x647;" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-zinc-400">
-          <a href="#subsystems" className="transition-colors hover:text-gold-400">&#x632;&#x6cc;&#x631;&#x633;&#x6cc;&#x633;&#x62a;&#x645;‌&#x647;&#x627;</a>
-          <a href="#roadmap" className="transition-colors hover:text-gold-400">&#x646;&#x642;&#x634;&#x647; &#x631;&#x627;&#x647;</a>
-          <a href="#security" className="transition-colors hover:text-gold-400">&#x627;&#x645;&#x646;&#x6cc;&#x62a;</a>
-          <a href="#install" className="transition-colors hover:text-gold-400">&#x646;&#x635;&#x628;</a>
+        <nav aria-label="footer links" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-zinc-400">
+          <a href="#subsystems" className="transition-colors hover:text-gold-400">Subsystems</a>
+          <a href="#roadmap" className="transition-colors hover:text-gold-400">Roadmap</a>
+          <a href="#security" className="transition-colors hover:text-gold-400">Security</a>
+          <a href="#install" className="transition-colors hover:text-gold-400">Install</a>
         </nav>
 
         <div className="flex items-center gap-4 text-xs text-zinc-500">
@@ -26,7 +26,7 @@ export function SiteFooter() {
             <ShieldCheck className="size-3.5 text-royal-400" /> REA-ready
           </span>
           <span className="flex items-center gap-1.5">
-            <FolderGit2 className="size-3.5" /> &#x645;&#x648;&#x646;&#x648;&#x631;&#x6cc;&#x67e;&#x648; kian/
+            <FolderGit2 className="size-3.5" /> the MAIRON monorepo
           </span>
           <span dir="ltr">© 2026</span>
         </div>

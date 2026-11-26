@@ -15,11 +15,11 @@ DGX.pages['create-drop'] = async (view) => {
         <select id="dProd">${prods.length ? prods.map(p => `<option value="${+p.id}">${DGX.esc(p.title)}</option>`).join('')
           : '<option value="">\u0627\u0648\u0644 \u06cc\u06a9 \u0645\u062d\u0635\u0648\u0644 \u0628\u0633\u0627\u0632</option>'}</select></div>
       <div class="field"><label>\u0639\u0646\u0648\u0627\u0646 \u062f\u0631\u0627\u067e</label>
-        <input id="dTitle" maxlength="80" placeholder="\u0645\u062b\u0644\u0627\u064b: \u062f\u0631\u0627\u067e \u0637\u0644\u0627\u06cc\u06cc \u062c\u0645\u0639\u0647‌\u0634\u0628"></div>
+        <input id="dTitle" maxlength="80" aria-label="\u0645\u062b\u0644\u0627\u064b: \u062f\u0631\u0627\u067e \u0637\u0644\u0627\u06cc\u06cc \u062c\u0645\u0639\u0647‌\u0634\u0628"></div>
       <div class="field"><label>\u0632\u0645\u0627\u0646 \u067e\u0627\u06cc\u0627\u0646</label>
         <select id="dEnd"><option value="\u0627\u0645\u0634\u0628">\u0627\u0645\u0634\u0628 (\u062a\u0627 \u06f2\u06f4)</option><option value="\u06f2\u06f4 \u0633\u0627\u0639\u062a">\u06f2\u06f4 \u0633\u0627\u0639\u062a</option><option value="\u06f4\u06f8 \u0633\u0627\u0639\u062a">\u06f4\u06f8 \u0633\u0627\u0639\u062a</option><option value="\u06cc\u06a9 \u0647\u0641\u062a\u0647">\u06cc\u06a9 \u0647\u0641\u062a\u0647</option></select></div>
       <div class="field"><label>\u0645\u062a\u0646 \u0627\u0639\u0644\u0627\u0646</label>
-        <textarea id="dMsg" rows="3" maxlength="300" placeholder="\u06cc\u06a9 \u062c\u0645\u0644\u0647‌\u06cc \u0647\u06cc\u062c\u0627\u0646\u06cc \u0628\u0631\u0627\u06cc \u0641\u0627\u0644\u0648\u0648\u0631\u0647\u0627…"></textarea></div>
+        <textarea id="dMsg" rows="3" maxlength="300" aria-label="\u06cc\u06a9 \u062c\u0645\u0644\u0647‌\u06cc \u0647\u06cc\u062c\u0627\u0646\u06cc \u0628\u0631\u0627\u06cc \u0641\u0627\u0644\u0648\u0648\u0631\u0647\u0627…"></textarea></div>
       <button class="btn btn-primary" id="dGo" ${prods.length ? '' : 'disabled style="opacity:.5"'}>${DGX.icon('send','ic-s')} \u062b\u0628\u062a \u062f\u0631\u0627\u067e \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0628\u0627\u062a</button>
       <a class="btn btn-ghost" href="#/drafts">${DGX.icon('doc','ic-s')} \u067e\u06cc\u0634‌\u0646\u0648\u06cc\u0633‌\u0647\u0627</a>
     </div>

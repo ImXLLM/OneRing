@@ -462,7 +462,7 @@ mod tests {
         let sent = sender.sent.lock().unwrap().clone();
         assert_eq!(sent.len(), 1, "one reply for one command");
         assert_eq!(sent[0].chat_id, 100);
-        assert!(sent[0].text.contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
+        assert!(sent[0].text.contains("Your balance"));
         assert!(sent[0].text.contains('0'), "in-memory store starts at zero — honest");
         // the token never appears in a response
         assert!(!sent[0].text.contains(BOT));
@@ -484,7 +484,7 @@ mod tests {
         assert_eq!(sent.len(), 1);
         assert_eq!(
             sent[0].links.first().map(|(label, _)| label.as_str()),
-            Some("🚀 \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN")
+            Some("🚀 Open the MAIRON mini-app")
         );
         assert_eq!(
             sent[0].links.first().map(|(_, url)| url.as_str()),
@@ -493,7 +493,7 @@ mod tests {
         // second button: direct market shortcut
         assert_eq!(
             sent[0].links.get(1).map(|(label, url)| (label.as_str(), url.as_str())),
-            Some(("🛒 \u{628}\u{627}\u{632}\u{627}\u{631} KIAN", "http://localhost:3000/market"))
+            Some(("🛒 MAIRON Market", "http://localhost:3000/market"))
         );
     }
 

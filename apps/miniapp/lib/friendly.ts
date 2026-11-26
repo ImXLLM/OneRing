@@ -1,5 +1,5 @@
 /**
- * Translates kernel error codes into human, short, actionable Persian (presentation-layer UX).
+ * Translates kernel error codes into short, actionable English (presentation-layer UX).
  *
  * Codes come from the Rust kernel's standard `{ error: { code, message } }` envelope;
  * they are rewritten here for display only — no security logic lives here.
@@ -9,33 +9,32 @@ import { ApiError } from "@kian/sdk";
 
 const FRIENDLY_CODES: Record<string, string> = {
   ACCOUNT_OVERDRAFT:
-    "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0648\u0644 \u06a9\u06cc\u0641 \u0631\u0627 \u0634\u0627\u0631\u0698 \u06a9\u0646 \u06cc\u0627 \u0628\u0627 \u0644\u06cc\u0646\u06a9 \u0631\u0641\u0631\u0627\u0644 \u062f\u0631\u0622\u0645\u062f \u0628\u0633\u0627\u0632.",
+    "Not enough wallet balance — top up first, or earn with your referral link.",
   INSUFFICIENT_BALANCE:
-    "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0648\u0644 \u06a9\u06cc\u0641 \u0631\u0627 \u0634\u0627\u0631\u0698 \u06a9\u0646 \u06cc\u0627 \u0628\u0627 \u0644\u06cc\u0646\u06a9 \u0631\u0641\u0631\u0627\u0644 \u062f\u0631\u0622\u0645\u062f \u0628\u0633\u0627\u0632.",
-  UNKNOWN_ACCOUNT: "\u0627\u06cc\u0646 \u062d\u0633\u0627\u0628 \u067e\u06cc\u062f\u0627 \u0646\u0634\u062f — \u0634\u0627\u06cc\u062f \u0646\u0634\u0633\u062a \u0642\u062f\u06cc\u0645\u06cc \u0627\u0633\u062a\u061b \u06cc\u06a9‌\u0628\u0627\u0631 \u062f\u06cc\u06af\u0631 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
-  UNKNOWN_ESCROW: "\u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u067e\u06cc\u062f\u0627 \u0646\u0634\u062f — \u0634\u0627\u06cc\u062f \u062d\u0630\u0641 \u0634\u062f\u0647 \u06cc\u0627 \u0646\u0634\u0633\u062a \u0642\u062f\u06cc\u0645\u06cc \u0627\u0633\u062a.",
-  INVALID_STATE: "\u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u0627\u0644\u0627\u0646 \u062f\u0631 \u0627\u06cc\u0646 \u0648\u0636\u0639\u06cc\u062a \u0642\u0627\u0628\u0644 \u0627\u0646\u062c\u0627\u0645 \u0646\u06cc\u0633\u062a — \u0635\u0641\u062d\u0647 \u0631\u0627 \u062a\u0627\u0632\u0647 \u06a9\u0646.",
+    "Not enough wallet balance — top up first, or earn with your referral link.",
+  UNKNOWN_ACCOUNT: "This account was not found — the session may be stale; try signing in again.",
+  UNKNOWN_ESCROW: "This transaction was not found — it may have been removed or the session is stale.",
+  INVALID_STATE: "This transaction cannot run from its current state — refresh the page.",
   REQUIRES_HUMAN_APPROVAL:
-    "\u0627\u06cc\u0646 \u0645\u0628\u0644\u063a \u0628\u0632\u0631\u06af \u0627\u0633\u062a \u0648 \u0628\u0647 \u062a\u0623\u06cc\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646 \u0646\u06cc\u0627\u0632 \u062f\u0627\u0631\u062f — \u062f\u0631\u062e\u0648\u0627\u0633\u062a\u062a \u062f\u0631 \u0635\u0641 \u0628\u0631\u0631\u0633\u06cc \u0642\u0631\u0627\u0631 \u06af\u0631\u0641\u062a.",
-  SELF_PURCHASE: "\u0646\u0645\u06cc‌\u062a\u0648\u0627\u0646\u06cc \u0645\u062d\u0635\u0648\u0644 \u062e\u0648\u062f\u062a \u0631\u0627 \u0628\u062e\u0631\u06cc.",
-  RATE_LIMITED: "\u06a9\u0645\u06cc \u0622\u0631\u0627\u0645‌\u062a\u0631 — \u0686\u0646\u062f \u0644\u062d\u0638\u0647 \u0628\u0639\u062f \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
-  SESSION_REQUIRED: "\u0646\u0634\u0633\u062a\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f\u0647 — \u062f\u0648\u0628\u0627\u0631\u0647 \u0648\u0627\u0631\u062f \u0634\u0648.",
-  SESSION_EXPIRED: "\u0646\u0634\u0633\u062a\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f\u0647 — \u062f\u0648\u0628\u0627\u0631\u0647 \u0648\u0627\u0631\u062f \u0634\u0648.",
-  INVALID_INIT_DATA: "\u0627\u062d\u0631\u0627\u0632 \u0647\u0648\u06cc\u062a \u062a\u0644\u06af\u0631\u0627\u0645 \u067e\u0630\u06cc\u0631\u0641\u062a\u0647 \u0646\u0634\u062f — \u0645\u06cc\u0646\u06cc‌\u0627\u067e \u0631\u0627 \u0628\u0628\u0646\u062f \u0648 \u062f\u0648\u0628\u0627\u0631\u0647 \u0628\u0627\u0632 \u06a9\u0646.",
-  IDENTITY_DISABLED:
-    "\u0648\u0631\u0648\u062f \u0628\u0627 \u062a\u0644\u06af\u0631\u0627\u0645 \u0641\u0639\u0644\u0627\u064b \u062e\u0627\u0645\u0648\u0634 \u0627\u0633\u062a — \u06a9\u0645\u06cc \u0628\u0639\u062f \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
+    "This amount is large and needs admin approval — your request is now in the review queue.",
+  SELF_PURCHASE: "You cannot buy your own product.",
+  RATE_LIMITED: "Easy there — try again in a few moments.",
+  SESSION_REQUIRED: "Your session has expired — please sign in again.",
+  SESSION_EXPIRED: "Your session has expired — please sign in again.",
+  INVALID_INIT_DATA: "Telegram identity verification failed — close and reopen the mini-app.",
+  IDENTITY_DISABLED: "Telegram sign-in is currently off — try again shortly.",
   MINT_CAP_EXCEEDED:
-    "\u0633\u0642\u0641 \u0636\u0631\u0628 \u0633\u0627\u0644\u0627\u0646\u0647\u0654 \u067e\u0648\u0644 \u067e\u0631 \u0634\u062f\u0647 — \u0627\u06cc\u0646 \u0645\u062d\u062f\u0648\u062f\u06cc\u062a \u0645\u0646\u0634\u0648\u0631 \u0627\u0633\u062a\u060c \u0646\u0647 \u0645\u0634\u06a9\u0644 \u062d\u0633\u0627\u0628 \u062a\u0648.",
-  VALIDATION: "\u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0641\u0631\u0645 \u06a9\u0627\u0645\u0644 \u06cc\u0627 \u0645\u0639\u062a\u0628\u0631 \u0646\u06cc\u0633\u062a — \u062f\u0648\u0628\u0627\u0631\u0647 \u0628\u0631\u0631\u0633\u06cc \u06a9\u0646.",
-  BODY_TOO_LARGE: "\u062d\u062c\u0645 \u0645\u062d\u062a\u0648\u0627\u06cc \u0627\u0631\u0633\u0627\u0644\u06cc \u0628\u06cc\u0634 \u0627\u0632 \u062d\u062f \u0645\u062c\u0627\u0632 \u0627\u0633\u062a (\u0633\u0642\u0641 HTML: \u06f1\u06f5\u06f0 \u06a9\u06cc\u0644\u0648\u0628\u0627\u06cc\u062a).",
-  NETWORK: "\u0627\u062a\u0635\u0627\u0644 \u0628\u0647 \u06a9\u0631\u0646\u0644 \u0628\u0631\u0642\u0631\u0627\u0631 \u0646\u0634\u062f — \u0627\u06cc\u0646\u062a\u0631\u0646\u062a \u06cc\u0627 VPN \u0631\u0627 \u0686\u06a9 \u06a9\u0646 \u0648 \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
-  UNKNOWN: "\u06cc\u06a9 \u062e\u0637\u0627\u06cc \u067e\u06cc\u0634‌\u0628\u06cc\u0646\u06cc‌\u0646\u0634\u062f\u0647 \u0631\u062e \u062f\u0627\u062f — \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646\u061b \u0627\u06af\u0631 \u062a\u06a9\u0631\u0627\u0631 \u0634\u062f \u0628\u0647 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u062e\u0628\u0631 \u0628\u062f\u0647.",
+    "The annual mint cap is full — this limit is published and public, it is not an account problem.",
+  VALIDATION: "The form data is incomplete or invalid — please double-check and retry.",
+  BODY_TOO_LARGE: "The submitted content is too large (the HTML cap is 150 kilobytes).",
+  NETWORK: "Could not reach the kernel — check your internet or VPN and try again.",
+  UNKNOWN: "An unexpected error occurred — try again; if it repeats, contact support.",
 };
 
-/** Friendly message for any API or network error — always in user-comprehensible Persian. */
+/** Friendly message for any API or network error — always user-comprehensible English. */
 export function friendlyError(err: unknown): string {
   if (err instanceof ApiError) {
-    return FRIENDLY_CODES[err.code] ?? `${err.message || "\u062e\u0637\u0627\u06cc \u06a9\u0631\u0646\u0644"} — \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.`;
+    return FRIENDLY_CODES[err.code] ?? `${err.message || "kernel error"} — please try again.`;
   }
   if (err instanceof Error && err.message) {
     if (/fetch|network|Failed to fetch/i.test(err.message)) {
@@ -49,10 +48,10 @@ export function friendlyError(err: unknown): string {
 /** Short title for the error toast, based on the error type. */
 export function friendlyErrorTitle(err: unknown): string {
   if (err instanceof ApiError && (err.code === "ACCOUNT_OVERDRAFT" || err.code === "INSUFFICIENT_BALANCE")) {
-    return "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a";
+    return "Insufficient balance";
   }
   if (err instanceof ApiError && (err.code === "SESSION_REQUIRED" || err.code === "SESSION_EXPIRED")) {
-    return "\u0646\u0634\u0633\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f";
+    return "Session expired";
   }
-  return "\u0627\u0646\u062c\u0627\u0645 \u0646\u0634\u062f";
+  return "Action failed";
 }

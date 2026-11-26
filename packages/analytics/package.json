@@ -1,0 +1,20 @@
+{
+  "name": "@kian/analytics",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./src": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "true"
+  },
+  "dependencies": {
+    "@kian/sdk": "workspace:*",
+    "@kian/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "7.0.2"
+  }
+}

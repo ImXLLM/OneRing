@@ -66,7 +66,7 @@ DGX.pages.people = async (view) => {
   try { lb = await DGX.api('/api/pub/leaderboard'); } catch (_) { lb = { items: [] }; }
   view.innerHTML = `
     <div class="search-bar2" style="margin-bottom:12px">
-      ${DGX.icon('search','ic-s')}<input id="pq" placeholder="\u062c\u0633\u062a\u062c\u0648\u06cc \u06a9\u0627\u0631\u0628\u0631 \u0648 \u0641\u0631\u0648\u0634\u06af\u0627\u0647…">
+      ${DGX.icon('search','ic-s')}<input id="pq" aria-label="\u062c\u0633\u062a\u062c\u0648\u06cc \u06a9\u0627\u0631\u0628\u0631 \u0648 \u0641\u0631\u0648\u0634\u06af\u0627\u0647…">
     </div>
     <p class="page-hint">${DGX.icon('trophy','ic-s')} \u062c\u062f\u0648\u0644 \u0642\u0647\u0631\u0645\u0627\u0646\u0627\u0646 — \u0628\u06cc\u0634\u062a\u0631\u06cc\u0646 \u0641\u0631\u0648\u0634 \u062f\u0631 \u06a9\u0644 \u0628\u0627\u0632\u0627\u0631</p>
     <div id="lb">${lb.items.map((u, i) => `

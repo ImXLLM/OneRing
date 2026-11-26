@@ -27,8 +27,8 @@ use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
-    accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, hermes,
-    market, nation, monopoly, quant, studio, system, wallet, war_room,
+    accounts, admin, agents, ai, arda, auth, bot, builder, chains, deposits, escrows, grok_lab,
+    hermes, market, nation, monopoly, quant, studio, system, wallet, war_room,
 };
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -222,6 +222,10 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // grok — Wave 9: the Grok UX signature (public UI pack; session-gated chat)
         .route("/grok/ui-bundle", get(hermes::grok_ui_bundle))
         .route("/grok/chat-turn", post(hermes::grok_chat_turn))
+        // grok-lab — the MAIRON 10-DNA telemetry surface (packages/analytics client)
+        .route("/grok-lab/telemetry", post(grok_lab::insert_telemetry))
+        .route("/grok-lab/export-sft-dpo", get(grok_lab::export_sft_dpo))
+        .route("/grok-lab/summary", get(grok_lab::summary))
         // i18n — Wave 9: the ecosystem's 20-locale matrix (public) + hot patches (session)
         .route("/i18n/ecosystem-matrix", get(hermes::i18n_ecosystem_matrix))
         .route("/i18n/apply-patch", post(hermes::i18n_apply_patch))

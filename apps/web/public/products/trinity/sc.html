@@ -241,7 +241,7 @@ main{min-width:0}
 .only-un .field.is-filled{display:none}
 .input,.select,.textarea{width:100%;min-height:46px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--line-strong);background:var(--surface-2);color:var(--text);font-size:15px;line-height:1.7;transition:border-color .15s}
 .textarea{min-height:104px;resize:vertical}
-.input::placeholder,.textarea::placeholder{color:var(--text-3);opacity:1}
+.input::hintText,.textarea::hintText{color:var(--text-3);opacity:1}
 .input:hover,.select:hover,.textarea:hover{border-color:var(--text-3)}
 .input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
 input[type="date"].input{direction:ltr;text-align:right}
@@ -669,7 +669,7 @@ body.calm *,body.calm *::before,body.calm *::after{transition:none!important;ani
         <button class="tool" id="calmBtn" type="button" aria-pressed="false" aria-label="&#x6a9;&#x627;&#x647;&#x634; &#x62d;&#x631;&#x6a9;&#x62a;" title="&#x6a9;&#x627;&#x647;&#x634; &#x62d;&#x631;&#x6a9;&#x62a; &#x648; &#x62c;&#x644;&#x648;&#x647;‌&#x647;&#x627;">&#x6a9;&#x627;&#x647;&#x634; &#x62d;&#x631;&#x6a9;&#x62a;</button>
       </div>
       <label class="sr-only" for="navSearch">&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;</label>
-      <input class="input nav-search" id="navSearch" type="search" placeholder="&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;… (Alt+S)" autocomplete="off">
+      <input class="input nav-search" id="navSearch" type="search" aria-label="&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;… (Alt+S)" autocomplete="off">
       <button class="sb-jump" id="jumpBtn" type="button">&#x67e;&#x631;&#x634; &#x628;&#x647; &#x628;&#x62e;&#x634; &#x646;&#x627;&#x62a;&#x645;&#x627;&#x645;</button>
       <nav class="nav-list" id="navList" aria-label="&#x628;&#x62e;&#x634;‌&#x647;&#x627;&#x6cc; &#x67e;&#x631;&#x633;&#x634;&#x646;&#x627;&#x645;&#x647;"></nav>
     </aside>
@@ -763,7 +763,7 @@ body.calm *,body.calm *::before,body.calm *::after{transition:none!important;ani
     <p class="snap-note">&#x62d;&#x62f;&#x627;&#x6a9;&#x62b;&#x631; &#x67e;&#x646;&#x62c; &#x646;&#x633;&#x62e;&#x647; &#x627;&#x632; &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x641;&#x639;&#x644;&#x6cc; &#x62f;&#x631; &#x647;&#x645;&#x6cc;&#x646; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x646;&#x6af;&#x647; &#x62f;&#x627;&#x634;&#x62a;&#x647; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;. &#x627;&#x6cc;&#x646; &#x646;&#x633;&#x62e;&#x647;‌&#x647;&#x627; <b>&#x62c;&#x627;&#x6cc; &#x641;&#x627;&#x6cc;&#x644; &#x67e;&#x634;&#x62a;&#x6cc;&#x628;&#x627;&#x646; &#x628;&#x6cc;&#x631;&#x648;&#x646; &#x627;&#x632; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x631;&#x627; &#x646;&#x645;&#x6cc;‌&#x6af;&#x6cc;&#x631;&#x646;&#x62f;</b>&#x61b; &#x67e;&#x627;&#x6a9;‌&#x6a9;&#x631;&#x62f;&#x646; &#x62f;&#x627;&#x62f;&#x647;‌&#x647;&#x627;&#x6cc; &#x633;&#x627;&#x6cc;&#x62a; &#x6cc;&#x627; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x622;&#x646;‌&#x647;&#x627; &#x631;&#x627; &#x647;&#x645; &#x62d;&#x630;&#x641; &#x645;&#x6cc;‌&#x6a9;&#x646;&#x62f;. &#x628;&#x631;&#x627;&#x6cc; &#x67e;&#x634;&#x62a;&#x6cc;&#x628;&#x627;&#x646; &#x648;&#x627;&#x642;&#x639;&#x6cc;&#x60c; JSON &#x631;&#x627; &#x62f;&#x627;&#x646;&#x644;&#x648;&#x62f; &#x6a9;&#x646;.</p>
     <div class="snap-create">
       <label for="snapshotName">&#x646;&#x627;&#x645; &#x646;&#x633;&#x62e;&#x647;</label>
-      <div class="snap-row"><input class="input" id="snapshotName" maxlength="60" placeholder="&#x645;&#x62b;&#x644;&#x627;&#x64b; &#x642;&#x628;&#x644; &#x627;&#x632; &#x62c;&#x644;&#x633;&#x647; &#x628;&#x627; &#x6a9;&#x627;&#x631;&#x641;&#x631;&#x645;&#x627;" autocomplete="off"><button class="btn btn-primary" type="button" id="createSnapshot">&#x62b;&#x628;&#x62a; &#x646;&#x633;&#x62e;&#x647;&#x654; &#x641;&#x639;&#x644;&#x6cc;</button></div>
+      <div class="snap-row"><input class="input" id="snapshotName" maxlength="60" aria-label="&#x645;&#x62b;&#x644;&#x627;&#x64b; &#x642;&#x628;&#x644; &#x627;&#x632; &#x62c;&#x644;&#x633;&#x647; &#x628;&#x627; &#x6a9;&#x627;&#x631;&#x641;&#x631;&#x645;&#x627;" autocomplete="off"><button class="btn btn-primary" type="button" id="createSnapshot">&#x62b;&#x628;&#x62a; &#x646;&#x633;&#x62e;&#x647;&#x654; &#x641;&#x639;&#x644;&#x6cc;</button></div>
     </div>
     <p id="snapshotStatus" class="snap-status" role="status" aria-live="polite"></p>
     <div id="snapshotList" class="snap-list"></div>
@@ -773,7 +773,7 @@ body.calm *,body.calm *::before,body.calm *::after{transition:none!important;ani
 <dialog class="palette" id="paletteDialog" aria-label="&#x67e;&#x627;&#x644;&#x62a; &#x641;&#x631;&#x645;&#x627;&#x646;">
   <div class="pal-top">
     <label class="sr-only" for="palInput">&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;&#x60c; &#x67e;&#x631;&#x633;&#x634;&#x60c; &#x622;&#x6cc;&#x62a;&#x645; &#x6cc;&#x627; &#x641;&#x631;&#x645;&#x627;&#x646;</label>
-    <input class="input pal-input" id="palInput" type="text" autocomplete="off" placeholder="&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;&#x60c; &#x67e;&#x631;&#x633;&#x634;&#x60c; &#x622;&#x6cc;&#x62a;&#x645; &#x6cc;&#x627; &#x641;&#x631;&#x645;&#x627;&#x646;…" role="combobox" aria-expanded="true" aria-controls="palList" aria-autocomplete="list">
+    <input class="input pal-input" id="palInput" type="text" autocomplete="off" aria-label="&#x62c;&#x633;&#x62a;&#x62c;&#x648;&#x6cc; &#x628;&#x62e;&#x634;&#x60c; &#x67e;&#x631;&#x633;&#x634;&#x60c; &#x622;&#x6cc;&#x62a;&#x645; &#x6cc;&#x627; &#x641;&#x631;&#x645;&#x627;&#x646;…" role="combobox" aria-expanded="true" aria-controls="palList" aria-autocomplete="list">
     <button class="icon-btn" type="button" id="palClose" aria-label="&#x628;&#x633;&#x62a;&#x646; &#x67e;&#x627;&#x644;&#x62a; &#x641;&#x631;&#x645;&#x627;&#x646;">✕</button>
   </div>
   <div class="pal-list" id="palList" role="listbox" aria-label="&#x646;&#x62a;&#x627;&#x6cc;&#x62c;"></div>
@@ -2406,8 +2406,8 @@ function fieldHTML(def,v,status,idx,scope){
   if(def.type==="ref"||def.type==="refs"){o=refOptions(def.ref);}
   const d2=Object.assign({},def,{o});
   switch(def.type){
-    case"textarea":body=`<textarea class="textarea" id="${ctxName}" name="${esc(def.key)}" rows="3" placeholder="${esc(def.ph||"")}">${esc(v||"")}</textarea><span class="char-count" data-count="${ctxName}">${fa(String(v||"").length)} \u06a9\u0627\u0631\u0627\u06a9\u062a\u0631</span>`;break;
-    case"lines":body=`<textarea class="textarea" id="${ctxName}" name="${esc(def.key)}" rows="3" placeholder="${esc(def.ph||"\u0647\u0631 \u0645\u0648\u0631\u062f \u062f\u0631 \u06cc\u06a9 \u062e\u0637")}">${esc(Array.isArray(v)?v.join("\n"):(v||""))}</textarea><span class="char-count">${fa(lines(v).length)} \u0645\u0648\u0631\u062f · \u0647\u0631 \u0645\u0648\u0631\u062f \u062f\u0631 \u06cc\u06a9 \u062e\u0637</span>`;break;
+    case"textarea":body=`<textarea class="textarea" id="${ctxName}" name="${esc(def.key)}" rows="3" aria-label="${esc(def.ph||"")}">${esc(v||"")}</textarea><span class="char-count" data-count="${ctxName}">${fa(String(v||"").length)} \u06a9\u0627\u0631\u0627\u06a9\u062a\u0631</span>`;break;
+    case"lines":body=`<textarea class="textarea" id="${ctxName}" name="${esc(def.key)}" rows="3" aria-label="${esc(def.ph||"\u0647\u0631 \u0645\u0648\u0631\u062f \u062f\u0631 \u06cc\u06a9 \u062e\u0637")}">${esc(Array.isArray(v)?v.join("\n"):(v||""))}</textarea><span class="char-count">${fa(lines(v).length)} \u0645\u0648\u0631\u062f · \u0647\u0631 \u0645\u0648\u0631\u062f \u062f\u0631 \u06cc\u06a9 \u062e\u0637</span>`;break;
     case"select":case"ref":
       if(def.type==="ref"&&!o.length)body=`<div class="f-note">\u0647\u0646\u0648\u0632 \u0645\u0648\u0631\u062f\u06cc \u062f\u0631 «${esc(BUILDERS[def.ref].title)}» \u062a\u0639\u0631\u06cc\u0641 \u0646\u0634\u062f\u0647 \u0627\u0633\u062a.</div>`;
       else body=optionsHTML(d2,v,ctxName);break;
@@ -2416,9 +2416,9 @@ function fieldHTML(def,v,status,idx,scope){
       else body=optionsHTML(d2,v,ctxName);break;
     case"pairs":body=pairsHTML(def,v);break;
     case"bool":body=`<label class="bool-check"><input type="checkbox" name="${esc(def.key)}" value="true"${v===true?" checked":""}><span class="approval-stmt">${esc(def.label)}</span></label>`;break;
-    case"number":body=`<input class="input" id="${ctxName}" type="text" inputmode="decimal" name="${esc(def.key)}" placeholder="${esc(def.ph||"\u0639\u062f\u062f")}" value="${esc(v??"")}">`;break;
+    case"number":body=`<input class="input" id="${ctxName}" type="text" inputmode="decimal" name="${esc(def.key)}" aria-label="${esc(def.ph||"\u0639\u062f\u062f")}" value="${esc(v??"")}">`;break;
     case"date":body=`<input class="input" id="${ctxName}" type="date" name="${esc(def.key)}" value="${esc(v||"")}">`;break;
-    default:body=`<input class="input" id="${ctxName}" type="text" name="${esc(def.key)}" placeholder="${esc(def.ph||"")}" value="${esc(v||"")}">`;
+    default:body=`<input class="input" id="${ctxName}" type="text" name="${esc(def.key)}" aria-label="${esc(def.ph||"")}" value="${esc(v||"")}">`;
   }
   const imp=isQ&&(def.imp==="blocking"||def.imp==="high")?`<span class="f-imp ${def.imp}">${def.imp==="blocking"?"\u06a9\u0644\u06cc\u062f\u06cc":"\u0645\u0647\u0645"}</span>`:"";
   const help=def.help?`<button class="f-help" type="button" aria-expanded="false" aria-label="\u0631\u0627\u0647\u0646\u0645\u0627" title="\u0631\u0627\u0647\u0646\u0645\u0627">?</button>`:"";

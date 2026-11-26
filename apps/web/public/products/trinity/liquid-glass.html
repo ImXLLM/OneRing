@@ -252,7 +252,7 @@ svg{display:block}
 .add-task{display:flex;gap:8px;margin-bottom:16px}
 .add-task input{flex:1;min-width:0;height:46px;border-radius:16px;border:0;padding:0 16px;background:oklch(1 0 0 / .5);
   box-shadow:inset 0 1px 2px oklch(0.3 0.05 290 / .12), inset 0 0 0 1px oklch(1 0 0 / .6);outline:none;transition:box-shadow .2s}
-.add-task input::placeholder{color:var(--ink-3)}
+.add-task input::hintText{color:var(--ink-3)}
 .add-task input:focus-visible{box-shadow:inset 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft)}
 .add-btn{width:46px;height:46px;border-radius:16px;background:var(--accent);color:var(--paper);display:grid;place-items:center;flex:none;transition:transform .6s var(--jelly);box-shadow:0 10px 20px -10px oklch(0.4 0.17 285 / .8)}
 .add-btn svg{width:20px;height:20px}
@@ -513,7 +513,7 @@ svg{display:block}
         </div>
         <form class="add-task" id="addForm" autocomplete="off">
           <label class="sr" for="newTask">&#x6a9;&#x627;&#x631; &#x62a;&#x627;&#x632;&#x647;</label>
-          <input id="newTask" maxlength="60" placeholder="&#x6a9;&#x627;&#x631; &#x62a;&#x627;&#x632;&#x647;‌&#x627;&#x6cc; &#x628;&#x646;&#x648;&#x6cc;&#x633;…">
+          <input id="newTask" maxlength="60" aria-label="&#x6a9;&#x627;&#x631; &#x62a;&#x627;&#x632;&#x647;‌&#x627;&#x6cc; &#x628;&#x646;&#x648;&#x6cc;&#x633;…">
           <button class="add-btn" type="submit" aria-label="&#x627;&#x641;&#x632;&#x648;&#x62f;&#x646; &#x6a9;&#x627;&#x631;"><span data-icon="plus"></span></button>
         </form>
         <ul class="task-list" id="pendingList" data-zone="pending" aria-label="&#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x62f;&#x631; &#x627;&#x646;&#x62a;&#x638;&#x627;&#x631;"></ul>

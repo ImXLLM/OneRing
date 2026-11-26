@@ -1,1 +1,1 @@
-# infra — Docker (web/kernel server) + Railway deployment (railway.json planned)
+# MAIRON infra — Docker (the sovereign web OS + kernel server) + Railway deployment

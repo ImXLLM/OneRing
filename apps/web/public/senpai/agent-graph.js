@@ -300,8 +300,8 @@ function matchesKindFilter(node, kindFilter) {
 }
 
 function updateGraphControlLabels(searchInput, kindFilter) {
-  if (searchInput?.placeholder) {
-    searchInput.placeholder =
+  if (searchInput?.ariaLabel) {
+    searchInput.ariaLabel =
       "Search capabilities, skills, tools, channels, surfaces or interfaces";
   }
 

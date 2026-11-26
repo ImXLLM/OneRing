@@ -1,12 +1,12 @@
-# KIAN — compose for the local test night and small-scale deployment
+# MAIRON — compose for the local test night and small-scale deployment
 #
 #   docker compose up --build
 #
 # Ports:
-#   8088  → Rust kernel (kian-server)
-#   3000  → web (apps/web — landing)
-#   3001  → miniapp (apps/miniapp — dev mode, mounted source)
-#   3002  → admin panel (apps/admin — dev mode, mounted source)
+#   8088  → Rust kernel (mairon kernel, the kian-server binary)
+#   3000  → web (apps/web — the sovereign Web OS landing)
+#   3001  → miniapp (apps/miniapp — the sovereign Telegram mini-app OS, dev mode)
+#   3002  → admin (apps/admin — the institutional governance console, dev mode)
 #
 # Admin: http://localhost:3002 with key dev-admin-key (change the variable below in production!)
 

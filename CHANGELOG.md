@@ -1,6 +1,6 @@
 # CHANGELOG — KIAN Ecosystem
 
-## v1.1.0-wave10 (2026-11-25) — Wave 10: "The Grand UI Update" — the Sovereign Founder War Room + the "Day 0 → Day 1" Real-Time Simulation Engine
+## v1.1.0-sovereign (2026-11-25) — the Sovereign Founder War Room release + the "Day 0 → Day 1" Real-Time Simulation Engine
 
 Commit #30 — three legendary co-founders (Elon Musk, CZ, Jeff Bezos) work remotely 24/7 under the
 chairmanship of `0xKIA`, commercializing the `KiaAgentX/xA` repository from "day zero, second 00:00:00" — with no
@@ -21,12 +21,12 @@ fake time jumps, a starting revenue of `$0.00`, and `$33.00` of real crypto seed
   the honest wallet + live chart + the EIP-681/XTR transaction feed, three tabs (animated ELI5, live
   terminal, social feed), and the chairman chat with 6 tactical chips + an optional live-LLM modal.
 * **Migration `0014`** — `"FounderWarRoomTick"` + `"ChairmanDirectiveLog"` (additive,
-  zero ledger touches) + the `crates/db/src/wave10.rs` layer.
+  zero ledger touches) + the `crates/db/src/wave10.rs` persistence layer (module name kept as a stable file id).
 * **Four endpoints** — `GET /war-room/state` · `POST /war-room/step` ·
   `POST /war-room/directive` · `GET /war-room/explain-simple` (+ a route-registration test).
 * **Seed** — 24 canonical ticks on `kian-production.db` (the exact causal sum of `$9.55`
   day-one revenue on the `$33.00` seed ⇒ `$42.55`) + 2 sample directives; DNA #18 became historical
-  and DNA #19 (`dna:wave10:founder-war-room-grand-ui`) became the active primary —
+  and DNA #19 (`dna:wave10:founder-war-room-grand-ui` — a stable seed content id) became the active primary —
   `"KbEntry"` = **334**; **779 green workspace tests** (750→779).
 
 ## v1.1.0-final (2025-11-21) — Frontend Update: Standalone Mini-App + SDK

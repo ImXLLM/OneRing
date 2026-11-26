@@ -15,8 +15,8 @@ import { SessionProvider, useSession } from "@/components/kian/session";
 import { formatDin } from "@/lib/format";
 
 const TABS = [
-  { href: "/wallet", label: "\u0648\u0644\u062a", icon: Wallet },
-  { href: "/market", label: "\u0628\u0627\u0632\u0627\u0631", icon: Store },
+  { href: "/wallet", label: "Wallet", icon: Wallet },
+  { href: "/market", label: "Market", icon: Store },
 ];
 
 function MiniHeader() {
@@ -26,7 +26,7 @@ function MiniHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-royal-500/20 bg-zinc-950/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-        <Link href="/" className="flex items-center gap-2" aria-label="KIAN — &#x62e;&#x627;&#x646;&#x647;">
+        <Link href="/" className="flex items-center gap-2" aria-label="MAIRON — home">
           <Image
             src="/logo-badge.png"
             alt=""
@@ -38,7 +38,7 @@ function MiniHeader() {
           <span className="font-black tracking-tight">KIAN</span>
         </Link>
 
-        <nav className="mr-2 flex items-center gap-1" aria-label="&#x645;&#x6cc;&#x646;&#x6cc;‌&#x627;&#x67e;">
+        <nav className="mr-2 flex items-center gap-1" aria-label="mini-app">
           {TABS.map((t) => {
             const active = pathname.startsWith(t.href);
             return (
@@ -65,19 +65,19 @@ function MiniHeader() {
                 {formatDin(state.me.balance)}
               </span>
               <span className="hidden text-xs text-zinc-400 sm:inline">
-                {state.me.user.username ? `@${state.me.user.username}` : `\u06a9\u0627\u0631\u0628\u0631 ${state.me.user.telegramId}`}
+                `member ${state.me.user.telegramId}`
               </span>
               <button
                 type="button"
                 onClick={() => void signOut()}
                 className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                aria-label="\u062e\u0631\u0648\u062c \u0627\u0632 \u0646\u0634\u0633\u062a"
+                aria-label="Sign out of the session"
               >
                 <LogOut className="size-4" aria-hidden />
               </button>
             </>
           ) : (
-            <span className="text-xs text-zinc-500">&#x628;&#x62f;&#x648;&#x646; &#x646;&#x634;&#x633;&#x62a;</span>
+            <span className="text-xs text-zinc-500">no session</span>
           )}
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function MiniAppLayout({ children }: { children: React.ReactNode 
         <MiniHeader />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
         <footer className="border-t border-zinc-800/60 py-4 text-center text-xs text-zinc-600">
-          &#x6a9;&#x631;&#x646;&#x644; Rust · &#x62f;&#x641;&#x62a;&#x631; &#x62f;&#x648;&#x637;&#x631;&#x641;&#x647; · &#x627;&#x633;&#x6a9;&#x631;&#x648; &#x6f8; &#x62d;&#x627;&#x644;&#x62a;&#x647; &#x628;&#x627; &#x645;&#x627;&#x644;&#x6cc;&#x627;&#x62a; &#x6f1;&#x6f0;&#x66a; &#x645;&#x627;&#x62f;&#x647;&#x654; &#x6f8;
+          Rust kernel · double-entry ledger · 8-state escrow with the 10 percent Article 8 tax
         </footer>
       </div>
     </SessionProvider>

@@ -27,10 +27,10 @@ DGX.pages.create = async (view) => {
         <p style="color:var(--dim);font-size:12.5px;margin-bottom:6px">\u0627\u0648\u0644 \u0686\u06cc \u0645\u06cc‌\u0641\u0631\u0648\u0634\u06cc\u061f</p>
         <div class="field"><label>\u0639\u0646\u0648\u0627\u0646</label>
           <input id="wTitle" maxlength="120" value="${DGX.esc(data.title)}"
-                 placeholder="\u0645\u062b\u0644\u0627\u064b: \u067e\u06a9\u06cc\u062c \u06f5\u06f0 \u067e\u0631\u0627\u0645\u067e\u062a \u0633\u06cc\u0646\u0645\u0627\u06cc\u06cc AI"></div>
+                 aria-label="\u0645\u062b\u0644\u0627\u064b: \u067e\u06a9\u06cc\u062c \u06f5\u06f0 \u067e\u0631\u0627\u0645\u067e\u062a \u0633\u06cc\u0646\u0645\u0627\u06cc\u06cc AI"></div>
         <div class="field"><label>\u062a\u0648\u0636\u06cc\u062d\u0627\u062a</label>
           <textarea id="wDesc" rows="5" maxlength="1000"
-            placeholder="\u0648\u06cc\u0698\u06af\u06cc‌\u0647\u0627\u060c \u062f\u0633\u062a\u0627\u0648\u0631\u062f\u0647\u0627\u060c \u0628\u0631\u0627\u06cc \u06a9\u06cc \u0645\u0646\u0627\u0633\u0628 \u0627\u0633\u062a…">${DGX.esc(data.description)}</textarea></div>
+            aria-label="\u0648\u06cc\u0698\u06af\u06cc‌\u0647\u0627\u060c \u062f\u0633\u062a\u0627\u0648\u0631\u062f\u0647\u0627\u060c \u0628\u0631\u0627\u06cc \u06a9\u06cc \u0645\u0646\u0627\u0633\u0628 \u0627\u0633\u062a…">${DGX.esc(data.description)}</textarea></div>
         <button class="btn btn-primary" id="wNext">\u0628\u0639\u062f\u06cc ←</button>`;
       w.querySelector('#wNext').onclick = () => {
         data.title = w.querySelector('#wTitle').value.trim();
@@ -48,7 +48,7 @@ DGX.pages.create = async (view) => {
                ${c.icon} ${c.fa}</option>`).join('')}</select></div>
         <div class="field"><label>\u0642\u06cc\u0645\u062a (\u06a9\u0631\u062f\u06cc\u062a) — \u06f1\u06f0\u06f0\u06f0 \u06a9\u0631\u062f\u06cc\u062a ≈ \u06f1$</label>
           <input id="wPrice" type="number" min="5" max="200000"
-            value="${data.price_credits || ''}" placeholder="\u0645\u062b\u0644\u0627\u064b \u06f2\u06f5\u06f0\u06f0">
+            value="${data.price_credits || ''}" aria-label="\u0645\u062b\u0644\u0627\u064b \u06f2\u06f5\u06f0\u06f0">
           <div style="color:var(--dim);font-size:11px;margin-top:6px">
             \u0645\u0639\u0627\u062f\u0644: ≈<span id="usdLive">${data.price_credits ? (data.price_credits / 1000).toFixed(2) : '0.00'}</span>$
             · \u06a9\u0645\u06cc\u0633\u06cc\u0648\u0646 \u067e\u0644\u062a\u0641\u0631\u0645 \u0628\u0639\u062f \u0627\u0632 \u0641\u0631\u0648\u0634 \u06a9\u0633\u0631 \u0645\u06cc‌\u0634\u0648\u062f</div></div>

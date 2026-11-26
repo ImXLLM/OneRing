@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// KIAN miniapp — same REA gates as the web app: no browser source maps + strict headers
+// MAIRON mini-app — same REA gates as the web OS: no browser source maps + strict headers
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -14,7 +14,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   // Workspace packages with raw TS sources — they must be transpiled
-  transpilePackages: ["@kian/ui", "@kian/sdk", "@kian/contracts"],
+  transpilePackages: ["@kian/ui", "@kian/sdk", "@kian/contracts", "@kian/analytics"],
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   typescript: {

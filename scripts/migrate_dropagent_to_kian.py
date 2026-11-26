@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-migrate_dropagent_to_kian.py — \u0645\u0647\u0627\u062c\u0631\u062a \u0642\u0637\u0639\u06cc \u0648 idempotent \u062c\u0627\u0645\u0639\u0647\u0654 \u0632\u0646\u062f\u0647\u0654 dropagent \u0628\u0647 KIAN v2
+migrate_dropagent_to_kian.py — the deterministic, idempotent migration of the live dropagent community to MAIRON
 =========================================================================================
 
-\u0648\u0631\u0648\u062f\u06cc:  \u067e\u0627\u06cc\u06af\u0627\u0647 \u06f3\u06f0\u0631\u0648\u0632\u0647\u0654 \u0644\u06af\u0627\u0633\u06cc (marketplace-20260924-0400.db — \u0641\u0642\u0637‌\u062e\u0648\u0627\u0646\u062f\u0646\u06cc)
-\u062e\u0631\u0648\u062c\u06cc:  kian-production.db \u0628\u0627 \u0627\u0633\u06a9\u06cc\u0645\u0627\u06cc \u06a9\u0627\u0645\u0644 KIAN v2 \u0622\u0645\u0627\u062f\u0647\u0654 \u0627\u0633\u062a\u0642\u0631\u0627\u0631 Railway
+Input:  the 30-day legacy database (marketplace-20260924-0400.db — read-only)
+Output:  kian-production.db with the complete MAIRON schema, ready for Railway deployment
 
-\u062a\u0636\u0645\u06cc\u0646‌\u0647\u0627\u06cc \u06a9\u0631\u0646\u0644 (crates/db/src/store.rs):
-  * `"Posting"` \u062a\u0646\u0647\u0627 \u0645\u0646\u0628\u0639 \u062d\u0642\u06cc\u0642\u062a \u062a\u0631\u0627\u0632 \u0627\u0633\u062a (ADR-003) — \u0647\u0631 \u062a\u0631\u0627\u0632 \u0628\u0627 Tx (MINT) \u0648
-    \u062f\u0648 \u067e\u0627 (`mint:genesis` \u0628\u062f\u0647\u06a9\u0627\u0631 −amount\u060c `citizen:{tg}` \u0628\u0633\u062a\u0627\u0646\u06a9\u0627\u0631 +amount) \u067e\u0634\u062a\u06cc\u0628\u0627\u0646 \u0645\u06cc‌\u0634\u0648\u062f.
-  * `V3Store::load_ledger_state()` \u062c\u062f\u0648\u0644‌\u0647\u0627\u06cc Account/Tx/Posting \u0631\u0627 \u0645\u06cc‌\u062e\u0648\u0627\u0646\u062f \u0648
-    kinds \u0628\u0627\u06cc\u062f lowercase \u0628\u0627\u0634\u062f: user/escrow/treasury/mint/burn.
-  * `load_escrow_registry()` \u0647\u0645\u0647\u0654 \u0631\u062f\u06cc\u0641‌\u0647\u0627\u06cc Escrow \u0631\u0627 \u0628\u0647 \u0648\u0636\u0639\u06cc\u062a \u062f\u0627\u0645\u0646\u0647 \u0645\u06cc‌\u062e\u0648\u0627\u0646\u062f —
-    status \u0628\u0627\u06cc\u062f \u0627\u0632 \u062b\u0627\u0628\u062a‌\u0647\u0627\u06cc EscrowStatus \u0628\u0627\u0634\u062f (\u0627\u06cc\u0646\u062c\u0627: RELEASED).
-  * Σ \u0647\u0645\u0647\u0654 Posting\u0647\u0627 \u0628\u0627\u06cc\u062f \u062f\u0642\u06cc\u0642\u0627\u064b \u06f0 \u0628\u0627\u0634\u062f \u062a\u0627 `trial_balance` \u0648 \u0647\u0645\u0647\u0654 `apply()`\u0647\u0627\u06cc \u0628\u0639\u062f\u06cc \u0633\u0627\u0644\u0645 \u0628\u0645\u0627\u0646\u0646\u062f.
+Kernel guarantees (crates/db/src/store.rs):
+  * `"Posting"` is the single source of truth for balances (ADR-003) — every balance is backed by a Tx (MINT) and
+    two legs (`mint:genesis` debited -amount, `citizen:{tg}` credited +amount).
+  * `V3Store::load_ledger_state()` reads the Account/Tx/Posting tables and
+    kinds must be lowercase: user/escrow/treasury/mint/burn.
+  * `load_escrow_registry()` reads every Escrow row into the domain state —
+    status must come from the EscrowStatus constants (here: RELEASED).
+  * The sum of all Postings must be exactly 0 so `trial_balance` and all later `apply()` calls stay sound.
 
-\u067e\u0627\u06a9‌\u0633\u0627\u0632\u06cc \u0645\u0627\u0644\u06cc (\u0637\u0628\u0642 \u062f\u0633\u062a\u0648\u0631 \u0645\u0647\u0627\u062c\u0631\u062a):
-  * \u0647\u0631 \u06a9\u0627\u0631\u0628\u0631 \u0639\u0627\u062f\u06cc: \u062f\u0642\u06cc\u0642\u0627\u064b \u062a\u0631\u0627\u0632 \u0645\u062b\u0628\u062a \u0644\u06af\u0627\u0633\u06cc × \u06f1\u066c\u06f0\u06f0\u06f0\u066c\u06f0\u06f0\u06f0 micro\u060c \u0633\u0642\u0641 \u06f1\u066c\u06f0\u06f0\u06f0 KIAN
-  * @ImXsi  (6398636666): \u06f1\u066c\u06f0\u06f0\u06f0 KIAN — \u0627\u0635\u0644\u0627\u062d \u0648\u0627\u0631\u06cc\u0632 \u062f\u0648\u0628\u0627\u0631 Deposit #3 (tx #806/#807)
-  * @ImXforevr (8198598635): \u06f5\u066c\u06f0\u06f0\u06f0 KIAN — \u062a\u0631\u0627\u0632 \u0628\u0646\u06cc\u0627\u0646‌\u06af\u0630\u0627\u0631
-  * Σ \u06a9\u0644 genesis = \u06f5\u06f8\u066c\u06f7\u06f0\u06f0\u066c\u06f2\u06f0\u06f0\u066c\u06f0\u06f0\u06f0 micro (\u06f5\u06f8\u066c\u06f7\u06f0\u06f0.\u06f2 KIAN) — \u0632\u06cc\u0631 \u0633\u0642\u0641 \u062c\u062f\u06cc\u062f \u0645\u0646\u0634\u0648\u0631
+Financial cleanup (per the migration directive):
+  * Every regular user: exactly the positive legacy balance x 1,000,000 micro, capped at 1,000 KIAN
+  * @ImXsi  (6398636666): 1,000 KIAN — fixing the doubled Deposit #3 (tx #806/#807)
+  * @ImXforevr (8198598635): 5,000 KIAN — the founder balance
+  * Total genesis sum = 58,700,200,000 micro (58,700.2 KIAN) — under the new charter cap
 """
 from __future__ import annotations
 
@@ -46,9 +46,9 @@ INSIDER_FIXED_MICRO = {
 }
 
 SYSTEM_ACCOUNTS = [
-    ("mint:genesis", "mint", "\u0645\u0646\u0628\u0639 \u0639\u0631\u0636\u0647 (\u0636\u0631\u0628)"),
-    ("treasury:nation", "treasury", "\u062e\u0632\u0627\u0646\u0647 \u0645\u0644\u06cc"),
-    ("burn:void", "burn", "\u0645\u0642\u0635\u062f \u0633\u0648\u0632\u0627\u0646\u062f\u0646"),
+    ("mint:genesis", "mint", "the supply source (mint)"),
+    ("treasury:nation", "treasury", "the national treasury"),
+    ("burn:void", "burn", "the burn destination"),
 ]
 
 MEMORY_LAYER_MAP = {
@@ -63,7 +63,7 @@ REPORT: dict = {}
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def iso(ts: float | int | None) -> str | None:
-    """Unix epoch (\u062b\u0627\u0646\u06cc\u0647\u060c \u0634\u0627\u06cc\u062f float) → ISO-8601 UTC \u0628\u0627 millis \u0648 \u067e\u0633\u0648\u0646\u062f Z (\u0642\u0631\u0627\u0631\u062f\u0627\u062f EPOCH_ISO \u06a9\u0631\u0646\u0644)."""
+    """Unix epoch (seconds, maybe float) -> ISO-8601 UTC with millis and a Z suffix (the kernel EPOCH_ISO contract)."""
     if ts is None:
         return None
     dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
@@ -71,7 +71,7 @@ def iso(ts: float | int | None) -> str | None:
 
 
 def s(v) -> str | None:
-    """None/\u0631\u0634\u062a\u0647\u0654 \u062e\u0627\u0644\u06cc → None\u061b \u0648\u06af\u0631\u0646\u0647 \u0631\u0634\u062a\u0647\u0654 \u067e\u0627\u06a9‌\u0634\u062f\u0647."""
+    """None/empty string -> None; otherwise the cleaned string."""
     if v is None:
         return None
     t = str(v).strip()
@@ -85,7 +85,7 @@ def sanitize_micro(tg_id: str, credits: float) -> int:
 
 
 def split_statements(sql_text: str) -> list[str]:
-    """\u062d\u0630\u0641 \u06a9\u0627\u0645\u0646\u062a‌\u0647\u0627\u06cc \u062e\u0637 \u06a9\u0627\u0645\u0644 \u0648 \u0634\u06a9\u0633\u062a \u0631\u0648\u06cc ';' — \u0628\u0631\u0627\u06cc \u0627\u062c\u0631\u0627\u06cc \u06af\u0627\u0645‌\u0628\u0647‌\u06af\u0627\u0645 \u0628\u0627 \u06af\u0627\u0631\u062f ALTER."""
+    """Strip full-line comments and split on ';' — for step-by-step execution with the ALTER guard."""
     lines = [ln for ln in sql_text.splitlines() if not ln.lstrip().startswith("--")]
     out = []
     for chunk in "\n".join(lines).split(";"):
@@ -101,7 +101,7 @@ def column_exists(con: sqlite3.Connection, table: str, column: str) -> bool:
 
 
 def apply_migration_file(con: sqlite3.Connection, version: int, path: str) -> None:
-    """\u0627\u062c\u0631\u0627\u06cc \u06cc\u06a9 \u0641\u0627\u06cc\u0644 \u0645\u0647\u0627\u062c\u0631\u062a \u0628\u0627 \u06af\u0627\u0631\u062f ADD COLUMN (idempotent) + \u062b\u0628\u062a \u0631\u062f\u06cc\u0641 _sqlx_migrations."""
+    """Run one migration file with the ADD COLUMN guard (idempotent) + register the _sqlx_migrations row."""
     raw = open(path, "r", encoding="utf-8").read()
     checksum = hashlib.sha384(raw.encode("utf-8")).digest()
     description = re.sub(r"^\d+_", "", os.path.splitext(os.path.basename(path))[0])
@@ -119,7 +119,7 @@ def apply_migration_file(con: sqlite3.Connection, version: int, path: str) -> No
 
 
 def wipe_migration_rows(con: sqlite3.Connection) -> dict:
-    """\u062d\u0630\u0641 \u0631\u062f\u06cc\u0641‌\u0647\u0627\u06cc \u0645\u0647\u0627\u062c\u0631\u062a \u0642\u0628\u0644\u06cc \u0628\u0627 \u067e\u06cc\u0634\u0648\u0646\u062f\u0647\u0627\u06cc \u0642\u0637\u0639\u06cc — \u0627\u062c\u0631\u0627\u06cc \u062f\u0648\u0645 = \u0647\u0645\u0627\u0646 \u0648\u0636\u0639\u06cc\u062a (idempotent)."""
+    """Delete previous migration rows with deterministic prefixes — a second run is a no-op (idempotent)."""
     wiped = {}
     def d(sql: str, args: tuple = ()) -> None:
         wiped[sql.split("FROM")[1].split("WHERE")[0].strip('" ')] = con.execute(sql, args).rowcount
@@ -140,17 +140,17 @@ def wipe_migration_rows(con: sqlite3.Connection) -> dict:
 # ── Product HTML artifacts ─────────────────────────────────────────────────────
 def artifact_html(title: str, seller: str, category: str | None, description: str,
                   price_kian: str, full: bool) -> str:
-    """\u0622\u0631\u062a\u06cc\u0641\u06a9\u062a HTML \u062a\u06a9‌\u0635\u0641\u062d\u0647‌\u0627\u06cc\u060c \u0641\u0627\u0631\u0633\u06cc RTL\u060c \u062e\u0648\u062f\u06a9\u0641\u0627 \u0648 \u062a\u0639\u0627\u0645\u0644\u06cc — \u0628\u062f\u0648\u0646 \u0648\u0627\u0628\u0633\u062a\u06af\u06cc \u062e\u0627\u0631\u062c\u06cc."""
+    """A self-contained, interactive one-page HTML artifact — no external dependencies."""
     cat = category or "tool"
     paras = "".join(
         f"<p>{ln}</p>" for ln in description.splitlines() if ln.strip()
-    ) or "<p>\u0627\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644 \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644 \u0628\u0647‌\u0647\u0645\u0631\u0627\u0647 \u0645\u0647\u0627\u062c\u0631\u062a \u062c\u0627\u0645\u0639\u0647\u0654 dropagent \u0628\u0647 KIAN v2 \u0645\u0646\u062a\u0634\u0631 \u0634\u062f.</p>"
-    esc_title = (title or "\u0645\u062d\u0635\u0648\u0644 KIAN").replace("<", "&lt;")
+    ) or "<p>This digital product shipped together with the dropagent community migration to MAIRON.</p>"
+    esc_title = (title or "MAIRON product").replace("<", "&lt;")
     esc_seller = (seller or "unknown").replace("<", "&lt;")
     extra = (
-        '<button onclick="dl()">⬇️ \u062f\u0627\u0646\u0644\u0648\u062f \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644</button>'
+        '<button onclick="dl()">⬇️ Download the full version</button>'
         if full
-        else '<button onclick="alert(\'\u0628\u0631\u0627\u06cc \u062f\u0631\u06cc\u0627\u0641\u062a \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644\u060c \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0628\u0627\u0632\u0627\u0631 KIAN \u062e\u0631\u06cc\u062f \u06a9\u0646\u06cc\u062f.\')">🔒 \u062f\u0631\u06cc\u0627\u0641\u062a \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644</button>'
+        else '<button onclick="alert(\'Buy it through the MAIRON market to receive the full version.\')">Get the full version</button>'
     )
     return f"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -183,16 +183,16 @@ def artifact_html(title: str, seller: str, category: str | None, description: st
 <div class="wrap">
   <span class="badge">📦 {cat} · KIAN v2 Marketplace</span>
   <h1>{esc_title}</h1>
-  <div class="seller">\u0641\u0631\u0648\u0634\u0646\u062f\u0647: @{esc_seller}</div>
-  <div class="price"><span>\u0642\u06cc\u0645\u062a</span><b>{price_kian} KIAN</b></div>
-  <div class="card"><h2>\u0645\u0639\u0631\u0641\u06cc \u0645\u062d\u0635\u0648\u0644</h2>{paras}</div>
-  <div class="card"><h2>\u062f\u0631\u0628\u0627\u0631\u0647\u0654 \u062a\u062d\u0648\u06cc\u0644</h2>
-    <p>\u0627\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644 \u0628\u0647‌\u0635\u0648\u0631\u062a \u0622\u0631\u062a\u06cc\u0641\u06a9\u062a HTML \u062a\u0639\u0627\u0645\u0644\u06cc \u062a\u062d\u0648\u06cc\u0644 \u062f\u0627\u062f\u0647 \u0645\u06cc‌\u0634\u0648\u062f — \u0628\u0644\u0627\u0641\u0627\u0635\u0644\u0647 \u067e\u0633 \u0627\u0632 \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0627\u0633\u06a9\u0631\u0648\u060c
-       \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 \u0627\u0632 \u0645\u0633\u06cc\u0631 <code>GET /api/v1/market/escrows/&#123;id&#125;/delivery</code> \u062f\u0631 \u062f\u0633\u062a\u0631\u0633 \u062e\u0631\u06cc\u062f\u0627\u0631 \u0627\u0633\u062a.</p>
-    <p>\u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0645\u0639\u0631\u0641: <b>{AFFILIATE_BPS // 100}\u066a</b> \u0627\u0632 \u0647\u0631 \u062e\u0631\u06cc\u062f \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0644\u06cc\u0646\u06a9 \u062f\u0639\u0648\u062a \u0634\u0645\u0627.</p>
+  <div class="seller">Seller: @{esc_seller}</div>
+  <div class="price"><span>Price</span><b>{price_kian} KIAN</b></div>
+  <div class="card"><h2>Product introduction</h2>{paras}</div>
+  <div class="card"><h2>About delivery</h2>
+    <p>This product is delivered as an interactive HTML artifact — immediately after the escrow release,
+       the full version is available to the buyer via <code>GET /api/v1/market/escrows/&#123;id&#125;/delivery</code>.</p>
+    <p>Referral commission: <b>{AFFILIATE_BPS // 100}%</b> of every purchase through your invite link.</p>
   </div>
   {extra}
-  <div class="foot">KIAN v2 · \u0645\u0647\u0627\u062c\u0631\u062a‌\u06cc\u0627\u0641\u062a\u0647 \u0627\u0632 \u062c\u0627\u0645\u0639\u0647\u0654 \u06f3\u06f0\u0631\u0648\u0632\u0647\u0654 dropagent · \u062f\u0641\u062a\u0631 \u062f\u0648\u0637\u0631\u0641\u0647\u0654 \u0645\u0645\u06cc\u0632\u06cc‌\u067e\u0630\u06cc\u0631</div>
+  <div class="foot">MAIRON · migrated from the 30-day dropagent community · an auditable double-entry ledger</div>
 </div>
 <script>
 function dl() {{
@@ -408,8 +408,8 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
             '"affiliateBps","generatedHtml","publishedProductId","createdAt","updatedAt") '
             'VALUES (?,?,?,?,?,?,?,?,?,?,?)',
             (sid, f"citizen:{tg}", "discovery",
-             "\u06af\u0641\u062a\u06af\u0648\u06cc \u0645\u0647\u0627\u062c\u0631\u062a‌\u06cc\u0627\u0641\u062a\u0647 \u0627\u0632 \u0647\u0631\u0645\u0633 (dropagent)",
-             ((first_user["content"] or "").strip()[:200] or "\u06af\u0641\u062a\u06af\u0648\u06cc \u062a\u0627\u0631\u06cc\u062e\u06cc \u06a9\u0627\u0631\u0628\u0631 \u0628\u0627 \u0647\u0631\u0645\u0633"),
+             "Conversation migrated from Hermes (dropagent)",
+             ((first_user["content"] or "").strip()[:200] or "A historical user conversation with Hermes"),
              50 * MICRO, AFFILIATE_BPS, "", None, int(float(msgs[0]["created_at"])),
              int(float(msgs[-1]["created_at"]))),
         )

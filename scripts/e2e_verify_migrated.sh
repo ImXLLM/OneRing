@@ -118,7 +118,7 @@ chkj "faucet minted 5 KIAN (post-mint balance)" "$(printf '%s' "$FA" | python3 -
 E4=$(curl -sf "$BASE/economy" || true)
 chkj "mintedThisYear = 63,700,200,000 < cap 500B" "$(printf '%s' "$E4" | python3 -c 'import json,sys;print(json.load(sys.stdin)["mintedThisYear"])' 2>/dev/null)" "63700200000" "$E4"
 
-say "8. Wave-10 public kernel surface (war-room / hud / grok / monopoly / i18n)"
+say "8. Sovereign public kernel surface (war-room / hud / grok / grok-lab / monopoly / i18n)"
 W10=$(curl -sf "$BASE/war-room/state" || true)
 chkj "war-room signature MAIRON-WAR-ROOM" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(json.load(sys.stdin)["signature"])' 2>/dev/null)" "MAIRON-WAR-ROOM" "$W10"
 chkj "war-room canonical 24-tick scenario" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["scenario"]))' 2>/dev/null)" "24" "$W10"

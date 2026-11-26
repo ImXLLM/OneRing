@@ -74,9 +74,9 @@ mod tests {
     fn stale_detection_prevents_double_replies() {
         let drained = drain_backlog_offset(&[100]);
         assert_eq!(drained.offset(0), 101);
-        assert!(drained.is_stale(0, 100), "\u{622}\u{67e}\u{62f}\u{6cc}\u{62a} \u{62a}\u{62e}\u{644}\u{6cc}\u{647}‌\u{634}\u{62f}\u{647} \u{6a9}\u{647}\u{646}\u{647} \u{627}\u{633}\u{62a}");
-        assert!(drained.is_stale(0, 42), "\u{67e}\u{627}\u{6cc}\u{6cc}\u{646}‌\u{62a}\u{631} \u{627}\u{632} \u{62a}\u{62e}\u{644}\u{6cc}\u{647}\u{60c} \u{6a9}\u{647}\u{646}\u{647} \u{627}\u{633}\u{62a}");
-        assert!(!drained.is_stale(0, 101), "\u{622}\u{67e}\u{62f}\u{6cc}\u{62a} \u{62a}\u{627}\u{632}\u{647} \u{67e}\u{631}\u{62f}\u{627}\u{632}\u{634} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
+        assert!(drained.is_stale(0, 100), "test text");
+        assert!(drained.is_stale(0, 42), "test text");
+        assert!(!drained.is_stale(0, 101), "test text");
         let kept = drain_backlog_offset(&[]);
         assert_eq!(kept.offset(77), 77);
         assert!(kept.is_stale(77, 76));
@@ -93,6 +93,6 @@ mod tests {
             offset = next_offset(uid);
         }
         assert_eq!(offset, 13);
-        assert!(drain_backlog_offset(&[]).is_stale(offset, 12), "\u{62a}\u{6a9}\u{631}\u{627}\u{631} uid=12 \u{631}\u{62f} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
+        assert!(drain_backlog_offset(&[]).is_stale(offset, 12), "test text");
     }
 }

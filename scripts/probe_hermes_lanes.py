@@ -36,7 +36,7 @@ OC_MODELS = [
     "oc/glm-5.3-flash-free",
     "oc/longcat-2.5-free",
 ]
-PING = "\u0641\u0642\u0637 \u06a9\u0644\u0645\u0647\u0654 «\u0633\u0644\u0627\u0645» \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633."
+PING = "Write only the word "hello"."
 TIMEOUT = 90.0
 
 

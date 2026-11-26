@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn plain_text_has_no_command() {
-        let u = BotUpdate::from_json(&update("\u{633}\u{644}\u{627}\u{645}")).expect("parses");
+        let u = BotUpdate::from_json(&update("hello there")).expect("parses");
         assert!(u.command.is_none());
         assert_eq!(u.args, [] as [String; 0]);
     }

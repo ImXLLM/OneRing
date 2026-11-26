@@ -84,7 +84,7 @@ impl KernelHttpClient {
         let err = &body["error"];
         BotError::Kernel {
             code: err["code"].as_str().unwrap_or("HTTP_ERROR").to_owned(),
-            message: err["message"].as_str().unwrap_or("\u{6a9}\u{631}\u{646}\u{644} \u{67e}\u{627}\u{633}\u{62e} \u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631} \u{62f}\u{627}\u{62f}").to_owned(),
+            message: err["message"].as_str().unwrap_or("the kernel returned an invalid response").to_owned(),
         }
     }
 }
@@ -181,13 +181,13 @@ mod tests {
 
     /// Error mapping — the kernel code comes through; the user text is non-technical and secret-free.
     #[test]
-    fn bot_error_user_text_is_persian_and_secret_free() {
+    fn bot_error_user_text_is_english_and_secret_free() {
         let e = BotError::Kernel { code: "IDENTITY_DISABLED".to_owned(), message: "x".to_owned() };
-        assert!(e.user_text().contains("\u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644}"));
+        assert!(e.user_text().contains("disabled"));
         let t = BotError::Transport("boom".to_owned());
-        assert!(t.user_text().contains("\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a}"));
+        assert!(t.user_text().contains("not reachable"));
         assert!(!t.user_text().contains("boom"));
         let s = BotError::Kernel { code: "SESSION_EXPIRED".to_owned(), message: "y".to_owned() };
-        assert!(s.user_text().contains("\u{645}\u{646}\u{642}\u{636}\u{6cc}"));
+        assert!(s.user_text().contains("expired"));
     }
 }

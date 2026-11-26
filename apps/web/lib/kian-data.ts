@@ -1,5 +1,5 @@
 /**
- * KIAN — source of truth for page data (mirror of docs/migration-map.md and the weighting analysis)
+ * MAIRON — source of truth for page data (mirror of docs/migration-map.md and the weighting analysis)
  */
 
 export type Subsystem = {
@@ -16,52 +16,52 @@ export const SUBSYSTEMS: Subsystem[] = [
   {
     id: "money",
     icon: "coins",
-    title: "\u067e\u0648\u0644",
+    title: "Money",
     weight: 27,
     crates: "domain · wallet",
     stack: ["Rust", "sqlx", "TRX/SOL/TON/BSC"],
     description:
-      "\u0642\u0644\u0628 \u0627\u06a9\u0648\u0633\u06cc\u0633\u062a\u0645: \u0627\u0631\u0632 \u0639\u062f\u062f \u0635\u062d\u06cc\u062d Din (Đ) \u0628\u0627 \u0633\u0642\u0641 \u06f2⁵³−\u06f1\u060c \u062f\u0641\u062a\u0631 \u062f\u0648\u0637\u0631\u0641\u0647\u060c \u0627\u0645\u0627\u0646\u062a \u06f8 \u062d\u0627\u0644\u062a\u0647\u060c \u06a9\u06cc\u0641 \u067e\u0648\u0644 USDT \u0686\u0647\u0627\u0631\u0632\u0646\u062c\u06cc\u0631\u0647‌\u0627\u06cc \u0628\u0627 \u062e\u0632\u0627\u0646\u0647 \u0648 \u062d\u0636\u0627\u0646\u062a \u06a9\u0644\u06cc\u062f.",
+      "The heart of the ecosystem: the exact-integer Din (Đ) currency with the 2^53−1 cap, the double-entry ledger, the 8-state escrow, and the four-chain USDT wallet with treasury and cold storage.",
   },
   {
     id: "protocol",
     icon: "network",
-    title: "\u067e\u0631\u0648\u062a\u06a9\u0644",
+    title: "Protocol",
     weight: 24,
     crates: "agents · contracts",
     stack: ["A2A", "MCP", "OpenAPI 3.1"],
     description:
-      "\u0632\u0628\u0627\u0646 \u0645\u0634\u062a\u0631\u06a9 \u0627\u06cc\u062c\u0646\u062a‌\u0647\u0627: \u06a9\u0634\u0641 \u0648 \u06af\u0641\u062a\u06af\u0648\u06cc \u0627\u06cc\u062c\u0646\u062a‌\u0628\u0647‌\u0627\u06cc\u062c\u0646\u062a (A2A)\u060c \u0646\u0627\u0648\u06af\u0627\u0646 \u06f7 \u0646\u0642\u0634\u060c \u0642\u0631\u0627\u0631\u062f\u0627\u062f\u0647\u0627\u06cc \u0648\u0627\u06cc\u0631 \u0628\u0627 OpenAPI 3.1 \u0648 SDK \u062e\u0648\u062f\u06a9\u0627\u0631 \u0628\u0631\u0627\u06cc \u0628\u06cc\u0644\u062f\u0631\u0647\u0627\u06cc \u062e\u0627\u0631\u062c\u06cc.",
+      "The agents' shared language: agent-to-agent discovery and conversation (A2A), the seven-role fleet, wire contracts with OpenAPI 3.1, and an automatic SDK for external builders.",
   },
   {
     id: "brain",
     icon: "brain",
-    title: "\u0645\u063a\u0632",
+    title: "Brain",
     weight: 20,
     crates: "ai · hermes",
-    stack: ["Rust", "fallback \u0633\u0647‌\u0627\u0633\u0644\u0627\u062a", "\u062d\u0627\u0641\u0638\u0647 \u06f7\u0644\u0627\u06cc\u0647"],
+    stack: ["Rust", "three-slot fallback", "seven-layer memory"],
     description:
-      "\u06af\u06cc\u062a‌\u0648\u06cc AI \u0628\u0627 \u0633\u0648\u0626\u06cc\u0686 \u062e\u0648\u062f\u06a9\u0627\u0631 \u0645\u062f\u0644\u060c \u067e\u0627\u06a9\u062a \u0633\u062e\u062a \u0628\u0648\u062f\u062c\u0647 \u0648 redaction\u061b \u0645\u0648\u062a\u0648\u0631 \u0647\u0631\u0645\u0633 \u0628\u0627 \u06f1\u06f6 \u0645\u0647\u0627\u0631\u062a \u062a\u062c\u0627\u0631\u06cc\u060c RL \u0647\u0648\u06cc\u062a \u0648 \u0633\u067e\u0631 \u062f\u0641\u0627\u0639\u06cc.",
+      "The AI gateway with automatic model switching, a hard budget envelope and redaction; the Hermes engine with 16 commercial skills, an RL identity and a defensive shield.",
   },
   {
     id: "growth",
     icon: "landmark",
-    title: "\u062d\u0627\u06a9\u0645\u06cc\u062a \u0648 \u0631\u0634\u062f",
+    title: "Governance & Growth",
     weight: 17,
-    crates: "nation · superapp",
-    stack: ["HITL", "\u067e\u0627\u0631\u0644\u0645\u0627\u0646", "CRM"],
+    crates: "nation · viral",
+    stack: ["HITL", "Parliament", "CRM"],
     description:
-      "\u0646\u0627\u062f\u0631\u062a\u0631\u06cc\u0646 \u0642\u0637\u0639\u0647 \u0628\u0627\u0632\u0627\u0631: \u067e\u0627\u0631\u0644\u0645\u0627\u0646 \u0627\u06cc\u062c\u0646\u062a‌\u0647\u0627 \u0628\u0627 \u0622\u0633\u062a\u0627\u0646\u0647 \u06f5\u06f0,\u06f0\u06f0\u06f0 Đ \u0628\u0631\u0627\u06cc \u0639\u0645\u0644‌\u0647\u0627\u06cc \u0628\u0632\u0631\u06af\u061b \u062d\u0644\u0642\u0647‌\u0647\u0627\u06cc \u0631\u0634\u062f \u06a9\u0648\u0626\u0633\u062a\u060c \u0645\u0639\u0631\u0641\u06cc\u060c \u0631\u062a\u0628\u0647‌\u0628\u0646\u062f\u06cc \u0648 CRM.",
+      "The market's rarest piece: the agents' parliament with the 50,000 Đ threshold for large operations; quest, referral and ranking growth loops.",
   },
   {
     id: "channel",
     icon: "channel",
-    title: "\u06a9\u0627\u0646\u0627\u0644",
+    title: "Channels",
     weight: 12,
     crates: "bot · web · miniapp",
     stack: ["teloxide", "TON Connect", "PWA"],
     description:
-      "\u062f\u0633\u062a\u0631\u0633\u06cc \u0627\u0632 \u0647\u0631\u062c\u0627: \u0631\u0628\u0627\u062a \u062a\u0644\u06af\u0631\u0627\u0645 \u0628\u0627 orchestrator \u062e\u0627\u0644\u0635\u060c \u0645\u06cc\u0646\u06cc‌\u0627\u067e\u060c \u0647\u0645\u06cc\u0646 PWA \u0648 \u0648\u06cc\u062c\u062a \u0642\u0627\u0628\u0644 \u062c\u0627\u0633\u0627\u0632\u06cc \u0628\u0631\u0627\u06cc \u0633\u0627\u06cc\u062a‌\u0647\u0627\u06cc \u062f\u06cc\u06af\u0631.",
+      "Access from anywhere: the Telegram bot with the pure orchestrator, the mini-app, this PWA, and an embeddable widget for other sites.",
   },
 ];
 
@@ -83,59 +83,59 @@ export type Milestone = {
 export const ROADMAP: Milestone[] = [
   {
     id: "M1",
-    title: "\u0641\u0631\u0627\u0646\u062a\u0627\u0646\u062f + PWA",
+    title: "Frontend + PWA",
     scope: "apps/web · packages/ui",
     items: [
-      "\u0627\u0633\u06a9\u0644\u062a \u0645\u0648\u0646\u0648\u0631\u06cc\u067e\u0648 \u0628\u0627 \u06f1\u06f3 \u06a9\u0631\u062a Rust",
-      "\u0644\u0646\u062f\u06cc\u0646\u06af \u0633\u0644\u0637\u0646\u062a\u06cc RTL \u0628\u0627 Next.js 16",
-      "PWA \u0646\u0635\u0628‌\u067e\u0630\u06cc\u0631 \u0628\u0627 \u062d\u0627\u0644\u062a \u0622\u0641\u0644\u0627\u06cc\u0646",
-      "\u062f\u06cc\u0632\u0627\u06cc\u0646 \u0633\u06cc\u0633\u062a\u0645 \u06a9\u0627\u0645\u0644 (packages/ui)",
+      "The monorepo skeleton with 13 Rust crates",
+      "The royal Next.js 16 landing",
+      "An installable PWA with an offline mode",
+      "The complete design system (packages/ui)",
     ],
     status: "done",
   },
   {
     id: "M2",
-    title: "\u06a9\u0631\u0646\u0644 \u067e\u0648\u0644",
+    title: "Money kernel",
     scope: "domain → db → contracts → server",
     items: [
-      "\u0645\u0647\u0627\u062c\u0631\u062a Din\u060c \u062f\u0641\u062a\u0631 \u062f\u0648\u0637\u0631\u0641\u0647 \u0648 \u0627\u0645\u0627\u0646\u062a \u06f8 \u062d\u0627\u0644\u062a\u0647",
-      "\u0645\u0647\u0627\u062c\u0631\u062a‌\u0647\u0627\u06cc \u0646\u0633\u062e\u0647‌\u062f\u0627\u0631 sqlx",
-      "\u062f\u0631\u0648\u0627\u0632\u0647 axum \u0628\u0627 X-KIAN-Key",
-      "\u06af\u06cc\u062a REA \u06af\u0627\u0645 \u06f2: \u0628\u0627\u06cc\u0646\u0631\u06cc \u0628\u062f\u0648\u0646 \u0633\u06cc\u0645\u0628\u0644",
+      "The Din migration, the double-entry ledger and the 8-state escrow",
+      "Versioned sqlx migrations",
+      "The axum gateway with X-KIAN-Key",
+      "REA gate step 2: a symbol-free binary",
     ],
     status: "done",
   },
   {
     id: "M3",
-    title: "\u0645\u06cc\u0646\u06cc‌\u0627\u067e \u062a\u0644\u06af\u0631\u0627\u0645",
+    title: "Telegram mini-app",
     scope: "apps/miniapp · TON Connect",
     items: [
-      "\u0648\u0644\u062a\u060c \u0628\u0627\u0632\u0627\u0631 \u0648 \u06a9\u0648\u0626\u0633\u062a \u0631\u0648\u06cc \u06a9\u0631\u0646\u0644",
-      "\u0627\u062d\u0631\u0627\u0632 initData \u0633\u0645\u062a \u06a9\u0631\u0646\u0644",
-      "\u06af\u06cc\u062a REA \u06af\u0627\u0645 \u06f3: \u062a\u0637\u0628\u06cc\u0642 \u0627\u0646\u062f\u067e\u0648\u06cc\u0646\u062a \u0641\u0631\u0627\u0646\u062a ↔ \u0642\u0631\u0627\u0631\u062f\u0627\u062f",
+      "Wallet, market and quests on the kernel",
+      "Kernel-side initData verification",
+      "REA gate step 3: static endpoints ↔ observed parity",
     ],
     status: "done",
   },
   {
     id: "M4",
-    title: "\u0645\u063a\u0632 + \u067e\u0646\u0644 \u0639\u0645\u0644\u06cc\u0627\u062a",
+    title: "Brain + operations console",
     scope: "ai · hermes · agents · apps/admin",
     items: [
-      "\u06af\u06cc\u062a‌\u0648\u06cc AI \u0641\u0627\u0644‌\u0628\u06a9 \u0633\u0647‌\u0627\u0633\u0644\u0627\u062a + redaction + \u067e\u0627\u06a9\u062a \u0628\u0648\u062f\u062c\u0647",
-      "\u0645\u0648\u062a\u0648\u0631 \u0647\u0631\u0645\u0633: \u06f1\u06f6 \u0645\u0647\u0627\u0631\u062a\u060c \u0633\u067e\u0631 \u062f\u0641\u0627\u0639\u06cc\u060c \u062d\u0627\u0641\u0638\u0647\u0654 \u06f7\u0644\u0627\u06cc\u0647",
-      "\u0646\u0627\u0648\u06af\u0627\u0646 A2A/MCP \u0628\u0627 \u06f7 \u0646\u0642\u0634 \u0635\u0627\u062f\u0642\u0627\u0646\u0647",
-      "\u067e\u0646\u0644 \u0627\u062f\u0645\u06cc\u0646 \u062c\u0627\u0646\u0634\u06cc\u0646 \u06f7\u06f1 \u0627\u0646\u062f\u067e\u0648\u06cc\u0646\u062a (apps/admin)",
+      "The AI gateway with three-slot fallback + redaction + budget envelope",
+      "The Hermes engine: 16 skills, defensive shield, seven-layer memory",
+      "The honest A2A/MCP fleet with 7 roles",
+      "The admin console replacing 71 endpoints (apps/admin)",
     ],
     status: "done",
   },
   {
     id: "M5",
-    title: "\u062d\u0627\u06a9\u0645\u06cc\u062a + \u0648\u0644\u062a + \u0627\u0646\u062a\u0634\u0627\u0631",
+    title: "Governance + wallet + release",
     scope: "nation · wallet · release",
     items: [
-      "\u067e\u0627\u0631\u0644\u0645\u0627\u0646 HITL \u0628\u0627 \u0622\u0633\u062a\u0627\u0646\u0647 \u06f5\u06f0,\u06f0\u06f0\u06f0 Đ",
-      "\u0648\u0644\u062a USDT \u0686\u0647\u0627\u0631\u0632\u0646\u062c\u06cc\u0631\u0647‌\u0627\u06cc + \u062e\u0632\u0627\u0646\u0647",
-      "\u06af\u06cc\u062a REA \u06af\u0627\u0645 \u06f5: audit \u06a9\u0627\u0645\u0644 → 10/10 \u0646\u0647\u0627\u06cc\u06cc",
+      "The HITL parliament with the 50,000 Đ threshold",
+      "The four-chain USDT wallet + treasury",
+      "REA gate step 5: full audit → final 10/10",
     ],
     status: "next",
   },
@@ -144,32 +144,32 @@ export const ROADMAP: Milestone[] = [
 export const REA_LADDER = [
   {
     step: 1,
-    title: "\u0648\u0628 + PWA (M1)",
-    detail: "\u0628\u062f\u0648\u0646 \u0633\u0648\u0631\u0633‌\u0645\u067e \u0645\u0631\u0648\u0631\u06af\u0631 · \u0628\u062f\u0648\u0646 \u06a9\u0631\u06cc\u062f\u0646\u0634\u0627\u0644 · \u0647\u062f\u0631\u0647\u0627\u06cc \u0627\u0645\u0646 · \u0627\u0633\u06a9\u0644\u062a \u0622\u0641\u0644\u0627\u06cc\u0646",
+    title: "Web + PWA (M1)",
+    detail: "no browser source maps · no credentials · secure headers · offline skeleton",
     status: "passed",
   },
   {
     step: 2,
-    title: "\u06a9\u0631\u0646\u0644 Rust (M2)",
-    detail: "strip=symbols · \u0628\u062f\u0648\u0646 debug companion · \u0628\u062f\u0648\u0646 \u0645\u062a\u0627\u062f\u06cc\u062a\u0627\u06cc \u0648\u0627\u0628\u0633\u062a\u06af\u06cc",
+    title: "Rust kernel (M2)",
+    detail: "strip=symbols · no debug companion · no dependency metadata",
     status: "passed",
   },
   {
     step: 3,
-    title: "\u0645\u06cc\u0646\u06cc‌\u0627\u067e (M3)",
-    detail: "\u062a\u0637\u0628\u06cc\u0642 \u0627\u0646\u062f\u067e\u0648\u06cc\u0646\u062a \u0627\u0633\u062a\u0627\u062a\u06cc\u06a9 ↔ \u0645\u0634\u0627\u0647\u062f\u0647‌\u0634\u062f\u0647 (compare-static-and-observed-endpoints)",
+    title: "Mini-app (M3)",
+    detail: "static ↔ observed endpoint parity (compare-static-and-observed-endpoints)",
     status: "passed",
   },
   {
     step: 4,
-    title: "\u0627\u062f\u0645\u06cc\u0646 \u0648 \u0645\u063a\u0632 (M4)",
-    detail: "\u0633\u0637\u062d \u062f\u0633\u062a\u0631\u0633\u06cc X-KIAN-Key · redaction · sandbox",
+    title: "Admin and brain (M4)",
+    detail: "X-KIAN-Key access surface · redaction · sandbox",
     status: "passed",
   },
   {
     step: 5,
-    title: "\u0627\u0646\u062a\u0634\u0627\u0631 \u0646\u0647\u0627\u06cc\u06cc (M5)",
-    detail: "rea audit-release-exposure --fail_on low → \u0635\u0641\u0631 \u0631\u062f\u06cc\u0641 exposed → 10/10",
+    title: "Final release (M5)",
+    detail: "rea audit-release-exposure --fail_on low → zero exposed rows → 10/10",
     status: "pending",
   },
 ] as const;
@@ -184,10 +184,10 @@ export const REA_FILTERS = [
 ];
 
 export const HERO_STATS = [
-  { value: "\u06f1\u06f3", label: "\u06a9\u0631\u062a \u06a9\u0631\u0646\u0644 Rust" },
-  { value: "\u06f5", label: "\u0632\u06cc\u0631\u0633\u06cc\u0633\u062a\u0645" },
-  { value: "\u06f8", label: "\u062d\u0627\u0644\u062a \u0627\u0645\u0627\u0646\u062a" },
-  { value: "\u06f1\u06f6", label: "\u0645\u0647\u0627\u0631\u062a \u0647\u0631\u0645\u0633" },
+  { value: "13", label: "Rust kernel crates" },
+  { value: "5", label: "subsystems" },
+  { value: "8", label: "escrow states" },
+  { value: "16", label: "Hermes skills" },
 ];
 
-export const FUTURE_TARGETS = ["PWA — \u0627\u0645\u0631\u0648\u0632", "APK", "iOS", "Electron", "macOS"];
+export const FUTURE_TARGETS = ["PWA — today", "APK", "iOS", "Electron", "macOS"];

@@ -49,7 +49,7 @@ export function InstallButton({ className }: { className?: string }) {
         className={`border-gold-400/40 text-gold-400 hover:bg-gold-400/10 ${className ?? ""}`}
         disabled
       >
-        <Crown className="size-4" /> &#x646;&#x635;&#x628; &#x634;&#x62f;&#x647;
+        <Crown className="size-4" /> installed
       </Button>
     );
   }
@@ -58,10 +58,10 @@ export function InstallButton({ className }: { className?: string }) {
     <Button
       onClick={install}
       disabled={!deferred}
-      title={deferred ? "\u0646\u0635\u0628 KIAN \u0631\u0648\u06cc \u0627\u06cc\u0646 \u062f\u0633\u062a\u06af\u0627\u0647" : "\u0627\u0632 \u0645\u0646\u0648\u06cc \u0645\u0631\u0648\u0631\u06af\u0631 \u0646\u0635\u0628 \u06a9\u0646\u06cc\u062f"}
+      title={deferred ? "Install MAIRON on this device" : "Install from the browser menu"}
       className={`bg-gold-400 text-zinc-950 hover:bg-gold-400/90 font-bold ${className ?? ""}`}
     >
-      <Download className="size-4" /> &#x646;&#x635;&#x628; KIAN
+      <Download className="size-4" /> Install MAIRON
     </Button>
   );
 }

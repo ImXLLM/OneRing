@@ -1,4 +1,4 @@
-//! kian-bot — the M6 Telegram adapter — a pure, offline-testable orchestrator.
+//! kian-bot — the MAIRON sovereign Telegram adapter — a pure, offline-testable orchestrator.
 //!
 //! Architecture (the same repo-wide pattern — pure domain + thin shell):
 //!
@@ -25,12 +25,19 @@ pub mod loop_guard;
 pub mod orchestrator;
 pub mod port;
 pub mod shell;
+pub mod sovereign;
 pub mod telegram_api9;
 pub mod update;
 
 pub use backlog::{drain_backlog_offset, next_offset, DrainOutcome};
 pub use loop_guard::{BotLoopGuard, LoopGuardDecision, LoopReason, MAX_CONSECUTIVE_BOT_TURNS};
 pub use orchestrator::{BotAction, BotCore, BotPolicy, LinkButton};
+pub use sovereign::{
+    format_mairon, format_quant, format_sovereign_command, format_trinity, format_treasury,
+    format_warroom, is_sovereign_command, BASE_USDC_CONTRACT, GROK_VOICES, KEYLESS_VENUES,
+    MAIRON_MIN_SHARPE, REA_MIN_SCORE, TRINITY_IQ_ALPHA, TRINITY_IQ_COMMAND_CENTER,
+    TRINITY_IQ_MAIRON, WAR_ROOM_TICKS,
+};
 pub use port::{BotEconomy, BotError, BotMe, KernelPort};
 pub use telegram_api9::{
     validate_init_data, InitDataError, StartAppPayload, StartAppPayloadError,

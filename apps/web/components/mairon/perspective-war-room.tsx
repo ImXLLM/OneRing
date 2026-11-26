@@ -211,7 +211,7 @@ export function PerspectiveWarRoom() {
                 </span>
               </p>
               <p className="text-zinc-500 md:col-span-2">
-                Funnel: {snapshot.wallet.funnelVisits} visits -> {snapshot.wallet.funnelSignups} signups ->{" "}
+                Funnel: {snapshot.wallet.funnelVisits} visits {'->'} {snapshot.wallet.funnelSignups} signups {'->'}{" "}
                 {snapshot.wallet.funnelPurchases} purchases · {snapshot.wallet.activeUsers} active users
               </p>
             </div>
@@ -240,7 +240,7 @@ export function PerspectiveWarRoom() {
                   {tick.walletDeltaUsdcMicros !== 0 ? (
                     <span className="text-emerald-400">
                       wallet {tick.walletDeltaUsdcMicros > 0 ? "+" : ""}
-                      {microsToUsd(tick.walletDeltaUsdcMicros)} -> {microsToUsd(tick.walletTotalUsdcMicros)}
+                      {microsToUsd(tick.walletDeltaUsdcMicros)} {'->'} {microsToUsd(tick.walletTotalUsdcMicros)}
                     </span>
                   ) : null}
                   {tick.terminalCmd ? <code className="text-amber-300">{tick.terminalCmd}</code> : null}

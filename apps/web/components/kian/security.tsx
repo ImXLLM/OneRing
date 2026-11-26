@@ -14,11 +14,11 @@ export function SecurityREA() {
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black sm:text-4xl">
-            &#x6af;&#x627;&#x645;‌&#x628;&#x647;‌&#x6af;&#x627;&#x645; &#x62a;&#x627; <span className="text-gold-400">10 &#x627;&#x632; 10</span> REA
+            Step by step to <span className="text-gold-400">10 out of 10</span> REA
           </h2>
           <p className="mx-auto mt-3 max-w-2xl leading-7 text-zinc-400">
-            &#x6cc;&#x6a9;‌&#x634;&#x627;&#x62a; &#x646;&#x645;&#x6cc;‌&#x633;&#x627;&#x632;&#x6cc;&#x645;&#x61b; &#x647;&#x631; &#x645;&#x627;&#x6cc;&#x644;&#x633;&#x62a;&#x648;&#x646; &#x628;&#x627;&#x6cc;&#x62f; &#x641;&#x6cc;&#x644;&#x62a;&#x631;&#x647;&#x627;&#x6cc; &#x62a;&#x62d;&#x644;&#x6cc;&#x644; &#x627;&#x633;&#x62a;&#x627;&#x62a;&#x6cc;&#x6a9; REA &#x631;&#x627; &#x628;&#x627; &#x635;&#x641;&#x631; &#x627;&#x641;&#x634;&#x627; &#x631;&#x62f; &#x6a9;&#x646;&#x62f;.
-            &#x646;&#x631;&#x62f;&#x628;&#x627;&#x646; &#x67e;&#x646;&#x62c;‌&#x645;&#x631;&#x62d;&#x644;&#x647;‌&#x627;&#x6cc;:
+            Nothing ships one-shot; every milestone must pass the REA static-analysis filters with zero exposure.
+            The five-step ladder:
           </p>
         </div>
 
@@ -64,13 +64,13 @@ export function SecurityREA() {
             <div className="mb-3 flex items-center gap-2 text-royal-400">
               <ShieldCheck className="size-5" aria-hidden />
               <h3 className="text-sm font-bold">
-                &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x641;&#x6cc;&#x644;&#x62a;&#x631;&#x647;&#x627;&#x6cc; REA &#x62f;&#x631; &#x6af;&#x627;&#x645; &#x6f1; — &#x647;&#x645;&#x647;{" "}
+                REA filter status at step 1 — all{" "}
                 <span className="font-mono text-gold-400" dir="ltr">
                   not_observed
                 </span>
               </h3>
             </div>
-            <div className="flex flex-wrap gap-2" aria-label="&#x641;&#x6cc;&#x644;&#x62a;&#x631;&#x647;&#x627;&#x6cc; REA &#x648; &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x622;&#x646;‌&#x647;&#x627;">
+            <div className="flex flex-wrap gap-2" aria-label="REA filters and their status">
               {REA_FILTERS.map((f) => (
                 <span
                   key={f.filter}
@@ -93,8 +93,8 @@ export function SecurityREA() {
               ))}
             </div>
             <p className="mt-3 text-xs leading-6 text-zinc-500">
-              &#x6af;&#x6cc;&#x62a; &#x627;&#x62c;&#x631;&#x627;&#x6cc;&#x6cc;: <span className="font-mono text-zinc-400" dir="ltr">make rea-gate</span> —
-              &#x647;&#x631; &#x631;&#x62f;&#x6cc;&#x641; exposed &#x6cc;&#x639;&#x646;&#x6cc; &#x634;&#x6a9;&#x633;&#x62a; &#x628;&#x6cc;&#x644;&#x62f; (&#x62e;&#x631;&#x648;&#x62c; &#x6f3;).
+              Enforcement gate: <span className="font-mono text-zinc-400" dir="ltr">make rea-gate</span> —
+              every exposed row means a build failure (exit 3).
             </p>
           </motion.div>
         </div>

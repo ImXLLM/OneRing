@@ -11,11 +11,11 @@ export function Journey() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-black sm:text-4xl">
-            &#x627;&#x632; &#x6f1;&#x6f8; &#x645;&#x62e;&#x632;&#x646; &#x628;&#x647; <span className="text-gold-400">&#x6cc;&#x6a9; &#x67e;&#x627;&#x62f;&#x634;&#x627;&#x647;&#x6cc;</span>
+            From 18 repos to <span className="text-gold-400">one kingdom</span>
           </h2>
           <p className="mx-auto mt-3 max-w-2xl leading-7 text-zinc-400">
-            &#x647;&#x631; &#x642;&#x637;&#x639;&#x647; &#x627;&#x631;&#x632;&#x634;&#x645;&#x646;&#x62f;&#x60c; &#x628;&#x647;&#x62a;&#x631;&#x6cc;&#x646; &#x646;&#x633;&#x62e;&#x647; &#x62e;&#x648;&#x62f;&#x634; &#x631;&#x627; &#x62f;&#x631; &#x6a9;&#x631;&#x646;&#x644; &#x62c;&#x62f;&#x6cc;&#x62f; &#x67e;&#x6cc;&#x62f;&#x627; &#x645;&#x6cc;‌&#x6a9;&#x646;&#x62f; — &#x633;&#x647; &#x632;&#x628;&#x627;&#x646; &#x628;&#x647; &#x62f;&#x648; &#x632;&#x628;&#x627;&#x646;
-            (Rust + TypeScript) &#x62e;&#x644;&#x627;&#x635;&#x647; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
+            Every valuable piece finds its best version in the new kernel — three languages condensed into two
+            (Rust + TypeScript).
           </p>
         </div>
 
@@ -30,9 +30,9 @@ export function Journey() {
           >
             <div className="mb-4 flex items-center gap-2 text-zinc-500">
               <PackageX className="size-5" aria-hidden />
-              <h3 className="font-bold">&#x6f1;&#x6f8; &#x645;&#x62e;&#x632;&#x646; legacy</h3>
+              <h3 className="font-bold">18 legacy repos</h3>
             </div>
-            <div className="flex max-h-56 flex-wrap gap-1.5 overflow-y-auto pb-1 [scrollbar-width:thin]" aria-label="&#x641;&#x647;&#x631;&#x633;&#x62a; &#x645;&#x62e;&#x632;&#x646;‌&#x647;&#x627;&#x6cc; &#x642;&#x62f;&#x6cc;&#x645;&#x6cc;">
+            <div className="flex max-h-56 flex-wrap gap-1.5 overflow-y-auto pb-1 [scrollbar-width:thin]" aria-label="the list of legacy repos">
               {LEGACY_REPOS.map((r) => (
                 <span
                   key={r}
@@ -43,7 +43,7 @@ export function Journey() {
               ))}
             </div>
             <p className="mt-4 text-xs leading-6 text-zinc-500">
-              &#x6f5; &#x62e;&#x637; &#x645;&#x62d;&#x635;&#x648;&#x644;&#x60c; &#x6f3; &#x632;&#x628;&#x627;&#x646;&#x60c; &#x642;&#x637;&#x639;&#x627;&#x62a; &#x62a;&#x6a9;&#x631;&#x627;&#x631;&#x6cc; — &#x627;&#x631;&#x632;&#x634; &#x648;&#x627;&#x642;&#x639;&#x6cc; &#x641;&#x642;&#x637; &#x62f;&#x631; &#x6f8; &#x642;&#x637;&#x639;&#x647; &#x628;&#x648;&#x62f;.
+              5 product lines, 3 languages, duplicated pieces — the real value sat in only 8 pieces.
             </p>
           </motion.div>
 
@@ -60,17 +60,17 @@ export function Journey() {
             </div>
             <div className="mb-4 flex items-center gap-2 text-royal-400">
               <Layers className="size-5" aria-hidden />
-              <h3 className="font-bold">&#x6f8; &#x642;&#x637;&#x639;&#x647; &#x627;&#x631;&#x632;&#x634;&#x645;&#x646;&#x62f;</h3>
+              <h3 className="font-bold">8 valuable pieces</h3>
             </div>
             <ul className="space-y-2.5 text-sm leading-6 text-zinc-300">
-              <li>&#x645;&#x648;&#x62a;&#x648;&#x631; &#x67e;&#x648;&#x644; — Din&#x60c; &#x62f;&#x641;&#x62a;&#x631; &#x62f;&#x648;&#x637;&#x631;&#x641;&#x647;&#x60c; &#x627;&#x645;&#x627;&#x646;&#x62a; &#x6f8; &#x62d;&#x627;&#x644;&#x62a;&#x647;</li>
-              <li>&#x6a9;&#x6cc;&#x641; &#x67e;&#x648;&#x644; &#x686;&#x646;&#x62f;&#x632;&#x646;&#x62c;&#x6cc;&#x631;&#x647;‌&#x627;&#x6cc; USDT + &#x62e;&#x632;&#x627;&#x646;&#x647;</li>
-              <li>&#x6af;&#x6cc;&#x62a;‌&#x648;&#x6cc; AI — fallback&#x60c; &#x628;&#x648;&#x62f;&#x62c;&#x647;&#x60c; redaction</li>
-              <li>&#x645;&#x648;&#x62a;&#x648;&#x631; &#x647;&#x631;&#x645;&#x633; + &#x6f1;&#x6f6; &#x645;&#x647;&#x627;&#x631;&#x62a;</li>
-              <li>&#x67e;&#x627;&#x631;&#x644;&#x645;&#x627;&#x646; HITL — &#x622;&#x633;&#x62a;&#x627;&#x646;&#x647; &#x6f5;&#x6f0;,&#x6f0;&#x6f0;&#x6f0; Đ</li>
-              <li>&#x67e;&#x631;&#x648;&#x62a;&#x6a9;&#x644; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627; — A2A&#x60c; MCP&#x60c; &#x646;&#x627;&#x648;&#x6af;&#x627;&#x646;</li>
-              <li>&#x642;&#x631;&#x627;&#x631;&#x62f;&#x627;&#x62f; OpenAPI 3.1 + SDK &#x62e;&#x648;&#x62f;&#x6a9;&#x627;&#x631;</li>
-              <li>&#x6a9;&#x627;&#x646;&#x627;&#x644;‌&#x647;&#x627; — &#x631;&#x628;&#x627;&#x62a;&#x60c; &#x645;&#x6cc;&#x646;&#x6cc;‌&#x627;&#x67e;&#x60c; &#x648;&#x6cc;&#x62c;&#x62a;</li>
+              <li>The money engine — Din, the double-entry ledger, the 8-state escrow</li>
+              <li>The multichain USDT wallet + treasury</li>
+              <li>The AI gateway — fallback, budget, redaction</li>
+              <li>The Hermes engine + 16 skills</li>
+              <li>The HITL parliament — the 50,000 Đ threshold</li>
+              <li>The agent protocol — A2A, MCP, the fleet</li>
+              <li>The OpenAPI 3.1 contract + the automatic SDK</li>
+              <li>The channels — bot, mini-app, widget</li>
             </ul>
           </motion.div>
 
@@ -87,7 +87,7 @@ export function Journey() {
             </div>
             <div className="mb-4 flex items-center gap-2 text-gold-400">
               <Boxes className="size-5" aria-hidden />
-              <h3 className="font-bold">&#x6f1;&#x6f3; &#x6a9;&#x631;&#x62a; &#x6a9;&#x631;&#x646;&#x644; KIAN</h3>
+              <h3 className="font-bold">13 MAIRON kernel crates</h3>
             </div>
             <p className="font-mono text-xs leading-6 text-zinc-400" dir="ltr">
               domain · db · contracts · server · bot · nation · agents · ai · hermes · wallet ·
@@ -95,13 +95,13 @@ export function Journey() {
             </p>
             <div className="mt-4 space-y-2 text-sm text-zinc-300">
               <p className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-gold-400" /> forbid(unsafe_code) &#x62f;&#x631; &#x647;&#x645;&#x647; &#x6a9;&#x631;&#x62a;‌&#x647;&#x627;
+                <span className="size-1.5 rounded-full bg-gold-400" /> forbid(unsafe_code) in every crate
               </p>
               <p className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-gold-400" /> dual-run &#x628;&#x631;&#x627;&#x6cc; &#x645;&#x647;&#x627;&#x62c;&#x631;&#x62a; &#x627;&#x645;&#x646;
+                <span className="size-1.5 rounded-full bg-gold-400" /> dual-run for a safe migration
               </p>
               <p className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-gold-400" /> &#x6af;&#x6cc;&#x62a; REA &#x631;&#x648;&#x6cc; &#x647;&#x631; &#x627;&#x646;&#x62a;&#x634;&#x627;&#x631;
+                <span className="size-1.5 rounded-full bg-gold-400" /> the REA gate on every release
               </p>
             </div>
           </motion.div>

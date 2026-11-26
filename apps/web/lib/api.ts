@@ -114,7 +114,7 @@ async function request<T>(
     throw new ApiError(
       res.status,
       envelope?.code ?? "UNKNOWN",
-      envelope?.message ?? "\u067e\u0627\u0633\u062e \u0646\u0627\u0634\u0646\u0627\u062e\u062a\u0647 \u0627\u0632 \u06a9\u0631\u0646\u0644",
+      envelope?.message ?? "unrecognized response from the kernel",
     );
   }
   return body as T;

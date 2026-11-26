@@ -592,7 +592,7 @@ function VaultTab({ safe }: { safe: <T>(fn: () => Promise<T>) => Promise<T | nul
           MaironVerifiedSeal gate inspector
         </h3>
         <p className="mt-1 text-xs text-zinc-500">
-          Kernel rule: a seal exists only at `REA >= 85`, and its id is
+          Kernel rule: a seal exists only at `REA {'>='} 85`, and its id is
           `mairon-seal:&lt;sha256(artifact_sha256)[0..16]&gt;` — recomputable, therefore auditable.
         </p>
         <input

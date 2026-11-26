@@ -19,6 +19,7 @@ pub mod common;
 pub mod economy;
 pub mod error;
 pub mod escrows;
+pub mod grok_lab;
 pub mod market;
 pub mod monopoly;
 pub mod nation;

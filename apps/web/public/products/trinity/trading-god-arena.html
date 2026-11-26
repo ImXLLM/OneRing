@@ -1485,16 +1485,16 @@
                         </select>
                     </div>
                     <div><label>Volume (Lots)</label><input type="number" id="tradeVolume" value="0.02" step="0.01" min="0.01" max="10.0" /></div>
-                    <div><label>Stop Loss</label><input type="number" id="tradeSL" placeholder="0.00" step="0.01" /></div>
-                    <div><label>Take Profit</label><input type="number" id="tradeTP" placeholder="0.00" step="0.01" /></div>
+                    <div><label>Stop Loss</label><input type="number" id="tradeSL" aria-label="0.00" step="0.01" /></div>
+                    <div><label>Take Profit</label><input type="number" id="tradeTP" aria-label="0.00" step="0.01" /></div>
 
                     <!-- ===== v10 NEW: R1 R2 R3 Risk Manager ===== -->
                     <div class="risk-manager">
                         <div class="rm-row">
                             <label>Risk $:</label>
-                            <input type="number" id="riskAmount" value="20" step="1" min="1" placeholder="Risk $" oninput="updateRiskFromDollar()" />
+                            <input type="number" id="riskAmount" value="20" step="1" min="1" aria-label="Risk $" oninput="updateRiskFromDollar()" />
                             <label>Reward $:</label>
-                            <input type="number" id="rewardAmount" value="40" step="1" min="1" placeholder="Reward $" oninput="updateRiskFromDollar()" />
+                            <input type="number" id="rewardAmount" value="40" step="1" min="1" aria-label="Reward $" oninput="updateRiskFromDollar()" />
                             <button onclick="applyRiskPreset(1)">R1</button>
                             <button onclick="applyRiskPreset(2)">R2</button>
                             <button onclick="applyRiskPreset(3)">R3</button>

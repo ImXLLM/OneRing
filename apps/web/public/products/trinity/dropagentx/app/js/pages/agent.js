@@ -20,7 +20,7 @@ DGX.pages.agent = async (view) => {
       ${chips.map(c => `<button class="chip">${c}</button>`).join('')}
     </div>
     <div class="agent-input">
-      <textarea id="agIn" rows="1" placeholder="\u067e\u06cc\u0627\u0645\u062a \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633…" maxlength="800"
+      <textarea id="agIn" rows="1" aria-label="\u067e\u06cc\u0627\u0645\u062a \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633…" maxlength="800"
         enterkeyhint="send"></textarea>
       <button class="btn btn-primary" id="agSend" style="flex:none;width:60px" aria-label="\u0627\u0631\u0633\u0627\u0644">${DGX.icon('send')}</button>
     </div>`;

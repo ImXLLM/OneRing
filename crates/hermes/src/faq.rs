@@ -1,8 +1,9 @@
 //! Instant FAQ answerer — port of the Hermes bot "Zero-Token Instant FAQ" pattern (folder 03).
 //!
-//! Persian-speaking customers' frequent questions are answered with zero LLM tokens in "0
+//! Customers' frequent questions are answered with zero LLM tokens in "0
 //! milliseconds" via deterministic keyword matching; only when no hook matches does the question
-//! reach the Hermes engine (LLM). Every canned answer is RTL-safe (the [`crate::prompt`] rule).
+//! reach the Hermes engine (LLM). Every canned answer is plain international English (the
+//! [`crate::prompt`] rule for the MAIRON brand).
 #![forbid(unsafe_code)]
 
 /// One of the key FAQ questions — for tests and reporting.
@@ -10,56 +11,55 @@
 pub struct FaqTopic {
     /// Short key
     pub key: &'static str,
-    /// RTL-safe canned answer
+    /// Canned answer (international English)
     pub answer: &'static str,
-    /// Matching keywords (all lowercase / Persian)
+    /// Matching keywords (all lowercase)
     pub keywords: &'static [&'static str],
 }
 
-/// Kian customers' key questions — purchase/escrow, commission, Tether/TON, building with Hermes,
-/// parliament support/arbitration + catalog and pricing (port of the Hermes bot FAQ).
+/// MAIRON customers' key questions — purchase/escrow, commission, Tether/TON, building with Hermes,
+/// support/arbitration + catalog and pricing (port of the Hermes bot FAQ).
 pub const FAQ_TOPICS: &[FaqTopic] = &[
     FaqTopic {
         key: "buy_escrow",
-        keywords: &["\u{62e}\u{631}\u{6cc}\u{62f}", "\u{627}\u{633}\u{6a9}\u{631}\u{648}", "\u{627}\u{645}\u{646}\u{6cc}\u{62a}", "escrow", "\u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}", "\u{62f}\u{631}\u{6cc}\u{627}\u{641}\u{62a} \u{645}\u{62d}\u{635}\u{648}\u{644}", "\u{62a}\u{62d}\u{648}\u{6cc}\u{644}"],
-        answer: "\u{62e}\u{631}\u{6cc}\u{62f} \u{62f}\u{631} \u{6a9}\u{6cc}\u{627}\u{646} \u{628}\u{627} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{645}\u{62d}\u{627}\u{641}\u{638}\u{62a} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{67e}\u{648}\u{644} \u{634}\u{645}\u{627} \u{62a}\u{627} \u{62a}\u{62d}\u{648}\u{6cc}\u{644}\u{650} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{642}\u{641}\u{644} \u{645}\u{6cc}‌\u{645}\u{627}\u{646}\u{62f} \u{648} \u{641}\u{642}\u{637} \u{628}\u{627} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{634}\u{645}\u{627} \u{622}\u{632}\u{627}\u{62f} \u{645}\u{6cc}‌\u{6af}\u{631}\u{62f}\u{62f}.\n• \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{628}\u{627} \u{62f}\u{6cc}\u{6cc}\u{646}\u{650} \u{62f}\u{631}\u{648}\u{646}‌\u{627}\u{67e} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{628}\u{62f}\u{648}\u{646} \u{627}\u{631}\u{633}\u{627}\u{644} \u{645}\u{633}\u{62a}\u{642}\u{6cc}\u{645} \u{67e}\u{648}\u{644} \u{628}\u{647} \u{641}\u{631}\u{648}\u{634}\u{646}\u{62f}\u{647}.\n• \u{627}\u{6af}\u{631} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{646}\u{634}\u{648}\u{62f}\u{60c} \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{628}\u{647} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f} \u{648} \u{645}\u{628}\u{644}\u{63a} \u{628}\u{631}\u{645}\u{6cc}‌\u{6af}\u{631}\u{62f}\u{62f}.\n\u{647}\u{631} \u{62e}\u{631}\u{6cc}\u{62f} \u{632}\u{6cc}\u{631} \u{633}\u{642}\u{641} \u{627}\u{645}\u{646}\u{60c} \u{622}\u{632}\u{627}\u{62f}\u{633}\u{627}\u{632}\u{6cc} \u{622}\u{646}\u{6cc} \u{62f}\u{627}\u{631}\u{62f}\u{61b} \u{646}\u{6af}\u{631}\u{627}\u{646}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{646}\u{6af}\u{647}‌\u{62f}\u{627}\u{634}\u{62a}\u{646} \u{67e}\u{648}\u{644} \u{648}\u{62c}\u{648}\u{62f} \u{646}\u{62f}\u{627}\u{631}\u{62f}.",
+        keywords: &["escrow", "buy", "purchase", "payment", "delivery", "safe to pay"],
+        answer: "Every purchase on MAIRON is escrow-protected: your money stays locked until the product is delivered, and it is only released after your explicit confirmation.\n• Payment runs inside the app with Din — you never send money directly to a seller.\n• If a product is not delivered, the dispute goes to the Parliament arbitration and the amount is returned to you.\nEvery purchase sits under a safe ceiling with instant release; there is no risk in holding your money.",
     },
     FaqTopic {
         key: "affiliate",
-        keywords: &["\u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}", "\u{632}\u{6cc}\u{631}\u{645}\u{62c}\u{645}\u{648}\u{639}\u{647}", "\u{627}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}", "affiliate", "\u{645}\u{639}\u{631}\u{641}", "\u{62f}\u{639}\u{648}\u{62a}", "\u{631}\u{641}\u{631}\u{627}\u{644}"],
-        answer: "\u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{645}\u{639}\u{631}\u{641} \u{6f2}\u{6f5} \u{62f}\u{631}\u{635}\u{62f} \u{641}\u{631}\u{648}\u{634} \u{627}\u{633}\u{62a} \u{648} \u{628}\u{644}\u{627}\u{641}\u{627}\u{635}\u{644}\u{647} \u{67e}\u{633} \u{627}\u{632} \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{647} \u{62d}\u{633}\u{627}\u{628} \u{634}\u{645}\u{627} \u{645}\u{6cc}‌\u{646}\u{634}\u{6cc}\u{646}\u{62f}.\n• \u{644}\u{6cc}\u{646}\u{6a9} \u{62f}\u{639}\u{648}\u{62a} \u{627}\u{62e}\u{62a}\u{635}\u{627}\u{635}\u{6cc} \u{62e}\u{648}\u{62f} \u{631}\u{627} \u{627}\u{632} \u{635}\u{641}\u{62d}\u{647}\u{654} \u{645}\u{639}\u{631}\u{641}\u{6cc} \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} \u{628}\u{6af}\u{6cc}\u{631}\u{6cc}\u{62f}.\n• \u{632}\u{6cc}\u{631}\u{645}\u{62c}\u{645}\u{648}\u{639}\u{647}‌\u{647}\u{627} \u{647}\u{631}\u{686}\u{642}\u{62f}\u{631} \u{628}\u{62e}\u{631}\u{646}\u{62f}\u{60c} \u{634}\u{645}\u{627} \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{633}\u{647}\u{645} \u{6f2}\u{6f5} \u{62f}\u{631}\u{635}\u{62f}\u{6cc} \u{645}\u{6cc}‌\u{6af}\u{6cc}\u{631}\u{6cc}\u{62f}\u{61b} \u{633}\u{642}\u{641} \u{646}\u{62f}\u{627}\u{631}\u{62f}.\n\u{628}\u{631}\u{627}\u{6cc} \u{631}\u{634}\u{62f} \u{633}\u{631}\u{6cc}\u{639}\u{60c} \u{644}\u{6cc}\u{646}\u{6a9} \u{631}\u{627} \u{62f}\u{631} \u{6a9}\u{627}\u{646}\u{627}\u{644}‌\u{647}\u{627}\u{6cc} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{647}\u{645} \u{645}\u{646}\u{62a}\u{634}\u{631} \u{6a9}\u{646}\u{6cc}\u{62f}.",
+        keywords: &["affiliate", "commission", "referral", "invite", "earn", "percentage"],
+        answer: "The referral commission is 25 percent of every sale, credited to your account immediately after the purchase settles.\n• Get your personal invite link from the referral page inside the mini-app.\n• No matter how much your network buys, you always receive the 25 percent share; there is no ceiling.\nFor fast growth, also share your link across your Telegram channels.",
     },
     FaqTopic {
         key: "usdt_ton",
-        keywords: &["\u{62a}\u{62a}\u{631}", "usdt", "\u{62a}\u{648}\u{646}", "ton", "\u{648}\u{627}\u{631}\u{6cc}\u{632}", "\u{628}\u{631}\u{62f}\u{627}\u{634}\u{62a}", "\u{634}\u{627}\u{631}\u{698}", "\u{6a9}\u{6cc}\u{641} \u{67e}\u{648}\u{644}"],
-        answer: "\u{648}\u{627}\u{631}\u{6cc}\u{632} \u{648} \u{628}\u{631}\u{62f}\u{627}\u{634}\u{62a} \u{62a}\u{62a}\u{631} \u{648} \u{62a}\u{648}\u{646} \u{627}\u{632} \u{628}\u{62e}\u{634} \u{648}\u{644}\u{62a} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f} \u{648} \u{622}\u{62f}\u{631}\u{633}‌\u{647}\u{627} \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{62b}\u{628}\u{62a}\u{60c} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{633}\u{646}\u{62c}\u{6cc} \u{631}\u{633}\u{645}\u{6cc} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647} \u{631}\u{627} \u{645}\u{6cc}‌\u{6af}\u{630}\u{631}\u{627}\u{646}\u{646}\u{62f}.\n• \u{648}\u{627}\u{631}\u{6cc}\u{632}: \u{622}\u{62f}\u{631}\u{633} \u{627}\u{62e}\u{62a}\u{635}\u{627}\u{635}\u{6cc} \u{62e}\u{648}\u{62f} \u{631}\u{627} \u{6a9}\u{67e}\u{6cc} \u{6a9}\u{646}\u{6cc}\u{62f} \u{648} \u{67e}\u{633} \u{627}\u{632} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{634}\u{628}\u{6a9}\u{647}\u{60c} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{646}\u{634}\u{6cc}\u{646}\u{62f}.\n• \u{628}\u{631}\u{62f}\u{627}\u{634}\u{62a}: \u{62f}\u{631}\u{62e}\u{648}\u{627}\u{633}\u{62a} \u{62b}\u{628}\u{62a} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f} \u{648} \u{67e}\u{633} \u{627}\u{632} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{627}\u{62f}\u{645}\u{6cc}\u{646} \u{628}\u{647} \u{622}\u{62f}\u{631}\u{633} \u{634}\u{645}\u{627} \u{627}\u{631}\u{633}\u{627}\u{644} \u{645}\u{6cc}‌\u{6af}\u{631}\u{62f}\u{62f}.\n\u{6a9}\u{627}\u{631}\u{645}\u{632}\u{62f} \u{634}\u{628}\u{6a9}\u{647} \u{62c}\u{62f}\u{627} \u{627}\u{632} \u{645}\u{628}\u{644}\u{63a} \u{627}\u{633}\u{62a}\u{61b} \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{627}\u{631}\u{633}\u{627}\u{644}\u{60c} \u{622}\u{62f}\u{631}\u{633} \u{631}\u{627} \u{62f}\u{648} \u{628}\u{627}\u{631} \u{628}\u{631}\u{631}\u{633}\u{6cc} \u{6a9}\u{646}\u{6cc}\u{62f}.",
+        keywords: &["usdt", "ton", "deposit", "withdraw", "charge", "wallet", "base", "usdc"],
+        answer: "USDT/TON deposits and withdrawals run from the wallet section of the mini-app, and every address is validated against the official chain checksums before it is registered.\n• Deposit: copy your own dedicated address and wait for the network confirmation; credit is automatic.\n• Withdrawal: the request is registered and, after admin approval, sent to your address.\nThe network fee is separate from the amount; double-check the address before sending.",
     },
     FaqTopic {
         key: "build_with_hermes",
-        keywords: &["\u{633}\u{627}\u{62e}\u{62a} \u{645}\u{62d}\u{635}\u{648}\u{644}", "\u{647}\u{631}\u{645}\u{633}", "hermes", "\u{628}\u{633}\u{627}\u{632}", "\u{62a}\u{648}\u{644}\u{6cc}\u{62f}", "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}", "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645}"],
-        answer: "\u{628}\u{631}\u{627}\u{6cc} \u{633}\u{627}\u{62e}\u{62a} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{60c} \u{62f}\u{631} \u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} \u{647}\u{631}\u{645}\u{633} \u{641}\u{642}\u{637} \u{627}\u{6cc}\u{62f}\u{647}\u{654} \u{62e}\u{648}\u{62f} \u{631}\u{627} \u{628}\u{646}\u{648}\u{6cc}\u{633}\u{6cc}\u{62f}\u{61b} \u{647}\u{631}\u{6af}\u{631}\u{648}\u{647} HTML \u{6a9}\u{627}\u{645}\u{644} \u{648} \u{645}\u{633}\u{62a}\u{642}\u{644} \u{628}\u{627} \u{645}\u{62a}\u{627}\u{62f}\u{6cc}\u{62a}\u{627}\u{6cc} \u{641}\u{631}\u{648}\u{634} \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{62f}\u{647}\u{62f}.\n• \u{646}\u{648}\u{628}\u{62a} \u{627}\u{648}\u{644}: \u{647}\u{62f}\u{641}\u{60c} \u{633}\u{628}\u{6a9} \u{638}\u{627}\u{647}\u{631}\u{6cc} \u{648} \u{645}\u{62e}\u{627}\u{637}\u{628} \u{631}\u{627} \u{645}\u{634}\u{62e}\u{635} \u{6a9}\u{646}\u{6cc}\u{62f} \u{6cc}\u{627} \u{645}\u{633}\u{62a}\u{642}\u{6cc}\u{645} \u{628}\u{646}\u{648}\u{6cc}\u{633}\u{6cc}\u{62f} «\u{628}\u{633}\u{627}\u{632}».\n• \u{62e}\u{631}\u{648}\u{62c}\u{6cc}: \u{648}\u{628}‌\u{627}\u{67e}\u{644}\u{6cc}\u{6a9}\u{6cc}\u{634}\u{646} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{622}\u{645}\u{627}\u{62f}\u{647}\u{654} \u{627}\u{646}\u{62a}\u{634}\u{627}\u{631} \u{62f}\u{631} \u{628}\u{627}\u{632}\u{627}\u{631} \u{6a9}\u{6cc}\u{627}\u{646}.\n\u{628}\u{639}\u{62f} \u{627}\u{632} \u{627}\u{646}\u{62a}\u{634}\u{627}\u{631} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631}\u{60c} \u{642}\u{6cc}\u{645}\u{62a} \u{67e}\u{6cc}\u{634}\u{646}\u{647}\u{627}\u{62f}\u{6cc} \u{648} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{631}\u{627} \u{645}\u{6cc}‌\u{62a}\u{648}\u{627}\u{646}\u{6cc}\u{62f} \u{648}\u{6cc}\u{631}\u{627}\u{6cc}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}.",
+        keywords: &["hermes", "build", "product", "studio", "create", "toyspark"],
+        answer: "To build a product, write your idea inside the Hermes studio — every turn returns a complete, standalone HTML app with sales metadata attached.\n• First turn: define the goal, the visual style and the audience, or just write \"build\".\n• Output: a one-page interactive web application, ready to publish on the MAIRON market.\nAfter publishing, you can edit the suggested price and commission at any time.",
     },
     FaqTopic {
         key: "support_parliament",
-        keywords: &["\u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}\u{6cc}", "\u{62f}\u{627}\u{648}\u{631}\u{6cc}", "\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646}", "\u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641}", "\u{634}\u{6a9}\u{627}\u{6cc}\u{62a}", "\u{628}\u{631}\u{6af}\u{634}\u{62a} \u{67e}\u{648}\u{644}", "refound", "refund"],
-        answer: "\u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}\u{6cc} \u{648} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{62f}\u{631} «\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{6a9}\u{6cc}\u{627}\u{646}» \u{627}\u{646}\u{62c}\u{627}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{647}\u{631} \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{628}\u{627} \u{631}\u{623}\u{6cc} \u{627}\u{639}\u{636}\u{627} \u{648} \u{642}\u{648}\u{627}\u{646}\u{6cc}\u{646} \u{645}\u{646}\u{634}\u{648}\u{631} \u{62d}\u{644} \u{645}\u{6cc}‌\u{6af}\u{631}\u{62f}\u{62f}.\n• \u{646}\u{62e}\u{633}\u{62a} \u{627}\u{632} \u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}\u{6cc} \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} \u{67e}\u{6cc}\u{627}\u{645} \u{628}\u{62f}\u{647}\u{6cc}\u{62f}\u{61b} \u{67e}\u{627}\u{633}\u{62e} \u{645}\u{639}\u{645}\u{648}\u{644}\u{627}\u{64b} \u{641}\u{648}\u{631}\u{6cc} \u{627}\u{633}\u{62a}.\n• \u{627}\u{6af}\u{631} \u{62a}\u{648}\u{627}\u{641}\u{642} \u{646}\u{634}\u{62f}\u{60c} \u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{62b}\u{628}\u{62a} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f} \u{648} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{62a}\u{627} \u{631}\u{623}\u{6cc} \u{646}\u{647}\u{627}\u{6cc}\u{6cc} \u{646}\u{6af}\u{647} \u{62f}\u{627}\u{634}\u{62a}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.\n\u{62a}\u{635}\u{645}\u{6cc}\u{645}‌\u{647}\u{627}\u{6cc} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{62f}\u{631} \u{62f}\u{641}\u{62a}\u{631} \u{634}\u{641}\u{627}\u{641} \u{62b}\u{628}\u{62a} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{647}\u{6cc}\u{686} \u{637}\u{631}\u{641}\u{6cc} \u{646}\u{645}\u{6cc}‌\u{62a}\u{648}\u{627}\u{646}\u{62f} \u{67e}\u{648}\u{644} \u{631}\u{627} \u{6cc}\u{6a9}‌\u{62c}\u{627}\u{646}\u{628}\u{647} \u{628}\u{631}\u{62f}\u{627}\u{631}\u{62f}.",
+        keywords: &["support", "arbitration", "parliament", "dispute", "complaint", "refund", "refound"],
+        answer: "Support and arbitration run inside the \"MAIRON Parliament\": every dispute is resolved with member votes and published rules.\n• First open the support button inside the mini-app and send a message; the answer is usually instant.\n• If it is not settled, an arbitration case is registered and the escrow holds until the final vote.\nArbitration decisions are recorded in a transparent ledger; no party can take the money unilaterally.",
     },
     FaqTopic {
         key: "catalog",
-        keywords: &["\u{6a9}\u{627}\u{62a}\u{627}\u{644}\u{648}\u{6af}", "\u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a}", "\u{686}\u{647} \u{645}\u{62d}\u{635}\u{648}\u{644}", "\u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647}", "\u{628}\u{627}\u{632}\u{627}\u{631}", "\u{686}\u{6cc} \u{62f}\u{627}\u{631}\u{6cc}\u{62f}"],
-        answer: "\u{628}\u{627}\u{632}\u{627}\u{631} \u{6a9}\u{6cc}\u{627}\u{646} \u{628}\u{6cc}\u{633}\u{62a} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{641}\u{639}\u{627}\u{644} \u{62f}\u{627}\u{631}\u{62f}\u{61b} \u{647}\u{634}\u{62a} \u{67e}\u{631}\u{686}\u{645}‌\u{62f}\u{627}\u{631} \u{62a}\u{631}\u{6cc}\u{646}\u{6cc}\u{62a}\u{6cc} \u{648} \u{62f}\u{648}\u{627}\u{632}\u{62f}\u{647} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{645}\u{646}\u{62a}\u{62e}\u{628} \u{62c}\u{627}\u{645}\u{639}\u{647}.\n• \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{67e}\u{631}\u{686}\u{645}‌\u{62f}\u{627}\u{631}: \u{645}\u{6cc}\u{632} \u{6a9}\u{627}\u{631} SC\u{60c} \u{628}\u{627}\u{632}\u{6cc} \u{641}\u{6cc}\u{632}\u{6cc}\u{6a9}\u{6cc} FISHKAL\u{60c} \u{622}\u{648}\u{631}\u{62f}\u{6af}\u{627}\u{647} \u{645}\u{639}\u{627}\u{645}\u{644}\u{627}\u{62a}\u{60c} \u{67e}\u{6cc}\u{627}\u{645}‌\u{631}\u{633}\u{627}\u{646} \u{646}\u{648}\u{627} \u{648} \u{686}\u{647}\u{627}\u{631} \u{627}\u{62b}\u{631} \u{62f}\u{6cc}\u{6af}\u{631}.\n• \u{647}\u{645}\u{647}\u{654} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{648} \u{622}\u{641}\u{644}\u{627}\u{6cc}\u{646}‌\u{627}\u{646}\u{62f}\u{61b} \u{67e}\u{6cc}\u{634}‌\u{646}\u{645}\u{627}\u{6cc}\u{634} \u{632}\u{646}\u{62f}\u{647} \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{627}\u{632} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.\n\u{641}\u{647}\u{631}\u{633}\u{62a} \u{6a9}\u{627}\u{645}\u{644} \u{631}\u{627} \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\u{60c} \u{628}\u{62e}\u{634} «\u{628}\u{627}\u{632}\u{627}\u{631}» \u{628}\u{628}\u{6cc}\u{646}\u{6cc}\u{62f}.",
+        keywords: &["catalog", "products", "market", "store", "what do you sell"],
+        answer: "The MAIRON market lists twenty active products: the eight most popular Trinity titles and twelve curated community products.\n• Popular titles: the SC workbench, the physical-physics FISHKAL game, the trading arena, the Nova messenger and four other titles.\n• Every product is a single-page online app; the live preview opens before you buy.\nSee the complete list inside the mini-app, in the Market section.",
     },
     FaqTopic {
         key: "pricing",
-        keywords: &["\u{642}\u{6cc}\u{645}\u{62a}", "\u{686}\u{642}\u{62f}\u{631}", "\u{647}\u{632}\u{6cc}\u{646}\u{647}", "\u{686}\u{646}\u{62f}", "\u{62f}\u{6cc}\u{6cc}\u{646}", "\u{62f}\u{627}\u{646}\u{6af}", "đ"],
-        answer: "\u{642}\u{6cc}\u{645}\u{62a}‌\u{647}\u{627} \u{627}\u{632} \u{6f3}\u{6f0}\u{6f0} \u{62a}\u{627} \u{6f1}\u{66c}\u{6f2}\u{6f0}\u{6f0} \u{62f}\u{6cc}\u{6cc}\u{646} \u{628}\u{631}\u{627}\u{6cc} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{67e}\u{631}\u{686}\u{645}‌\u{62f}\u{627}\u{631} \u{627}\u{633}\u{62a} \u{648} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{62c}\u{627}\u{645}\u{639}\u{647} \u{627}\u{632} \u{6f5}\u{6f0} \u{62f}\u{6cc}\u{6cc}\u{646} \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}.\n• \u{647}\u{645}\u{647}\u{654} \u{642}\u{6cc}\u{645}\u{62a}‌\u{647}\u{627} \u{632}\u{6cc}\u{631} \u{633}\u{642}\u{641} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc}‌\u{627}\u{646}\u{62f}\u{61b} \u{67e}\u{633} \u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{6cc}‌\u{62f}\u{631}\u{646}\u{6af} \u{62a}\u{633}\u{648}\u{6cc}\u{647} \u{648} \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.\n• \u{628}\u{627} \u{644}\u{6cc}\u{646}\u{6a9} \u{645}\u{639}\u{631}\u{641}\u{60c} \u{6f2}\u{6f5} \u{62f}\u{631}\u{635}\u{62f} \u{647}\u{631} \u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{647} \u{62d}\u{633}\u{627}\u{628} \u{634}\u{645}\u{627} \u{628}\u{631}\u{645}\u{6cc}‌\u{6af}\u{631}\u{62f}\u{62f}.\n\u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{642}\u{6cc}\u{645}\u{62a} \u{647}\u{631} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{62f}\u{631} \u{635}\u{641}\u{62d}\u{647}\u{654} \u{62e}\u{648}\u{62f}\u{634} \u{62f}\u{631} \u{628}\u{627}\u{632}\u{627}\u{631} \u{622}\u{645}\u{62f}\u{647} \u{627}\u{633}\u{62a}.",
+        keywords: &["price", "cost", "how much", "din", "pricing"],
+        answer: "Prices run from 300 to 1,200 Din for the popular titles, and community products start from 50 Din.\n• Every price sits under a human-approved ceiling; after purchase, settlement and delivery are instant.\n• With a referral link, 25 percent of every purchase returns to your account.\nThe detailed price of each product is listed on its own market page.",
     },
 ];
 
-/// Instant match — a Persian/English question → canned answer (no tokens, no network).
+/// Instant match — a question → canned answer (no tokens, no network).
 ///
-/// Matching runs on lowercased text; Persian keywords are searched
-/// as-is. The first topic whose keyword is present wins.
+/// Matching runs on lowercased text. The first topic whose keyword is present wins.
 #[must_use]
 pub fn match_instant_faq(query: &str) -> Option<&'static str> {
     let q = query.trim().to_lowercase();
@@ -89,11 +89,11 @@ mod tests {
     /// Every key mission question gets an answer with zero tokens.
     #[test]
     fn key_customer_questions_hit_instant_answers() {
-        assert!(match_instant_faq_key("\u{646}\u{62d}\u{648}\u{647} \u{62e}\u{631}\u{6cc}\u{62f} \u{648} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}").is_some());
-        assert!(match_instant_faq_key("\u{62f}\u{631}\u{635}\u{62f} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{627}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a} \u{648} \u{632}\u{6cc}\u{631}\u{645}\u{62c}\u{645}\u{648}\u{639}\u{647}‌\u{6af}\u{6cc}\u{631}\u{6cc} \u{686}\u{642}\u{62f}\u{631}\u{647}\u{61f}").is_some());
-        assert!(match_instant_faq_key("\u{648}\u{627}\u{631}\u{6cc}\u{632} \u{648} \u{628}\u{631}\u{62f}\u{627}\u{634}\u{62a} \u{62a}\u{62a}\u{631} \u{648} \u{62a}\u{648}\u{646} \u{631}\u{648} \u{686}\u{637}\u{648}\u{631} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{628}\u{62f}\u{645}\u{61f}").is_some());
-        assert!(match_instant_faq_key("\u{686}\u{637}\u{648}\u{631} \u{628}\u{627} \u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc} \u{647}\u{631}\u{645}\u{633} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645}\u{61f}").is_some());
-        assert!(match_instant_faq_key("\u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}\u{6cc} \u{648} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{6a9}\u{62c}\u{627}\u{633}\u{62a}\u{61f}").is_some());
+        assert!(match_instant_faq_key("how do escrow-protected purchases work?").is_some());
+        assert!(match_instant_faq_key("what is the affiliate commission percentage?").is_some());
+        assert!(match_instant_faq_key("how do usdt and ton deposits and withdrawals work?").is_some());
+        assert!(match_instant_faq_key("how do I build a product with the hermes studio?").is_some());
+        assert!(match_instant_faq_key("where is the parliament arbitration support?").is_some());
     }
 
     /// Answers are non-empty and multi-line; the first-line + bullets structure is preserved.
@@ -101,9 +101,9 @@ mod tests {
     fn answers_are_structured_and_nonempty() {
         for t in FAQ_TOPICS {
             assert!(!t.answer.trim().is_empty(), "{}", t.key);
-            assert!(t.answer.contains('•'), "{} \u{628}\u{62f}\u{648}\u{646} \u{628}\u{648}\u{644}\u{62a}", t.key);
-            assert!(t.answer.chars().count() > 120, "{} \u{62e}\u{6cc}\u{644}\u{6cc} \u{6a9}\u{648}\u{62a}\u{627}\u{647}", t.key);
-            assert!(!t.keywords.is_empty(), "{} \u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{644}\u{6cc}\u{62f}\u{648}\u{627}\u{698}\u{647}", t.key);
+            assert!(t.answer.contains('•'), "{} without a bullet", t.key);
+            assert!(t.answer.chars().count() > 120, "{} too short", t.key);
+            assert!(!t.keywords.is_empty(), "{} without keywords", t.key);
         }
         // at least 5 key mission topics
         assert!(FAQ_TOPICS.len() >= 5);
@@ -115,16 +115,21 @@ mod tests {
         assert!(match_instant_faq_key("how to pay with USDT?").is_some());
         assert!(match_instant_faq_key("ESCROW safe?").is_some());
         assert_eq!(match_instant_faq_key(""), None);
-        assert_eq!(match_instant_faq_key("\u{633}\u{644}\u{627}\u{645} \u{62e}\u{648}\u{628}\u{6cc}\u{61f}"), None);
+        assert_eq!(match_instant_faq_key("hello there!"), None);
         assert_eq!(match_instant_faq_key("xyzabc"), None);
     }
 
-    /// Matching is deterministic — same input, same output (no chance).
+    /// Pure English: every answer and every keyword is free of Arabic-script codepoints.
     #[test]
-    fn matching_is_deterministic() {
-        let q = "\u{686}\u{637}\u{648}\u{631} \u{62a}\u{62a}\u{631} \u{648}\u{627}\u{631}\u{6cc}\u{632} \u{6a9}\u{646}\u{645}\u{61f}";
-        let a = match_instant_faq(q);
-        assert_eq!(a, match_instant_faq(q));
-        assert_eq!(match_instant_faq_key(q), Some("usdt_ton"));
+    fn faq_is_pure_english() {
+        for t in FAQ_TOPICS {
+            for s in t.keywords.iter().copied().chain(std::iter::once(t.answer)) {
+                assert!(
+                    !s.chars().any(|c| ('\u{0600}'..='\u{06FF}').contains(&c)),
+                    "{} carries non-English script",
+                    t.key
+                );
+            }
+        }
     }
 }

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-broadcast_relaunch.py — \u0627\u0633\u06a9\u0631\u06cc\u067e\u062a \u0627\u0645\u0646 \u067e\u06cc\u0627\u0645 \u0631\u06cc\u0644\u0627\u0646\u0686 KIAN v2 \u0628\u0647 \u06a9\u0644 \u062c\u0627\u0645\u0639\u0647\u0654 \u0645\u0647\u0627\u062c\u0631\u062a‌\u0634\u062f\u0647
+broadcast_relaunch.py — the safe relaunch broadcast script for the entire migrated MAIRON community
 ==============================================================================
 
-\u0645\u0646\u0628\u0639: seed/kian-production.db (\u06f4\u06f6\u06f6 \u0634\u0647\u0631\u0648\u0646\u062f \u0645\u0647\u0627\u062c\u0631\u062a‌\u06cc\u0627\u0641\u062a\u0647) — \u0641\u0642\u0637‌\u062e\u0648\u0627\u0646\u062f\u0646\u06cc.
-\u062e\u0631\u0648\u062c\u06cc: \u067e\u06cc\u0627\u0645 \u0634\u062e\u0635\u06cc‌\u0633\u0627\u0632\u06cc‌\u0634\u062f\u0647\u0654 \u0641\u0627\u0631\u0633\u06cc/\u0627\u0646\u06af\u0644\u06cc\u0633\u06cc \u0628\u0627 \u062a\u0631\u0627\u0632 KIAN \u0647\u0631 \u06a9\u0627\u0631\u0628\u0631 + \u062f\u06a9\u0645\u0647\u0654 \u0648\u0631\u0648\u062f.
+Source: seed/kian-production.db (466 migrated citizens) — read-only.
+Output: a personalized English message with each user's MAIRON balance + an entry button.
 
-\u0627\u06cc\u0645\u0646\u06cc:
-  * \u067e\u06cc\u0634‌\u0641\u0631\u0636 --dry-run: \u0647\u06cc\u0686 \u067e\u06cc\u0627\u0645\u06cc \u0627\u0631\u0633\u0627\u0644 \u0646\u0645\u06cc‌\u0634\u0648\u062f\u061b \u0641\u0642\u0637 \u0646\u0645\u0648\u0646\u0647\u0654 \u067e\u06cc\u0627\u0645 \u0648 \u0622\u0645\u0627\u0631 \u0686\u0627\u067e \u0645\u06cc‌\u0634\u0648\u062f.
-  * \u0627\u0631\u0633\u0627\u0644 \u0648\u0627\u0642\u0639\u06cc \u0641\u0642\u0637 \u0628\u0627 --live \u0648 TELEGRAM_BOT_TOKEN \u062f\u0631 \u0645\u062d\u06cc\u0637.
-  * \u0646\u0631\u062e \u0645\u062d\u062f\u0648\u062f: \u062d\u062f\u0627\u06a9\u062b\u0631 \u06f2\u06f0 \u067e\u06cc\u0627\u0645 \u062f\u0631 \u062b\u0627\u0646\u06cc\u0647 (\u0633\u0642\u0641 \u0631\u0633\u0645\u06cc Bot API) + \u062a\u0648\u0642\u0641‌\u0647\u0627\u06cc \u062f\u0648\u0631\u0647‌\u0627\u06cc.
-  * Resume \u0627\u0645\u0646: \u0648\u0636\u0639\u06cc\u062a \u0627\u0631\u0633\u0627\u0644 \u062f\u0631 --state (JSON) \u062b\u0628\u062a \u0645\u06cc‌\u0634\u0648\u062f\u061b \u0627\u062c\u0631\u0627\u06cc \u0645\u062c\u062f\u062f \u0627\u062f\u0627\u0645\u0647 \u0645\u06cc‌\u062f\u0647\u062f\u060c \u062f\u0648\u0628\u0627\u0631 \u0646\u0645\u06cc‌\u0641\u0631\u0633\u062a\u062f.
-  * \u0647\u0631 \u062e\u0637\u0627\u06cc 429 \u0627\u0632 \u067e\u0627\u0633\u062e \u062a\u0644\u06af\u0631\u0627\u0645 obeyed \u0645\u06cc‌\u0634\u0648\u062f (retry_after).
+Safety:
+  * --dry-run is the default: no message is sent; only a sample message and stats are printed.
+  * Real sending only with --live and TELEGRAM_BOT_TOKEN in the environment.
+  * Rate-limited: at most 20 messages per second (the official Bot API cap) + periodic pauses.
+  * Safe resume: send state is recorded in --state (JSON); re-runs continue and never double-send.
+  * Every 429 from the Telegram response is obeyed (retry_after).
 """
 from __future__ import annotations
 
@@ -30,16 +30,22 @@ RATE_PER_SEC = 20          # Official Bot API limit
 BATCH_PAUSE_EVERY = 500    # After every 500 messages, pause for 5 seconds
 BATCH_PAUSE_SEC = 5.0
 
-BTN_TEXT = "🚀 \u0648\u0631\u0648\u062f \u0628\u0647 \u0627\u0633\u062a\u0648\u062f\u06cc\u0648 \u0648 \u0628\u0627\u0632\u0627\u0631 KIAN v2"
+BTN_TEXT = "🚀 Open the MAIRON studio and market"
 
 TEMPLATE_FA = (
-    "\u0633\u0644\u0627\u0645 {name} 👋\n\n"
-    "\u062f\u0646\u06cc\u0627\u06cc dropagent \u062d\u0627\u0644\u0627 \u0628\u0627 \u0646\u0627\u0645 **KIAN v2** \u0628\u0627 \u0642\u062f\u0631\u062a \u0628\u0631\u06af\u0634\u062a\u0647 — \u0648 \u0647\u0645\u0647\u0654 \u062f\u0627\u0631\u0627\u06cc\u06cc‌\u0627\u062a \u062f\u0642\u06cc\u0642\u0627\u064b \u0647\u0645\u0648\u0646‌\u0637\u0648\u0631 \u06a9\u0647 \u0628\u0648\u062f \u0628\u0631\u0627\u062a \u0645\u0646\u062a\u0642\u0644 \u0634\u062f\u0647:\n\n"
-    "💰 \u062a\u0631\u0627\u0632 KIAN \u062a\u0648: **{balance} KIAN**\n"
-    "🧠 \u062d\u0627\u0641\u0638\u0647 \u0648 \u06af\u0641\u062a\u06af\u0648\u0647\u0627\u06cc AI \u062a\u0648 \u0645\u0646\u062a\u0642\u0644 \u0634\u062f\u0647\n"
-    "🛒 \u0633\u0641\u0627\u0631\u0634‌\u0647\u0627\u06cc \u0642\u0628\u0644\u06cc‌\u0627\u062a \u0628\u0627 \u0645\u062d\u062a\u0648\u0627\u06cc \u06a9\u0627\u0645\u0644 \u062f\u0631 \u062f\u0633\u062a\u0631\u0633\u0647\n"
-    "🎁 \u0628\u0627 \u0647\u0631 \u0641\u0631\u0648\u0634 \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0644\u06cc\u0646\u06a9 \u062f\u0639\u0648\u062a \u062a\u0648\u060c \u06f2\u06f0\u066a \u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0645\u06cc‌\u06af\u06cc\u0631\u06cc!\n\n"
-    "\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627 \u0648\u0627\u0631\u062f \u0634\u0648 \u0648 \u06a9\u06cc\u0627\u0646 \u062c\u062f\u06cc\u062f \u0631\u0648 \u0628\u0628\u06cc\u0646 👇"
+    "Hello {name} 👋\n\n"
+
+    "The dropagent world is back, stronger than ever, as **MAIRON** — and all of your assets were migrated exactly as they were:\n\n"
+
+    "💰 Your MAIRON balance: **{balance} KIAN**\n"
+
+    "🧠 Your AI memory and conversations carried over\n"
+
+    "🛒 Your past orders are available with full content\n"
+
+    "🎁 You earn a 25 percent commission on every sale through your invite link!\n\n"
+
+    "Sign in right now and see the new MAIRON 👇"
 )
 
 
@@ -56,7 +62,7 @@ def load_users(db_path: str) -> list[dict]:
         'GROUP BY u."telegramId" ORDER BY u."createdAt"'
     ).fetchall()
     con.close()
-    return [{"tg_id": r[0], "username": r[1], "name": r[2] or "\u062f\u0648\u0633\u062a \u0645\u0646", "micro": int(r[3])} for r in rows]
+    return [{"tg_id": r[0], "username": r[1], "name": r[2] or "my friend", "micro": int(r[3])} for r in rows]
 
 
 def render(user: dict, miniapp_url: str) -> dict:
@@ -115,9 +121,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="KIAN v2 relaunch broadcast (safe: dry-run default)")
     ap.add_argument("--db", default=os.path.join(repo, "seed", "kian-production.db"))
     ap.add_argument("--miniapp-url", default=os.environ.get("KIAN_MINIAPP_URL", "https://t.me/KianV2Bot/app"))
-    ap.add_argument("--live", action="store_true", help="\u0627\u0631\u0633\u0627\u0644 \u0648\u0627\u0642\u0639\u06cc — \u0628\u062f\u0648\u0646 \u0627\u06cc\u0646 \u067e\u0631\u0686\u0645 \u0641\u0642\u0637 dry-run \u0627\u0633\u062a")
-    ap.add_argument("--limit", type=int, default=0, help="\u0633\u0642\u0641 \u062a\u0639\u062f\u0627\u062f \u067e\u06cc\u0627\u0645 (\u06f0 = \u0647\u0645\u0647)")
-    ap.add_argument("--samples", type=int, default=3, help="\u062a\u0639\u062f\u0627\u062f \u067e\u06cc\u0627\u0645 \u0646\u0645\u0648\u0646\u0647 \u062f\u0631 dry-run")
+    ap.add_argument("--live", action="store_true", help="real sending — without this flag it is a dry-run only")
+    ap.add_argument("--limit", type=int, default=0, help="message cap (0 = all)")
+    ap.add_argument("--samples", type=int, default=3, help="number of sample messages in the dry-run")
     ap.add_argument("--state", default=os.path.join(repo, "scripts", "broadcast_state.json"))
     args = ap.parse_args()
 

@@ -157,10 +157,10 @@ export function buildTelegramViralLink(
   return { startParam, telegramUrl, webUrl };
 }
 
-/** Persian display of the commission percent from basis points (e.g. `1000` → `10%`). */
+/** International display of the commission percent from basis points (e.g. `1000` -> `10%`). */
 export function formatAffiliatePercent(bps: number): string {
   const pct = bps / 100;
-  return `${pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}\u066a`;
+  return `${pct.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 }
 
 /**
@@ -190,7 +190,7 @@ export function buildViralShareLinks(
   ).replace(/^@/, "");
   const text =
     shareText ??
-    `\u0627\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631 \u0631\u0627 \u062f\u0631 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646 \u0633\u0627\u062e\u062a\u0645 — \u06cc\u06a9 \u06a9\u0644\u06cc\u06a9 \u0628\u0627\u0632\u0634 \u06a9\u0646 \u0648 \u0628\u0627 \u0647\u0631 \u062e\u0631\u06cc\u062f\u060c \u067e\u0627\u062f\u0627\u0634 \u0645\u0639\u0631\u0641\u06af\u0631\u06cc \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.`;
+    shareText ?? "I built this tool on the MAIRON market — open it in one tap and earn a referral reward on every purchase.";
   const shareUrl = buildViralShareLink(botUsername, productId, referrerTgId, text);
   return { startParam: base.startParam, telegramUrl: base.telegramUrl, webUrl: base.webUrl, shareUrl };
 }

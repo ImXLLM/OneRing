@@ -9,10 +9,13 @@
 //! * Citizen commands (`/balance`, `/me`) take identity from the trusted channel —
 //!   initData is HMAC-verified and the official `POST /auth/telegram` path is taken; never
 //!   from the user body.
+//! * The MAIRON sovereign suite ([`crate::sovereign`]) serves `/mairon`, `/trinity`,
+//!   `/quant`, `/treasury`, `/warroom` and `/hud` as pure, deterministic formatters.
 
 use std::collections::{HashMap, VecDeque};
 
 use crate::port::KernelPort;
+use crate::sovereign;
 use crate::update::BotUpdate;
 
 /// The Telegram message-length hard cap.
@@ -23,7 +26,7 @@ pub const TELEGRAM_MAX_CHARS: usize = 4096;
 pub struct BotAction {
     /// Destination chat.
     pub chat_id: i64,
-    /// Text (Persian RTL, no secrets).
+    /// Text (international English, no secrets).
     pub text: String,
     /// Inline link buttons (one glass row — mini-app and market entry).
     pub links: Vec<LinkButton>,
@@ -102,7 +105,7 @@ impl BotCore {
                 let secs = (retry_ms / 1000).max(1);
                 return vec![Action::text(
                     chat,
-                    format!("\u{6a9}\u{645}\u{6cc} \u{622}\u{631}\u{627}\u{645}‌\u{62a}\u{631} — \u{67e}\u{633} \u{627}\u{632} {secs} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{628}\u{67e}\u{631}\u{633}\u{6cc}\u{62f}. /help"),
+                    format!("Easy there — try again after {secs} seconds. /help"),
                 )];
             }
             RateVerdict::Reject { warn: None } => return Vec::new(),
@@ -119,18 +122,26 @@ impl BotCore {
             Some("economy") => vec![self.economy(update.chat_id, port).await],
             Some("balance") => vec![self.balance(update.chat_id, update, now_ms, port).await],
             Some("me") => vec![self.me(update.chat_id, update, now_ms, port).await],
+            // the MAIRON sovereign suite — deterministic, zero-I/O formatters
+            Some(c) if sovereign::is_sovereign_command(c) => vec![Action::text(
+                update.chat_id,
+                sovereign::format_sovereign_command(c).unwrap_or_default(),
+            )],
             Some(_) => vec![Action::text(
                 update.chat_id,
-                "\u{627}\u{6cc}\u{646} \u{62f}\u{633}\u{62a}\u{648}\u{631} \u{631}\u{627} \u{646}\u{627}\u{634}\u{646}\u{627}\u{62e}\u{62a}\u{647} \u{628}\u{648}\u{62f}\u{645} 🤔 — \u{628}\u{627} /help \u{641}\u{647}\u{631}\u{633}\u{62a} \u{641}\u{631}\u{645}\u{627}\u{646}‌\u{647}\u{627} \u{631}\u{627} \u{628}\u{628}\u{6cc}\u{646}.",
+                "I did not recognize that command 🤔 — run /help to see the command list.",
             )],
             // a plain text message = first the instant FAQ responder (zero tokens — a port of the Hermes bot;
             // vault folder 03); if nothing hooks → the golden opportunity to pitch the same engaging
             // /start welcome
             None => {
                 if let Some(answer) = kian_hermes::match_instant_faq(&update.text) {
-                    vec![Action::text(update.chat_id, answer.to_owned())]
+                    vec![Action::text(
+                        update.chat_id,
+                        format!("⚡ Instant answer — zero tokens:\n\n{answer}"),
+                    )]
                 } else {
-                    vec![self.welcome(update.chat_id, Some("\u{67e}\u{6cc}\u{627}\u{645}\u{62a} \u{631}\u{627} \u{6af}\u{631}\u{641}\u{62a}\u{645}! 👋"))]
+                    vec![self.welcome(update.chat_id, Some("Got your message! 👋"))]
                 }
             }
         };
@@ -170,7 +181,7 @@ impl BotCore {
 
     // ── commands ─────────────────────────────────────────────────────────────
 
-    /// The three-line welcome message — the platform value proposition + glass entry buttons.
+    /// The welcome message — the platform value proposition + glass entry buttons.
     ///
     /// Sent for `/start` with no preamble, and for a plain text message with a short greeting;
     /// in both cases the direct mini-app and market entry buttons
@@ -183,11 +194,11 @@ impl BotCore {
         }
         text.push_str(
             concat!(
-                "✨ \u{628}\u{647} \u{67e}\u{627}\u{62f}\u{634}\u{627}\u{647}\u{6cc} KIAN \u{62e}\u{648}\u{634} \u{622}\u{645}\u{62f}\u{6cc}!\n\n",
-                "\u{6f1}. \u{628}\u{627} \u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc} \u{62f}\u{631} \u{6f1} \u{62f}\u{642}\u{6cc}\u{642}\u{647} \u{648}\u{628}‌\u{627}\u{67e} \u{648} \u{627}\u{628}\u{632}\u{627}\u{631} HTML \u{628}\u{633}\u{627}\u{632} ✨\n",
-                "\u{6f2}. \u{644}\u{6cc}\u{646}\u{6a9} \u{641}\u{631}\u{648}\u{634}\u{62a} \u{631}\u{627} \u{67e}\u{62e}\u{634} \u{6a9}\u{646} \u{648} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} \u{628}\u{6af}\u{6cc}\u{631} 💎\n",
-                "\u{6f3}. \u{6cc}\u{627} \u{644}\u{6cc}\u{646}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{628}\u{642}\u{6cc}\u{647} \u{631}\u{627} \u{67e}\u{62e}\u{634} \u{6a9}\u{646} \u{648} \u{62a}\u{627} \u{6f5}\u{6f0}\u{66a} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{622}\u{646}\u{6cc} \u{628}\u{6af}\u{6cc}\u{631} 🔗\n\n",
-                "\u{647}\u{645}\u{6cc}\u{646} \u{62d}\u{627}\u{644}\u{627} \u{634}\u{631}\u{648}\u{639} \u{6a9}\u{646} 👇 (\u{631}\u{627}\u{647}\u{646}\u{645}\u{627}: /help)"
+                "✨ Welcome to MAIRON — the sovereign founder OS!\n\n",
+                "1. Build a web app or HTML tool with AI in 2 minutes ✨\n",
+                "2. Share your storefront link and earn crypto 💎\n",
+                "3. Or share product links and earn up to 20% instant commission 🔗\n\n",
+                "Start right now 👇 (guide: /help)"
             ),
         );
         let market_url = format!("{}/market", self.policy.miniapp_url.trim_end_matches('/'));
@@ -196,10 +207,10 @@ impl BotCore {
             text,
             vec![
                 LinkButton {
-                    label: "🚀 \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN".to_owned(),
+                    label: "🚀 Open the MAIRON mini-app".to_owned(),
                     url: self.policy.miniapp_url.clone(),
                 },
-                LinkButton { label: "🛒 \u{628}\u{627}\u{632}\u{627}\u{631} KIAN".to_owned(), url: market_url },
+                LinkButton { label: "🛒 MAIRON Market".to_owned(), url: market_url },
             ],
         )
     }
@@ -208,9 +219,9 @@ impl BotCore {
     fn link(&self, chat_id: i64) -> BotAction {
         Action::with_links(
             chat_id,
-            format!("\u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN:\n{}", self.policy.miniapp_url),
+            format!("MAIRON mini-app:\n{}", self.policy.miniapp_url),
             vec![LinkButton {
-                label: "\u{628}\u{627}\u{632} \u{6a9}\u{631}\u{62f}\u{646} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}".to_owned(),
+                label: "Open the mini-app".to_owned(),
                 url: self.policy.miniapp_url.clone(),
             }],
         )
@@ -222,13 +233,13 @@ impl BotCore {
             Ok(e) => Action::text(
                 chat_id,
                 format!(
-                    "\u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f} \u{645}\u{644}\u{6cc} KIAN (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6}):\n\
-                     \u{62f}\u{631} \u{6af}\u{631}\u{62f}\u{634}: {} Đ\n\
-                     \u{62e}\u{632}\u{627}\u{646}\u{647}: {} Đ\n\
-                     \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648}: {} Đ\n\
-                     \u{6a9}\u{644} \u{636}\u{631}\u{628}: {} Đ — \u{6a9}\u{644} \u{633}\u{648}\u{632}\u{627}\u{646}\u{62f}\u{647}: {} Đ\n\
-                     \u{62d}\u{633}\u{627}\u{628}‌\u{647}\u{627}: {} — \u{627}\u{645}\u{627}\u{646}\u{62a} \u{628}\u{627}\u{632}: {}\n\n\
-                     \u{645}\u{646}\u{628}\u{639}: \u{62f}\u{641}\u{62a}\u{631} \u{62f}\u{648}\u{637}\u{631}\u{641}\u{647}\u{654} \u{6a9}\u{631}\u{646}\u{644} — \u{647}\u{6cc}\u{686} \u{639}\u{62f}\u{62f}\u{6cc} \u{62f}\u{633}\u{62a}‌\u{633}\u{627}\u{632} \u{646}\u{6cc}\u{633}\u{62a}.",
+                    "MAIRON economy (Article 6):\n\
+                     circulating: {} Đ\n\
+                     treasury: {} Đ\n\
+                     escrow locked: {} Đ\n\
+                     total minted: {} Đ — total burned: {} Đ\n\
+                     accounts: {} — open escrows: {}\n\n\
+                     Source: the kernel double-entry ledger — no number is hand-edited.",
                     num(e.circulating),
                     num(e.treasury),
                     num(e.escrow_locked),
@@ -255,10 +266,10 @@ impl BotCore {
             Ok(m) => Action::text(
                 chat_id,
                 format!(
-                    "\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}:\n\
-                     \u{622}\u{632}\u{627}\u{62f}: {} Đ\n\
-                     \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648}: {} Đ\n\n\
-                     \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{648}\u{644}\u{62a} \u{648} \u{628}\u{627}\u{632}\u{627}\u{631} \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}.",
+                    "Your balance:\n\
+                     available: {} Đ\n\
+                     escrow locked: {} Đ\n\n\
+                     Full wallet and market live in the mini-app.",
                     num(m.balance),
                     num(m.escrow_locked),
                 ),
@@ -281,14 +292,14 @@ impl BotCore {
                 let ton = m
                     .ton_address
                     .as_deref()
-                    .map_or_else(|| "\u{62b}\u{628}\u{62a} \u{646}\u{634}\u{62f}\u{647} (/me \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e})".to_owned(), str::to_owned);
+                    .map_or_else(|| "not set (use /me inside the mini-app)".to_owned(), str::to_owned);
                 Action::text(
                     chat_id,
                     format!(
-                        "\u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{634}\u{645}\u{627}:\n\
-                         \u{62d}\u{633}\u{627}\u{628} \u{62f}\u{641}\u{62a}\u{631}: {}\n\
+                        "Your profile:\n\
+                         account: {}\n\
                          username: @{}\n\
-                         \u{622}\u{62f}\u{631}\u{633} TON: {}",
+                         TON address: {}",
                         m.account_id,
                         m.username.as_deref().unwrap_or("—"),
                         ton,
@@ -335,14 +346,20 @@ impl Action {
         Self::text(
             chat_id,
             concat!(
-                "\u{641}\u{631}\u{645}\u{627}\u{646}‌\u{647}\u{627}\u{6cc} \u{628}\u{627}\u{62a} KIAN:\n",
-                "/start — \u{62e}\u{648}\u{634}‌\u{622}\u{645}\u{62f} \u{648} \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\n",
-                "/balance — \u{62a}\u{631}\u{627}\u{632} Din \u{648} \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648} (\u{646}\u{634}\u{633}\u{62a} \u{634}\u{647}\u{631}\u{648}\u{646}\u{62f})\n",
-                "/me — \u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{645}\u{646} (\u{62d}\u{633}\u{627}\u{628} \u{62f}\u{641}\u{62a}\u{631}\u{60c} \u{622}\u{62f}\u{631}\u{633} TON)\n",
-                "/economy — \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f} \u{645}\u{644}\u{6cc} (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6})\n",
-                "/link — \u{644}\u{6cc}\u{646}\u{6a9} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\n",
-                "/id — \u{634}\u{646}\u{627}\u{633}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{645}\u{646}\n\n",
-                "\u{647}\u{648}\u{6cc}\u{62a} \u{641}\u{642}\u{637} \u{627}\u{632} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{645}\u{6cc}‌\u{622}\u{6cc}\u{62f}\u{61b} \u{631}\u{645}\u{632} \u{648} \u{6a9}\u{644}\u{6cc}\u{62f}\u{6cc} \u{627}\u{6cc}\u{646}\u{62c}\u{627} \u{62c}\u{627}\u{6cc}\u{6cc} \u{648}\u{627}\u{631}\u{62f} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}."
+                "MAIRON bot commands:\n",
+                "/start — welcome and the mini-app entry\n",
+                "/mairon — the sovereign OS overview (IMPERIUM laws)\n",
+                "/trinity — the 3-avatar build pipeline (IQ 136/139/150, REA >= 85)\n",
+                "/quant — the causal CCXT desk (8 keyless venues, Sharpe >= 1.20)\n",
+                "/treasury — Base-8453 settlement (USDC, $0xKIA, XTR, 4-stream split)\n",
+                "/warroom — the 24-tick founder simulation (chairman directives)\n",
+                "/hud — the neural topology and Grok voice modes\n",
+                "/balance — your balance and escrow lock (citizen session)\n",
+                "/me — my profile (account, TON address)\n",
+                "/economy — the national economy (Article 6)\n",
+                "/link — mini-app link\n",
+                "/id — my Telegram id\n\n",
+                "Identity comes only from Telegram; no password or key is ever entered here."
             ),
         )
     }
@@ -352,12 +369,12 @@ impl Action {
         let name = update.username.as_deref().unwrap_or("—");
         Self::text(
             chat_id,
-            format!("\u{634}\u{646}\u{627}\u{633}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{634}\u{645}\u{627}: {}\nusername: @{}", update.from_id, name),
+            format!("Your Telegram id: {}\nusername: @{}", update.from_id, name),
         )
     }
 }
 
-/// Number formatting with thousands separators (locale-neutral — RTL-friendly).
+/// Number formatting with thousands separators (locale-neutral).
 fn num(n: i64) -> String {
     let s = n.abs().to_string();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
@@ -380,6 +397,7 @@ fn num(n: i64) -> String {
 mod tests {
     use super::*;
     use crate::port::{BotEconomy, BotError, BotMe};
+    use crate::sovereign;
     use async_trait::async_trait;
     use std::sync::Mutex;
 
@@ -458,13 +476,14 @@ mod tests {
         let start = core.handle(&update("start"), NOW, &port).await;
         assert_eq!(start.len(), 1);
         assert!(!start[0].links.is_empty(), "start must carry miniapp buttons");
-        assert!(start[0].text.contains("KIAN"));
-        // three-line value proposition + market button
-        assert!(start[0].text.contains("\u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc}"));
-        assert!(start[0].text.contains("\u{6f5}\u{6f0}\u{66a} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}"));
+        assert!(start[0].text.contains("MAIRON"));
+        // value proposition + market button
+        assert!(start[0].text.contains("AI in 2 minutes"));
+        assert!(start[0].text.contains("20% instant commission"));
         assert!(start[0].links.iter().any(|l| l.url.ends_with("/market")));
         let help = core.handle(&update("help"), NOW + 1, &port).await;
         assert!(help[0].text.contains("/balance"));
+        assert!(help[0].text.contains("/mairon"), "help lists the sovereign suite");
     }
 
     #[tokio::test]
@@ -478,7 +497,7 @@ mod tests {
         let mut core2 = BotCore::new(BotPolicy::default());
         let broken = FakePort::broken();
         let out2 = core2.handle(&update("balance"), NOW, &broken).await;
-        assert!(out2[0].text.contains("\u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644}"), "honest identity-disabled message");
+        assert!(out2[0].text.contains("disabled"), "honest identity-disabled message");
     }
 
     #[tokio::test]
@@ -487,10 +506,10 @@ mod tests {
         let port = FakePort::ok();
         let out = core.handle(&update("economy"), NOW, &port).await;
         assert!(out[0].text.contains("1,234,567"), "thousands separator");
-        assert!(out[0].text.contains("\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6}"));
+        assert!(out[0].text.contains("Article 6"));
         let mut core2 = BotCore::new(BotPolicy::default());
         let out2 = core2.handle(&update("economy"), NOW, &FakePort::broken()).await;
-        assert!(out2[0].text.contains("\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a}"));
+        assert!(out2[0].text.contains("not reachable"));
     }
 
     #[tokio::test]
@@ -505,7 +524,7 @@ mod tests {
         // the fourth — one warning
         let warn = core.handle(&update("id"), NOW + 4, &port).await;
         assert_eq!(warn.len(), 1);
-        assert!(warn[0].text.contains("\u{622}\u{631}\u{627}\u{645}‌\u{62a}\u{631}"));
+        assert!(warn[0].text.contains("Easy there"));
         // the fifth and sixth — silent
         assert_eq!(core.handle(&update("id"), NOW + 5, &port).await, [] as [BotAction; 0]);
         assert_eq!(core.handle(&update("id"), NOW + 6, &port).await, [] as [BotAction; 0]);
@@ -519,7 +538,7 @@ mod tests {
         let mut core = BotCore::new(BotPolicy::default());
         let port = FakePort::ok();
         let unknown = core.handle(&update("nope"), NOW, &port).await;
-        assert!(unknown[0].text.contains("\u{646}\u{627}\u{634}\u{646}\u{627}\u{62e}\u{62a}\u{647}"));
+        assert!(unknown[0].text.contains("did not recognize"));
         let plain = core
             .handle(
                 &BotUpdate {
@@ -529,15 +548,15 @@ mod tests {
                     username: None,
                     command: None,
                     args: Vec::new(),
-                    text: "\u{633}\u{644}\u{627}\u{645}".to_owned(),
+                    text: "hello there".to_owned(),
                 },
                 NOW + 1,
                 &port,
             )
             .await;
         // a plain text message → the full welcome with mini-app buttons (not a dry reply)
-        assert!(plain[0].text.contains("\u{62e}\u{648}\u{634} \u{622}\u{645}\u{62f}\u{6cc}"), "friendly welcome on plain text");
-        assert!(plain[0].text.contains("\u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}"));
+        assert!(plain[0].text.contains("Welcome to MAIRON"), "friendly welcome on plain text");
+        assert!(plain[0].text.contains("20% instant commission"));
         assert!(!plain[0].links.is_empty(), "welcome carries miniapp buttons");
     }
 
@@ -561,7 +580,7 @@ mod tests {
         let mut u = update("balance");
         u.command = Some("balance@kiabot".to_owned());
         let out = core.handle(&u, NOW, &port).await;
-        assert!(out[0].text.contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
+        assert!(out[0].text.contains("Your balance"));
     }
 
     #[tokio::test]
@@ -599,19 +618,95 @@ mod tests {
         // a text message (no command) with the escrow keyword → the instant canned reply
         let mut u = update("");
         u.command = None;
-        u.text = "\u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{627} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}".to_owned();
+        u.text = "how do escrow-protected purchases work?".to_owned();
         let out = core.handle(&u, NOW, &FakePort::ok()).await;
         assert_eq!(out.len(), 1);
-        assert!(out[0].text.contains("\u{627}\u{633}\u{6a9}\u{631}\u{648}"), "\u{67e}\u{627}\u{633}\u{62e} \u{641}\u{648}\u{631}\u{6cc}: {}", out[0].text);
-        assert!(out[0].text.contains("\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646}"));
+        assert!(out[0].text.contains("escrow"), "instant FAQ: {}", out[0].text);
+        assert!(out[0].text.contains("zero tokens"), "the FAQ wrapper is English");
         // an unrelated message → the regular welcome path (not FAQ)
         let mut u2 = update("");
         u2.command = None;
-        u2.text = "\u{633}\u{644}\u{627}\u{645} \u{62e}\u{648}\u{628}\u{6cc}\u{61f}".to_owned();
+        u2.text = "hello, how are you?".to_owned();
         let out2 = core.handle(&u2, NOW, &FakePort::ok()).await;
         assert_eq!(out2.len(), 1);
-        assert!(!out2[0].text.contains("\u{627}\u{633}\u{6a9}\u{631}\u{648}"), "\u{628}\u{6cc}‌\u{631}\u{628}\u{637} \u{646}\u{628}\u{627}\u{6cc}\u{62f} FAQ \u{628}\u{6af}\u{6cc}\u{631}\u{62f}");
+        assert!(!out2[0].text.contains("escrow"), "an unrelated message must not hit the FAQ");
         // the FAQ reply stays under the Telegram truncation cap
         assert!(out[0].text.chars().count() <= 4096);
+    }
+
+    // ── the MAIRON sovereign suite through the router ────────────────────────
+
+    /// Every sovereign command routes through `handle` with its formatted payload.
+    #[tokio::test]
+    async fn sovereign_commands_route_through_the_core() {
+        let mut core = BotCore::new(BotPolicy::default());
+        let port = FakePort::ok();
+        let expectations: [(&str, &str); 6] = [
+            ("mairon", "IMPERIUM"),
+            ("trinity", "150"),
+            ("quant", "binance-spot"),
+            ("treasury", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+            ("warroom", "24 hourly causal ticks"),
+            ("hud", "180"),
+        ];
+        for (i, (cmd, marker)) in expectations.iter().enumerate() {
+            let out = core.handle(&update(cmd), NOW + i as u64, &port).await;
+            assert_eq!(out.len(), 1, "{cmd} replies exactly once");
+            assert!(
+                out[0].text.contains(marker),
+                "{cmd} must carry its sovereign marker ({marker}): {}",
+                out[0].text
+            );
+        }
+    }
+
+    /// `/mairon@Bot` suffix routing works for the sovereign suite too.
+    #[tokio::test]
+    async fn sovereign_commands_support_bot_suffix() {
+        let mut core = BotCore::new(BotPolicy {
+            bot_username: Some("MaironBot".to_owned()),
+            ..BotPolicy::default()
+        });
+        let port = FakePort::ok();
+        let mut u = update("treasury");
+        u.command = Some("treasury@maironbot".to_owned());
+        let out = core.handle(&u, NOW, &port).await;
+        assert!(out[0].text.contains("Base-8453"));
+    }
+
+    /// Sovereign replies never leak secrets and always fit the cap.
+    #[tokio::test]
+    async fn sovereign_replies_are_clean_and_clipped() {
+        let mut core = BotCore::new(BotPolicy::default());
+        let port = FakePort::ok();
+        for (i, cmd) in sovereign::KEYLESS_VENUES.iter().enumerate().take(3) {
+            let _ = cmd; // venue ids are not commands; iterate sovereign commands instead
+            let cmd = ["mairon", "trinity", "quant", "treasury", "warroom", "hud"][i];
+            let out = core.handle(&update(cmd), NOW + i as u64, &port).await;
+            assert_eq!(out.len(), 1);
+            assert!(!out[0].text.contains("ABC-TOKEN"), "no secrets in {cmd}");
+            assert!(out[0].text.chars().count() <= 4096, "{cmd} fits the cap");
+        }
+        // and all six explicitly
+        for (i, cmd) in ["trinity", "quant", "treasury", "warroom", "hud", "mairon"]
+            .iter()
+            .enumerate()
+        {
+            let out = core.handle(&update(cmd), NOW + 100 + i as u64, &port).await;
+            assert_eq!(out.len(), 1);
+            assert!(!out[0].text.contains("ABC-TOKEN"));
+        }
+    }
+
+    /// The rate limit also gates the sovereign suite (no bypass).
+    #[tokio::test]
+    async fn sovereign_commands_respect_the_rate_limit() {
+        let mut core = BotCore::new(BotPolicy { rate_max_per_window: 2, ..BotPolicy::default() });
+        let port = FakePort::ok();
+        assert_eq!(core.handle(&update("mairon"), NOW, &port).await.len(), 1);
+        assert_eq!(core.handle(&update("trinity"), NOW + 1, &port).await.len(), 1);
+        let warn = core.handle(&update("quant"), NOW + 2, &port).await;
+        assert_eq!(warn.len(), 1);
+        assert!(warn[0].text.contains("Easy there"), "rate limit applies to sovereign cmds");
     }
 }

@@ -43,7 +43,7 @@ async def probe(client: httpx.AsyncClient, sem: asyncio.Semaphore, owner: str, m
             r = await client.post(
                 f"{BASE}/chat/completions",
                 headers={"Authorization": f"Bearer {KEY}"},
-                json={"model": model, "messages": [{"role": "user", "content": "\u0633\u0644\u0627\u0645"}], "max_tokens": 8},
+                json={"model": model, "messages": [{"role": "user", "content": "hello"}], "max_tokens": 8},
                 timeout=40,
             )
             ms = int((time.perf_counter() - t0) * 1000)

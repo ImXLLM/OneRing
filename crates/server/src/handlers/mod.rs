@@ -16,6 +16,7 @@ pub mod builder;
 pub mod chains;
 pub mod deposits;
 pub mod escrows;
+pub mod grok_lab;
 pub mod hermes;
 pub mod market;
 pub mod monopoly;

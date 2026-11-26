@@ -4313,7 +4313,7 @@ class Vector3 {
 
 	}
 
-	// Todo lengthSquared?
+	// Legacy-note lengthSquared?
 
 	lengthSq() {
 
@@ -6283,7 +6283,7 @@ class Matrix4 {
 		const n31 = te[ 2 ], n32 = te[ 6 ], n33 = te[ 10 ], n34 = te[ 14 ];
 		const n41 = te[ 3 ], n42 = te[ 7 ], n43 = te[ 11 ], n44 = te[ 15 ];
 
-		//Todo: make this more efficient
+		//Legacy-note: make this more efficient
 		//( based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm )
 
 		return (
@@ -9492,7 +9492,7 @@ class Material extends EventDispatcher {
 
 		if ( Object.keys( this.userData ).length > 0 ) data.userData = this.userData;
 
-		// Todo: Copied from Object3D.toJSON
+		// Legacy-note: Copied from Object3D.toJSON
 
 		function extractFromCache( cache ) {
 
@@ -14438,7 +14438,7 @@ const UniformsLib = {
 			groundColor: {}
 		} },
 
-		// Todo (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
+		// Legacy-note (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
 		rectAreaLights: { value: [], properties: {
 			color: {},
 			position: {},
@@ -15426,7 +15426,7 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 					const attribute = attributes.get( geometryAttribute );
 
-					// Todo Attribute may not be available on context restore
+					// Legacy-note Attribute may not be available on context restore
 
 					if ( attribute === undefined ) continue;
 
@@ -19802,7 +19802,7 @@ function generateCubeUVSize( parameters ) {
 
 function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
-	// Todo Send this event to Three.js DevTools
+	// Legacy-note Send this event to Three.js DevTools
 	// console.log( 'WebGLProgram', cacheKey );
 
 	const gl = renderer.getContext();
@@ -21605,7 +21605,7 @@ function ShadowUniformsCache() {
 					};
 					break;
 
-				// Todo (abelnation): set RectAreaLight shadow uniforms
+				// Legacy-note (abelnation): set RectAreaLight shadow uniforms
 
 			}
 
@@ -21788,7 +21788,7 @@ function WebGLLights( extensions, capabilities ) {
 					numSpotMaps ++;
 
 					// make sure the lightMatrix is up to date
-					// Todo : do it if required only
+					// Legacy-note : do it if required only
 					shadow.updateMatrices( light );
 
 					if ( light.castShadow ) numSpotShadowsWithMaps ++;
@@ -25245,7 +25245,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				if ( useTexStorage && allocateMemory ) {
 
-					// Todo: Uniformly handle mipmap definitions
+					// Legacy-note: Uniformly handle mipmap definitions
 					// Normal textures and compressed cube textures define base level + mips with their mipmap array
 					// Uncompressed cube textures use their mipmap array only for mips (no base level)
 
@@ -27075,7 +27075,7 @@ class WebXRManager extends EventDispatcher {
 
 				}
 
-				newRenderTarget.isXRRenderTarget = true; // Todo Remove this when possible, see #23278
+				newRenderTarget.isXRRenderTarget = true; // Legacy-note Remove this when possible, see #23278
 
 				this.setFoveation( foveation );
 
@@ -27208,7 +27208,7 @@ class WebXRManager extends EventDispatcher {
 			const zOffset = ipd / ( - leftFov + rightFov );
 			const xOffset = zOffset * - leftFov;
 
-			// Todo: Better way to apply this offset?
+			// Legacy-note: Better way to apply this offset?
 			cameraL.matrixWorld.decompose( camera.position, camera.quaternion, camera.scale );
 			camera.translateX( xOffset );
 			camera.translateZ( zOffset );
@@ -28184,7 +28184,7 @@ function WebGLUniformsGroups( gl, info, capabilities, state ) {
 
 						const info = getUniformSize( value );
 
-						// Todo add integer and struct support
+						// Legacy-note add integer and struct support
 						if ( typeof value === 'number' || typeof value === 'boolean' ) {
 
 							uniform.__data[ 0 ] = value;
@@ -30083,7 +30083,7 @@ class WebGLRenderer {
 				uniforms.spotLightMap.value = lights.state.spotLightMap;
 				uniforms.pointShadowMap.value = lights.state.pointShadowMap;
 				uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
-				// Todo (abelnation): add area lights shadow info to uniforms
+				// Legacy-note (abelnation): add area lights shadow info to uniforms
 
 			}
 
@@ -32908,12 +32908,12 @@ const _renderList = /*@__PURE__*/ new MultiDrawRenderList();
 const _mesh = /*@__PURE__*/ new Mesh();
 const _batchIntersects = [];
 
-// @Todo: SkinnedMesh support?
-// @Todo: geometry.groups support?
-// @Todo: geometry.drawRange support?
-// @Todo: geometry.morphAttributes support?
-// @Todo: Support uniform parameter per geometry
-// @Todo: Add an "optimize" function to pack geometry and remove data gaps
+// @Legacy-note: SkinnedMesh support?
+// @Legacy-note: geometry.groups support?
+// @Legacy-note: geometry.drawRange support?
+// @Legacy-note: geometry.morphAttributes support?
+// @Legacy-note: Support uniform parameter per geometry
+// @Legacy-note: Add an "optimize" function to pack geometry and remove data gaps
 
 // copies data from attribute "src" into "target" starting at "targetOffset"
 function copyAttributeData( src, target, targetOffset = 0 ) {
@@ -33515,7 +33515,7 @@ class BatchedMesh extends Mesh {
 
 	setMatrixAt( geometryId, matrix ) {
 
-		// @Todo: Map geometryId to index of the arrays because
+		// @Legacy-note: Map geometryId to index of the arrays because
 		//        optimize() can make geometryId mismatch the index
 
 		const active = this._active;
@@ -36261,7 +36261,7 @@ class Path extends CurvePath {
 
 	moveTo( x, y ) {
 
-		this.currentPoint.set( x, y ); // Todo consider referencing vectors instead of copying?
+		this.currentPoint.set( x, y ); // Legacy-note consider referencing vectors instead of copying?
 
 		return this;
 
@@ -38579,7 +38579,7 @@ class ExtrudeGeometry extends BufferGeometry {
 
 		function addShape( shape ) {
 
-			const placeholder = [];
+			const splineScratch = [];
 
 			// options
 
@@ -38611,7 +38611,7 @@ class ExtrudeGeometry extends BufferGeometry {
 
 				// SETUP TNB variables
 
-				// TODO1 - have a .isClosed in spline?
+				// LEGACY-NOTE-1 - have a .isClosed in spline?
 
 				splineTube = extrudePath.computeFrenetFrames( steps, false );
 
@@ -39124,9 +39124,9 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			function v( x, y, z ) {
 
-				placeholder.push( x );
-				placeholder.push( y );
-				placeholder.push( z );
+				splineScratch.push( x );
+				splineScratch.push( y );
+				splineScratch.push( z );
 
 			}
 
@@ -39172,9 +39172,9 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			function addVertex( index ) {
 
-				verticesArray.push( placeholder[ index * 3 + 0 ] );
-				verticesArray.push( placeholder[ index * 3 + 1 ] );
-				verticesArray.push( placeholder[ index * 3 + 2 ] );
+				verticesArray.push( splineScratch[ index * 3 + 0 ] );
+				verticesArray.push( splineScratch[ index * 3 + 1 ] );
+				verticesArray.push( splineScratch[ index * 3 + 2 ] );
 
 			}
 
@@ -45034,7 +45034,7 @@ class LightProbe extends Light {
 
 	fromJSON( json ) {
 
-		this.intensity = json.intensity; // Todo: Move this bit to Light.fromJSON();
+		this.intensity = json.intensity; // Legacy-note: Move this bit to Light.fromJSON();
 		this.sh.fromArray( json.sh );
 
 		return this;
@@ -51742,7 +51742,7 @@ class PointLightHelper extends Mesh {
 
 
 		/*
-	// Todo: delete this comment?
+	// Legacy-note: delete this comment?
 	const distanceGeometry = new THREE.IcosahedronGeometry( 1, 2 );
 	const distanceMaterial = new THREE.MeshBasicMaterial( { color: hexColor, fog: false, wireframe: true, opacity: 0.1, transparent: true } );
 

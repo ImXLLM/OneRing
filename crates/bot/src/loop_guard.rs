@@ -240,21 +240,21 @@ mod tests {
     #[test]
     fn consecutive_bot_turns_are_capped_and_human_resets() {
         let mut g = BotLoopGuard::new();
-        assert_eq!(g.observe("c", "bot-a", true, "\u{67e}\u{6cc}\u{627}\u{645} \u{6cc}\u{6a9}", 1), LoopGuardDecision::Allow);
-        assert_eq!(g.observe("c", "bot-a", true, "\u{67e}\u{6cc}\u{627}\u{645} \u{62f}\u{648}", 2), LoopGuardDecision::Allow);
-        assert_eq!(g.observe("c", "bot-a", true, "\u{67e}\u{6cc}\u{627}\u{645} \u{633}\u{647}", 3), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-a", true, "alpha one", 1), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-a", true, "alpha two", 2), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-a", true, "alpha three", 3), LoopGuardDecision::Allow);
         assert_eq!(
-            g.observe("c", "bot-a", true, "\u{67e}\u{6cc}\u{627}\u{645} \u{686}\u{647}\u{627}\u{631}", 4),
+            g.observe("c", "bot-a", true, "alpha four", 4),
             LoopGuardDecision::Suppress(LoopReason::MaxConsecutiveBotTurns)
         );
         // a human breaks the chain — three hops allowed again
-        assert_eq!(g.observe("c", "human-1", false, "\u{62e}\u{648}\u{62f}\u{62a} \u{62c}\u{648}\u{627}\u{628} \u{628}\u{62f}\u{647}", 5), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "human-1", false, "answer it yourself", 5), LoopGuardDecision::Allow);
         assert_eq!(g.consecutive_bot_turns("c"), 0);
-        assert_eq!(g.observe("c", "bot-b", true, "\u{633}\u{648}\u{627}\u{644} \u{627}\u{648}\u{644}", 6), LoopGuardDecision::Allow);
-        assert_eq!(g.observe("c", "bot-b", true, "\u{633}\u{648}\u{627}\u{644} \u{62f}\u{648}\u{645}", 7), LoopGuardDecision::Allow);
-        assert_eq!(g.observe("c", "bot-b", true, "\u{633}\u{648}\u{627}\u{644} \u{633}\u{648}\u{645}", 8), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-b", true, "question one", 6), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-b", true, "question two", 7), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot-b", true, "test text", 8), LoopGuardDecision::Allow);
         assert_eq!(
-            g.observe("c", "bot-b", true, "\u{633}\u{648}\u{627}\u{644} \u{686}\u{647}\u{627}\u{631}\u{645}", 9),
+            g.observe("c", "bot-b", true, "question four", 9),
             LoopGuardDecision::Suppress(LoopReason::MaxConsecutiveBotTurns)
         );
     }
@@ -263,25 +263,25 @@ mod tests {
     #[test]
     fn duplicate_payload_is_suppressed_within_window_then_allowed() {
         let mut g = BotLoopGuard::new();
-        assert_eq!(g.observe("c", "bot", true, "\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}", 10), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot", true, "how is the status?", 10), LoopGuardDecision::Allow);
         // whitespace is normalized — the same text with different spacing is a duplicate
         assert_eq!(
-            g.observe("c", "bot", true, "\u{648}\u{636}\u{639}\u{6cc}\u{62a}   \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}", 20),
+            g.observe("c", "bot", true, "how is the   status?", 20),
             LoopGuardDecision::Suppress(LoopReason::DuplicatePayload)
         );
         assert_eq!(
-            g.observe("c", "bot", true, "\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}", 30),
+            g.observe("c", "bot", true, "how is the status?", 30),
             LoopGuardDecision::Suppress(LoopReason::DuplicatePayload)
         );
         // the 60-second window has passed — the same text is allowed again (a new round)
-        assert_eq!(g.observe("c", "bot", true, "\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}", 10 + 61 + 30), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "bot", true, "how is the status?", 10 + 61 + 30), LoopGuardDecision::Allow);
     }
 
     /// A→B→A ping-pong with identical text is suppressed — the essence of the bot-to-bot storm.
     #[test]
     fn ping_pong_between_two_bots_is_suppressed() {
         let mut g = BotLoopGuard::new();
-        let msg = "\u{633}\u{644}\u{627}\u{645}\u{60c} \u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}";
+        let msg = "hi, how is the status?";
         assert_eq!(g.observe("c", "a", true, msg, 1), LoopGuardDecision::Allow);
         assert_eq!(g.observe("c", "b", true, msg, 2), LoopGuardDecision::Allow);
         // A repeats the same text — the bounce completed; ping-pong outranks plain duplication
@@ -290,11 +290,11 @@ mod tests {
             LoopGuardDecision::Suppress(LoopReason::PingPong)
         );
         // different text from the same A — neither duplicate nor ping-pong; the third hop is allowed
-        assert_eq!(g.observe("c", "a", true, "\u{645}\u{62a}\u{646} \u{62f}\u{6cc}\u{6af}\u{631}", 4), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "a", true, "some other text", 4), LoopGuardDecision::Allow);
         assert_eq!(g.consecutive_bot_turns("c"), 3);
         // the fourth hop — cap
         assert_eq!(
-            g.observe("c", "a", true, "\u{645}\u{62a}\u{646} \u{62f}\u{6cc}\u{6af}\u{631}\u{650} \u{62a}\u{627}\u{632}\u{647}", 5),
+            g.observe("c", "a", true, "some other fresh text", 5),
             LoopGuardDecision::Suppress(LoopReason::MaxConsecutiveBotTurns)
         );
     }
@@ -307,25 +307,25 @@ mod tests {
         // but the (chat, spam) pace accumulates within the window
         let mut t = 1u64;
         for i in 0..MAX_EVENTS_PER_WINDOW {
-            assert_eq!(g.observe("c", "human", false, "\u{633}\u{648}\u{627}\u{644} \u{62a}\u{627}\u{632}\u{647}", t), LoopGuardDecision::Allow);
+            assert_eq!(g.observe("c", "human", false, "a fresh question", t), LoopGuardDecision::Allow);
             t += 1;
             assert_eq!(
-                g.observe("c", "spam", true, &format!("\u{67e}\u{627}\u{633}\u{62e} \u{634}\u{645}\u{627}\u{631}\u{647}\u{654} {i}"), t),
+                g.observe("c", "spam", true, &format!("reply number {i}"), t),
                 LoopGuardDecision::Allow
             );
             t += 10;
         }
         // the sixth message from the same sender — still inside the window; the flood is suppressed
         assert_eq!(
-            g.observe("c", "spam", true, "\u{67e}\u{627}\u{633}\u{62e} \u{62a}\u{627}\u{632}\u{647}\u{654} \u{62f}\u{6cc}\u{6af}\u{631}", t),
+            g.observe("c", "spam", true, "another fresh reply", t),
             LoopGuardDecision::Suppress(LoopReason::RateLimit)
         );
         // another sender in the same conversation — not its flood, and the hops have reset
-        assert_eq!(g.observe("c", "other", true, "\u{67e}\u{6cc}\u{627}\u{645} \u{645}\u{633}\u{62a}\u{642}\u{644}", t + 1), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "other", true, "an independent message", t + 1), LoopGuardDecision::Allow);
         // a human resets; once the window passes, the first sender makes room again too
-        assert_eq!(g.observe("c", "human", false, "\u{6a9}\u{627}\u{641}\u{6cc} \u{627}\u{633}\u{62a}", t + 2), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "human", false, "that is enough", t + 2), LoopGuardDecision::Allow);
         assert_eq!(
-            g.observe("c", "spam", true, "\u{67e}\u{627}\u{633}\u{62e} \u{628}\u{639}\u{62f} \u{627}\u{632} \u{67e}\u{646}\u{62c}\u{631}\u{647}", t + 200),
+            g.observe("c", "spam", true, "a reply after the window", t + 200),
             LoopGuardDecision::Allow
         );
     }
@@ -334,8 +334,8 @@ mod tests {
     #[test]
     fn conversations_are_isolated() {
         let mut g = BotLoopGuard::new();
-        assert_eq!(g.observe("c1", "bot", true, "\u{645}\u{634}\u{62a}\u{631}\u{6a9}", 1), LoopGuardDecision::Allow);
-        assert_eq!(g.observe("c2", "bot", true, "\u{645}\u{634}\u{62a}\u{631}\u{6a9}", 2), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c1", "bot", true, "shared text", 1), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c2", "bot", true, "shared text", 2), LoopGuardDecision::Allow);
         assert_eq!(g.consecutive_bot_turns("c1"), 1);
         assert_eq!(g.consecutive_bot_turns("c2"), 1);
     }
@@ -345,13 +345,13 @@ mod tests {
     #[test]
     fn explicit_limits_shape_the_guard() {
         let mut g = BotLoopGuard::with_limits(10, 1);
-        assert_eq!(g.observe("c", "a", true, "\u{627}\u{648}\u{644}", 1), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "a", true, "first", 1), LoopGuardDecision::Allow);
         assert_eq!(
-            g.observe("c", "a", true, "\u{62f}\u{648}\u{645}", 2),
+            g.observe("c", "a", true, "second", 2),
             LoopGuardDecision::Suppress(LoopReason::MaxConsecutiveBotTurns)
         );
         // a silence gap beyond the window — the previous chain expired and the «first» text is allowed again
-        assert_eq!(g.observe("c", "a", true, "\u{627}\u{648}\u{644}", 1 + 11), LoopGuardDecision::Allow);
+        assert_eq!(g.observe("c", "a", true, "first", 1 + 11), LoopGuardDecision::Allow);
     }
 
     /// A human is never suppressed — not even with duplicate text or a flood.
@@ -360,9 +360,9 @@ mod tests {
         let mut g = BotLoopGuard::new();
         for i in 0u64..10 {
             assert_eq!(
-                g.observe("c", "human", false, "\u{647}\u{645}\u{627}\u{646} \u{633}\u{648}\u{627}\u{644}", i + 1),
+                g.observe("c", "human", false, "the same question", i + 1),
                 LoopGuardDecision::Allow,
-                "\u{67e}\u{6cc}\u{627}\u{645} \u{627}\u{646}\u{633}\u{627}\u{646} \u{647}\u{631}\u{6af}\u{632} \u{633}\u{631}\u{6a9}\u{648}\u{628} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}"
+                "test text"
             );
         }
     }
@@ -370,8 +370,8 @@ mod tests {
     /// Stable hash — consecutive spaces collapse and semantically equal texts hash equal.
     #[test]
     fn payload_hash_normalizes_whitespace() {
-        assert_eq!(payload_hash("\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}"), payload_hash("\u{648}\u{636}\u{639}\u{6cc}\u{62a}   \n\u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}"));
-        assert_ne!(payload_hash("\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}"), payload_hash("\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}\u{61f}"));
+        assert_eq!(payload_hash("how is the status?"), payload_hash("how   is the status?"));
+        assert_ne!(payload_hash("how is the status?"), payload_hash("how is the status??"));
         assert_eq!(payload_hash(""), payload_hash("   \t\n  "));
     }
 }

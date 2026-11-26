@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * KIAN miniapp — guest gate: a clean "Quick experimental sign-in / Browser" banner + one-click
- * demo persona sign-in (only when the kernel is in dev mode) + a transparent guide to connecting
- * from inside Telegram. Replaces the locked screen and dry technical error.
+ * MAIRON mini-app — guest gate: a clean "Quick experimental sign-in / Browser"
+ * banner + one-click demo persona sign-in (only when the kernel is in dev mode)
+ * + a transparent guide to connecting from inside Telegram. Replaces the locked
+ * screen and dry technical error.
  *
- * Real sign-in still goes only through Telegram's signed initData and the kernel HMAC; browser
- * mode opens only public endpoints (market and national economy), and demo sign-in
- * works only when the server is up with KIAN_DEV_MODE=1.
+ * Real sign-in still goes only through Telegram's signed initData and the kernel
+ * HMAC; browser mode opens only public endpoints, and demo sign-in works only
+ * when the server is up with KIAN_DEV_MODE=1.
  */
 
 import { useState } from "react";
@@ -25,8 +26,8 @@ function botUsername(): string {
 }
 
 export function GuestGate({
-  title = "\u0628\u0631\u0627\u06cc \u0627\u06cc\u0646 \u0628\u062e\u0634\u060c \u0648\u0631\u0648\u062f \u0627\u0632 \u062f\u0627\u062e\u0644 \u062a\u0644\u06af\u0631\u0627\u0645 \u0644\u0627\u0632\u0645 \u0627\u0633\u062a",
-  hint = "\u0647\u0648\u06cc\u062a KIAN \u0641\u0642\u0637 \u0628\u0627 \u0627\u0645\u0636\u0627\u06cc \u0631\u0645\u0632\u0646\u06af\u0627\u0631\u06cc‌\u0634\u062f\u0647\u0654 \u062a\u0644\u06af\u0631\u0627\u0645 (HMAC \u06a9\u0631\u0646\u0644) \u0633\u0627\u062e\u062a\u0647 \u0645\u06cc‌\u0634\u0648\u062f — \u067e\u0633 \u0631\u0645\u0632\u06cc \u0627\u0632 \u062a\u0648 \u0646\u0645\u06cc‌\u062e\u0648\u0627\u0647\u06cc\u0645 \u0648 \u0647\u0631\u06af\u0632 \u062f\u0631 \u0645\u0631\u0648\u0631\u06af\u0631 \u062c\u0639\u0644 \u0646\u0645\u06cc‌\u0634\u0648\u062f.",
+  title = "Sign-in from inside Telegram is required for this section",
+  hint = "Your MAIRON identity is built only from Telegram's HMAC-signed initData verified by the kernel — we never ask for a password and never fabricate one in the browser.",
   whatWorksInPreview = true,
 }: {
   title?: string;
@@ -56,7 +57,7 @@ export function GuestGate({
       await loginAsDemoPersona(persona);
     } catch (err) {
       toast({
-        title: "\u0648\u0631\u0648\u062f \u0622\u0632\u0645\u0627\u06cc\u0634\u06cc \u0641\u0639\u0627\u0644 \u0646\u0634\u062f",
+        title: "Experimental sign-in failed",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -66,9 +67,9 @@ export function GuestGate({
   };
 
   const personas: { key: DemoPersona; label: string }[] = [
-    { key: "creator", label: "🎨 \u0648\u0631\u0648\u062f \u06cc\u06a9‌\u06a9\u0644\u06cc\u06a9\u06cc: \u0633\u0627\u0632\u0646\u062f\u0647 (#1001)" },
-    { key: "buyer", label: "🛒 \u0648\u0631\u0648\u062f \u06cc\u06a9‌\u06a9\u0644\u06cc\u06a9\u06cc: \u062e\u0631\u06cc\u062f\u0627\u0631 (#2002)" },
-    { key: "affiliate", label: "🔗 \u0648\u0631\u0648\u062f \u06cc\u06a9‌\u06a9\u0644\u06cc\u06a9\u06cc: \u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628 (#3003)" },
+    { key: "creator", label: "🎨 One-click: Creator (#1001)" },
+    { key: "buyer", label: "🛒 One-click: Buyer (#2002)" },
+    { key: "affiliate", label: "🔗 One-click: Affiliate (#3003)" },
   ];
 
   return (
@@ -87,7 +88,7 @@ export function GuestGate({
           className="mx-auto flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-royal-600/30 ring-1 ring-gold-400/40 transition hover:opacity-90 active:scale-[0.98]"
         >
           <FlaskConical className="size-4" aria-hidden />
-          🧪 &#x648;&#x631;&#x648;&#x62f; &#x633;&#x631;&#x6cc;&#x639; &#x622;&#x632;&#x645;&#x627;&#x6cc;&#x634;&#x6cc; / &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631;
+          🧪 Quick experimental sign-in / Browser
         </button>
       )}
 
@@ -95,7 +96,7 @@ export function GuestGate({
       {whatWorksInPreview && (
         <div className="flex w-full flex-col gap-2 rounded-xl bg-zinc-950/70 p-3 ring-1 ring-royal-500/30">
           <p className="text-[11px] font-bold leading-5 text-royal-300">
-            🧬 &#x648;&#x631;&#x648;&#x62f; &#x628;&#x627; &#x67e;&#x631;&#x633;&#x648;&#x646;&#x627;&#x6cc; &#x62f;&#x645;&#x648; (&#x62a;&#x633;&#x62a;&#x650; &#x645;&#x62d;&#x644;&#x6cc; &#x6a9;&#x627;&#x645;&#x644; — &#x633;&#x627;&#x62e;&#x62a;&#x60c; &#x62e;&#x631;&#x6cc;&#x62f; &#x648; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a;):
+            🧬 Sign in with a demo persona (full local test — build, buy and withdraw):
           </p>
           <div className="grid gap-2">
             {personas.map((p) => (
@@ -114,41 +115,43 @@ export function GuestGate({
             ))}
           </div>
           <p className="text-[10px] leading-4 text-zinc-500">
-            &#x628;&#x627; &#x627;&#x6cc;&#x646; &#x633;&#x647; &#x67e;&#x631;&#x633;&#x648;&#x646;&#x627; &#x645;&#x6cc;‌&#x62a;&#x648;&#x627;&#x646;&#x6cc; &#x627;&#x645;&#x634;&#x628; &#x6a9;&#x644; &#x686;&#x631;&#x62e;&#x647; &#x631;&#x627; &#x62f;&#x631; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x62a;&#x633;&#x62a; &#x6a9;&#x646;&#x6cc;:
-            &#x633;&#x627;&#x62e;&#x62a;&#x650; &#x627;&#x67e; ← &#x627;&#x646;&#x62a;&#x634;&#x627;&#x631; ← &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644; ← &#x62e;&#x631;&#x6cc;&#x62f; ← &#x627;&#x633;&#x6a9;&#x631;&#x648; ← &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a; &#x6a9;&#x631;&#x6cc;&#x67e;&#x62a;&#x648;.
+            With these three personas you can test the whole loop in the browser:
+            build an app → publish → referral link → buy → escrow → withdraw crypto.
           </p>
         </div>
       )}
       {whatWorksInPreview && (
         <p className="text-[11px] leading-5 text-zinc-500">
-          &#x628;&#x627; &#x627;&#x6cc;&#x646; &#x62d;&#x627;&#x644;&#x62a; &#x645;&#x6cc;‌&#x62a;&#x648;&#x627;&#x646;&#x6cc; &#x628;&#x627;&#x632;&#x627;&#x631;&#x60c; &#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x645;&#x62d;&#x635;&#x648;&#x644;&#x627;&#x62a; &#x648; &#x627;&#x642;&#x62a;&#x635;&#x627;&#x62f; &#x645;&#x644;&#x6cc; &#x631;&#x627; &#x628;&#x628;&#x6cc;&#x646;&#x6cc;&#x61b;
-          &#x62e;&#x631;&#x6cc;&#x62f; &#x648; &#x641;&#x631;&#x648;&#x634; &#x648; &#x627;&#x633;&#x62a;&#x648;&#x62f;&#x6cc;&#x648;&#x6cc; AI &#x641;&#x642;&#x637; &#x62f;&#x627;&#x62e;&#x644; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x641;&#x639;&#x627;&#x644; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
+          In this mode you can see the market, product previews and the national economy;
+          buying, selling and the AI studio run only inside Telegram.
         </p>
       )}
 
       {/* Transparent guide to connecting for real */}
-      <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-950/70 p-3 text-right ring-1 ring-zinc-800">
+      <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-950/70 p-3 text-left ring-1 ring-zinc-800">
         <div className="flex items-center gap-2 text-[11px] font-bold text-gold-400">
           <Wifi className="size-3.5" aria-hidden />
-          &#x627;&#x62a;&#x635;&#x627;&#x644; &#x648;&#x627;&#x642;&#x639;&#x6cc; &#x62f;&#x631; &#x6f3; &#x642;&#x62f;&#x645;:
+          Real sign-in in 3 steps:
         </div>
-        <ol className="list-inside list-decimal space-y-1 text-[11px] leading-5 text-zinc-400">
-          <li>&#x631;&#x628;&#x627;&#x62a; KIAN &#x631;&#x627; &#x62f;&#x631; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x628;&#x627;&#x632; &#x6a9;&#x646;: <code dir="ltr" className="font-mono text-zinc-300">@{botUsername()}</code></li>
-          <li>&#x62f;&#x6a9;&#x645;&#x647;&#x654; «&#x648;&#x631;&#x648;&#x62f; &#x628;&#x647; &#x645;&#x6cc;&#x646;&#x6cc;‌&#x627;&#x67e;» &#x631;&#x627; &#x628;&#x632;&#x646; (&#x645;&#x646;&#x648;&#x6cc; Start &#x6cc;&#x627; /link).</li>
-          <li>&#x647;&#x645;&#x6cc;&#x646; &#x635;&#x641;&#x62d;&#x647; &#x62f;&#x627;&#x62e;&#x644; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x628;&#x627;&#x632; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f; &#x648; &#x648;&#x631;&#x648;&#x62f; &#x628;&#x6cc;‌&#x635;&#x62f;&#x627; &#x627;&#x646;&#x62c;&#x627;&#x645; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.</li>
+        <ol className="list-inside list-decimal space-y-1 text-left text-[11px] leading-5 text-zinc-400">
+          <li>
+            Open the MAIRON bot in Telegram: <code className="font-mono text-zinc-300">@{botUsername()}</code>
+          </li>
+          <li>Tap the “Open the mini-app” button (the Start menu, or /link).</li>
+          <li>The same page opens inside Telegram and sign-in happens silently.</li>
         </ol>
         <button
           type="button"
           onClick={() => void copyBotLink()}
           className="mx-auto mt-1 w-full max-w-[240px] rounded-lg bg-zinc-800 px-3 py-2 text-[11px] font-bold text-zinc-200 ring-1 ring-zinc-700 hover:bg-zinc-700"
         >
-          {copied ? "\u0644\u06cc\u0646\u06a9 \u0631\u0628\u0627\u062a \u06a9\u067e\u06cc \u0634\u062f ✓" : "\u06a9\u067e\u06cc \u0644\u06cc\u0646\u06a9 \u0631\u0628\u0627\u062a \u062a\u0644\u06af\u0631\u0627\u0645"}
+          {copied ? "Bot link copied ✓" : "Copy the Telegram bot link"}
         </button>
       </div>
 
       <p className="flex items-center justify-center gap-1.5 text-[10px] text-zinc-600">
         <ShieldCheck className="size-3" aria-hidden />
-        &#x646;&#x634;&#x633;&#x62a; &#x62a;&#x648; &#x641;&#x642;&#x637; &#x631;&#x648;&#x6cc; &#x633;&#x631;&#x648;&#x631; &#x631;&#x633;&#x645;&#x6cc; &#x6a9;&#x631;&#x646;&#x644; &#x633;&#x627;&#x62e;&#x62a;&#x647; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f; — &#x628;&#x62f;&#x648;&#x646; &#x631;&#x645;&#x632;&#x60c; &#x628;&#x62f;&#x648;&#x646; &#x631;&#x6cc;&#x633;&#x6a9;.
+        Your session is built only on the official kernel server — no passwords, no risk.
       </p>
     </div>
   );
@@ -160,15 +163,15 @@ export function PreviewBanner() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gold-400/35 bg-gold-400/10 px-3 py-2 text-[11px] leading-5 text-gold-300">
       <span>
-        🧪 <strong className="font-bold">&#x62d;&#x627;&#x644;&#x62a; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x622;&#x632;&#x645;&#x627;&#x6cc;&#x634;&#x6cc;</strong> — \u0641\u0642\u0637 \u0628\u062e\u0634‌\u0647\u0627\u06cc
-        &#x639;&#x645;&#x648;&#x645;&#x6cc; &#x641;&#x639;&#x627;&#x644; &#x627;&#x633;&#x62a;&#x61b; &#x628;&#x631;&#x627;&#x6cc; &#x62e;&#x631;&#x6cc;&#x62f;&#x60c; &#x641;&#x631;&#x648;&#x634; &#x648; &#x627;&#x633;&#x62a;&#x648;&#x62f;&#x6cc;&#x648;&#x6cc; AI &#x627;&#x632; &#x62f;&#x627;&#x62e;&#x644; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x648;&#x627;&#x631;&#x62f; &#x634;&#x648;.
+        🧪 <strong className="font-bold">Experimental browser mode</strong> — only public sections
+        are active. For buying, selling and the AI studio, enter from inside Telegram.
       </span>
       <button
         type="button"
         onClick={exitPreview}
         className="shrink-0 rounded-lg bg-gold-400/15 px-2.5 py-1 font-bold text-gold-300 ring-1 ring-gold-400/40 hover:bg-gold-400/25"
       >
-        &#x62a;&#x644;&#x627;&#x634; &#x628;&#x631;&#x627;&#x6cc; &#x648;&#x631;&#x648;&#x62f; &#x648;&#x627;&#x642;&#x639;&#x6cc;
+        Try real sign-in
       </button>
     </div>
   );
@@ -178,9 +181,9 @@ const PERSONA_META: Record<
   DemoPersona,
   { label: string; tag: string; href: string }
 > = {
-  creator: { label: "\u0633\u0627\u0632\u0646\u062f\u0647", tag: "#1001", href: "/builder" },
-  buyer: { label: "\u062e\u0631\u06cc\u062f\u0627\u0631", tag: "#2002", href: "/market" },
-  affiliate: { label: "\u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628", tag: "#3003", href: "/market" },
+  creator: { label: "Creator", tag: "#1001", href: "/builder" },
+  buyer: { label: "Buyer", tag: "#2002", href: "/market" },
+  affiliate: { label: "Affiliate", tag: "#3003", href: "/market" },
 };
 
 /**
@@ -207,13 +210,13 @@ export function DemoPersonaBar() {
   return (
     <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-royal-500/30 bg-royal-500/10 px-2.5 py-2 text-[11px]">
       <span className="font-bold text-royal-300">
-        🧬 &#x62d;&#x627;&#x644;&#x62a; &#x62a;&#x633;&#x62a;:
+        🧬 Test mode:
         {" "}
         <strong className="text-gold-400">
           {PERSONA_META[activePersona].label} {PERSONA_META[activePersona].tag}
         </strong>
       </span>
-      <span className="mr-auto flex flex-wrap gap-1">
+      <span className="ml-auto flex flex-wrap gap-1">
         {(Object.keys(PERSONA_META) as DemoPersona[]).map((p) => (
           <button
             key={p}

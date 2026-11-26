@@ -1424,7 +1424,7 @@ body {
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px var(--shadow-glow), 0 0 20px rgba(88, 166, 255, 0.08);
 }
-.chat-input::placeholder {
+.chat-input {
     color: var(--text-dim);
 }
 

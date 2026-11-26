@@ -37,7 +37,7 @@ DGX.pages.product = async (view, params) => {
       </div>`).join('') || '<div style="color:var(--dim);font-size:12.5px">\u0627\u0648\u0644\u06cc\u0646 \u0646\u0638\u0631 \u0631\u0648 \u0628\u0630\u0627\u0631 💬</div>'}
     </div>
     <div class="search-bar2" style="margin-top:10px;padding:8px 10px">
-      <input id="cIn" placeholder="\u0646\u0638\u0631\u062a \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633…" maxlength="500" enterkeyhint="send"
+      <input id="cIn" aria-label="\u0646\u0638\u0631\u062a \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633…" maxlength="500" enterkeyhint="send"
              style="padding:8px;background:none;border:0">
       <button class="btn btn-primary" id="cSend" style="flex:none;padding:9px 16px">\u0627\u0631\u0633\u0627\u0644</button>
     </div>

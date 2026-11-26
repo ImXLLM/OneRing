@@ -19,18 +19,24 @@ pub enum BotError {
 }
 
 impl BotError {
-    /// User-facing text (Persian, no technical/secret leakage).
+    /// User-facing text (international English, no technical/secret leakage).
     #[must_use]
     pub fn user_text(&self) -> String {
         match self {
             Self::Transport(_) => {
-                "\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a} — \u{6a9}\u{645}\u{6cc} \u{628}\u{639}\u{62f} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{627}\u{645}\u{62a}\u{62d}\u{627}\u{646} \u{6a9}\u{646}\u{6cc}\u{62f} (/help)".to_owned()
+                "The kernel is not reachable right now — please try again shortly (/help)".to_owned()
             }
             Self::Kernel { code, .. } => match code.as_str() {
-                "IDENTITY_DISABLED" => "\u{647}\u{648}\u{6cc}\u{62a} \u{631}\u{648}\u{6cc} \u{6a9}\u{631}\u{646}\u{644} \u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644} \u{627}\u{633}\u{62a} (KIAN_BOT_TOKEN \u{62a}\u{646}\u{638}\u{6cc}\u{645} \u{646}\u{634}\u{62f}\u{647})".to_owned(),
-                "INVALID_INIT_DATA" => "\u{627}\u{645}\u{636}\u{627}\u{6cc} \u{647}\u{648}\u{6cc}\u{62a} \u{67e}\u{630}\u{6cc}\u{631}\u{641}\u{62a}\u{647} \u{646}\u{634}\u{62f} — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}".to_owned(),
-                "SESSION_EXPIRED" | "SESSION_REQUIRED" => "\u{646}\u{634}\u{633}\u{62a} \u{645}\u{646}\u{642}\u{636}\u{6cc} \u{634}\u{62f} — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}".to_owned(),
-                _ => format!("\u{6a9}\u{631}\u{646}\u{644} \u{62e}\u{637}\u{627} \u{62f}\u{627}\u{62f} ({code}) — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}"),
+                "IDENTITY_DISABLED" => {
+                    "Identity is currently disabled on the kernel (KIAN_BOT_TOKEN is not set)".to_owned()
+                }
+                "INVALID_INIT_DATA" => {
+                    "Identity signature was rejected — please try again".to_owned()
+                }
+                "SESSION_EXPIRED" | "SESSION_REQUIRED" => {
+                    "Your session has expired — please try again".to_owned()
+                }
+                _ => format!("The kernel reported an error ({code}) — please try again"),
             },
         }
     }

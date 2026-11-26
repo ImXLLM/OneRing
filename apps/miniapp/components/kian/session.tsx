@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * KIAN miniapp — session provider (@kian/sdk layer).
+ * MAIRON mini-app — session provider (@kian/sdk layer).
  *
  * Fail-closed flow with a friction-free sign-in experience:
  * 1. A valid stored token → straight to /me.
  * 2. Telegram initData (WebApp or browser fragment) → POST /auth/telegram → token.
- * 3. Neither → guest gate with a clean "🧪 Quick experimental sign-in / Browser" banner —
+ * 3. Neither → guest gate with a clean "Quick experimental sign-in / Browser" banner —
  *    not a locked screen or a dry technical error.
  *
  * The experimental browser mode opens only public endpoints (market and national economy);
@@ -203,7 +203,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           detail:
             err instanceof Error
               ? err.message
-              : "\u0648\u0631\u0648\u062f \u0622\u0632\u0645\u0627\u06cc\u0634\u06cc \u062f\u0631 \u0627\u06cc\u0646 \u0633\u0631\u0648\u0631 \u0641\u0639\u0627\u0644 \u0646\u06cc\u0633\u062a",
+              : "Experimental sign-in is not enabled on this server",
         });
         throw err;
       }

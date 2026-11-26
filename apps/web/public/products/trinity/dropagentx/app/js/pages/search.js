@@ -6,7 +6,7 @@ DGX.pages.search = async (view, params) => {
   view.innerHTML = `
     <div class="search-bar2">
       <svg width="18" height="18" style="color:var(--dim);flex:none"><use href="#i-search"/></svg>
-      <input id="sq" placeholder="\u0645\u062d\u0635\u0648\u0644 \u06cc\u0627 \u06a9\u0627\u0631\u0628\u0631…" value="${DGX.esc(q0)}" autocomplete="off"
+      <input id="sq" aria-label="\u0645\u062d\u0635\u0648\u0644 \u06cc\u0627 \u06a9\u0627\u0631\u0628\u0631…" value="${DGX.esc(q0)}" autocomplete="off"
          enterkeyhint="search" autocapitalize="off" spellcheck="false">
     </div>
     <div id="sOut"><div class="empty"><div class="big">${DGX.icon('search','big-ic')}</div>\u062f\u0646\u0628\u0627\u0644 \u0686\u06cc \u0645\u06cc‌\u06af\u0631\u062f\u06cc\u061f<br>

@@ -6,10 +6,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-vazir), "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 
-  /* KIAN royal palette */
+  /* MAIRON royal palette */
   --color-royal-400: oklch(0.65 0.16 285);
   --color-royal-500: oklch(0.55 0.19 285);
   --color-royal-600: oklch(0.45 0.19 285);
@@ -49,7 +49,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* KIAN: dark-royal-first — no dark class needed */
+/* MAIRON: dark-royal-first — no dark class needed */
 :root {
   --radius: 0.625rem;
   --background: oklch(0.13 0.02 285);

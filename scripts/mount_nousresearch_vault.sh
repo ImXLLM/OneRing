@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # mount_nousresearch_vault.sh — mounting a selected subset of the NousResearch/hermes-agent vault
-# (Wave 2 - Step 2) under docs/vault/nousresearch_hermes/ with secret sanitization.
+# (the phase-2 vault drop) under docs/vault/nousresearch_hermes/ with secret sanitization.
 #
 # ~60 selected files: listing and manifest + Rust port maps (folder 06) + the complete
 # Hermes-Function-Calling schema (folder 05) + the agent-loop core and compressor (folder 01) +

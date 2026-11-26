@@ -384,7 +384,7 @@ with per-step reports under [`docs/rea/`](./docs/rea).
 | **TOTAL VERDICT** | **92** | **100** | 🏆 **PASS** (`pass_threshold = 85`, `hard_failures: []`) |
 
 **Verified metrics at audit time:** 185 Rust files · 212 TS/JS files · 11 crates · 334 `"KbEntry"`
-rows at audit time (now **334** after the Wave-10 `dna:wave10:founder-war-room-grand-ui` injection — see
+rows at audit time (now **334** after the founder-war-room `dna:wave10:founder-war-room-grand-ui` seed injection — see
 *Repository Design*) · 0 `todo!()` markers. The gate transparently reports one advisory: 49 files exceed the REA
 `.oxlintrc` 500-line style limit (largest: `crates/ai/src/free_llm_registry.rs` at 960 lines).
 
