@@ -6,10 +6,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-vazir), "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist Mono", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono);
 
-  /* KIAN royal palette */
+  /* MAIRON sovereign palette */
+  --color-mairon-gold: oklch(0.78 0.14 85);
+  --color-mairon-ink: oklch(0.18 0.02 270);
   --color-royal-400: oklch(0.65 0.16 285);
   --color-royal-500: oklch(0.55 0.19 285);
   --color-royal-600: oklch(0.45 0.19 285);

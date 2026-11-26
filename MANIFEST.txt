@@ -1,38 +1,115 @@
-═══════════════════════════════════════════════════════════════════════════════
+===============================================================================
  MAIRON — Sovereign Intelligence, Quantitative Execution & Autonomous Capital OS
- LAW Enforcement Commit: Pure-English Source Purge + Sovereign Brand Alignment
-═══════════════════════════════════════════════════════════════════════════════
- Packaged: 2026-11-26 · base kernel 1c313dd (Step-1 gates all closed, 100/100)
- Enforcement commit: 4d9dc6d4731441f8fbe7cba3348ab7e8e35b42bc (4d9dc6d)
+ Alignment Commit: TypeScript Monorepo Upgraded to 100% MAIRON Architecture
+===============================================================================
+ Packaged: 2026-11-27 · base kernel 99bf70e (laws enforced, pure-English tree)
+ Alignment commit: recorded in the delivery commit message (Step 3 credit)
 
- 1) LAWS ENFORCED IN THIS COMMIT
-    LAW 1  Sovereign brand identity = MAIRON. All v1/v2/Wave/Step developmental
-           badges stripped from user-facing surfaces (README, War-Room, Neural
-           HUD, Dockerfile, start-railway, smoke scripts). Developmental tags
-           deleted: v1.1.0-wave10 (local + remote). Developmental doc trees
-           removed: docs/vault, docs/rea, docs/history, docs/launch, FA/ES/ZH
-           README editions + FA-named dev reports.
-    LAW 2  100% pure English source: rg '[\u0600-\u06FF]' over crates/ tools/
-           scripts/ apps/ packages/ docs/ contracts/ infra/ tests/ KIA-BRAIN-OS/
-           OMNI-MODEL-GENOME/ locales/ and every root file -> 0 matches.
-           Persian (fa) is a pluggable PATCH_READY_SLOT: locales/fa.patch.json
-           (ASCII \uXXXX escapes) + runtime locale patches kept via \uXXXX
-           escapes in JS/Rust string literals so every bilingual fixture and
-           tokenizer test behaves identically at runtime.
-    LAW 3  IMPERIUM principles preserved: single authoritative state contract
-           (contracts crate + TS packages), non-destructive perspective
-           switching (War-Room applyLocale re-renders from state), and zero
-           placeholder stubs introduced by the purge.
+ 1) SCOPE OF THIS COMMIT
+    packages/contracts, packages/config, packages/sdk, apps/web and apps/admin
+    upgraded from ~30% legacy alignment to 100% alignment with the complete
+    MAIRON sovereign architecture.
 
- 2) SEED DATABASE (re-baked, all-English institutional records)
-    408 previously-Persian rows across 10 tables translated (Account, Product,
-    KbEntry, User, MemoryNote, BuilderSession/Message, UserLabTelemetryLog,
-    ChairmanDirectiveLog, FounderWarRoomTick). _sqlx_migrations re-checksummed
-    for all 14 migrations (sha384 of the translated SQL files). Invariants:
-    PRAGMA integrity_check = ok · SUM(Posting.amount) = 0 · KbEntry = 334 ·
-    FounderWarRoomTick = 24 ($9.55 day-1) · "Product" = 19 columns.
+    packages/contracts — nine MAIRON domain modules (src/mairon/):
+      ledger.ts       double-entry Account/JournalEntry/Posting with the
+                      SUM(Posting.amount) == 0 invariant, the eight-state
+                      escrow machine, the full 19-column Product row.
+      trinity.ts      Alpha IQ 136 -> CommandCenter IQ 139 -> Mairon IQ 150,
+                      ReaAuditReport (gate 85), TwoKeyPublishTicket,
+                      BayesianReviewSummary, 3x9 OpenBot DNA manifest.
+      arda.ts         20-locale manifest (en native default,
+                      PATCH_READY_SLOT for pluggable patches incl. fa-IR),
+                      SvgFlagSpec (viewBox 0 0 20 14), SkillMdExport.
+      superstudio.ts  UxMorphMode (ToySpark/CreatorStudio/ProTerminal),
+                      9 modalities, SearchReplacePatch, TimeTravelCheckpoint,
+                      McpToolInvocation, MaironVerifiedSeal.
+      quant.ts        FixedPointI128, TickSize, StrategyAst,
+                      BacktestCausalReport (Sharpe >= 1.20 gate, SHA-256
+                      claim hash), 8 keyless venue descriptors.
+      treasury.ts     Base-8453 constants (chainId 8453, USDC
+                      0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, $0xKIA, XTR),
+                      four-stream split (20%/80% unreferred, 10%/80%+10%
+                      referred, 100% boosts, 1.5% spread), capital reserve
+                      partition ($33.00/$15.00/$350.00), 5x9=45 genome slots.
+      neuralHud.ts    FibonacciSphereNode (180 nodes, dual shell 120+60),
+                      AudioSafetyLimiterConfig (alimiter=limit=0.95),
+                      UserLabTelemetryRow, SftDpoExportLine, 4 Grok voices.
+      warRoom.ts      WarRoomStateSnapshot mirrors: 24 hourly causal ticks,
+                      co-founder cast, chairman directives, +$9.55 -> $42.55
+                      ledger, ELI5 cards.
+      worldState.ts   MaironWorldState — the single authoritative snapshot,
+                      non-destructive perspective switching, jobs, telemetry.
+    Legacy exports are untouched: every existing import keeps compiling.
 
- 3) ARTIFACT SHA-256 (post-transform working tree)
+    packages/config — MAIRON brand constants, Base-8453 settlement constants,
+    charter BPS, capital reserve, quality gates, the canonical endpoint table,
+    runtime endpoint resolvers (resolveApiBase/KernelUrl/WarRoomUrl/
+    NeuralHudUrl), and the 69-key P0 -> P5 environment schema
+    (MAIRON_ENV_SPEC, auditEnvReadiness) with exactly 69 unique keys.
+
+    packages/sdk — MaironSdkClient with fully implemented domain namespaces
+    wrapping real /api/v1/* routes: trinity (alpha/build/orchestrate/status/
+    publishTwoKey/submitReview), arda (listLocales/ecosystemMatrix/
+    switchLocale/localize/exportSkillMd), superStudio (morphMode/
+    executeModality/portfolio), supremacy (applySurgicalDiff/listCheckpoints/
+    restoreCheckpoint/executeWorkflow/invokeMcpTool/verifySeal), quant
+    (listVenues/runCausalBacktest/listStrategies/verifyClaimHash via WebCrypto
+    SHA-256/deployLiveStrategy with the 1.20 Sharpe gate), treasury
+    (getCharterState/calculateSplit/listGenomeModels/setGenomeRouting),
+    neuralHud (getGraphState/renderPreset/dashboardUrl), grokLab (uiBundle/
+    runSimulation/exportSftDpo), warRoom (getState/stepTick/sendDirective/
+    reset/explainSimple/dashboardUrl), admin control plane, and
+    syncWorldState() — the unified authoritative snapshot (degraded
+    subsystems keep their last known payload; nothing is dropped).
+    KianSdkClient/createKianSdk aliases + the legacy flat client keep every
+    existing import working.
+
+    apps/web — the MAIRON Sovereign Web OS:
+      lib/mairon/world-state.tsx        single authoritative store (reducer +
+                                        provider); SWITCH_PERSPECTIVE moves a
+                                        pointer and resets nothing; the
+                                        war-room autoplay clock is
+                                        provider-owned so background jobs
+                                        advance across perspective switches.
+      components/mairon/mairon-os.tsx   OS shell: brand header, posture chips,
+                                        5-perspective switcher, Ctrl+K
+                                        command palette, status bar.
+      perspective-super-studio.tsx      Trinity ladder, 9 modalities, REA seal
+                                        gate, dual Ocean/Cosmos WebAudio
+                                        synthesizer (safety ceiling).
+      perspective-quant.tsx             causal backtest runner, Sharpe >= 1.20
+                                        gate badge, 14-metric grid, DAG
+                                        telemetry, SHA-256 claim verification.
+      perspective-treasury.tsx          charter streams, atomic split
+                                        calculator, Base USDC + XTR feed,
+                                        5x9 genome router (ManualOverride /
+                                        AgentAutoDecision).
+      perspective-neural-hud.tsx        180-node dual-shell Fibonacci topology
+                                        canvas, HUD preset synthesis, 4 Grok
+                                        voice modes, /neural-hud link.
+      perspective-war-room.tsx          24-tick causal feed, chairman
+                                        directive console, wallet ledger,
+                                        ELI5 cards, /war-room link.
+    Root layout rebranded: lang="en" dir="ltr", MAIRON metadata; the Telegram
+    mini-app and static artifacts remain as legacy routes.
+
+    apps/admin — the MAIRON Institutional Governance & Audit Console:
+      ledger auditor (SUM(Posting.amount) == 0 monitor + escrow state machine
+      + session-bound release/refund controls), two-key publish vault (HITL
+      approve/reject + MaironVerifiedSeal inspector re-deriving
+      mairon-seal:<sha256[0..16]>), 45-model genome override matrix + 69-key
+      P0->P5 readiness monitor, 10-DNA telemetry table with 1-click SFT/DPO
+      JSONL export, and the War-Room chairman override/reset console.
+
+ 2) ANTI-RECYCLE VERIFICATION GATES (rerun on this tree)
+    rg '[\u0600-\u06FF]' over the entire repository                -> 0 matches
+    TODO/FIXME/placeholder over every modified JSON/TS/TSX file     -> 0 matches
+    node type-strip parse over all 26 modified TS/TSX files         -> all parse
+    cargo test --workspace                            -> 784 passed / 0 failed
+    cargo clippy --workspace --all-targets -D warnings -> 0 warnings (exit 0)
+    python3 tools/war-room/render_war_room.py --check  -> exit 0 (byte-identical)
+
+ 3) ARTIFACT SHA-256 (unchanged canonical artifacts)
     d621be984201d7317bd622e5e0de7f56b6b3ff49a2715244ec36945e0cea2690  tools/war-room/war_room.html
     6cb1bd88490975648c0f411b3b785d24e411a635ac9cbc5ef79342528f260460  tools/war-room/render_war_room.py
     44fa984c9355616089a375a9f94da439a9c62a019caa6850926c6a76b9357987  tools/neural-hud/neural_hud.html
@@ -46,11 +123,48 @@
     6d4e5c714cf5ceac5d7ef63aa3db84febc81e10d6e03e0dc21824bba2dd4e0b7  crates/db/migrations/0014_wave10_founder_war_room.sql
     eed563d8d9adbefa1b01732382077a06ff75aea831e3ca6058414678fc521f52  scripts/smoke_vault.sh
     a2210c116057240c7575af1b9afe130a35c85da9fa2b3765b89406993ea4935d  scripts/e2e_verify_migrated.sh
+
+ 4) ARTIFACT SHA-256 (every file transformed or added by this commit)
+    6015358765353b566ae55b6bd5e00506e927b86cffa3afd7ebf3da543aff8e77  packages/contracts/src/index.ts
+    85a269c02f3de994d5fbd0d3ab34dbe3816e753715b562368a91120e81d27e3f  packages/contracts/src/mairon/ledger.ts
+    f204c5d4d5664aa8ecafc256a714cfe5704c5b85204ea15a5d68dcd5a76f0700  packages/contracts/src/mairon/trinity.ts
+    b91e7b937daef1faafe575a613dd827d01a4fa2751fac81916808907feccc8b9  packages/contracts/src/mairon/arda.ts
+    dcbe7b6753ffeebe9cf77cdaff13f1d5cb0f6391dc458fcce11b588bed324fdb  packages/contracts/src/mairon/superstudio.ts
+    dea915b9c0f3170a5a894de7eed646ab3cd3a760143df19127298ae5682e027c  packages/contracts/src/mairon/quant.ts
+    a0ff82723b7759ae432a3ad4ea9868557d00ce2077ae951452762fae634d4ba8  packages/contracts/src/mairon/treasury.ts
+    9acf6244b41f6b7edf67b4272808cc1aea8214b790cf660a0737a1e845a9a6c9  packages/contracts/src/mairon/neuralHud.ts
+    28868dd67cbbf68ae3fb6881f866b82c3cf35d82d9d4e81812d958683ea5588f  packages/contracts/src/mairon/warRoom.ts
+    4f1837c75ce41e868c042abf4ad9d7fbefe8434839e9438b269663d3ad064061  packages/contracts/src/mairon/worldState.ts
+    c8f493fab37f45173d33e7820893af8d22dd3fef03dfada35e74e6a291492323  packages/contracts/package.json
+    56593de347762daa1d138ef7ca73d309c81e274915818767ac163d311fd32adb  packages/contracts/README.md
+    1b9ab79d30a9fcb4e22f7b4db18b4f47a1343ce5959bcfb238c3e0811809bca8  packages/config/src/index.ts
+    457743980092c151f03110ded5b92daf083d1cb065bb13e6bb17cbf968ec960d  packages/config/package.json
+    25dfbdeb7d9a518a85c9dd9c4cd93f80df26f9b268586827ad6ad82c8db97fef  packages/config/README.md
+    e4e35e6514dd76e3cd74db2902872abb8b5ab7dc537a2d146628724fbd9f7005  packages/sdk/src/index.ts
+    745b776b16c96654fb3341a048e818aabfbb61dae760eda66600945ee6ebf25b  packages/sdk/src/core.ts
+    93c786cb742e972740158973e2ced87c0225cc599d68f4dbc0d18cf351a001ce  packages/sdk/src/mairon-client.ts
+    d91aa3c28e67896bef88738a1870de1b0c2c7b1c8f157905b84a7d72769900b7  packages/sdk/README.md
+    7d723bcb7069bca457d9e8f9de7dc3b5919ed15f2a7a9adb691b8745462dc39f  apps/web/package.json
+    a9b5befcf7752ebc931b4e44317bb00d43d27dece82953d658988fbfe23a39c0  apps/web/app/page.tsx
+    c8a3f44dc2bb3cde6904f94809ff6da7fd55fb15ba1ffc61b251b9fe71bd51db  apps/web/app/layout.tsx
+    6c552db049e38c3a9a0ee5886e8cbfdd1df5b66170b59c7b158fea199cc847a6  apps/web/app/globals.css
+    b4608a4a0d5197fd5237231865b3e0b2a05329088466b572ea83bdb7e98eab93  apps/web/lib/mairon/world-state.tsx
+    0bf3de0fa195a8c6488d24bc865163564e10e2ba529fa4f3f15917ca4f85647d  apps/web/components/mairon/mairon-os.tsx
+    05d545506d5eb51ec758104aa80e097b51c500013a322f65b8b33ca833c46dca  apps/web/components/mairon/perspective-super-studio.tsx
+    a763b785b9df4baa037a279dfe72a52858af9eedd1937e4a6079a854459c1209  apps/web/components/mairon/perspective-quant.tsx
+    8b9d584880fd24761bdd5446d446a957c14c55c5a8c75710241bbe5bc986efae  apps/web/components/mairon/perspective-treasury.tsx
+    9d6d86d7a2798cf6d4e4f510bf31a1ba1757dd18128a12e83dcd1cd596440deb  apps/web/components/mairon/perspective-neural-hud.tsx
+    596680a88ca5b1ca2ce215860999a96997d1ddfa4c424942aaaa76c1d00fd026  apps/web/components/mairon/perspective-war-room.tsx
+    0406e9032c92d8906099649149c2cc0bf7bb70052e12914ac6f47f03debcc05d  apps/web/README.md
+    bddc14dfac4070f2a9ab32b8dd0e698296594b553b3bc608d2f202be3501f9aa  apps/admin/package.json
+    4f555b338f7cd8ca3d5a92e9cd97ee5bb32a07f3891eb5467cc0533869aab51f  apps/admin/app/page.tsx
+    6a058692dde2f1d121976928e7f0421df865690c4ee6c2d365e5a818f9419a96  apps/admin/app/layout.tsx
+    7b02f4ee1d9d9ce9370f60800cd472bf0b7ac58deb3f7dde4cdb098d5f6ad830  apps/admin/lib/admin-api.ts
+    f7a9ad3f9ad1dcf1742d4200dec8194d56493c0d9029553546f3c4a173cfd2de  apps/admin/README.md
     (MANIFEST.txt itself is finalized by this write; its own SHA is computed
      over the committed bytes and recorded in the delivery commit message.)
 
- 4) VERIFICATION GATES (rerun on the transformed tree)
-    python3 tools/war-room/render_war_room.py --check  -> exit 0 (byte-identical)
-    cargo test --workspace                             -> recorded in the commit
-    cargo clippy --workspace --all-targets -D warnings -> recorded in the commit
+ 5) SEED DATABASE (unchanged from the law-enforcement commit)
+    PRAGMA integrity_check = ok · SUM(Posting.amount) = 0 · KbEntry = 334 ·
+    FounderWarRoomTick = 24 ($9.55 day-1) · "Product" = 19 columns.
 
