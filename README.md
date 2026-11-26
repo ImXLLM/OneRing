@@ -15,7 +15,7 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
-**English** | [فارسی](README.fa.md)
+**English** | [فارسی](README.fa.md) | [中文](README.zh-CN.md) | [Español](README.es.md)
 
 </div>
 
