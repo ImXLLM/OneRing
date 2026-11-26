@@ -28,7 +28,7 @@ import sys
 
 # ══ embedded template ═════════════════════════════════════════════════════════
 # Byte-exact reproduction target (UTF-8 · LF · no BOM).
-# Verbatim the approved Wave-10 artifact; byte-exact regeneration (UTF-8 · LF · no BOM)
+# The approved sovereign artifact; byte-exact regeneration (UTF-8 · LF · no BOM)
 TEMPLATE = (r'''<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -290,7 +290,7 @@ body:not(.en) .cmsg .alt.en-lang{display:block}
 <header id="hdr">
   <div class="logo">
     <div class="sig">K</div>
-    <h1><small>KIAN · WAVE 10 · THE GRAND UI UPDATE</small>
+    <h1><small>MAIRON · SOVEREIGN FOUNDER WAR-ROOM</small>
       <span data-i18n="hdrTitle">&#x627;&#x62a;&#x627;&#x642; &#x62c;&#x646;&#x6af; &#x628;&#x646;&#x6cc;&#x627;&#x646;‌&#x6af;&#x630;&#x627;&#x631; &#x62d;&#x627;&#x6a9;&#x645;</span></h1>
   </div>
   <div class="hspacer"></div>
@@ -1315,7 +1315,7 @@ def check(out: pathlib.Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     default_out = pathlib.Path(__file__).resolve().parent / "war_room.html"
     p = argparse.ArgumentParser(
-        description="Canonical renderer of the Wave-10 Founder War-Room command deck",
+        description="Canonical renderer of the sovereign Founder War-Room command deck",
     )
     g = p.add_mutually_exclusive_group()
     g.add_argument("--out", type=pathlib.Path, default=default_out,

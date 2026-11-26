@@ -83,6 +83,7 @@ pub const WAR_ROOM_COUNCIL: [&str; 3] = ["@elonmusk", "@cz_binance", "@JeffBezos
 pub const CHAIRMAN_HANDLE: &str = "0xKIA";
 
 /// `/mairon` — the sovereign overview: brand, laws and the world-state surface.
+#[must_use]
 pub fn format_mairon() -> String {
     String::from(
         "MAIRON — Sovereign Founder OS\n\
@@ -107,32 +108,32 @@ pub fn format_mairon() -> String {
 }
 
 /// `/trinity` — the 3-avatar build pipeline with the REA gate.
+#[must_use]
 pub fn format_trinity() -> String {
     format!(
         "TRINITY — 3-Avatar Sovereign Build Pipeline\n\
          \n\
-         Stage 1  Alpha IQ {alpha}      — master prompt + project scaffold.\n\
-         Stage 2  CommandCenter IQ {cc} — orchestrator, judicial strictness on.\n\
-         Stage 3  Mairon IQ {mairon}      — overclocked judge, final calibration.\n\
+         Stage 1  Alpha IQ {TRINITY_IQ_ALPHA}      — master prompt + project scaffold.\n\
+         Stage 2  CommandCenter IQ {TRINITY_IQ_COMMAND_CENTER} — orchestrator, judicial strictness on.\n\
+         Stage 3  Mairon IQ {TRINITY_IQ_MAIRON}      — overclocked judge, final calibration.\n\
          \n\
-         Quality gate: every build passes the REA review with score >= {rea}/100\n\
+         Quality gate: every build passes the REA review with score >= {REA_MIN_SCORE}/100\n\
          before it may ship; two-key publish is enforced for store release.\n\
          \n\
          Try it live: Pro Terminal -> Trinity pipeline (Ctrl+K), or the\n\
-         ToySpark tab of the MAIRON mini-app.",
-        alpha = TRINITY_IQ_ALPHA,
-        cc = TRINITY_IQ_COMMAND_CENTER,
-        mairon = TRINITY_IQ_MAIRON,
-        rea = REA_MIN_SCORE,
+         ToySpark tab of the MAIRON mini-app."
     )
 }
 
 /// `/quant` — the causal CCXT desk and the live-deployment gate.
+#[must_use]
 pub fn format_quant() -> String {
-    let mut venues = String::new();
-    for (i, v) in KEYLESS_VENUES.iter().enumerate() {
-        venues.push_str(&format!("  {}. {v}\n", i + 1));
-    }
+    let numbered: Vec<String> = KEYLESS_VENUES
+        .iter()
+        .enumerate()
+        .map(|(i, v)| format!("  {}. {v}", i + 1))
+        .collect();
+    let venues = numbered.join("\n");
     format!(
         "QUANT — Causal Vibe-Trading & CCXT Desk\n\
          \n\
@@ -151,6 +152,7 @@ pub fn format_quant() -> String {
 }
 
 /// `/treasury` — Base-8453 settlement, the 4-stream split and the reserve.
+#[must_use]
 pub fn format_treasury() -> String {
     format!(
         "TREASURY — Base-8453 Sovereign Settlement\n\
@@ -182,14 +184,9 @@ pub fn format_treasury() -> String {
 }
 
 /// `/warroom` — the 24-tick founder simulation and the chairman channel.
+#[must_use]
 pub fn format_warroom() -> String {
-    let mut council = String::new();
-    for (i, m) in WAR_ROOM_COUNCIL.iter().enumerate() {
-        if i > 0 {
-            council.push_str(", ");
-        }
-        council.push_str(m);
-    }
+    let council = WAR_ROOM_COUNCIL.join(", ");
     format!(
         "WAR-ROOM — Founder Command Simulation\n\
          \n\
@@ -210,18 +207,13 @@ pub fn format_warroom() -> String {
 }
 
 /// `/hud` — the neural topology and the Grok voice modes.
+#[must_use]
 pub fn format_hud() -> String {
-    let mut voices = String::new();
-    for (i, v) in GROK_VOICES.iter().enumerate() {
-        if i > 0 {
-            voices.push_str(", ");
-        }
-        voices.push_str(v);
-    }
+    let voices = GROK_VOICES.join(", ");
     format!(
         "HUD — Neural Topology & Grok Voice Lab\n\
          \n\
-         Fibonacci-sphere topology: {nodes} nodes on a dual shell (inner\n\
+         Fibonacci-sphere topology: {NEURAL_HUD_NODE_COUNT} nodes on a dual shell (inner\n\
          cognition ring, outer telemetry ring), rendered live by the kernel\n\
          at /neural-hud.\n\
          \n\
@@ -230,13 +222,12 @@ pub fn format_hud() -> String {
          \n\
          Grok voice modes: {voices}\n\
          \n\
-         Mini-app: Founder War-Room tab -> Grok Voice HUD.",
-        nodes = NEURAL_HUD_NODE_COUNT,
-        voices = voices,
+         Mini-app: Founder War-Room tab -> Grok Voice HUD."
     )
 }
 
 /// Map one `/cmd` (normalized, lowercase, no leading slash) to its formatter.
+#[must_use]
 pub fn format_sovereign_command(cmd: &str) -> Option<String> {
     match cmd {
         "mairon" => Some(format_mairon()),
@@ -250,6 +241,7 @@ pub fn format_sovereign_command(cmd: &str) -> Option<String> {
 }
 
 /// True when this normalized command is served by the sovereign suite.
+#[must_use]
 pub fn is_sovereign_command(cmd: &str) -> bool {
     matches!(
         cmd,

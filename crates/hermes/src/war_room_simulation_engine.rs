@@ -28,7 +28,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Founder war room signature — present on every wire payload.
-pub const WAR_ROOM_SIGNATURE: &str = "KIA-WAR-ROOM-W10";
+pub const WAR_ROOM_SIGNATURE: &str = "MAIRON-WAR-ROOM";
 
 /// Commercialization target repository — the same 11-crate repo with 783 tests.
 pub const GITHUB_REPO: &str = "KiaAgentX/xA";

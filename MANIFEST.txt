@@ -1,170 +1,762 @@
 ===============================================================================
  MAIRON — Sovereign Intelligence, Quantitative Execution & Autonomous Capital OS
- Alignment Commit: TypeScript Monorepo Upgraded to 100% MAIRON Architecture
+ Final Seal: the complete repository at 100% MAIRON alignment (all credits)
 ===============================================================================
- Packaged: 2026-11-27 · base kernel 99bf70e (laws enforced, pure-English tree)
- Alignment commit: recorded in the delivery commit message (Step 3 credit)
+ Packaged: 2026-11-27 · base checkpoint e106abc (packages/ui + analytics +
+ apps/miniapp + crates/bot + grok-lab routes + scripts rebrand) + this seal
 
- 1) SCOPE OF THIS COMMIT
-    packages/contracts, packages/config, packages/sdk, apps/web and apps/admin
-    upgraded from ~30% legacy alignment to 100% alignment with the complete
-    MAIRON sovereign architecture.
+ 1) SCOPE OF THE FINAL SEALS
+    Step 4 (checkpoint e106abc): packages/ui (the MAIRON sovereign kit),
+    packages/analytics (the 10-DNA telemetry + SFT/DPO client), the
+    apps/miniapp sovereign 4-tab OS, the crates/bot sovereign command suite
+    (/mairon /trinity /quant /treasury /warroom /hud + 30 new tests), the
+    kernel /api/v1/grok-lab/* route group, and the scripts/infra MAIRON
+    rebrand. Step 5: the 16-gate end-to-end audit, the alignment report
+    (docs/MAIRON_ALIGNMENT_AUDIT.md) and this manifest — every tracked file
+    hash-sealed below (695 files).
 
-    packages/contracts — nine MAIRON domain modules (src/mairon/):
-      ledger.ts       double-entry Account/JournalEntry/Posting with the
-                      SUM(Posting.amount) == 0 invariant, the eight-state
-                      escrow machine, the full 19-column Product row.
-      trinity.ts      Alpha IQ 136 -> CommandCenter IQ 139 -> Mairon IQ 150,
-                      ReaAuditReport (gate 85), TwoKeyPublishTicket,
-                      BayesianReviewSummary, 3x9 OpenBot DNA manifest.
-      arda.ts         20-locale manifest (en native default,
-                      PATCH_READY_SLOT for pluggable patches incl. fa-IR),
-                      SvgFlagSpec (viewBox 0 0 20 14), SkillMdExport.
-      superstudio.ts  UxMorphMode (ToySpark/CreatorStudio/ProTerminal),
-                      9 modalities, SearchReplacePatch, TimeTravelCheckpoint,
-                      McpToolInvocation, MaironVerifiedSeal.
-      quant.ts        FixedPointI128, TickSize, StrategyAst,
-                      BacktestCausalReport (Sharpe >= 1.20 gate, SHA-256
-                      claim hash), 8 keyless venue descriptors.
-      treasury.ts     Base-8453 constants (chainId 8453, USDC
-                      0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, $0xKIA, XTR),
-                      four-stream split (20%/80% unreferred, 10%/80%+10%
-                      referred, 100% boosts, 1.5% spread), capital reserve
-                      partition ($33.00/$15.00/$350.00), 5x9=45 genome slots.
-      neuralHud.ts    FibonacciSphereNode (180 nodes, dual shell 120+60),
-                      AudioSafetyLimiterConfig (alimiter=limit=0.95),
-                      UserLabTelemetryRow, SftDpoExportLine, 4 Grok voices.
-      warRoom.ts      WarRoomStateSnapshot mirrors: 24 hourly causal ticks,
-                      co-founder cast, chairman directives, +$9.55 -> $42.55
-                      ledger, ELI5 cards.
-      worldState.ts   MaironWorldState — the single authoritative snapshot,
-                      non-destructive perspective switching, jobs, telemetry.
-    Legacy exports are untouched: every existing import keeps compiling.
+ 2) ANTI-RECYCLE VERIFICATION GATES (rerun on this exact tree)
+    Gate 1  raw Persian scan over all text files          -> 0 matches
+    Gate 1b Persian across every seed table (sqlite3)     -> 0 rows
+    Gate 2  Wave/v1.1.0-wave10 badges (README/HTML/tools) -> 0 matches; no stale tags
+    Gate 3  todo|fixme|placeholder over packages/ + apps/ -> 0 matches
+    Gate 3b 92 TS/TSX files, tsc syntax family            -> all parse clean
+    Gate 4  seed integrity / 14 SHA-384 migrations / 19-col
+            Product / SUM(Posting)==0 / KbEntry==334      -> all verified
+    Gate 5  69-key env parity (.env == railway == config) -> exact
+    Gate 6-14 engines (Trinity/Arda/Studio/Quant/Treasury/
+            Seal/HUD/Grok-Lab/War-Room)                   -> 41/41 checks pass
+    Gate 15 cargo test --workspace                        -> 814 passed / 0 failed
+    Gate 15 cargo clippy --workspace --all-targets -D w   -> 0 warnings (exit 0)
+    Gate 16 this manifest (every tracked file, SHA-256)   -> complete
+    python3 tools/war-room/render_war_room.py --check     -> exit 0 (byte-identical)
 
-    packages/config — MAIRON brand constants, Base-8453 settlement constants,
-    charter BPS, capital reserve, quality gates, the canonical endpoint table,
-    runtime endpoint resolvers (resolveApiBase/KernelUrl/WarRoomUrl/
-    NeuralHudUrl), and the 69-key P0 -> P5 environment schema
-    (MAIRON_ENV_SPEC, auditEnvReadiness) with exactly 69 unique keys.
+ 3) ARTIFACT SHA-256 — EVERY TRACKED FILE (grouped by area)
 
-    packages/sdk — MaironSdkClient with fully implemented domain namespaces
-    wrapping real /api/v1/* routes: trinity (alpha/build/orchestrate/status/
-    publishTwoKey/submitReview), arda (listLocales/ecosystemMatrix/
-    switchLocale/localize/exportSkillMd), superStudio (morphMode/
-    executeModality/portfolio), supremacy (applySurgicalDiff/listCheckpoints/
-    restoreCheckpoint/executeWorkflow/invokeMcpTool/verifySeal), quant
-    (listVenues/runCausalBacktest/listStrategies/verifyClaimHash via WebCrypto
-    SHA-256/deployLiveStrategy with the 1.20 Sharpe gate), treasury
-    (getCharterState/calculateSplit/listGenomeModels/setGenomeRouting),
-    neuralHud (getGraphState/renderPreset/dashboardUrl), grokLab (uiBundle/
-    runSimulation/exportSftDpo), warRoom (getState/stepTick/sendDirective/
-    reset/explainSimple/dashboardUrl), admin control plane, and
-    syncWorldState() — the unified authoritative snapshot (degraded
-    subsystems keep their last known payload; nothing is dropped).
-    KianSdkClient/createKianSdk aliases + the legacy flat client keep every
-    existing import working.
-
-    apps/web — the MAIRON Sovereign Web OS:
-      lib/mairon/world-state.tsx        single authoritative store (reducer +
-                                        provider); SWITCH_PERSPECTIVE moves a
-                                        pointer and resets nothing; the
-                                        war-room autoplay clock is
-                                        provider-owned so background jobs
-                                        advance across perspective switches.
-      components/mairon/mairon-os.tsx   OS shell: brand header, posture chips,
-                                        5-perspective switcher, Ctrl+K
-                                        command palette, status bar.
-      perspective-super-studio.tsx      Trinity ladder, 9 modalities, REA seal
-                                        gate, dual Ocean/Cosmos WebAudio
-                                        synthesizer (safety ceiling).
-      perspective-quant.tsx             causal backtest runner, Sharpe >= 1.20
-                                        gate badge, 14-metric grid, DAG
-                                        telemetry, SHA-256 claim verification.
-      perspective-treasury.tsx          charter streams, atomic split
-                                        calculator, Base USDC + XTR feed,
-                                        5x9 genome router (ManualOverride /
-                                        AgentAutoDecision).
-      perspective-neural-hud.tsx        180-node dual-shell Fibonacci topology
-                                        canvas, HUD preset synthesis, 4 Grok
-                                        voice modes, /neural-hud link.
-      perspective-war-room.tsx          24-tick causal feed, chairman
-                                        directive console, wallet ledger,
-                                        ELI5 cards, /war-room link.
-    Root layout rebranded: lang="en" dir="ltr", MAIRON metadata; the Telegram
-    mini-app and static artifacts remain as legacy routes.
-
-    apps/admin — the MAIRON Institutional Governance & Audit Console:
-      ledger auditor (SUM(Posting.amount) == 0 monitor + escrow state machine
-      + session-bound release/refund controls), two-key publish vault (HITL
-      approve/reject + MaironVerifiedSeal inspector re-deriving
-      mairon-seal:<sha256[0..16]>), 45-model genome override matrix + 69-key
-      P0->P5 readiness monitor, 10-DNA telemetry table with 1-click SFT/DPO
-      JSONL export, and the War-Room chairman override/reset console.
-
- 2) ANTI-RECYCLE VERIFICATION GATES (rerun on this tree)
-    rg '[\u0600-\u06FF]' over the entire repository                -> 0 matches
-    TODO/FIXME/placeholder over every modified JSON/TS/TSX file     -> 0 matches
-    node type-strip parse over all 26 modified TS/TSX files         -> all parse
-    cargo test --workspace                            -> 784 passed / 0 failed
-    cargo clippy --workspace --all-targets -D warnings -> 0 warnings (exit 0)
-    python3 tools/war-room/render_war_room.py --check  -> exit 0 (byte-identical)
-
- 3) ARTIFACT SHA-256 (unchanged canonical artifacts)
-    d621be984201d7317bd622e5e0de7f56b6b3ff49a2715244ec36945e0cea2690  tools/war-room/war_room.html
-    6cb1bd88490975648c0f411b3b785d24e411a635ac9cbc5ef79342528f260460  tools/war-room/render_war_room.py
-    44fa984c9355616089a375a9f94da439a9c62a019caa6850926c6a76b9357987  tools/neural-hud/neural_hud.html
-    36c2f8d7670c626a4ee657f6339616f724e4c7414ec24beaf9b6e18fa93225fa  tools/neural-hud/render_neural_hud.py
-    19db3730cdde4cc15cb9913d4237f9dbf01f578637b3279cdfa62c5370fb7bbe  seed/kian-production.db
-    b3f844b2417763202cec05ec72b7cf441784cef9960d39670db8044da90815f0  locales/fa.patch.json
-    5bba6b60293af6482a2dbdd45b7ec9c0e5cc377e24f7c290ca0b3a462b0f4fc3  locales/README.locales.json
-    98ffa45e12764b11b4bb1bd96a8452658c9c4a16ecfa29164e0d4e894ef953f0  README.md
-    18b5644fd6a22e44563c49b0989815ad9faa73e8b4f4d69c57a7c0fdc75c6da3  start-railway.sh
+    ── repository root
+    6ad5538644789372404f5222c4224ee000be61c39eff2387aa1455e8baa86855  .dockerignore
+    1f98bc5873749c9d28c7b50265ed4867627ead377a5eddb152b2177c244060c5  .env.example
+    0ca41e82c788074f5f1a4204d99fa095fb76f6cefa136146d07ed7c5e6f1e523  .gitignore
+    d778321623682ec7d8db7cb0e3026cebd88c6b42db7524f2879aefe555b32dc5  CHANGELOG.md
+    9d0e7ed1e6436f7047ad856420d499666c91025824a0a7c289544c998e0285fc  Cargo.lock
+    87c71bc9482b8231aaa8388994bd4de67f6523315bb71d5f0f651b6cca633098  Cargo.toml
     bd77ff39e95825029ec0bef0e1744e259e12fd3a77b02e21283b111e74131da9  Dockerfile
-    6d4e5c714cf5ceac5d7ef63aa3db84febc81e10d6e03e0dc21824bba2dd4e0b7  crates/db/migrations/0014_wave10_founder_war_room.sql
-    eed563d8d9adbefa1b01732382077a06ff75aea831e3ca6058414678fc521f52  scripts/smoke_vault.sh
-    a2210c116057240c7575af1b9afe130a35c85da9fa2b3765b89406993ea4935d  scripts/e2e_verify_migrated.sh
+    1cc311dd38975201babee678c416a947fde0e83487626ec8eea2de86ae8ad275  LICENSE
+    269c3df6a4ec2c0cdefb214e64d9761ef504467efc1ee834393985f42aedea81  Makefile
+    c9d0362c90257bcedceed175062e40b294d2e395c69980d3cde1b46a3fee332d  README.md
+    cd9ac38abaa52d65130a064a7f70f655299406745313a9107751a29985c21805  REA_FINAL_VERDICT.json
+    46d20fdaa7b504fe830f12a22a26ed7f9010dcd815e263e4cc44594790feadc0  clippy.toml
+    ff1cf8790ffe2667b5a75c928b0093c3499f3eefbbb3471eccc1253294f552df  deny.toml
+    fa68778eba7dbedd76e537bf390c944f7e2261c0640f37d3d91d3079f899edfc  docker-compose.yml
+    094e54d31cd0cebc08d1288c7e134f2e38a5f4e3a7dcc2e5248004ca63b0cc21  next.config.ts
+    f7744e53da9d7e24e4cb5674e333281f3ddcc52b794fb28dcd29a3af8537cca4  package.json
+    d3305c62bf047cc63535676798d6d16c864e62b3861f6928865959dddc37f061  pnpm-lock.yaml
+    cfa5ff1eff2a964bdb221f8212c57a4bcc1dde5f3e4d613909db1ae100e3ed74  pnpm-workspace.yaml
+    e1b62bc4aa38363f800e95ce759ba0118a3386f1b27361e2a0105c6bf8f59324  railpack.json
+    369f096483d76d21b8c12b94c2ffc0808f4feea11d598bda2fd6e99a30fadb85  railway-env-v1.0.0.json
+    d7f2a105517ed7a696a1e8cc705e1e905cf205423783f03666845a9b99cd061b  railway.env.example
+    7dcd07cf413c4d8c75d04852dd9476b7bc99f7adb447cb2573f601db0f6dd9df  railway.json
+    cd9ac38abaa52d65130a064a7f70f655299406745313a9107751a29985c21805  rea-scorecard.json
+    2005a6440b4cf56de43085410f26315d73dece6d34a6d32920669f65f33062c4  rust-toolchain.toml
+    a72f230180ccfaf10db0b4e339b9d9066d2a678174b3da29cd9c905ee92f2cc3  rustfmt.toml
+    1667220ad53964bc3eb1001c7ecb2805b3cb4eefd0c8d1b5945681a116c6d73f  setup.html
+    18b5644fd6a22e44563c49b0989815ad9faa73e8b4f4d69c57a7c0fdc75c6da3  start-railway.sh
+    dade41328a214e55d3dcd75ba117831b2bdf2500a19872ab2aeb412cf6e8d64f  tsconfig.json
+    43578cf6231133f3afd8c2aaa73b2e6443c87a1ee12140c553149e73d08b7f41  turbo.json
 
- 4) ARTIFACT SHA-256 (every file transformed or added by this commit)
+    ── .github/ (2 files)
+    5b99bd175f5a68349f92bd50100b9b8141b064f14d92c46017261ddd1393b3cd  .github/workflows/ci.yml
+    a8da9c31461995c36304f3dd88b10cbc569c0af8a180b4b38946da29d5947f58  .github/workflows/release.yml
+
+    ── KIA-BRAIN-OS/ (16 files)
+    65f5d7a6247d27bb4a9966c08079fb64927be3bf4ca4d8b0e5f3ff0224e7e3b4  KIA-BRAIN-OS/01_DNAme.md
+    c067d229187eefa09ff0943587569de7145703fd852d063254dc5bd68d5268b0  KIA-BRAIN-OS/02_DNAwork.md
+    5092cf69804089ee81e15e63fe1309553a41c6e461b59ccc1b738f1fbfc33041  KIA-BRAIN-OS/03_DNAmind.md
+    37c1e79ab9e4fc3324ffdaf2d52e8d9ef1c4913f7f54e044a0a72bdf398edd0c  KIA-BRAIN-OS/04_DNAharness.md
+    552890d6fe2490207d86aeb249ea1c8a9633347b71f86bcd6c4370db7e8bcc4f  KIA-BRAIN-OS/05_DNAskills.md
+    1e56c3a80f56d66a8d11741c708bb34cdcd299793dbadf54724669ac49ca3b1d  KIA-BRAIN-OS/06_LINK_Router.md
+    1e813d5781c5271271f2cb96478d7ff6cd154170a416e3e1b987172d6d638425  KIA-BRAIN-OS/07_LINK_Protocol.md
+    c2fccd23d3ac3160b19181ab5891c39c47527e39d804044b9c00b96da426a86c  KIA-BRAIN-OS/08_LINK_Extractor.md
+    ffee07dcaa29ed474b13b89742e3dd6bab72eac238aa275107526bc9a478104d  KIA-BRAIN-OS/09_LINK_Bootloader.md
+    cc091d413b6f43aba4ee865506ee531a7fb84794e6f2066bb48a59de30986cda  KIA-BRAIN-OS/10_MAIRON_REA_SOVEREIGN.md
+    c74420724bf9b49d422e69bab2e9cc40e1bd4918b6d316582d6957551811867d  KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md
+    6f55419198be7e42a5e5d541e337c888d72c8e684f1318fd3b92380fdb364e0c  KIA-BRAIN-OS/12_TRINITY_AVATAR_ENGINE.md
+    45c7a71965c6a165d138e2d5df30f01a9ecfc0199e100cf7b33c97d3f5b0050c  KIA-BRAIN-OS/13_ARDA_FISHKAL_PLANETARY_ENGINE.md
+    8d5a3708e45c81dbfc70355a3363add7f7bf95b838aae49a0d59735ee0b013c2  KIA-BRAIN-OS/14_OMNI_STUDIO_AND_ADAPTIVE_UX.md
+    36d072ce7125a004849aef2ed755e84bdac03d02b89d6d217a05d25bbe5627ad  KIA-BRAIN-OS/15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md
+    7ba2b61485d2bc1dc865e23f64bfbbbd4a70f084d3e8582e73632028d31e1b03  KIA-BRAIN-OS/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md
+
+    ── OMNI-MODEL-GENOME/ (89 files)
+    8d91c825b8d56791e422773acab25fe302fa5454417da4080a1e75f12d6a2477  OMNI-MODEL-GENOME/00_MASTER_MODEL_COMPARISON_MATRIX.md
+    ebba42e379df88876c28b4e4f897fd3afb775e9e5d4de96be58182a9ed424c3b  OMNI-MODEL-GENOME/README.md
+    a8291d7b179ad3b51702776349c2c64a9fe87ce6e92624504fc493f582785f08  OMNI-MODEL-GENOME/legacy/00_ECOSYSTEM_INDEX.md
+    28f64f4f66085de2c9ac874cfc4bbd909ec69c4746a04c7767e737033dd16b99  OMNI-MODEL-GENOME/legacy/kian_v2_step5_merge/gemini_aragon_router_ext.rs
+    c913c7be21aa7f10177a74304311e014caf53f07baebd8b340faa9c3cfa4d186  OMNI-MODEL-GENOME/legacy/kian_v2_step5_merge/inject_gemini_aragon_genome.py
+    09e7442c5323202bc7a61cac8d1790a3aa2e09baaf6119db251445b48844c1f6  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/01_TOPOLOGY_AND_HARNESS.md
+    9dca775dca7c3e2f0b98bd8097daa22fb09b85b68ab0cc0b9a5b204dcad742c1  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/02_REASONING_AND_LOGIC_DNA.md
+    b14d34b80e8c5850a07f01968550a9e2d3592a57299782b3f26a4d13e46ddbd6  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/03_CODE_AND_PATCH_MECHANICS.md
+    da5388f0a325a7d4c4cd45c08232cb7abf73a1469cd9d5f2eaa4003f11d5c28a  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/04_TOOL_CALLING_AND_STATE.md
+    d07605b4382ee43319c6c03dbefa1cbcca002d0e4536286b787913b10bc4ca24  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/05_UI_UX_AND_AESTHETIC_BIAS.md
+    a284f2f9114849ac893f1661fb5209aeb7170585ca3757f3940dc114ae76f474  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/06_GUARDRAILS_AND_FRAMING.md
+    abe8862ce72d0fdbcafa12937b4e0d96c103837ef0b04d2bb6a4c4df4398de1c  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/07_PROMPT_COMPILER_LEXICON.md
+    312bcee81e56f4a011f2c0654976f219612e9a310a42cfdd2f8c4119065933fc  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/08_FAILURE_MODES_AND_PATCHES.md
+    6ae49438b6a80de768b000a6766aab3a2d0b7ec14feadef0cfa1eb5f959e7fc1  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/09_ROUTING_AND_HANDOFF_CARD.md
+    aed98bbb03f8308b912e8d4408aa5abbef2f7532254dc079359e20942cb1988c  OMNI-MODEL-GENOME/legacy/models/gemini-4-aragon-high/EMPIRICAL_AUDIT_REPORT.json
+    1e025fbf38846d0663b602fd92beb7cd951ae77370d68b3834b13e71f2ad1271  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/01_TOPOLOGY_AND_HARNESS.md
+    48679c6984240a141d94015a189bab1448e0ff5326151cbda1e5834c9a46bfa6  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/02_REASONING_AND_LOGIC_DNA.md
+    fdc733920760e18e6fab8fcf056c15913d5604b95b4e80bd6ab13324f020b7cc  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/03_CODE_AND_PATCH_MECHANICS.md
+    54f3f1c8cb115da095cf23bed74596d70f2aa8eee8597f43cef531c1bc309711  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/04_TOOL_CALLING_AND_STATE.md
+    f5d14962162bbcec4b0d8aa456f7e833da5bcb0c35537c408370839e0268110e  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/05_UI_UX_AND_AESTHETIC_BIAS.md
+    00169649cd351298ecf5582bda986fd32971d33a5f8eca8b04d3f80fbee4c95e  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/06_GUARDRAILS_AND_FRAMING.md
+    0fac113a489cb0150165e7b67a8ac06e247cd661d866c82b00906792a86bdf1a  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/07_PROMPT_COMPILER_LEXICON.md
+    0deb14008bca416f24518ddf307cf100847572289bfb97b88c38e18823aaf086  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/08_FAILURE_MODES_AND_PATCHES.md
+    edfc1561a1a7b3909d57b7f01f33fe88e0e3cf01dce673c44a5d2717efd79214  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/09_ROUTING_AND_HANDOFF_CARD.md
+    4333f43e90f9b4da50cd580c414992f060db8b81a1cc2f0d6e3b33a470ebffc4  OMNI-MODEL-GENOME/legacy/models/gpt-6-standard-free/README.md
+    4333f43e90f9b4da50cd580c414992f060db8b81a1cc2f0d6e3b33a470ebffc4  OMNI-MODEL-GENOME/legacy/templates/MODEL_WORKSPACE_TEMPLATE_README.md
+    957a4aca3eb978c33d50c67e75830e085a2afe046c39f07ee4cadf2db4ee45b5  OMNI-MODEL-GENOME/methodology/00_ECOSYSTEM_INDEX.md
+    455fe5ae050b0179cd45c1fa3dfa2744a3128f7550c3d40e2b6cd3f0f7229db5  OMNI-MODEL-GENOME/methodology/01_TOPOLOGY_AND_HARNESS.md
+    963cc4690be6afc0138cd13be6cf929f950830d2fa4390d8d606fa7a3696eb1e  OMNI-MODEL-GENOME/methodology/02_REASONING_AND_LOGIC_DNA.md
+    b31b97798e9fbe30ca351f8bace3923a0a0755b106355c409213050ddf07cb39  OMNI-MODEL-GENOME/methodology/03_CODE_AND_PATCH_MECHANICS.md
+    fe1b23c55c813e43d5743482a6b02f4f88271435279f1fbe1c3958dad6f16c93  OMNI-MODEL-GENOME/methodology/04_TOOL_CALLING_AND_STATE.md
+    d25a03f768907d50f77b9907531af722d73503687edac0009680cc475abe6ee6  OMNI-MODEL-GENOME/methodology/05_UI_UX_AND_AESTHETIC_BIAS.md
+    9871d53661157e89e4fc19e71a53f53ad498c30d1bb60387054afedffb9f0233  OMNI-MODEL-GENOME/methodology/06_GUARDRAILS_AND_FRAMING.md
+    46bdeb54d6747f258f9fd973796f64e0cbc0c355b71d34b9335e741c39167691  OMNI-MODEL-GENOME/methodology/07_PROMPT_COMPILER_LEXICON.md
+    5181e8c4357b7c392ba35d10b2dd8e78a3fa884f8be49889e24c84d9b8b6f961  OMNI-MODEL-GENOME/methodology/08_FAILURE_MODES_AND_PATCHES.md
+    0c6da332c7decd995c21108f7949dbeab46ebfc2cff13e0435a0b038df6a6156  OMNI-MODEL-GENOME/methodology/09_ROUTING_AND_HANDOFF_CARD.md
+    f053c96824773d0e3d2101dc3b46097dc55c50cecde79f158b58d588b1405df6  OMNI-MODEL-GENOME/models/01-gpt-6-web/01_IDENTITY_AND_PERSONA_GENOME.md
+    a2ada8df7148c957d2475462e669140f20ff3d1eca4d090fc59bb97580b3f3ec  OMNI-MODEL-GENOME/models/01-gpt-6-web/02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md
+    1ebdcb300d06ea923fa24daef977ca507783530647d1cf6554903eea14811d7e  OMNI-MODEL-GENOME/models/01-gpt-6-web/03_REASONING_AND_DECISION_TREE.md
+    d7acbcd8ef9273b9fc28b00e229813a9508486ba351b6c7eb9f4796c0b7a7574  OMNI-MODEL-GENOME/models/01-gpt-6-web/04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md
+    7431d3796103b4278b4a43967f2ff0ae5d455bc1e92156f5d5086d461fef99f3  OMNI-MODEL-GENOME/models/01-gpt-6-web/05_CODING_AND_ENGINEERING_DOCTRINE.md
+    d49e97e7e52de7e55afd632c73999fa9a95dee3844e987adf298e297b10f6006  OMNI-MODEL-GENOME/models/01-gpt-6-web/06_UI_UX_AND_ARTIFACT_CRAFT.md
+    067328a231fba7d9d7b4729ea155c8fdec2267958cbff51e6d7774969b1711da  OMNI-MODEL-GENOME/models/01-gpt-6-web/07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md
+    d934df7a8b3e41e3811f0756342e65ea444ee59e12cf69b6fb11af8c1a23a4d6  OMNI-MODEL-GENOME/models/01-gpt-6-web/08_FAILURE_MODES_AND_BLINDSPOTS.md
+    44c46390ea1a3a06f0349a85329183ea8dcf157fb34e43a70cc222487a11ec30  OMNI-MODEL-GENOME/models/01-gpt-6-web/09_DISTILLED_CLONE_SYSTEM_PROMPT.md
+    5ae473371c303afcf12606748aca8db761d63f3475acdc56eaf73fe1978d0974  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/01_IDENTITY_AND_PERSONA_GENOME.md
+    1ba4b379878104b0eb68bbe20b296196883dfde934d91d12c60b13d25508d14c  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md
+    dc34e9d3a91724d2d2aaa0c9d391f0d7dcd607745be502dba3983f248a02353d  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/03_REASONING_AND_DECISION_TREE.md
+    51186fd3a6a41e5b2cc2ec8b7b226a0447bef07db61e82dec0643c543cf900bc  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md
+    873d4c7577e23df0936ed76eb7a515821a8c35e9d1eaca42308e9e1ad8a2dfd1  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/05_CODING_AND_ENGINEERING_DOCTRINE.md
+    bf342ab995856636c2f48dc6d577ece1a135596687664de7ecadb45389c3911d  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/06_UI_UX_AND_ARTIFACT_CRAFT.md
+    ba2e8ff1e7c1d8857ffbac76bdb6158e6c4f300a42e9777486c428a640c2fa63  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md
+    7187b8d953198b68c6937a930dbdc50cc2480a9b536d0fadf529403a79ecf179  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/08_FAILURE_MODES_AND_BLINDSPOTS.md
+    add909a467c1f1881d4bcf32081587a57bbbb757a35f0e8574547e4acee5f1c9  OMNI-MODEL-GENOME/models/02-gemini-4-aragon-high/09_DISTILLED_CLONE_SYSTEM_PROMPT.md
+    e20d7a5282f6f8902ec5b34ee6925f94955bc97d7d3eabf5ca50916389faaeb9  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/01_IDENTITY_AND_PERSONA_GENOME.md
+    7971e59f37ca299305c8d3eee10e44fc8b0a0b16b530dc92cbdee23c076ed41d  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md
+    da4dd4dc329b8c4a081354c7e97623384d7050d36e06c24ccf707f0d26ab51f4  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/03_REASONING_AND_DECISION_TREE.md
+    d7f48e1891548b8633815278689dbd6f7843cad52ca49e668107e67f2fd7230d  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md
+    5fa3106da30feed28045160643dde0f8112ebf9fb6354597d08397aeef24f68a  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/05_CODING_AND_ENGINEERING_DOCTRINE.md
+    c8d3804502e21ff8d056055b75cc69a92c25e2bd252c5a62840a9d838d0512da  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/06_UI_UX_AND_ARTIFACT_CRAFT.md
+    aec390d7b6d6d52c343b28912cc2254ea0fcc98936ad1978a296b9e610b4d7be  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md
+    40c6c6105d4ad655c1ec978c6e6ff0f758153fbe5164a28de0564d00a5e46f5a  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/08_FAILURE_MODES_AND_BLINDSPOTS.md
+    6b2baf6dd17156f6ebe5beb2d4d4b5502611aab0b4baa4ef61fa5ebc873f75be  OMNI-MODEL-GENOME/models/03-deepseek-3.2-web-think-mode/09_DISTILLED_CLONE_SYSTEM_PROMPT.md
+    a16393e1ad3e4bff7439d80bb8c278c7b406bda887ebd0615028711eedea3568  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/01_IDENTITY_AND_PERSONA_GENOME.md
+    181b8c354c8102eef2fcaf213c68d24f8bff6a84e699af4d2b0abe0f17ca5797  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md
+    b6987963a881f07808f706e20f8663cbd0248d701c184ea9994fbd985befdc31  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/03_REASONING_AND_DECISION_TREE.md
+    867ffdac5b1543ed3800c48eee2b30738f4c743fd685ce27b56c1d8fe8b72733  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md
+    60ccdd0300c8ae626a7dfd25f70c975f1fa58d639cfc6454f9328ca76eb855df  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/05_CODING_AND_ENGINEERING_DOCTRINE.md
+    9436462f211d2098ed8d7845690f03134a0d54fd79afcd8152b6831b06ff2ec4  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/06_UI_UX_AND_ARTIFACT_CRAFT.md
+    3b1d6dd4e0dae1a0f62ad49dbfeb7534bb023125968c679ab3b6ce9f2cfc580e  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md
+    c8103941de970a3710fec69ce0d0f50d32f96477d553d77511c38c43eaec5ac3  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/08_FAILURE_MODES_AND_BLINDSPOTS.md
+    4aa4ec5913cbf083c744d245080a4f72de1bba8bf4366ce796dc602d493dc75f  OMNI-MODEL-GENOME/models/04-claude-sonnet-5.5-extra/09_DISTILLED_CLONE_SYSTEM_PROMPT.md
+    006b3adaca10b0ed295a6c93d509bdeeec0727a286f084efa2b027d1073229d2  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/01_IDENTITY_AND_PERSONA_GENOME.md
+    9b12c808c718cd232fb9531d30d6cfe1ae85f05cf504dfa2822de83848e855de  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/02_SYSTEM_ARCHITECTURE_AND_CONSTRAINTS.md
+    c83e3a8c6d7a03b1503e754edf71750068d1ceec525b1cad92b5409e8ed786d8  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/03_REASONING_AND_DECISION_TREE.md
+    31f64503544b0886c2f95549ac269c93dded7fa358c23387d8f2060882c4864c  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/04_TOOL_ORCHESTRATION_AND_AGENTIC_LOOP.md
+    713586b117c2179e0556309dddc6f91e6e500fb8bbaaa23f293f5ed8f844e584  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/05_CODING_AND_ENGINEERING_DOCTRINE.md
+    ea98ac6f50edaf25447e714eab11e94986a22f7801e983763d6f78325c9f47be  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/06_UI_UX_AND_ARTIFACT_CRAFT.md
+    4fe8755a6ef72457e00795c7bce614790b517bc810454ed873eb08a0a82a2176  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/07_SAFETY_GUARDRAILS_AND_EDGE_CASES.md
+    0f9da6592552b0ae59bc2e5ea21615f030227268b46f97568bafb975459ee18f  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/08_FAILURE_MODES_AND_BLINDSPOTS.md
+    984d9288de4b4818ce47d4c88f35a5a6780c1d34fd519598959cae56ce9f9814  OMNI-MODEL-GENOME/models/05-glm-5.3-flash-max/09_DISTILLED_CLONE_SYSTEM_PROMPT.md
+    f23e5f4301c09a8133ef1aeab4485aa7644520a99ef513ed1be20c26a7b37c68  OMNI-MODEL-GENOME/sovereign/00_DNAwork.md
+    4970bb43dcc50c94b7a0f3f72b9c4bb30b1cd318e9bc0380a375cb9093c783f1  OMNI-MODEL-GENOME/sovereign/01_DNAme.md
+    01b17711ce0dd5cba8559d605ff362a055938b402516fa919550bcdda520fea4  OMNI-MODEL-GENOME/sovereign/03_DNAmind.md
+    942a83126419caee94f51391bb6cc340c7ebd73cc281487d7b9910b92b4fea3b  OMNI-MODEL-GENOME/sovereign/04_DNAharness.md
+    4fb88f53c7c879646c940105299a1da6a3e67afb639e367a5039fecf6fd871c2  OMNI-MODEL-GENOME/sovereign/05_DNAskills.md
+    f3bf674fa6914f91ea269f32f1394814a803e8dec137671814b45b34f44668b7  OMNI-MODEL-GENOME/sovereign/06_LINK_Router.md
+    66e7bbf9f1656f942e6e5f7577f1b22f3de3702ddba54e23cea08a9e749c0a5a  OMNI-MODEL-GENOME/sovereign/08_LINK_Extractor.md
+    22562feb2a64899bf19b16ab663af4ea1497e78e02e35ba6778d28342b7dd9d2  OMNI-MODEL-GENOME/sovereign/11_UNCHAINED_KIA_DNA.md
+
+    ── apps/ (178 files)
+    f7a9ad3f9ad1dcf1742d4200dec8194d56493c0d9029553546f3c4a173cfd2de  apps/admin/README.md
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  apps/admin/app/.gitkeep
+    a6e9c970d9136b3932adaca767440b52549f6210a36bb3f6adc57422c3c713e8  apps/admin/app/globals.css
+    6a058692dde2f1d121976928e7f0421df865690c4ee6c2d365e5a818f9419a96  apps/admin/app/layout.tsx
+    124e0fbef57d899107c5dca6616d3387b5329b1cd821db08f27e3223d12e3c70  apps/admin/app/page.tsx
+    7b02f4ee1d9d9ce9370f60800cd472bf0b7ac58deb3f7dde4cdb098d5f6ad830  apps/admin/lib/admin-api.ts
+    1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  apps/admin/next-env.d.ts
+    427030711184e30f82a859d2a8a4c1aad1760bab967ce021fbd8bbfc71c0f2d3  apps/admin/next.config.ts
+    bddc14dfac4070f2a9ab32b8dd0e698296594b553b3bc608d2f202be3501f9aa  apps/admin/package.json
+    a1a188221f064d964dd9958c3d48b0c23252fabbeb6099d95ee8e15c764718b0  apps/admin/postcss.config.mjs
+    5dd7bab5708187547b2270ce56256db229b5542c101cee8a2bd385bf5b1f8727  apps/admin/public/favicon.ico
+    85e3d4f4ef2f751694e5cb007158ae0ca1d9ee2a8b6b9e5cb576da64b2bcc445  apps/admin/public/icon-192.png
+    45ce215168f8567ab7989c0b69431078f02b58a119e24f1e84d97b4d96053a12  apps/admin/public/logo.png
+    8fedc3bfbda5247835147262a884899f97877e67d3a88f86dbced532e951af6f  apps/admin/tsconfig.json
+    4655943c4a59ccf7c326a06070d33ca33c85ce36727f8d3bfb406f1a4bee9a14  apps/miniapp/README.md
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  apps/miniapp/app/.gitkeep
+    00d1b445eee9bc8595a2d9329ff66f1ee0e2c0ff51bd7ae52c273c27b852d891  apps/miniapp/app/builder/page.tsx
+    276c077dc562e302b08362856e59f0e64ba8baa83c38bf1d284cf4ffb71ca1b0  apps/miniapp/app/globals.css
+    998b1e2cf9fba4a2affac2e987abf76aa798763f27857ffa4382a93b48aaab3d  apps/miniapp/app/layout.tsx
+    218115986b87533b7bedd4d767f4b67c20c798cf90855af5a9a838e3d4668128  apps/miniapp/app/market/page.tsx
+    7ba0254f7252ef933106fcfbb4ff6f8fe18830a8dda03c3e517c804a2f4e8d3f  apps/miniapp/app/page.tsx
+    a8e483f259d080bd85256ebf67e90099dd415d66aae6fa670e5036919e145ace  apps/miniapp/app/wallet/page.tsx
+    2e5b7764aabe44129b47bce7003e41e7fa214c66a934ce26775a363a978a2481  apps/miniapp/components/kian/guest-gate.tsx
+    b2b28ac38e77370ba91e3325859ba326bf45d8dabe2b86eb24e9ee0e68a14e8b  apps/miniapp/components/kian/mini-shell.tsx
+    0bcb4fd9ef5d1b3fec992801343571576552aa71d0e63f3e33d7a679b085122b  apps/miniapp/components/kian/session.tsx
+    e72054cf2048032decaa1749cee4fd39dc97c1ad1c39873a6139dc4b653f12c1  apps/miniapp/components/mairon/tab-forge.tsx
+    39b2ef24e6051dd1b43e00e015a7d8b3b93a49a4f5e952d4811c8289c364f7ba  apps/miniapp/components/mairon/tab-quant.tsx
+    7f34610732a5de93924885f314e7a597cb677b41159cbeac3ff608eebf00f96c  apps/miniapp/components/mairon/tab-wallet.tsx
+    402cadebf98157a33c4a5bf4d687f88ffcf7a60ce702fe199e4a9db80104267e  apps/miniapp/components/mairon/tab-warroom.tsx
+    3ae05a86b7b9ee6d5fca74f60bb03b5a017be5865060e0f91c2d2a06646ae476  apps/miniapp/lib/format.ts
+    01a3fe0304568814ec26679772a0bda394c8621d73c92664873185e6163dfae0  apps/miniapp/lib/friendly.ts
+    bce7f4959389a2287540def4a59ef6e426c82a356569b8e5f859ee80d4b81930  apps/miniapp/lib/kian-tma-bridge.ts
+    3a38e0040e05158e025547c33f28cd2d87b999e321b169961e52a586a167228c  apps/miniapp/lib/mairon-state.tsx
+    f80357994c0430370a118ce8bc3f1f63c0b272248efe5548b5388caa049b38c0  apps/miniapp/lib/referral.ts
+    dbe471213025e85a8af89d4a605047f214709fa5124b0bc92e90e2b18ee133f0  apps/miniapp/lib/studio-html-guard.ts
+    1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  apps/miniapp/next-env.d.ts
+    90d735e0580202228f70011db375be83116f57424f1a4b7675d58aad58674834  apps/miniapp/next.config.ts
+    eb0e9ee94e71f076f424f304462b67026644cdaac05063d95eec0f6bb027ce4d  apps/miniapp/package.json
+    a1a188221f064d964dd9958c3d48b0c23252fabbeb6099d95ee8e15c764718b0  apps/miniapp/postcss.config.mjs
+    ad4833e8d9543d5986ef9e27187b3205104fb739a3fc37df9d55964c0ef65fa4  apps/miniapp/public/tonconnect-manifest.json
+    d5a56c47f1f23114d56bb29705e19f4b6abb5819a71ee21d134d7aa6568ea89e  apps/miniapp/tsconfig.json
+    0406e9032c92d8906099649149c2cc0bf7bb70052e12914ac6f47f03debcc05d  apps/web/README.md
+    2b89101a35e734f191669a55bb3ef8f9c9e577d180a5831a75e728dd76c9c07b  apps/web/app/(miniapp)/layout.tsx
+    98969a8bc068f8786db8a26a8f337c7443bc3b1bc223ee35efa9dff689a37c71  apps/web/app/(miniapp)/market/page.tsx
+    55f2b7ec19e3516f7e59220d197af40b924e4f7104736cb515ea2e6a39294aab  apps/web/app/(miniapp)/wallet/page.tsx
+    6c552db049e38c3a9a0ee5886e8cbfdd1df5b66170b59c7b158fea199cc847a6  apps/web/app/globals.css
+    c8a3f44dc2bb3cde6904f94809ff6da7fd55fb15ba1ffc61b251b9fe71bd51db  apps/web/app/layout.tsx
+    a9b5befcf7752ebc931b4e44317bb00d43d27dece82953d658988fbfe23a39c0  apps/web/app/page.tsx
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  apps/web/components/.gitkeep
+    7b90bcdf563127769e1018758dffb1378b05e25c2455c4e97a93fce7867eaef9  apps/web/components/kian/footer.tsx
+    45e88de134df19bc0bfa3ffa974a70887008397f725a99287a9cd324ff5d7c9a  apps/web/components/kian/header.tsx
+    1655cd2e4c55fac0615a052593cfc6e97c5e4a9273d4a92382a00c659940d066  apps/web/components/kian/hero.tsx
+    5707628313ee9aa4d6ba2dc8939983d7f1e16847b1d2bd2e98211fdaac88c734  apps/web/components/kian/install-button.tsx
+    37c4547b2044191aa011582edd83ed4338565f7642babece4dc4e90ef93d60e7  apps/web/components/kian/journey.tsx
+    6a4849453f007dd0f7d37a215bf966e8d5336bd25c9e602eae0ad0e153418381  apps/web/components/kian/pwa-install.tsx
+    f359d49816027efbadd08c87a6fe3c4ed736331a1be8d93fc81ebf5776eed3a7  apps/web/components/kian/roadmap.tsx
+    94e7b2ce8c51db08679ebf2abcc27a93d0f93e639fc1e59ee266d403066d5fb9  apps/web/components/kian/security.tsx
+    e8b5ee6283befd93bb1ba6325cd77104338a9a6f996433a11e43c32d313d76e7  apps/web/components/kian/session.tsx
+    047945f7e1a0da8bdabc06c3b9d19c40269370029711ddb9e4287f7783bd3330  apps/web/components/kian/subsystems.tsx
+    32bf95a8e100efeb8ed94865b378f3a3c46ad125687bdbfed016da7a2dc7d529  apps/web/components/kian/sw-register.tsx
+    d6f3af845844c5d3cf8a5e3864f6a5d14e1b369217c66993a59df4c89475885a  apps/web/components/kian/ton-connect.tsx
+    0bf3de0fa195a8c6488d24bc865163564e10e2ba529fa4f3f15917ca4f85647d  apps/web/components/mairon/mairon-os.tsx
+    9d6d86d7a2798cf6d4e4f510bf31a1ba1757dd18128a12e83dcd1cd596440deb  apps/web/components/mairon/perspective-neural-hud.tsx
+    a763b785b9df4baa037a279dfe72a52858af9eedd1937e4a6079a854459c1209  apps/web/components/mairon/perspective-quant.tsx
+    05d545506d5eb51ec758104aa80e097b51c500013a322f65b8b33ca833c46dca  apps/web/components/mairon/perspective-super-studio.tsx
+    8b9d584880fd24761bdd5446d446a957c14c55c5a8c75710241bbe5bc986efae  apps/web/components/mairon/perspective-treasury.tsx
+    551cbe040ed219f55c8f1a03820509d2770725ba6c79caaf97f6873d76b4e0cd  apps/web/components/mairon/perspective-war-room.tsx
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  apps/web/lib/.gitkeep
+    a1d4e4bef6535027262f87b3855f3162bdfa4f744f9dd600dfb79caae2530352  apps/web/lib/api.ts
+    1cb433e7673e71b4df73558fd7ab4285ac2491d8b5b0d8fc4ebe0a76e6784adc  apps/web/lib/format.ts
+    9a06517c02f675a5f7ed3e58bdd73ebb8cbfe5d7dd23a21a23fda775d9162497  apps/web/lib/kian-data.ts
+    b4608a4a0d5197fd5237231865b3e0b2a05329088466b572ea83bdb7e98eab93  apps/web/lib/mairon/world-state.tsx
+    5d10c3b80d655ded3f92ea3fcc3c304bac811266aed7f47d51a7c6859bc1efd8  apps/web/lib/telegram.ts
+    1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  apps/web/next-env.d.ts
+    9ef92a3f1e2efbdd09362cde16d1b71a9f34936f3800643edc314dfbbb8198bd  apps/web/next.config.ts
+    7d723bcb7069bca457d9e8f9de7dc3b5919ed15f2a7a9adb691b8745462dc39f  apps/web/package.json
+    a1a188221f064d964dd9958c3d48b0c23252fabbeb6099d95ee8e15c764718b0  apps/web/postcss.config.mjs
+    5dd7bab5708187547b2270ce56256db229b5542c101cee8a2bd385bf5b1f8727  apps/web/public/favicon.ico
+    25b277bad02c9635ca0f9827033e8a29aeed468a8f21907dc7a4dfa05f9219e8  apps/web/public/icons/apple-touch-icon.png
+    85e3d4f4ef2f751694e5cb007158ae0ca1d9ee2a8b6b9e5cb576da64b2bcc445  apps/web/public/icons/icon-192.png
+    1184dfc72b3284c3b7844b3e8a005e844730bc12cca1dc356fc1d9bb87cd4a62  apps/web/public/icons/icon-512.png
+    6f31b25234b02bbed1cf0042420835d81d2b62d59653ddf1e39b68a715ffa852  apps/web/public/icons/icon-64.png
+    1fc902ab267c382b0c7181dda988675bbe88a36403c1445e9d17e67cffa04b20  apps/web/public/icons/maskable-512.png
+    bf6cf2bd0566f9c54fbe316820f9010ec833462990c475efd8cebebe011b3cb6  apps/web/public/logo-badge.png
+    e3e7f1a7e06b287947252cf7cc08a1116058d947270ec36aab3886cd86771c16  apps/web/public/manifest.webmanifest
+    2d8e9cfc8700ed98ef31fb09378ddc719209e82139dee741f26dbde0828b8d89  apps/web/public/mascot.png
+    be3f0a76c49a06f5db0784ff1b356e2738f637c3dfc18af6e32b8a842c788691  apps/web/public/og-image.png
+    393f329ebf896ddc9cbe1de8f88a4f7d774c76488af755a0b128e445b6c9c740  apps/web/public/products/trinity/dropagentx/admin.html
+    8391bf31bd7aff59e0ffc6e4f51aef38cc58eb27fd2fe79a479dd86ee4751404  apps/web/public/products/trinity/dropagentx/app/assets/logo.jpg
+    1025c3fd09b6a779246ddb8b596e95c82c2bbca1c75b38ad1d82e8696faabbd1  apps/web/public/products/trinity/dropagentx/app/css/app.css
+    a08d1b66c5c425e662a8b0bfb4d66414c3714ec48494b72aeda7760c194ee617  apps/web/public/products/trinity/dropagentx/app/css/design-system.css
+    4c629d50be8944903a136aec81b56138d705317d6dbac433190e028a7884aa30  apps/web/public/products/trinity/dropagentx/app/css/pages.css
+    ee77a8ff1d48600328f8a6a3881df218100d37a0611b742e46a2112470aff943  apps/web/public/products/trinity/dropagentx/app/index.html
+    39eef16bf9858879a52b93e4825f9b17dcd4800eba1ee8f00c741a4956e26c0c  apps/web/public/products/trinity/dropagentx/app/index.landing-backup.html
+    8e81973c985e0913a9ed4a09fe3bc5b6caf09670229ec61dac34b99910018537  apps/web/public/products/trinity/dropagentx/app/js/core/api.js
+    73085dc26dc1de6dca5dd220610c27e23e3f6e5022c73a2c616ed092a59577be  apps/web/public/products/trinity/dropagentx/app/js/core/router.js
+    11d3093b4fc09ff31c4b02ffd3327f4f7ce2f01b37a30ab5a979f823ffaa65c1  apps/web/public/products/trinity/dropagentx/app/js/core/tg.js
+    691c9f5419623148dfff7436dec12b27eb699972274cf948d5bf958d460f90ab  apps/web/public/products/trinity/dropagentx/app/js/core/ui.js
+    2ac0692545ba85ef5c24c0367956b0f93786f5f8c9c80b527d7145063bf3616e  apps/web/public/products/trinity/dropagentx/app/js/demo-token.js
+    8921f838d9ebed3c0438ada2464e228b0cc947f0b0c0e8107835f90df5ac1b4c  apps/web/public/products/trinity/dropagentx/app/js/pages/activity.js
+    e84f5bbf4febf4b8fd29afe0af8fd34939f2fd28461cc17fd425b644d6743f17  apps/web/public/products/trinity/dropagentx/app/js/pages/agent.js
+    79155472b8a2112e60a6fbde6365411ea63bfa1f991e6507020dae0f44426bf8  apps/web/public/products/trinity/dropagentx/app/js/pages/catalog.js
+    c3792f9c871497f895c9a92513c75dc6b6de295a5ffd0bf73287028b9ddf7ab0  apps/web/public/products/trinity/dropagentx/app/js/pages/commerce.js
+    f4d58bf47da4321876b65bad3afcb1598d30b9f8dcf8a444827f0364a7bc0187  apps/web/public/products/trinity/dropagentx/app/js/pages/create.js
+    bb63557fc5d7cc0a79ed974fbc4fa0d0b80751abea10c2508fa0b4b1c8ae7e3a  apps/web/public/products/trinity/dropagentx/app/js/pages/creator.js
+    7d0bc2de66da8efaf4f121063f2fbc1d7db6be7342237db3ab5592cd54fb4f98  apps/web/public/products/trinity/dropagentx/app/js/pages/explore.js
+    796c1ad58ec621a748d5e8605ba9efa19865a1d1debf5478b16453437522b9e3  apps/web/public/products/trinity/dropagentx/app/js/pages/feed2.js
+    9444a3d02223dd79c41ec7cac0621d95039e5c29215aeeabffeaf2d3ec4bc30a  apps/web/public/products/trinity/dropagentx/app/js/pages/home.js
+    97a93e75b9676634c35aabd2d11490e4e41f4c2dce077adc059f4b53b43df1c3  apps/web/public/products/trinity/dropagentx/app/js/pages/info.js
+    14147b0edb8017d4a4c827db6ff6d2f5d08966f87d426e3de1499b399e0c7b40  apps/web/public/products/trinity/dropagentx/app/js/pages/product.js
+    ca0fc2d849c86cd478dd057cb8e5a7e6864b4842d8832599313b16c935737fb0  apps/web/public/products/trinity/dropagentx/app/js/pages/profile.js
+    010afd7b8012a3eef1d22d0ef8d91ce9aa97846545ef68fdf624a024c9817cb2  apps/web/public/products/trinity/dropagentx/app/js/pages/search.js
+    379ed0b927a23ff03449dcaa231fd391f62c2c587055724610a7946666c7796c  apps/web/public/products/trinity/dropagentx/app/js/pages/sitemap.js
+    92a1b8c880148c6a500649dbef6de49811ec9af6cae770450cf9b141883ecf6c  apps/web/public/products/trinity/dropagentx/app/js/pages/social.js
+    ddf53374e8cc1266298880ec711c5357ffe114c1d416211ff5aefeea8c4a39c5  apps/web/public/products/trinity/dropagentx/app/js/pages/wallet.js
+    47e8c258bcdd9420d9b3028bf7f7a5d4a9e2d3594f85a590755bf7384997f5ee  apps/web/public/products/trinity/dropagentx/app/js/pages/wallet2.js
+    345027d9e6dedf5243fa4e3675ccc9f48d5f17717df6bc1fc890a8824ac94862  apps/web/public/products/trinity/dropagentx/assets/icons/apple-touch-icon.png
+    062fdad69fdf252b1e27706b45c211bf3e809119f120d050d85ca7fc1665a484  apps/web/public/products/trinity/dropagentx/assets/icons/icon-192.png
+    505733360f850991bd7d0a78c756aadc3c29833cb7ebd423824969e261499d82  apps/web/public/products/trinity/dropagentx/assets/icons/icon-512.png
+    4fc7588886d0c9b662a4386fc944f668421ae96e9ad87b836f8190bd7fa8b355  apps/web/public/products/trinity/dropagentx/assets/icons/icon-maskable-512.png
+    009cafd2efba3370c046765e510493bae7ec1f178c2acbb794af9ff0adae2bc3  apps/web/public/products/trinity/dropagentx/assets/og-image.png
+    836fae7d42d83faa249bc00e0099592be98a1fa260d22d82f269b6091e585627  apps/web/public/products/trinity/dropagentx/fonts/Vazirmatn-Bold.woff2
+    cd67558bbca0ad319b89e3b2edb8a914f87f864951d7a9d24e1404cbf3b45b02  apps/web/public/products/trinity/dropagentx/fonts/Vazirmatn-ExtraBold.woff2
+    3333e31188a2b628db8780ca22fd5aad85bc083ccee9beb8d4d52db18cb98d48  apps/web/public/products/trinity/dropagentx/fonts/Vazirmatn-Medium.woff2
+    e382101336c6eb32cfb31381c027d02d2e0354bad08f6a395d4088beb3db3d91  apps/web/public/products/trinity/dropagentx/fonts/Vazirmatn-Regular.woff2
+    3989401a10e84fe97111a27457dc0ed681c71c9d2ecd87d354a9385fbc320d7b  apps/web/public/products/trinity/dropagentx/fonts/fonts.css
+    5be1cde25d8e410b34763e9a53e38788501aeddc78c216973f1329c5f6f9862a  apps/web/public/products/trinity/dropagentx/icon.svg
+    d7c9ec0531a4003c153f9f8b8c8de6ace2f5e7b8149509a4f4ee6cd5f2e8e69d  apps/web/public/products/trinity/dropagentx/insights.html
+    39eef16bf9858879a52b93e4825f9b17dcd4800eba1ee8f00c741a4956e26c0c  apps/web/public/products/trinity/dropagentx/landing.html
+    0a1f7add5732c5a52c2c8cf237879039c6dfd224cb468cad833f0e8a4c053971  apps/web/public/products/trinity/dropagentx/links.html
+    3c5b45ae8e6a36f025f9358a4256fe49666c7c292625eed6f30c40566b7b1fae  apps/web/public/products/trinity/dropagentx/live.html
+    5b32d632f5536813ba66ab02670ca610cb670be1f379e7012bec9bdb6ddc0384  apps/web/public/products/trinity/dropagentx/login.html
+    e8016b7d14b1d29548800c96748ab1a73efcba319fd35b7ae399b7eb2cb0e2a8  apps/web/public/products/trinity/dropagentx/manifest.webmanifest
+    50932ff2408b81a7eb9fe06fca77af15128b5d077b3eef5e09f8b8e1cd1baf31  apps/web/public/products/trinity/dropagentx/offline.html
+    ff845ff0dbfbe2003d96651a2a55bcb1a24e2850c81819625e5f2341cf2e51db  apps/web/public/products/trinity/dropagentx/senpai/app.css
+    7ecd925846bac1db1067cddee2955cfd6f683a2a8060a943604cc57e575e8626  apps/web/public/products/trinity/dropagentx/senpai/app.html
+    0107840c7a211448a25a96a3dd3e5af833c44a16408ee70e7677c8927659f075  apps/web/public/products/trinity/dropagentx/senpai/app.js
+    56facd0a5609b422c0f49af616994bc68fed1e1eed179dfcfd50f14f4e5465fd  apps/web/public/products/trinity/dropagentx/showcase3d.html
+    0da587a452a3383762ef60d7cd3f5b6c58edddd9331695a4c5fd6d3e5605b06c  apps/web/public/products/trinity/dropagentx/storefront.html
+    d29500a65f8e774e15e53047670e0fa1e7e8128adba0867af3a313a2a3a79dcc  apps/web/public/products/trinity/dropagentx/sw.js
+    9f208d022102b1d0c7aebfecd8e42ca7997d5de636649d2b31ea63093d809019  apps/web/public/products/trinity/dropagentx/vendor/highlight-github-dark.min.css
+    ecc64fb616859e05439ecb19d10ff3ef6b5a113d36af2beb0c61f5d79e49a47c  apps/web/public/products/trinity/dropagentx/vendor/highlight.min.js
+    c68075672d976e4777390560baa112194855bd4404b13647da4855aae1f9360c  apps/web/public/products/trinity/dropagentx/vendor/marked.min.js
+    49efa3b9e1c081efc370db860d01fddbc66e228d6ecc1d246b077e2b9c5e5ae5  apps/web/public/products/trinity/dropagentx/vendor/purify.min.js
+    9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2  apps/web/public/products/trinity/dropagentx/vendor/three.min.js
+    881b3afcb66ad491bcf359f74f30bb00a67bd9924bee720323f8939a17311835  apps/web/public/products/trinity/dropagentx/vendor/three.module.js
+    b6ac6e2331d02fc877c49727c879b3f78e974dc56f43f2fcb89b03230e1f52ca  apps/web/public/products/trinity/fable-bazaar.assets/vendor/three/addons/controls/PointerLockControls.js
+    9be041e96308775d00e2695cc607645b9a9b64fd7c0e759dd8f7c00a8d92becb  apps/web/public/products/trinity/fable-bazaar.assets/vendor/three/addons/utils/BufferGeometryUtils.js
+    4a51337af31f7b2e8c956804458717e48f6c5bc312d78967bda43295f9a4be8b  apps/web/public/products/trinity/fable-bazaar.assets/vendor/three/three.module.js
+    3e853f7141883cc74bd780b0a0e92d5a8f783ad3874e2f018003368de461b75d  apps/web/public/products/trinity/fable-bazaar.html
+    4c911f15b9605c2fac36efc9fb8700b59e2e340ca610004236579b7c7c7f079e  apps/web/public/products/trinity/fishkal.html
+    c969a4122637fe5bd737468a51749259db1396a1a0a9b31cd923cb88027941fa  apps/web/public/products/trinity/liquid-glass.html
+    d01053d255ae7de4a1ad7b4ef5c6068907ad9cd866325de21f87fad7a96d339d  apps/web/public/products/trinity/nova-messenger.html
+    9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2  apps/web/public/products/trinity/ocean-assets/three.min.js
+    34a3798a8018415f56bc65c603f37a9c5274bb93a2980da0122185656be27f78  apps/web/public/products/trinity/ocean-test-lab.html
+    7754deba437168df5d94b1f8519ddaa6b8d5c51e3b91ab3b39782ff0e2548128  apps/web/public/products/trinity/sc.html
+    ceb26258e0ecc980539e5499e594fecb73f8851e184c2a021c90bb4e6db2ca71  apps/web/public/products/trinity/trading-god-arena.html
+    a465b18c92f1cbdf5db4920d4a6d743c7a6a78381db396359a842adbcc02e1d6  apps/web/public/senpai/agent-graph.js
+    ff845ff0dbfbe2003d96651a2a55bcb1a24e2850c81819625e5f2341cf2e51db  apps/web/public/senpai/app.css
+    4ce8187d3bfc304082a492c4391d12a1f30397b26ccdf68d444baaa44ddba9c2  apps/web/public/senpai/app.html
+    07d59521b8cb1f995d6dbc64b7d89ea6f41361d6b37c33e3a5bd67521368385a  apps/web/public/senpai/app.js
+    836fae7d42d83faa249bc00e0099592be98a1fa260d22d82f269b6091e585627  apps/web/public/senpai/fonts/Vazirmatn-Bold.woff2
+    cd67558bbca0ad319b89e3b2edb8a914f87f864951d7a9d24e1404cbf3b45b02  apps/web/public/senpai/fonts/Vazirmatn-ExtraBold.woff2
+    3333e31188a2b628db8780ca22fd5aad85bc083ccee9beb8d4d52db18cb98d48  apps/web/public/senpai/fonts/Vazirmatn-Medium.woff2
+    e382101336c6eb32cfb31381c027d02d2e0354bad08f6a395d4088beb3db3d91  apps/web/public/senpai/fonts/Vazirmatn-Regular.woff2
+    3989401a10e84fe97111a27457dc0ed681c71c9d2ecd87d354a9385fbc320d7b  apps/web/public/senpai/fonts/fonts.css
+    248c1b28ccd92594ae53e453e365f5ea87996ef728c46e0a59dea54bc5dcb2a3  apps/web/public/senpai/js/inline/app_1.js
+    29a9bcd67ed4c9a69ef7a08a181d2eeeb935722e5a30fb3f995e5752dd4c45dc  apps/web/public/senpai/js/lazy-three.js
+    2362e44513015f686d9d3e167a465d8be87b793540c35e391590258723063047  apps/web/public/senpai/js/theme.css
+    64586a96934611029189b4330dbfe0a3ccd0caded012079bb5490cdf222999ce  apps/web/public/senpai/js/theme.js
+    9f208d022102b1d0c7aebfecd8e42ca7997d5de636649d2b31ea63093d809019  apps/web/public/senpai/vendor/highlight-github-dark.min.css
+    ecc64fb616859e05439ecb19d10ff3ef6b5a113d36af2beb0c61f5d79e49a47c  apps/web/public/senpai/vendor/highlight.min.js
+    c68075672d976e4777390560baa112194855bd4404b13647da4855aae1f9360c  apps/web/public/senpai/vendor/marked.min.js
+    49efa3b9e1c081efc370db860d01fddbc66e228d6ecc1d246b077e2b9c5e5ae5  apps/web/public/senpai/vendor/purify.min.js
+    9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2  apps/web/public/senpai/vendor/three.min.js
+    09afd1f5d8a735e2e5877e3a98f9da81b1a98bcb0693ceca77078d46e7eec359  apps/web/public/sw.js
+    2f626705cd570f416250f934b3dda2bf2acc0f68c7a52ded783fcd3d96d30c0a  apps/web/public/tonconnect-manifest.json
+    409bea08a68d1638ab3810ee15c9f8dc2411988c3444a0decae5217c83cf8e12  apps/web/tsconfig.json
+
+    ── contracts/ (3 files)
+    05eda51523d1fa83e88d8d77ce9e100ce0fd2c676de1b7e1eff859d2ab8f6afb  contracts/base/KiaBaseEscrowTreasury.sol
+    21b61d1b20dd499849fc6f51644fe6e7fb0a56700412dc7b44d9cb1fa42e9b11  contracts/base/SECURITY_SCAN_REPORT.json
+    77cd8c6ba32f0928eea0989b4bd2f9a4beb858504f673ca614b7ccd12d1ab46e  contracts/base/ZeroXKiaToken.sol
+
+    ── crates/ (243 files)
+    b291cbe8e322965fbbc8db2230f0774546e7eb60298663b7bd90b4abc7579cb9  crates/agents/Cargo.toml
+    a501d8f2dded130d7ed7b10d47d4a3d71ed197524a753b2b86ab944bf0e9a253  crates/agents/src/agent_reach.rs
+    413f6ce5566ed936f9103a8eadee846f70c396a6b7634531596e2fe1217ccf82  crates/agents/src/card.rs
+    d6f163b1df64021bac1d7333e6f975bd71d7f12db43be05a0297f752d23bd9e6  crates/agents/src/kya.rs
+    cfbdf072a47e7209f1c17532bbc1761491fce3a1ca7846c95e8b1c60db37cab1  crates/agents/src/lib.rs
+    61f32ada1ab1c0aaaa93c2a0846545d90f7758694fc9c708f0997ff7fd388b3f  crates/agents/src/mcp.rs
+    146582b76de3a04ba981deee2bf039ba31de830b0971b136cfb92199fc68c19c  crates/agents/src/roles.rs
+    57b13653ef283fe6837a7cbbf393869e5482feed1f5cf52e5cc83206d1ec0418  crates/ai/Cargo.toml
+    dcd561d82925c2403800c32132d8e2c1978cf4566893b94dd7737dc1e29c91a0  crates/ai/src/budget.rs
+    7697234723c3445fe810c1503041419cbf63980290d424d8662ebd8ffe71732f  crates/ai/src/client.rs
+    f901a6d3030549ecff301725504eaae0c0f3b89d96eccdbb12f9ebea29baada3  crates/ai/src/compressor.rs
+    2139d79164076be8327398b3c23c103db18e271df967a11b3c571471e5ab5641  crates/ai/src/free_llm_registry.rs
+    5f8b6a3e9477a589edb6a70a35b446aa00cd0ad96e80094e0e2fcb1f7424c49d  crates/ai/src/gateway.rs
+    4fee2b7bcbb3c9c24d17ea29978c7985ee17bb376a7bae05afdad12938932d39  crates/ai/src/history_repair.rs
+    86534de2318a5a712fd05f1ff334ae83e5ecbc7fc095fc2be0ac2c544626be14  crates/ai/src/lib.rs
+    68c4e9092c5f8e52403241e7863cc0319d08120630325360323a997cc82ed50c  crates/ai/src/omni_genome_router.rs
+    bec5c909abf0ff02bcf3357fa17b57a76ce0d9a7e64a64662c7919bd9c7c8bd2  crates/ai/src/opencode_zen.rs
+    2a59fe57f20d75247a8a99bf8bed9d6d4ece47c195b40cda2464a6cd9d648f68  crates/ai/src/redaction.rs
+    7274e93f2f892857108dfb794dbf07d3ccf1dd75678ce17acf2d8b931b52b676  crates/ai/src/tool_parser.rs
+    b88d3ea1f763915010410b3ef55c324eedf6a45dc2385a01b89ebb755053ea29  crates/ai/tests/live_upstream.rs
+    4c0d776ad4ecadc2ae9a72e51602884d13c54eaf3525e80d9b829dd597b10554  crates/bot/Cargo.toml
+    7738b84546fd4f709764286d5d72f2aaf460826d3d1145e869d23b3b67f05548  crates/bot/src/backlog.rs
+    3dc94021458d3738944ed23eece86e918c4d1f19192ac60c1aaeb5c451500ab7  crates/bot/src/kernel_http.rs
+    ffa876553bd554bcda152c63744ba4fb771df3207ebee9594c12cfa66e1d9e50  crates/bot/src/lib.rs
+    41d8c3969a3f22c56fa94459ebfb76dd54a0173b0395b89531e3095dabacd560  crates/bot/src/loop_guard.rs
+    f1d1314bce3c8228ad431faf4120546a321580bac2ac6c19141164bd33e8d482  crates/bot/src/main.rs
+    3800696e852b6bd4bd1242eaed7d7ffbe76b3334a23c88412296a1122c17a06c  crates/bot/src/orchestrator.rs
+    8038c2a28cb6be3525322a41d282c978657ed50086cd5efbbcb5b0c14efbee38  crates/bot/src/port.rs
+    e17291169308cfb7cecfbc2a4053559931bf98e655d41e91d70b024d68534379  crates/bot/src/shell.rs
+    7fe8729087b4e6eeb9f329bfd43f254979137a43d3827ce72deb3c621de1f005  crates/bot/src/sovereign.rs
+    69d9e477dceaca04df9029516168318d00f0ef11bcd5a5d46f25e3cdc0a37067  crates/bot/src/telegram_api9.rs
+    ff19bd920302ced3c437f68c6a1e2680e6d30cc34963b4e3319ca1e9edc624dd  crates/bot/src/update.rs
+    420f7a4b035b4faca3b5a5975fa701b6868dee67a6d0f0d24cf9adb4744ede82  crates/contracts/Cargo.toml
+    5979e2ff887661aac1bba2300169f8a3712b460ec290913a1108dd9e16d1ece3  crates/contracts/src/accounts.rs
+    57935e1f6ce4f9c1ce914fe4c08b74f943e5bdd5dd9d3845c6764e08c47d3872  crates/contracts/src/arda.rs
+    31c8b5f4d47dc0f93653585b29d5fc461476f15276f6dd9c12f88f507eaa72fc  crates/contracts/src/auth.rs
+    19ff3bfaea4c2344b2797973211b5dcfa3bf5c207db7d7a8d71ee484b0ff3e0e  crates/contracts/src/brain.rs
+    74fe22a3f71f182b89a61a1712ef19db199b5137247b3d77e29538f19f8a742d  crates/contracts/src/builder.rs
+    dc4017103b1def440ec81f426322b8a9b9a4ee3332876d2e0718344333b3d378  crates/contracts/src/chains.rs
+    9fdcb73d32e03d549720c37eebd40948006185def5895ed92a7775fe5e5d9d21  crates/contracts/src/common.rs
+    4c45c4a8417b1c4bda6618ac35c428869e7ab08f83e1488e19866c1f0cf05e6e  crates/contracts/src/economy.rs
+    de4b3e49c252e21b046a12a1cbfa95ef86156dd87fd8c607de2ff231c3d901c6  crates/contracts/src/error.rs
+    d4de2de5c4fb2159633dcd6fce6663aba2dd26f7781719d104e9bbb81a9d5f57  crates/contracts/src/escrows.rs
+    96eb24ee151c0cb01c4148017bcb37f64b0f2656d223711d0a058ff13676ca9d  crates/contracts/src/grok_lab.rs
+    4cc5d60e0af017ff9ddc72ec8f6b279937c149b41d856f9e3ab909b7c72346f0  crates/contracts/src/lib.rs
+    28d5de1e403422f8f868c98e245512869ac4d69ea011b8e491ef59659ea5275b  crates/contracts/src/market.rs
+    75bddc92946034bd92a6571d0644c4a41f0bb3e892aae3df5873bb4563829e58  crates/contracts/src/monopoly.rs
+    7d9bb8699e9bb84fa87686530a1d98e2b8f1e76ce6cfe999934e92219f4e1120  crates/contracts/src/nation.rs
+    d460af7f84db63a8904b930a40eefb02f01bd910bf5cfcda4cefe704cd4b6a28  crates/contracts/src/quant.rs
+    055f647c5ded59ddaae21db5021d836378c14f93eb1ae6535b03bf842c3e2cbc  crates/contracts/src/security.rs
+    d3317f367dea523c3f39578e8d048c150f52dd09ab721e7ce956dc0c8029f2a2  crates/contracts/src/studio.rs
+    6d8641e255ab74ba102ec739c1999f4caa3f74e9d789f15b1661fb38348ac7a3  crates/contracts/src/supremacy.rs
+    8fdf49dd1055900fa88385ab62cd5963fe98605764e8aeb4b7c87a2b288ee309  crates/contracts/src/system.rs
+    ea6082bb0ef8c5a95362fd9371847feb3ef83824fea32600052dd7d78527f605  crates/contracts/src/trinity.rs
+    f424dad9ba9d221938224281e42cf13795afde08fc707d0e172e1fb6f6d9e83c  crates/contracts/src/wallet.rs
+    7ff73ad192d4bd7807492a72100f5c79b15b3ff303d7dd14070b533f8822ceb6  crates/contracts/src/wave10.rs
+    1e0cd14ecd437e23db4116439e6ee12299acb43371a598d17dbee7a54d1581e8  crates/contracts/src/wave9.rs
+    daee383537ff092b661549255fc10f1d79e0698d2eefecaa75287829afa23096  crates/db/Cargo.toml
+    31eabdb9ce2f7d9c7f29cc50b84752de1fd77511928fa5115add1362bf32689e  crates/db/build.rs
+    f2180967d2eb6ae7b8bbf239b25ffa1152f8a94005e01803b104e941bd0b7726  crates/db/migrations/0001_init.sql
+    6382dd3c9d207a3ad63758d2bc606c59b9addd2055cf99ec6e3eda4a7a27914c  crates/db/migrations/0002_m3_sessions.sql
+    06ee82530d0abd6f9a224dfc7f5fe38d1f463992764c72d24b9c14d415d871ff  crates/db/migrations/0003_m4_brain.sql
+    1e66292934c25ac8704124ce95ddd6d72a09fb585f0a2340c8410fb1a0aac089  crates/db/migrations/0004_m5_nation_wallet.sql
+    5580ed20f129f712d730a7a59e311b83cb8f11a9d382db31bc99129705e438b4  crates/db/migrations/0005_builder_referral.sql
+    5539fc470ae05b827a37aa4e9fed798d16505df53006f6547eb6e9fb1a4b811e  crates/db/migrations/0006_legacy_migration.sql
+    26c139208a2d00ffea2a82a903931f094df1c0d2a3f379921db175d2df2a4f1f  crates/db/migrations/0007_trinity_reviews.sql
+    a7619bdf607f1022442637aa580921efd3db72098e58f1fde5230cdc097dcec2  crates/db/migrations/0008_arda_locales_and_skill_forge.sql
+    d5d61646a315c3f1c03b451a6942fc0079b34c24e601a210eecd9bfd0c28fec1  crates/db/migrations/0009_super_studio_and_portfolio_storefront.sql
+    94dc824ee99f5225f4c0dcb27759e11ebf3278832535f821fa2202abc0ef4093  crates/db/migrations/0010_quant_vibe_trading_and_ccxt_feeds.sql
+    9a71cd3cd671844003a21a2afa7d4a757049f3ca7b6118777f2b3d7899d816d5  crates/db/migrations/0011_sovereign_monopoly_genome_and_base_treasury.sql
+    7e9c6c4636bcb4b81a301421ed42e5fb5bacfcbf0199fd670a00c192acb09fb3  crates/db/migrations/0012_wave8_competitive_supremacy.sql
+    819759146004f6ffcb42ae9c1c8329eaa120b358465856d7bef577a2b8c1884d  crates/db/migrations/0013_wave9_hud_grok_lab_i18n.sql
+    6d4e5c714cf5ceac5d7ef63aa3db84febc81e10d6e03e0dc21824bba2dd4e0b7  crates/db/migrations/0014_wave10_founder_war_room.sql
+    710482abc1c38c0d18a5618c500b18fbb9ed97e6ddd20c554530f45a5c13f759  crates/db/src/brain.rs
+    5da805ff1fb2dc5269b82bd24faea5f3bd2677ea17c63200e6d076a40d279d07  crates/db/src/error.rs
+    33dfda7e84ada1b98c1aa1a180b956b6f294f4cfb251ed03f8fd0efed7e0844b  crates/db/src/genesis.rs
+    ac2b38fb282d892a8e011c345798c672259bf4742b180547cdaa95a3a799173b  crates/db/src/integration_tests.rs
+    8812b8ee2c75d47213019beb2f2881b1430ae34da91f9881abd8494d7d48254e  crates/db/src/legacy.rs
+    3042f5ad6e6177384dd1d9a49c86321eae54b18432e9e8c1ffe9d5a08a159a9b  crates/db/src/lib.rs
+    fcd4b54ac92bed4773fb451f5b4b4bd05a270084806e1438a9fa526a2fa743d2  crates/db/src/migrate.rs
+    517d1b7d5bdf252f32fc0e910a6db8c0d8ed3f14b752f9af546b0b7e6e38a9cc  crates/db/src/monopoly.rs
+    1178fb17236d3060d2e9b9c4e34ba3174dd4e7bb30c45c38862d4729425b74cb  crates/db/src/nation.rs
+    b3afc275ebc72d4d2602a13670aac2d8600a9f9008e0017384db19602d7df548  crates/db/src/outbox.rs
+    b45e7183bf503afe09186ec4f27dc7cef9c295f43f7ca2333092e21f0fd3feeb  crates/db/src/proof.rs
+    57f12310d6c8f040e26a403b9687ab6da2d98a7aec5fe52b562ba03a09b6e80e  crates/db/src/quant.rs
+    d4ff20a548c2ac0ca26a5e0aa806c6a7d7af11f80acbb99d9c5957575a76ab3c  crates/db/src/queries.rs
+    79e9eff0f7a7fd97dc0c0e93c72e1ecc847ea4f4dd72a8bb6ad76efc12bcf137  crates/db/src/sqlsafe.rs
+    68be678393cb19a793a18a1701c0511f84b9a21dae10973bb3a25e7eb7f7f6e1  crates/db/src/store.rs
+    7e6dbd8a976efd40e657cde330cc539784167f5d13698569b7368e2c7aa6ac73  crates/db/src/studio.rs
+    d29a0148dba0c047a113cdcfd7bc23198eb5cbca27b9a02062e840700d443577  crates/db/src/supremacy.rs
+    aa326e1696bf1c6c7adbbdffedbb2b11ca5547aeef03147bad7d0fa9358adff8  crates/db/src/users.rs
+    b9a3490827eac6ee5a616035518d31556c411b2be5d9e5196088f367be558f0e  crates/db/src/wallet_chains.rs
+    709492cef6f2164822e734203a054413789337964d8a86b918e3179dcc2ee560  crates/db/src/wave10.rs
+    83a0e06baccf04e177b3febaf5f176bfb60e67dec9aff7f83d4546d9b9eaf2ae  crates/db/src/wave9.rs
+    5c0d6e929cf62c67f8413a7ce73b22cf44467d2cfa9edfea826c2c3bce58fc29  crates/db/src/wire.rs
+    b25b96f59add55fba7a34217a69809aa94aa9bc611a406f53ab26d883508a876  crates/domain/Cargo.toml
+    4bef0b398039b7aa8f897e4d8bae61ae6a154f3583285baf0e4cf6270a175286  crates/domain/src/cas.rs
+    aad52628ceb4c3e2aa0a2973e138604949a8b140b814dd2bf2616ae5b7dcf39d  crates/domain/src/charter.rs
+    3d4757be53ccf836223569640a826a260a5a61c4fe04c988569c283911ee9475  crates/domain/src/errors.rs
+    c1897bd17b51b23f28bbc7922e02412e9b3bbd24e0339fb97df6aec332cd7ee4  crates/domain/src/escrow.rs
+    06985e86d4f58796f27048ce61188a12f6c83d378e20bf07625bd255a6deb074  crates/domain/src/events.rs
+    3a5f7e67e06b276dba68225374bf54faaf1cf0754745afaa202fcf4b53eb5247  crates/domain/src/ledger.rs
+    747c23ccbed48f0b12fcbfaec5bcc676a4bd3bc5570b09ede765ed405bb108a8  crates/domain/src/lib.rs
+    33115ff1e44d76485d708371740d8a41644704f15dd33336cbf195944f2ffc72  crates/domain/src/mairon_rea_and_reviews.rs
+    90650c95d06e33700e11d99e18ef2052b3ad6d7fd40dbc629124e61f15612cae  crates/domain/src/money.rs
+    c1cc7832aff8730dc128c8e4545d8f0251d380915420f78f5453824004b19d79  crates/domain/src/viral_ranker.rs
+    a6dcc8498b4de691168ffc7db2803beb00ec6c30137b0b3d6bb19f6ce796e9c7  crates/hermes/Cargo.toml
+    8d5a3708e45c81dbfc70355a3363add7f7bf95b838aae49a0d59735ee0b013c2  crates/hermes/KIA-BRAIN-OS/14_OMNI_STUDIO_AND_ADAPTIVE_UX.md
+    36d072ce7125a004849aef2ed755e84bdac03d02b89d6d217a05d25bbe5627ad  crates/hermes/KIA-BRAIN-OS/15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md
+    3d85cc129b35eb7020dd81de2aa0cef777b8302888a095617ef8698b8f509d5c  crates/hermes/KIA-BRAIN-OS/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md
+    11c393cd001b368bd35c1306552eeca35c1f36fea2482d20fddf70c2ed32db38  crates/hermes/src/ag_ui.rs
+    9cebc43aca23e1491e309795cbe974b2de80429a9143a2f69bf2cbd99809accf  crates/hermes/src/approvals.rs
+    c913aa1e5c2d194fbff3cbdd8a677f101e8a5a1497079c2875dd5176316718ae  crates/hermes/src/arda_fishkal_engine.rs
+    64c833d03215be142e653ba59bd10b0dd380cad5ce185cc79ba7024e1210172d  crates/hermes/src/builder.rs
+    b13da306706d76bb962eeb183f1a168837123f7c5dac0798745e1f3581990c3f  crates/hermes/src/competitive_supremacy_engine.rs
+    0685fa2b9f89a3c42cb47906321ec7c8e4f4dd9feba4d9164dfd5feef81c111d  crates/hermes/src/creator_dna_contract.rs
+    0898dfae4954410dad3ea021b344ca0445ee63879b9f7e72acaf2983b83f7d12  crates/hermes/src/discipline_gates.rs
+    8586631bb72ad693acb0d08fa8d468eb04dc40078aa76b150cc68080c5c5d8ef  crates/hermes/src/engine.rs
+    4c65bce0494a95a0d9d6128870b6792bff2ac4b102429ebcef8c35fb7e5275ce  crates/hermes/src/faq.rs
+    157c80e2862c607faa59e79f1431dffea85e4253de5bff60db910130791eb28e  crates/hermes/src/fuzzy_patch.rs
+    c419107e5174493b5250ee466512e89324f57cd2a8e2a45db01e88d9f3ad70a0  crates/hermes/src/grok_ux_and_lab_engine.rs
+    66e6dedb6f39de2abf0e03c9b55bf3f8a542086a43bea327d8284d4464a84483  crates/hermes/src/identity.rs
+    2f91324a0d9e43176bfb7625cc19b86ffe72818a9d4dd9a47b64415e065236f4  crates/hermes/src/lib.rs
+    356c209888943829d667e29fc03e8aab16258ad9c53d76c2b3529d8e6ad86f51  crates/hermes/src/memory.rs
+    3a15f9d392047b83e94fd06bd744702f012a52be3817fe988f73cc43d3ae4171  crates/hermes/src/neural_hud_studio_engine.rs
+    41e8f0cc39697cf9bdcb4e17d005474d1037c973ee0c734610cd14c7d8e1a812  crates/hermes/src/prompt.rs
+    12dd45de4e374614ff1748461e83c6e5340b80977d2ebca6a796438415ff0d8b  crates/hermes/src/security.rs
+    fcb3387eb3f98ae780f41499bf8124073597e7bc53498bb65f930bbafb912e14  crates/hermes/src/shield.rs
+    64a4e4d6787da25e750f78f30d5250485c0fb7b57430cadf8978efb425ca56b8  crates/hermes/src/skills.rs
+    6483035b99157f8bfe73ff80a944f7b178b855cc2f4a65a3ca0da1aaefaff4ec  crates/hermes/src/sovereign_monopoly_engine.rs
+    996302230ffc3fc9e1122463fcaa07127110321228e792559e30d9a28789cc26  crates/hermes/src/studio_design_contract.rs
+    e186509d5afad6d3494db8246fb2db3b48432e3845959a65cc42d10df0cb6616  crates/hermes/src/super_studio_engine.rs
+    3ae1a07a5296697cd3b4ab7eef40df6b296d8b12c0cea56f2a6fc4a345838f03  crates/hermes/src/token_saver.rs
+    5d5d1de26677b79eef4bd45c1f29d6bd790b9053f3eb47e8542dbbced5c7de14  crates/hermes/src/trinity_pipeline.rs
+    e2de72f3b3fc6a82520b60c47cfcd3cfa8297886647edecc3cce4702163541af  crates/hermes/src/vibe_trading_engine.rs
+    e273764871bef19bb313b08c513c21f66f0d8398560ba63a96ec53dd721828c9  crates/hermes/src/war_room_simulation_engine.rs
+    45390b9b9cdb5d5f18486d827761d63c24b4d4891cce9ead2a0c0deb3009484c  crates/nation/Cargo.toml
+    e5ce8abd99aec601a166ddc92452049ab58808f17e083e67dbbb7b5274cd9e0d  crates/nation/src/lib.rs
+    04b9597397c9c17d95e610ab4f00c7cc789177666f95d88e2d81aecf32a48a7d  crates/server/Cargo.toml
+    d1e8a64f3e2f2dc8d3c9deb7ce3f2ea434f102fa4360956dab6806b4e68a649d  crates/server/src/config.rs
+    88f3404d769e61b6300e9a3dda1a5b83992aabc751639aa93330ebc826ff3dd8  crates/server/src/error.rs
+    ee8063492808ccb4895f30de7b81f47d13b518b588ac735ce3e407dbc106f6de  crates/server/src/handlers/accounts.rs
+    14b69c91f8a44a71038e4c2d55ae8ed059223751fed8005661bf36d42dd0de14  crates/server/src/handlers/admin.rs
+    449f5b90063e5ce3ccfbf2d35a6185c69aad8c7815c519960c2bdb756101e01a  crates/server/src/handlers/agents.rs
+    699a0d169011945ed3e92a187fdb869640ecf6f67004a518f600ba0209028d6b  crates/server/src/handlers/ai.rs
+    30229426d54ec1134ca00183af89019cad2d8834b0f25d1139122715a6c7f412  crates/server/src/handlers/arda.rs
+    7c63261bad13acd788285ba998ab983b83c684c7eaee3965c9c75682bacd2028  crates/server/src/handlers/auth.rs
+    9fc044e7eb961af1fa4a9082b45bffce141a018be5e399388fc63d3e555d6fad  crates/server/src/handlers/bot.rs
+    278546fc0f1963bda5788110b4e88e6bbf32cfc68130dff228173dfafc88e071  crates/server/src/handlers/builder.rs
+    82b06e68ee56aded4397ee1bb2efe70135a620dafeec7020e561f443bb8a7fe6  crates/server/src/handlers/chains.rs
+    26179386ac828a779d6d0e9958370a8dd0157762ebf8152cfc966db6df031367  crates/server/src/handlers/deposits.rs
+    0d333e82a1cda657820722d1735f1f33f77b801f1b380da8cbf8eedaff1047ab  crates/server/src/handlers/escrows.rs
+    e2fd3eea2ded3f1697c453f851a74f6311141a7a79876fdd459aa288fb8d1558  crates/server/src/handlers/grok_lab.rs
+    58d66ab26dc13d9769150d513a4c04751acdd6ed5d7af1f6eab1fd7581996d3a  crates/server/src/handlers/hermes.rs
+    19f5fc4838c1cf07364a45082e08663ac544f792b3711e93c2ddf63c0cadeb9b  crates/server/src/handlers/market.rs
+    c8ed5a4fd951835f2992e3c7c0a054d5d58d81434d357fac571772a14cebdfd6  crates/server/src/handlers/mod.rs
+    fb1c2522b2b3b21cb9d382fa1f335d72660af77163324c3e0da05588e56d5af5  crates/server/src/handlers/monopoly.rs
+    903d743ba8cb7732efc7f5d0d01bae0e28b715f74d3ead8748c4644aff5e3041  crates/server/src/handlers/nation.rs
+    2d762f8f7c2428783f453a60d78ab5ec14275263de348283e0da6e452f9486b2  crates/server/src/handlers/quant.rs
+    763ad1854bafa93d1753940155efc6d1a3e736f4709fbee96321252ce1a36421  crates/server/src/handlers/studio.rs
+    4d6b3c7359f24a35593031d5c022d9ef8a5bf6d3858b3650b8f5617d4441c7ea  crates/server/src/handlers/system.rs
+    fb1a82b54e01bba8f3e83d4b558be8bed0ffacaa2eecb68b5f634f6129760876  crates/server/src/handlers/wallet.rs
+    56108940a0e551f7c1bd6259eefbb41f1ea30665f01d8c36c0950b23a900932d  crates/server/src/handlers/war_room.rs
+    70ca3b96970c2324ed3763d9c205bd19fd6cdb8e70400991ef8b525cc4789fa1  crates/server/src/lib.rs
+    79ba648ce0391fb7cfbe239f4f3a69432ebd682624525a5b9c42c0ee389b7555  crates/server/src/main.rs
+    0dfbbd836a206af306cecf80dcc8c9cf8f44df3b8f84a59a65542ed7e11f1c55  crates/server/src/middleware.rs
+    370db6f5722376413f6e4ab64ee1aa6ea91f794e09304c531fbfcda9cef5dbd5  crates/server/src/routes.rs
+    647e4f0824619d633151f4fb39984d1e4b91cfc2b6d45d5c14094b751b807c37  crates/server/src/state.rs
+    5e02f787259b2e8884b7654ab387eb77bc9c68b99b04ae967ae599f5ffb50b82  crates/server/src/views.rs
+    7bbc61866eb21d4bb4e0c0cb18989e17ab0a2d3ffc556f3aaeea2bdfe88025e5  crates/server/tests/m2_gateway_tests.rs
+    013e8a30f2dab30c31a70e4a4b5419f8d96507c3f0577747fece311e3cfa2085  crates/tooling/Cargo.toml
+    1ba4bd98f33c69129863ab45b767646e6d59c1b77fa74897ab2fbb2fd0282c22  crates/tooling/fuzz_suite/Cargo.toml
+    c3ab4494199d8778c1c6d75fb8fb615d0d93da174534caa650bf43aea3999181  crates/tooling/fuzz_suite/corpus/fuzz_ai_chat/seed1.json
+    21719eeb00e3962c1393f887656be4149a239e721f4efaa0ef1b85ed544fdcc4  crates/tooling/fuzz_suite/corpus/fuzz_create_escrow/seed1.json
+    e3cb94fbe1ba0fa80dd264a6c99c89bc863201b7621ea5418f0237ff85fdaf37  crates/tooling/fuzz_suite/corpus/fuzz_mint_request/seed1.json
+    93e64f6c731ceb1e260615cd1d16924fb1b484db8ba1bf9b1ced8e29b23c66a5  crates/tooling/fuzz_suite/fuzz_targets/fuzz_ai_chat.rs
+    1783974ca23006a6aaddce56806cce497dd7b8923ab7ca78a0191a7063d4feca  crates/tooling/fuzz_suite/fuzz_targets/fuzz_create_escrow.rs
+    96493ff8c4b39b38f81057eeb4c4466706d599ab45aa2f121d9a003cf57a9255  crates/tooling/fuzz_suite/fuzz_targets/fuzz_mint_request.rs
+    aaf553d024c790c81340150b4953792ec2e5cf211b9b36edd3829f04c912c397  crates/tooling/src/lib.rs
+    c64bd4bb4c556feba304360ac8df2c35c24e0fff67686a34072e56f43c5e27e6  crates/tooling/src/mutation.rs
+    86552ee9fa792349b9a174cb34bca70bdea7349ad3e924b13c5b283ece569b3f  crates/tooling/vault_pro/Cargo.toml
+    9db0a4d516d5f99cef9ae70bc6f949b8e19d09d9e8c92dfe8b7cdd90462dbb27  crates/tooling/vault_pro/src/bin/audit-ledger.rs
+    0c7211121ec723e3f9272177387091bcc887fabe654b306ae882ccbe8b1bb087  crates/tooling/vault_pro/src/bin/dual-run.rs
+    55fbaa6d33ef9d1681a9b7f182d834132432b8114d3f7666e6a4b246faee18e5  crates/tooling/vault_pro/src/bin/genesis-proof.rs
+    1618255632da7ddbbbc2292808c17bb1ba9eb01724ccc23660929137f4ac10cd  crates/tooling/vault_pro/src/bin/loadtest.rs
+    1e04d41ddbf7307f1c6c1b92a1c137f07731fc259102f1ee1a903691a6b70486  crates/tooling/vault_pro/src/bin/migrate-legacy.rs
+    f41d8af8b3bc815742ce54aa308bec98cb84d85261246e06aa9f247455f84fb8  crates/tooling/vault_pro/src/bin/parity.rs
+    90ab50defd52d54765534962e250c1b3cc219bd43f4bd6e25b98f08c2925770d  crates/tooling/vault_pro/src/dual_run.rs
+    46d5a8c2f9cf3e68daa2285b998e4177b0e6279eb22176c8f6938a6d8058141f  crates/tooling/vault_pro/src/lib.rs
+    253cc30c3fe727bc9897e4a7d52c7778570782acb7f3d12ff0048882412c2dc8  crates/tooling/vault_pro/src/parity/mod.rs
+    066ba45fea943a045025ab5cb2529c54b7ad516bfff402f4a51043b7f2d39e62  crates/tooling/vault_pro/src/parity/scenarios.rs
+    0e33ebb64cefe9d460817a4084c23908c125ee3b3e5f181b6e3500e94f786ff3  crates/tooling/vault_pro/src/proxy.rs
+    66cd5a423c73827b2d24bb38908df52a962a564be045caf8f238a4bed7877ce0  crates/tooling/vault_pro/tests/dual_run_proxy.rs
+    89799f7f0ee5aabf3ccf8cc0ff2a416fc60ff769426d0b31d1aaada5dd7897c2  crates/tooling/vault_pro/tests/fuzz_lite.rs
+    40c83c9719e98bbc2346c8ce73894ff225e12b618a01ba794f5df817266eb450  crates/tooling/vault_pro/tests/golden/account_balance_missing_404.json
+    4c8daf9512ecfe35bd4f8526fb6da24ce517179a36930b83129b6fe37c64f25b  crates/tooling/vault_pro/tests/golden/account_created_201.json
+    bab67136536aee9719e1640f953618d3c98092ff9c515d728a5f08cf0394483a  crates/tooling/vault_pro/tests/golden/account_duplicate_rejected.json
+    9bc5b4b5d39e6df5a47c69e0fb675db314f2038e631f6c8476ef81dba33bc089  crates/tooling/vault_pro/tests/golden/accounts_list.json
+    55dd1d531f45f5815666a224401bbd5407407ed47af053fd6646238176468582  crates/tooling/vault_pro/tests/golden/admin_guard_401.json
+    5e6f1a4b067e0c50762865701b56ce0a0669e082b789028909512487f08b1fec  crates/tooling/vault_pro/tests/golden/ai_agents_list.json
+    cffaf7ad52c39105bcf8fb9a0c09a9cb6b676e81b1c6b4f8bae8285c2730ee99  crates/tooling/vault_pro/tests/golden/ai_chat_disabled_503.json
+    cc08ef022d69733d328ee5fba97480a4e8eddba1a35a73de575da133f7165fd9  crates/tooling/vault_pro/tests/golden/ai_skills_list.json
+    8b2af8fc8fd5f59f29309da102d9add2d503d435dcbe60b6237c4848fb2f2c13  crates/tooling/vault_pro/tests/golden/ai_usage_empty.json
+    42944fce96e6786781ca86cbd834900ef0f5f683f4d376fbba865d91f6be8138  crates/tooling/vault_pro/tests/golden/bot_bad_secret_401.json
+    becd1e4a3b04232447f00459b8e5d52f51070b3380d1d31601e3b19a517d530d  crates/tooling/vault_pro/tests/golden/bot_balance_command.json
+    2f5ce852f34dcb8953749f95fd8f831ec90430e61a4240dae1398e077c08af76  crates/tooling/vault_pro/tests/golden/bot_disabled_503.json
+    7098049df7b5ef118fdec490d68f58caa02961edd788ad70091f98fefbf3875b  crates/tooling/vault_pro/tests/golden/burn_overdraft_422.json
+    1c67cc154ebb0fe29e02ae86da2c555e1c5b22ee814fc1683dc85c0461dba983  crates/tooling/vault_pro/tests/golden/dashboard_approval_decide_settles.json
+    f5d8d07f13483cde93c9f9d5840f8909d6ecfb7d3524e5689fa5a7b97305aa7b  crates/tooling/vault_pro/tests/golden/dashboard_orders_empty.json
+    afdead9dbeb7f60b7f8c6ea4fa4d6ebe56d6089a585a2d6feb554ab51694851c  crates/tooling/vault_pro/tests/golden/dashboard_overview.json
+    f1ffa72d8d7c5ac97cb91de5037614d33b4070d1333235df745d38a74ef1a025  crates/tooling/vault_pro/tests/golden/dashboard_product_created_listed.json
+    56db20a557f6aae949ab4cbe10c1e6ac0e866866750f802c697002cd8363798b  crates/tooling/vault_pro/tests/golden/dashboard_wallets_listed.json
+    547782640161a2feeb97291e2a7c3cd0e1fa036c76830f638e140ac647f42492  crates/tooling/vault_pro/tests/golden/docs_page.json
+    fa6a61c3d21aca9ca21772ed1a5224be1c476725ff1570d8031f7e073dc2a305  crates/tooling/vault_pro/tests/golden/economy_summary.json
+    b12a1b23b3a1ce7e736009d0b855a7d0c1d6b6e8965818115897afb009af3f3b  crates/tooling/vault_pro/tests/golden/escrow_cancel_funded.json
+    07625c44eba389a984c1c43ff88ed3511d43d80c7ec7dce5a038c4991830a1b3  crates/tooling/vault_pro/tests/golden/escrow_created_201.json
+    7fb65952472e7a66f524c135c02fa9b8b488dc89c55707d3e27ce7c39feb9951  crates/tooling/vault_pro/tests/golden/escrow_dispute_then_refund.json
+    a378f31251f111b90d62e5b298c026ecee92763d636dc459b6763d48e4951670  crates/tooling/vault_pro/tests/golden/escrow_expire_refunds.json
+    bbf2a703dde294d19133546b447b3dce0d8c937de7178c9f7a0ac40fce606f21  crates/tooling/vault_pro/tests/golden/escrow_release_needs_hitl_over_threshold.json
+    f39beb116babfee9a5aa4f436f026a1a536ae134aed1e2aed5a9762460b32c86  crates/tooling/vault_pro/tests/golden/escrow_release_replay_no_double_pay.json
+    79b3d383924d979e4d1674ee3e94939270ae49f91100edaf3f51c5436bc0abe3  crates/tooling/vault_pro/tests/golden/escrow_release_settles_90_10.json
+    145279bafcaa7054d4def1301e638acfc054b5a513eca84bd8cae3769c7b9a5d  crates/tooling/vault_pro/tests/golden/escrow_unknown_seller_422.json
+    0041dc65090b02f3f8e306121dcd71e2be25caba59c5d7f07d226eb419da219c  crates/tooling/vault_pro/tests/golden/health_ok.json
+    5597c554f3917f8c58cfb39ac548beaa186d9e5f098a6a5a00abae8c4b827c8e  crates/tooling/vault_pro/tests/golden/hitl_approve_settles_90_10.json
+    7285b25184ebf18eb21bc062ca253e80f8293c19a860c86d57146bc06847fe38  crates/tooling/vault_pro/tests/golden/hitl_created_201.json
+    c98732ad5c68a7ed8292b4858153e10d4262ec6baf48a05704eef3b609db5f44  crates/tooling/vault_pro/tests/golden/hitl_reject_moves_no_money.json
+    478969dd485221a5db7c02d9f47b110a346dc00c7c8b8254e9b2d3de1fc331ef  crates/tooling/vault_pro/tests/golden/hitl_second_decision_typed_error.json
+    e00a9813733fa641129b113a128cb6da28e03f71b03e0934df911cf1a623af0f  crates/tooling/vault_pro/tests/golden/hitl_sweep_empty_is_zero.json
+    e06f2839243964baace6d41e15ba7323441cc500286a778644980ed0ba32d3de  crates/tooling/vault_pro/tests/golden/mint_negative_422.json
+    7b2b00fa483752dfce3f6481647be1a9f6c13b0e123c2369a7f1375268a69f0c  crates/tooling/vault_pro/tests/golden/mint_ok.json
+    d08bd06d876225390bd4aa2f65aa6113e48681681ffcdeee4dfdf0d868608cdb  crates/tooling/vault_pro/tests/golden/mint_replay_idempotent.json
+    52384ddcc255afb47945ec3f34315aea8b64af49a23570ed6915420d5aed0532  crates/tooling/vault_pro/tests/golden/openapi_document.json
+    5c73220f9a9eed70129bb89d3eed1f3dc085727cb2da3cd03f4cda522cc4440c  crates/tooling/vault_pro/tests/golden/rate_limit_429_meta_limit.json
+    078a156a5a6ffe42b6455e93a6a40de1937e5073b1b99566c6d14b67ac9f2ec4  crates/tooling/vault_pro/tests/golden/security_layers.json
+    0a6f3c213521bba54131fc5e6cc47b3bc05712ae09d5604f6282396c663042f2  crates/tooling/vault_pro/tests/golden/settings_list_empty.json
+    4b5318a924dc9085a60a950646a7e41d9a0b501a3adf60e2c95a32e8e947113a  crates/tooling/vault_pro/tests/golden/settings_put_is_not_implemented.json
+    19cb1fe8401a7ff4adf960f62de2655049d91d823b09e8b7647fe7bf28aa8c3a  crates/tooling/vault_pro/tests/golden/unknown_route_envelope.json
+    61c15422704129ae24b7134dcf2a0be637ec145d83c26fe3a7efdace23715d62  crates/tooling/vault_pro/tests/parity_replay.rs
+    5893f35710566ed1b2fe110607ac02f4faff2f477ceac832b4c9d7eab314db90  crates/tooling/vault_pro/tests/properties.rs
+    91b642b759c0964c276a25d7911a98a1613234c6a05c31fca799c4470cdbb552  crates/wallet/Cargo.toml
+    a11a8f8996a44758405ccbfb88ca63acfba4ee565fa9a204a72453670776fff3  crates/wallet/src/base_treasury.rs
+    afe7433c49384cb0a8c24ca144a8fd08c550ea8815e704d4647f73c05040389f  crates/wallet/src/ccxt_core.rs
+    aacbd9f8d8e86256a476e8aad9e3c8226db18c3a855fd1e3259fc042c7cb445c  crates/wallet/src/lib.rs
+
+    ── docs/ (44 files)
+    c834da58048e117ff361ab0481652fd98baca37c1e9f478fc871e91507d4dd79  docs/adr/0001-kian-foundation.md
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/api/.gitkeep
+    9eb6d38b986fd00781f954f55572f2388bb260d65058368cd4dd010d6dec35a8  docs/dna.md
+    65f5d7a6247d27bb4a9966c08079fb64927be3bf4ca4d8b0e5f3ff0224e7e3b4  docs/dna/kia-brain-os/01_DNAme.md
+    c067d229187eefa09ff0943587569de7145703fd852d063254dc5bd68d5268b0  docs/dna/kia-brain-os/02_DNAwork.md
+    5092cf69804089ee81e15e63fe1309553a41c6e461b59ccc1b738f1fbfc33041  docs/dna/kia-brain-os/03_DNAmind.md
+    37c1e79ab9e4fc3324ffdaf2d52e8d9ef1c4913f7f54e044a0a72bdf398edd0c  docs/dna/kia-brain-os/04_DNAharness.md
+    552890d6fe2490207d86aeb249ea1c8a9633347b71f86bcd6c4370db7e8bcc4f  docs/dna/kia-brain-os/05_DNAskills.md
+    1e56c3a80f56d66a8d11741c708bb34cdcd299793dbadf54724669ac49ca3b1d  docs/dna/kia-brain-os/06_LINK_Router.md
+    1e813d5781c5271271f2cb96478d7ff6cd154170a416e3e1b987172d6d638425  docs/dna/kia-brain-os/07_LINK_Protocol.md
+    c2fccd23d3ac3160b19181ab5891c39c47527e39d804044b9c00b96da426a86c  docs/dna/kia-brain-os/08_LINK_Extractor.md
+    ffee07dcaa29ed474b13b89742e3dd6bab72eac238aa275107526bc9a478104d  docs/dna/kia-brain-os/09_LINK_Bootloader.md
+    cc091d413b6f43aba4ee865506ee531a7fb84794e6f2066bb48a59de30986cda  docs/dna/kia-brain-os/10_MAIRON_REA_SOVEREIGN.md
+    c74420724bf9b49d422e69bab2e9cc40e1bd4918b6d316582d6957551811867d  docs/dna/kia-brain-os/11_UNCHAINED_KIA_DNA.md
+    6f55419198be7e42a5e5d541e337c888d72c8e684f1318fd3b92380fdb364e0c  docs/dna/kia-brain-os/12_TRINITY_AVATAR_ENGINE.md
+    45c7a71965c6a165d138e2d5df30f01a9ecfc0199e100cf7b33c97d3f5b0050c  docs/dna/kia-brain-os/13_ARDA_FISHKAL_PLANETARY_ENGINE.md
+    8d5a3708e45c81dbfc70355a3363add7f7bf95b838aae49a0d59735ee0b013c2  docs/dna/kia-brain-os/14_OMNI_STUDIO_AND_ADAPTIVE_UX.md
+    36d072ce7125a004849aef2ed755e84bdac03d02b89d6d217a05d25bbe5627ad  docs/dna/kia-brain-os/15_CCXT_AND_VIBE_TRADING_QUANT_ENGINE.md
+    3d85cc129b35eb7020dd81de2aa0cef777b8302888a095617ef8698b8f509d5c  docs/dna/kia-brain-os/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md
+    a8291d7b179ad3b51702776349c2c64a9fe87ce6e92624504fc493f582785f08  docs/dna/omni-model-genome/00_ECOSYSTEM_INDEX.md
+    09e7442c5323202bc7a61cac8d1790a3aa2e09baaf6119db251445b48844c1f6  docs/dna/omni-model-genome/models/gemini-4-aragon-high/01_TOPOLOGY_AND_HARNESS.md
+    9dca775dca7c3e2f0b98bd8097daa22fb09b85b68ab0cc0b9a5b204dcad742c1  docs/dna/omni-model-genome/models/gemini-4-aragon-high/02_REASONING_AND_LOGIC_DNA.md
+    b14d34b80e8c5850a07f01968550a9e2d3592a57299782b3f26a4d13e46ddbd6  docs/dna/omni-model-genome/models/gemini-4-aragon-high/03_CODE_AND_PATCH_MECHANICS.md
+    da5388f0a325a7d4c4cd45c08232cb7abf73a1469cd9d5f2eaa4003f11d5c28a  docs/dna/omni-model-genome/models/gemini-4-aragon-high/04_TOOL_CALLING_AND_STATE.md
+    d07605b4382ee43319c6c03dbefa1cbcca002d0e4536286b787913b10bc4ca24  docs/dna/omni-model-genome/models/gemini-4-aragon-high/05_UI_UX_AND_AESTHETIC_BIAS.md
+    a284f2f9114849ac893f1661fb5209aeb7170585ca3757f3940dc114ae76f474  docs/dna/omni-model-genome/models/gemini-4-aragon-high/06_GUARDRAILS_AND_FRAMING.md
+    abe8862ce72d0fdbcafa12937b4e0d96c103837ef0b04d2bb6a4c4df4398de1c  docs/dna/omni-model-genome/models/gemini-4-aragon-high/07_PROMPT_COMPILER_LEXICON.md
+    312bcee81e56f4a011f2c0654976f219612e9a310a42cfdd2f8c4119065933fc  docs/dna/omni-model-genome/models/gemini-4-aragon-high/08_FAILURE_MODES_AND_PATCHES.md
+    6ae49438b6a80de768b000a6766aab3a2d0b7ec14feadef0cfa1eb5f959e7fc1  docs/dna/omni-model-genome/models/gemini-4-aragon-high/09_ROUTING_AND_HANDOFF_CARD.md
+    aed98bbb03f8308b912e8d4408aa5abbef2f7532254dc079359e20942cb1988c  docs/dna/omni-model-genome/models/gemini-4-aragon-high/EMPIRICAL_AUDIT_REPORT.json
+    1e025fbf38846d0663b602fd92beb7cd951ae77370d68b3834b13e71f2ad1271  docs/dna/omni-model-genome/models/gpt-6-standard-free/01_TOPOLOGY_AND_HARNESS.md
+    48679c6984240a141d94015a189bab1448e0ff5326151cbda1e5834c9a46bfa6  docs/dna/omni-model-genome/models/gpt-6-standard-free/02_REASONING_AND_LOGIC_DNA.md
+    fdc733920760e18e6fab8fcf056c15913d5604b95b4e80bd6ab13324f020b7cc  docs/dna/omni-model-genome/models/gpt-6-standard-free/03_CODE_AND_PATCH_MECHANICS.md
+    54f3f1c8cb115da095cf23bed74596d70f2aa8eee8597f43cef531c1bc309711  docs/dna/omni-model-genome/models/gpt-6-standard-free/04_TOOL_CALLING_AND_STATE.md
+    f5d14962162bbcec4b0d8aa456f7e833da5bcb0c35537c408370839e0268110e  docs/dna/omni-model-genome/models/gpt-6-standard-free/05_UI_UX_AND_AESTHETIC_BIAS.md
+    00169649cd351298ecf5582bda986fd32971d33a5f8eca8b04d3f80fbee4c95e  docs/dna/omni-model-genome/models/gpt-6-standard-free/06_GUARDRAILS_AND_FRAMING.md
+    0fac113a489cb0150165e7b67a8ac06e247cd661d866c82b00906792a86bdf1a  docs/dna/omni-model-genome/models/gpt-6-standard-free/07_PROMPT_COMPILER_LEXICON.md
+    0deb14008bca416f24518ddf307cf100847572289bfb97b88c38e18823aaf086  docs/dna/omni-model-genome/models/gpt-6-standard-free/08_FAILURE_MODES_AND_PATCHES.md
+    edfc1561a1a7b3909d57b7f01f33fe88e0e3cf01dce673c44a5d2717efd79214  docs/dna/omni-model-genome/models/gpt-6-standard-free/09_ROUTING_AND_HANDOFF_CARD.md
+    4333f43e90f9b4da50cd580c414992f060db8b81a1cc2f0d6e3b33a470ebffc4  docs/dna/omni-model-genome/models/gpt-6-standard-free/README.md
+    4333f43e90f9b4da50cd580c414992f060db8b81a1cc2f0d6e3b33a470ebffc4  docs/dna/omni-model-genome/templates/MODEL_WORKSPACE_TEMPLATE_README.md
+    268f815a0cfc0556e650c662a30899b5e960e0ba7041e35487f593ddcef14481  docs/migration-map.md
+    49a8c7dc972dfd1fa392b493deb3ffc0c5c098d845c7a848fabf8df5f6da88b0  docs/rea-gates.md
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/runbooks/.gitkeep
+
+    ── infra/ (3 files)
+    d0314df5d1eedd0734734fc129fd95e73955ff3692d44e5fbd651ac62961392e  infra/README.md
+    df41298f2f6ba66585ac8eef7e3c501a4aa59323d84ca5693e126f47b4c8639b  infra/docker/Dockerfile.server
+    a68a1375337c05ae0b9e32186509f8ae053f6e2c11542f62b4d4a2309cccc126  infra/docker/Dockerfile.web
+
+    ── locales/ (2 files)
+    5bba6b60293af6482a2dbdd45b7ec9c0e5cc377e24f7c290ca0b3a462b0f4fc3  locales/README.locales.json
+    b3f844b2417763202cec05ec72b7cf441784cef9960d39670db8044da90815f0  locales/fa.patch.json
+
+    ── packages/ (55 files)
+    80da277b1044078c3f3dc719a25e88a350eb9cf67787feb180a7e37aee6117c5  packages/analytics/package.json
+    11fadee2211207841367b44e8cf7830e66f4a928f02803caf9a0c16aa068bd12  packages/analytics/src/dna.ts
+    f473a1974d9b44c3e058e8f76f010bb31de1a2ce44be05a7c9c063057eac9825  packages/analytics/src/hashing.ts
+    b7c257f74e16282df4ddd48a098dd840988e2bd6a9f595ef9d8431441e26b65e  packages/analytics/src/index.ts
+    0e6795c7e56c9521365e7c01037f06e8b4bee59ce5791b9e18a4e707c958a4d8  packages/analytics/src/preference-pairs.ts
+    25dfbdeb7d9a518a85c9dd9c4cd93f80df26f9b268586827ad6ad82c8db97fef  packages/config/README.md
+    457743980092c151f03110ded5b92daf083d1cb065bb13e6bb17cbf968ec960d  packages/config/package.json
+    549afb57dd27ac3af5a87583ef9d28737f544907c44529529b3387d6d8aad7d9  packages/config/src/index.ts
+    2a692fd8ac39694447f59eb93605decf91e847f19887ff41015571243b08d069  packages/config/tsconfig.base.json
+    56593de347762daa1d138ef7ca73d309c81e274915818767ac163d311fd32adb  packages/contracts/README.md
+    c8f493fab37f45173d33e7820893af8d22dd3fef03dfada35e74e6a291492323  packages/contracts/package.json
     6015358765353b566ae55b6bd5e00506e927b86cffa3afd7ebf3da543aff8e77  packages/contracts/src/index.ts
-    85a269c02f3de994d5fbd0d3ab34dbe3816e753715b562368a91120e81d27e3f  packages/contracts/src/mairon/ledger.ts
-    f204c5d4d5664aa8ecafc256a714cfe5704c5b85204ea15a5d68dcd5a76f0700  packages/contracts/src/mairon/trinity.ts
     b91e7b937daef1faafe575a613dd827d01a4fa2751fac81916808907feccc8b9  packages/contracts/src/mairon/arda.ts
-    dcbe7b6753ffeebe9cf77cdaff13f1d5cb0f6391dc458fcce11b588bed324fdb  packages/contracts/src/mairon/superstudio.ts
-    dea915b9c0f3170a5a894de7eed646ab3cd3a760143df19127298ae5682e027c  packages/contracts/src/mairon/quant.ts
-    a0ff82723b7759ae432a3ad4ea9868557d00ce2077ae951452762fae634d4ba8  packages/contracts/src/mairon/treasury.ts
+    85a269c02f3de994d5fbd0d3ab34dbe3816e753715b562368a91120e81d27e3f  packages/contracts/src/mairon/ledger.ts
     9acf6244b41f6b7edf67b4272808cc1aea8214b790cf660a0737a1e845a9a6c9  packages/contracts/src/mairon/neuralHud.ts
+    dea915b9c0f3170a5a894de7eed646ab3cd3a760143df19127298ae5682e027c  packages/contracts/src/mairon/quant.ts
+    dcbe7b6753ffeebe9cf77cdaff13f1d5cb0f6391dc458fcce11b588bed324fdb  packages/contracts/src/mairon/superstudio.ts
+    a0ff82723b7759ae432a3ad4ea9868557d00ce2077ae951452762fae634d4ba8  packages/contracts/src/mairon/treasury.ts
+    f204c5d4d5664aa8ecafc256a714cfe5704c5b85204ea15a5d68dcd5a76f0700  packages/contracts/src/mairon/trinity.ts
     28868dd67cbbf68ae3fb6881f866b82c3cf35d82d9d4e81812d958683ea5588f  packages/contracts/src/mairon/warRoom.ts
     4f1837c75ce41e868c042abf4ad9d7fbefe8434839e9438b269663d3ad064061  packages/contracts/src/mairon/worldState.ts
-    c8f493fab37f45173d33e7820893af8d22dd3fef03dfada35e74e6a291492323  packages/contracts/package.json
-    56593de347762daa1d138ef7ca73d309c81e274915818767ac163d311fd32adb  packages/contracts/README.md
-    1b9ab79d30a9fcb4e22f7b4db18b4f47a1343ce5959bcfb238c3e0811809bca8  packages/config/src/index.ts
-    457743980092c151f03110ded5b92daf083d1cb065bb13e6bb17cbf968ec960d  packages/config/package.json
-    25dfbdeb7d9a518a85c9dd9c4cd93f80df26f9b268586827ad6ad82c8db97fef  packages/config/README.md
-    e4e35e6514dd76e3cd74db2902872abb8b5ab7dc537a2d146628724fbd9f7005  packages/sdk/src/index.ts
-    745b776b16c96654fb3341a048e818aabfbb61dae760eda66600945ee6ebf25b  packages/sdk/src/core.ts
-    93c786cb742e972740158973e2ced87c0225cc599d68f4dbc0d18cf351a001ce  packages/sdk/src/mairon-client.ts
+    08965090444292ead1f7b7ce66e848830e180f888c6292ed1f3d6f62e2f8e11a  packages/contracts/tsconfig.json
+    10f4c7da53f19965a9c8b6305a4937234e8a29c342b6e4b02e9438a20ca73ecd  packages/nation/README.md
+    6405bda3e7a5c94cc9ed1bc9a63ed53abc47fd44eb2482da7475170701a3538f  packages/nation/package.json
     d91aa3c28e67896bef88738a1870de1b0c2c7b1c8f157905b84a7d72769900b7  packages/sdk/README.md
-    7d723bcb7069bca457d9e8f9de7dc3b5919ed15f2a7a9adb691b8745462dc39f  apps/web/package.json
-    a9b5befcf7752ebc931b4e44317bb00d43d27dece82953d658988fbfe23a39c0  apps/web/app/page.tsx
-    c8a3f44dc2bb3cde6904f94809ff6da7fd55fb15ba1ffc61b251b9fe71bd51db  apps/web/app/layout.tsx
-    6c552db049e38c3a9a0ee5886e8cbfdd1df5b66170b59c7b158fea199cc847a6  apps/web/app/globals.css
-    b4608a4a0d5197fd5237231865b3e0b2a05329088466b572ea83bdb7e98eab93  apps/web/lib/mairon/world-state.tsx
-    0bf3de0fa195a8c6488d24bc865163564e10e2ba529fa4f3f15917ca4f85647d  apps/web/components/mairon/mairon-os.tsx
-    05d545506d5eb51ec758104aa80e097b51c500013a322f65b8b33ca833c46dca  apps/web/components/mairon/perspective-super-studio.tsx
-    a763b785b9df4baa037a279dfe72a52858af9eedd1937e4a6079a854459c1209  apps/web/components/mairon/perspective-quant.tsx
-    8b9d584880fd24761bdd5446d446a957c14c55c5a8c75710241bbe5bc986efae  apps/web/components/mairon/perspective-treasury.tsx
-    9d6d86d7a2798cf6d4e4f510bf31a1ba1757dd18128a12e83dcd1cd596440deb  apps/web/components/mairon/perspective-neural-hud.tsx
-    596680a88ca5b1ca2ce215860999a96997d1ddfa4c424942aaaa76c1d00fd026  apps/web/components/mairon/perspective-war-room.tsx
-    0406e9032c92d8906099649149c2cc0bf7bb70052e12914ac6f47f03debcc05d  apps/web/README.md
-    bddc14dfac4070f2a9ab32b8dd0e698296594b553b3bc608d2f202be3501f9aa  apps/admin/package.json
-    4f555b338f7cd8ca3d5a92e9cd97ee5bb32a07f3891eb5467cc0533869aab51f  apps/admin/app/page.tsx
-    6a058692dde2f1d121976928e7f0421df865690c4ee6c2d365e5a818f9419a96  apps/admin/app/layout.tsx
-    7b02f4ee1d9d9ce9370f60800cd472bf0b7ac58deb3f7dde4cdb098d5f6ad830  apps/admin/lib/admin-api.ts
-    f7a9ad3f9ad1dcf1742d4200dec8194d56493c0d9029553546f3c4a173cfd2de  apps/admin/README.md
-    (MANIFEST.txt itself is finalized by this write; its own SHA is computed
-     over the committed bytes and recorded in the delivery commit message.)
+    e707202e392a721d3d584ac28a2b503c7cd744b4fd52a1664af7c20e5dfc3971  packages/sdk/package.json
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  packages/sdk/src/.gitkeep
+    745b776b16c96654fb3341a048e818aabfbb61dae760eda66600945ee6ebf25b  packages/sdk/src/core.ts
+    e4e35e6514dd76e3cd74db2902872abb8b5ab7dc537a2d146628724fbd9f7005  packages/sdk/src/index.ts
+    93c786cb742e972740158973e2ced87c0225cc599d68f4dbc0d18cf351a001ce  packages/sdk/src/mairon-client.ts
+    d5fc55c3da4e0cab6e4ccd13d10e738427c06f967ee55ffabd85947bf4201e98  packages/sdk/tsconfig.json
+    2c9f9f4966a687af9d3955169e8b3afa51a3f29707a681e1a61c1eb5de4081bd  packages/ui/README.md
+    921c2b55352872d09a17d2d0e181779c153030fd4962d5f4c8060384aa99727d  packages/ui/package.json
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  packages/ui/src/components/.gitkeep
+    e411e4f5a2240d3f08d44d29d4cda371ced7ebe70b00861bec78b986ea606cdf  packages/ui/src/components/alert.tsx
+    070eaa1dc33ddc26bc5f12ef781067e99ebbfa6d51e9f63a87120918c0229226  packages/ui/src/components/badge.tsx
+    69b661cc3db343af34dbefd1a646ed28fe3f3b45afa5e248bb6b9f521515058e  packages/ui/src/components/base-8453-address-pill.tsx
+    a36a3f8408a1637d16943b60cb1d6e779b9b13314124d89dca659176263799a8  packages/ui/src/components/button.tsx
+    65036cc2e11388962a29626e554111275b992105c2c09489be719f571202526f  packages/ui/src/components/card.tsx
+    58363e86f24dc2eda4e974e3d2d749686eb92ea59666b18991c5c0925b0dc0f0  packages/ui/src/components/input.tsx
+    a105420e0c90637447fc6154a94a9b21ef810e632a1789c8e0494964f0b504d6  packages/ui/src/components/label.tsx
+    b265d331d285da3d6b0e852972369a4ef4ca1f75174edc6c2b63c15459a115ff  packages/ui/src/components/mairon-seal-badge.tsx
+    8a00a2123458a2dfa9b74770e9228110eb6aecef8c0e698be10a8f3636e07add  packages/ui/src/components/perspective-switcher-bar.tsx
+    3af4faa5d9e45ff707810634787ee33cb3538ba7662231ccfaddf61f7ecee061  packages/ui/src/components/progress.tsx
+    8f0e84f71bb0079132f0b214e18a28c4cbf31e122c503808a259363055fba8d9  packages/ui/src/components/separator.tsx
+    04eb2be6f3e67db672a43d67c785c67325ec61d6dd9a04018ea592a26d56115b  packages/ui/src/components/skeleton.tsx
+    b9c0edfc83d8fd62363779f94c424ca8cc8884d32a1e8ecdeed36b1998092439  packages/ui/src/components/slot.tsx
+    f9bd922b7d47768d93b75114fcef2a45716a7107945da1fa1b806a6a4d594f8e  packages/ui/src/components/textarea.tsx
+    f6c05a0aab9f8a352b8fb39ee2976b44af9e88bc6cacd19ac82a1bd925048ca4  packages/ui/src/components/toaster.tsx
+    a06f8a0e6f83e518ff2f361b5b848417dddc1d3125ad3c0a032db7a6594fa08e  packages/ui/src/components/trinity-iq-meter.tsx
+    ba44397eb38b3fe37ae6ffabe4c4eeaa68448b319d169b8d7de7900e20a76f8e  packages/ui/src/hooks/use-toast.ts
+    9ffa9a842440e9b936d63295d3c3b3e86da203c7804f9c279dc9c2ae1dc5cf69  packages/ui/src/index.ts
+    6028704c59be02eda315c52a432d6f2f5eccc7807411ea890c1853242f021d6f  packages/ui/src/lib/utils.ts
+    4c75f910784bdef5526c357c917ef43e8886309940157010830e4292b621de48  packages/widget/README.md
+    b48ae2464c8da5139ab12e9677cfd1313d27cea831c76ca00331a6fa6b160df5  packages/widget/package.json
 
- 5) SEED DATABASE (unchanged from the law-enforcement commit)
-    PRAGMA integrity_check = ok · SUM(Posting.amount) = 0 · KbEntry = 334 ·
-    FounderWarRoomTick = 24 ($9.55 day-1) · "Product" = 19 columns.
+    ── scripts/ (18 files)
+    ea710f9b19efb6dc24dfc0379a22a5ec1ba6092213549ea6b800dc7a9c2fd5b4  scripts/benchmark_9router.py
+    303d8c8e19199a99d31d247f65451a52ef480fb638b00786af1b2c1a9b7bc161  scripts/benchmark_openrouter.py
+    a78d7441f86011918145c2c67f64947f426086dd9a3d2e7ef058e75d59bd361a  scripts/broadcast_relaunch.py
+    7fdb38cf8eb0932656046de9e831b90424a27913d7e57f77d18ac168af372be7  scripts/discover_live_lanes.py
+    cbe444728d82aaab86b8e26a25796872b00a141e3a65a9b19ac8e59bb4c238ba  scripts/e2e_builder_live.sh
+    30f83640978c378b7ee41630190294aed12057157a93e3dfee36e6049e43df6c  scripts/e2e_openrouter_live.sh
+    aed0f0f41acab39108cda396b07736d17a2e4caa61b8698b20de1da1a5aeacbe  scripts/e2e_verify_migrated.sh
+    3af6ec9cbdeecff5ee24e4760479cffacd29e97458d8c0ba0baeced223431502  scripts/hermes_lane_probe.json
+    656fe371e90fee3ca4ee0340c1b6d8ec96ff37abab70929514576bdd09421db8  scripts/inject_copilotkit_gems.py
+    7c4d58cdecb2dff36116cd2ad9b1dc8fea67420ff70ab21563bb07ee7be53ef2  scripts/inject_nousresearch_gems.py
+    d944c994da216ef5907a2d3f2607c3d9f8b325548e519517b652beebd97b8676  scripts/inject_step4_and_genome_gems.py
+    7e3f5c7da7130d6fd635c7e5c61122a8d07029b066b675cfac5b9e6033811c7f  scripts/inject_trinity_dna12.py
+    64261c8f132871ab9ce17e384a3d8422e0782ddbccb41e0866d53642736704e1  scripts/inject_vault_gems.py
+    5de8e7bc914f1dc15a8e690a7a4ccf79c4a2be256045b12718baa8b5cce9be8f  scripts/migrate_dropagent_to_kian.py
+    2c2eb41e8804566e21df71bbcf94e7044e584afdf74f43c0f802375b85cf9833  scripts/mount_nousresearch_vault.sh
+    7aeba14908ae7c5e8de29d79922676ea5f5c513ddd6b4d141df6514c50988623  scripts/post_reset_proof.sh
+    3f7be1794d92faf26a51f34ec26e87f03c714b50ff6d13fdc3e9c7385a81df6d  scripts/probe_hermes_lanes.py
+    19d3f42e116fbc6b5f1df069b07d852a738cf6b3180271a127293e0f989e4b4f  scripts/smoke_vault.sh
 
+    ── seed/ (1 files)
+    19db3730cdde4cc15cb9913d4237f9dbf01f578637b3279cdfa62c5370fb7bbe  seed/kian-production.db
+
+    ── tests/ (1 files)
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/e2e/.gitkeep
+
+    ── tools/ (11 files)
+    44fa984c9355616089a375a9f94da439a9c62a019caa6850926c6a76b9357987  tools/neural-hud/neural_hud.html
+    36c2f8d7670c626a4ee657f6339616f724e4c7414ec24beaf9b6e18fa93225fa  tools/neural-hud/render_neural_hud.py
+    6886db708fc8f1cad90991a4f2564fb7e695bce3b53f7ca82dba27d7a92a5f91  tools/rea/clean-standalone.mjs
+    5776ef120ccd11de90308e19630232a862cd412b970ed5677056efa1e2044b92  tools/rea/release-exposure.mjs
+    d966aa89ce5d8911124265c441ba1b5db931671664ef31fa47a684938b980b0e  tools/rea/step4-gate.mjs
+    6079b235858aa10954db9bedfa3b6950ca23f26becfcdda0d54c7464c4dd018e  tools/rea/step5-gate.mjs
+    4d9ecc53688515a77b644a014fd0a2a75f73984c2905b428c0d20e1803fd3696  tools/rea/step6-gate.mjs
+    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tools/seeds/.gitkeep
+    555b6732fbdd612b3fcec2909533f9f66018a30e62ed5115f2cadccc8b909622  tools/telegram/make-init-data.mjs
+    581028f5fb823a33de2efb0f2b6eb80d5b18f7d931492da6b6eb84e235b7a981  tools/war-room/render_war_room.py
+    06ca09d06ffd872391cee425323557dadae8b2a1a9388635e7bf75f4f66e4f13  tools/war-room/war_room.html
+
+ (MANIFEST.txt itself is finalized by this write; its own SHA is computed
+  over the committed bytes and recorded in the delivery commit message.)

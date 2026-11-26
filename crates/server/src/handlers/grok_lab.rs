@@ -102,7 +102,11 @@ pub async fn summary(State(state): State<Arc<AppState>>, headers: HeaderMap) -> 
         0.0
     } else {
         let sum: u64 = entries.iter().map(|e| u64::from(e.rea_score)).sum();
-        sum as f64 / total as f64
+        // the cast is safe here: rea_score <= 100 and the row cap keeps both far below 2^52
+        #[allow(clippy::cast_precision_loss)]
+        {
+            sum as f64 / total as f64
+        }
     };
     let usable = entries.iter().filter(|e| e.usable_for_training).count();
     Ok(Json(GrokLabSummaryResponse {

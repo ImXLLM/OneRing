@@ -254,17 +254,17 @@ export const MAIRON_ENV_SPEC: readonly MaironEnvKeySpec[] = [
   { key: "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME", tier: "P4", description: "Bot username for deep links in the Web OS", reader: "web", required: false, secret: false },
 
   // P5 — MAIRON aliases and deployment platform (11)
-  { key: "MAIRON_API_BASE_URL", tier: "P5", description: "MAIRON canonical kernel API base (first resolver priority)", reader: "web", required: false, secret: false },
-  { key: "MAIRON_SITE_URL", tier: "P5", description: "MAIRON canonical site URL", reader: "web", required: false, secret: false },
-  { key: "MAIRON_ADMIN_KEY", tier: "P5", description: "MAIRON canonical admin key alias", reader: "admin", required: false, secret: true },
-  { key: "MAIRON_KERNEL_URL", tier: "P5", description: "MAIRON canonical kernel origin alias", reader: "admin", required: false, secret: false },
-  { key: "PORT", tier: "P5", description: "Platform-injected listen port for the web apps", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_ENVIRONMENT", tier: "P5", description: "Deployment environment name", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_PROJECT_ID", tier: "P5", description: "Deployment project identity", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_SERVICE_ID", tier: "P5", description: "Deployment service identity", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_DEPLOYMENT_URL", tier: "P5", description: "Deployment public URL", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_PUBLIC_DOMAIN", tier: "P5", description: "Deployment public domain", reader: "deployment", required: false, secret: false },
-  { key: "RAILWAY_GIT_COMMIT_SHA", tier: "P5", description: "Deployed commit SHA for provenance", reader: "deployment", required: false, secret: false },
+  { key: "KIAN_STUDIO_DEFAULT_TIER", tier: "P5", description: "Default studio cognitive tier for the studio lane", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_STUDIO_MAX_ARTIFACT_BYTES", tier: "P5", description: "Studio artifact size cap on the wire", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_STUDIO_STOREFRONT_DEFAULT_XTR", tier: "P5", description: "Default XTR storefront price for studio products", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_GENOME_ROOT_PATH", tier: "P5", description: "OMNI-MODEL-GENOME root directory for the genome loader", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_QUANT_DEFAULT_BARS", tier: "P5", description: "Default bar count for the causal backtest lane", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_QUANT_DEFAULT_SEED", tier: "P5", description: "Deterministic default seed for the causal backtest", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_QUANT_MAX_LIST", tier: "P5", description: "Max persisted strategies listed per request", reader: "kernel", required: false, secret: false },
+  { key: "KIAN_MONOPOLY_MAX_LIST", tier: "P5", description: "Max genome rows listed per request", reader: "kernel", required: false, secret: false },
+  { key: "OPENCODE_API_KEY", tier: "P5", description: "Optional OpenCode Zen key (absent = Bearer public lane)", reader: "kernel", required: false, secret: true },
+  { key: "RAILPACK_CARGO_WORKSPACE", tier: "P5", description: "Railpack cargo workspace root for the deploy builder", reader: "deployment", required: false, secret: false },
+  { key: "RUST_LOG", tier: "P5", description: "Rust tracing filter for the kernel process", reader: "deployment", required: false, secret: false },
 ];
 
 /** Total keys in the environment schema — the hard contract is exactly 69. */

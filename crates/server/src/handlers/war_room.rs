@@ -453,7 +453,7 @@ mod tests {
         let res = app.oneshot(req).await.unwrap();
         assert_eq!(res.status().as_u16(), 200, "war-room/state is public");
         let json = json_of(res).await;
-        assert_eq!(json["signature"], "KIA-WAR-ROOM-W10");
+        assert_eq!(json["signature"], "MAIRON-WAR-ROOM");
         assert_eq!(json["scenario"].as_array().map(Vec::len), Some(24));
         assert_eq!(json["wallet"]["cryptoSeedMicros"], 33_000_000);
         assert_eq!(json["wallet"]["earnedRevenueMicros"], 0);
@@ -526,7 +526,7 @@ mod tests {
         let res = app.clone().oneshot(req).await.unwrap();
         assert_eq!(res.status().as_u16(), 200, "reset must succeed for a citizen session");
         let json = json_of(res).await;
-        assert_eq!(json["signature"], "KIA-WAR-ROOM-W10");
+        assert_eq!(json["signature"], "MAIRON-WAR-ROOM");
         assert_eq!(json["deletedTicks"], 2, "exactly the two persisted ticks");
         assert_eq!(json["deletedDirectives"], 1, "exactly the one persisted directive");
         assert_eq!(json["tickCursor"], 0);
