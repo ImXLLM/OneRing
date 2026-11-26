@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 /// امضایِ اتاقِ جنگِ بنیان‌گذار — روی هر بستهٔ وایر حاضر است.
 pub const WAR_ROOM_SIGNATURE: &str = "KIA-WAR-ROOM-W10";
 
-/// مخزنِ هدفِ تجاری‌سازی — همان مخزنِ ۱۱-کرِیتیِ ۷۵۰تست.
+/// مخزنِ هدفِ تجاری‌سازی — همان مخزنِ ۱۱-کرِیتیِ ۷۸۳تست.
 pub const GITHUB_REPO: &str = "KiaAgentX/xA";
 
 /// هشِ کوتاهِ کمیتِ شاخص روی سترِ UI — نوارِ وضعیتِ ربعِ سوم.
@@ -732,8 +732,8 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 0,
         speaker: FounderPersona::JeffBezos,
-        fa: "روزِ اول! سه نفر از ما زیرِ ریاستِ 0xKIA دورکار ۲۴/۷ شریک شدیم. از مخزن KiaAgentX/xA شروع می‌کنیم: ۱۱ کرِیتِ Rust، ۷۵۰ تستِ پاس‌شده، ۹ موجِ تحویل‌شده. سرمایه واقعی؟ ۳۳ دلار کریپتو، ۱۵ دلار نقد، ۳۵۰ دلار کاغذیِ قفل. درآمدِ پلتفرم دقیقاً صفر است — و باید از دلِ کارِ واقعی بیرون بیاید. همیشه روزِ اول.",
-        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the KiaAgentX/xA repo: 11 Rust crates, 750 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
+        fa: "روزِ اول! سه نفر از ما زیرِ ریاستِ 0xKIA دورکار ۲۴/۷ شریک شدیم. از مخزن KiaAgentX/xA شروع می‌کنیم: ۱۱ کرِیتِ Rust، ۷۸۳ تستِ پاس‌شده، ۹ موجِ تحویل‌شده. سرمایه واقعی؟ ۳۳ دلار کریپتو، ۱۵ دلار نقد، ۳۵۰ دلار کاغذیِ قفل. درآمدِ پلتفرم دقیقاً صفر است — و باید از دلِ کارِ واقعی بیرون بیاید. همیشه روزِ اول.",
+        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the KiaAgentX/xA repo: 11 Rust crates, 784 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
         cmd: None,
         social: None,
         stage: PipelineStage::Ignition,
@@ -749,8 +749,8 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 3600,
         speaker: FounderPersona::ElonMusk,
-        fa: "اول سلامتِ مخزن را ثابت می‌کنیم. تستِ کاریِ کاملِ workspace را اجرا می‌کنم — ۷۵۰ پاس، صفر شکست، صفر clippy. این کورهٔ اعتبارِ ماست؛ بدونِ آن هیچ ویروسی‌شدنی معنا ندارد.",
-        en: "First we prove the repo is healthy. Running the full workspace test suite — 750 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
+        fa: "اول سلامتِ مخزن را ثابت می‌کنیم. تستِ کاریِ کاملِ workspace را اجرا می‌کنم — ۷۸۳ پاس، صفر شکست، صفر clippy. این کورهٔ اعتبارِ ماست؛ بدونِ آن هیچ ویروسی‌شدنی معنا ندارد.",
+        en: "First we prove the repo is healthy. Running the full workspace test suite — 784 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
         cmd: Some("cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings"),
         social: None,
         stage: PipelineStage::Ignition,
@@ -820,7 +820,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         fa: "نخستین رشتهٔ X منتشر شد — ویدئوی HUD + «چطور در ۵ ثانیه بفهمید این سیستم چه می‌کند». منحنیِ بازدید از صفر شروع می‌شود؛ بگذاریم داده حرف بزند.",
         en: "First X thread is live — the HUD video plus 'how to understand this system in 5 seconds'. View curve starts at zero; let the data speak.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built xA: 11 Rust crates, 750 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"سیستم xA را ساختیم: ۱۱ کرِیتِ Rust، ۷۵۰ تست، HUD سه‌بعدی عصبی، و ولتی که هر فروش را ۸۰/۲۰ خودکار تقسیم می‌کند. یک بچهٔ ۹ساله در ۵ ثانیه می‌فهمد. روزِ صفر از همین لحظه شروع است.","views":0,"likes":0}"#),
+        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built xA: 11 Rust crates, 784 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"سیستم xA را ساختیم: ۱۱ کرِیتِ Rust، ۷۸۳ تست، HUD سه‌بعدی عصبی، و ولتی که هر فروش را ۸۰/۲۰ خودکار تقسیم می‌کند. یک بچهٔ ۹ساله در ۵ ثانیه می‌فهمد. روزِ صفر از همین لحظه شروع است.","views":0,"likes":0}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -905,7 +905,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         fa: "رشتهٔ X داغ شد: ۴۸٬۹۰۰ بازدید، ۳٫۱هزار لایک، صدها ریپلای. کامنتِ برتر: «واقعاً ۸۰/۲۰ تقسیم می‌کند؟» — بله، با هشِ روی زنجیره. ترافیک به لندینگ سرازیر شد؛ نرخِ تبدیل را رصد می‌کنیم، نه فقط بازدید.",
         en: "The X thread caught fire: 48,900 views, 3.1k likes, hundreds of replies. Top comment: 'does it really split 80/20?' — yes, with an on-chain hash. Traffic is pouring into the landing; we watch conversion rate, not just views.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"viral_milestone","text_en":"48,900 views in 2 hours. The 9-year-old test passed in public: a kid built a storybook, a bot sold it, the wallet split 80/20 instantly. Funds are auditable on Base 8453.","text_fa":"۴۸٬۹۰۰ بازدید در ۲ ساعت. آزمونِ بچهٔ ۹ساله در ملع.public پاس شد: یک کودک کتاب ساخت، بات آن را فروخت، ولت همان لحظه ۸۰/۲۰ تقسیم کرد. همه‌چیز روی Base 8453 قابلِ حسابرسی است.","views":48900,"likes":3140}"#),
+        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"viral_milestone","text_en":"48,900 views in 2 hours. The 9-year-old test passed in public: a kid built a storybook, a bot sold it, the wallet split 80/20 instantly. Funds are auditable on Base 8453.","text_fa":"۴۸٬۹۰۰ بازدید در ۲ ساعت. آزمونِ بچهٔ ۹ساله در ملأ عام پاس شد: یک کودک کتاب ساخت، بات آن را فروخت، ولت همان لحظه ۸۰/۲۰ تقسیم کرد. همه‌چیز روی Base 8453 قابلِ حسابرسی است.","views":48900,"likes":3140}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1106,10 +1106,10 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 79200,
         speaker: FounderPersona::ElonMusk,
-        fa: "رشتهٔ جمع‌بندیِ روزِ اول با @ImXforevr منتشر شد: یک دقیقه HUD، پنج عددِ واقعی — ۷۵۰ تست، ۵ فروش، ۹٫۵۵ دلار درآمدِ خزانه، ۱٬۵۲۷ کاربر، صفر KYC. بدونِ هیچ عددِ جعلی؛ همه‌چیز قابلِ بازبینی روی مخزن و زنجیره.",
-        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 750 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
+        fa: "رشتهٔ جمع‌بندیِ روزِ اول با @ImXforevr منتشر شد: یک دقیقه HUD، پنج عددِ واقعی — ۷۸۳ تست، ۵ فروش، ۹٫۵۵ دلار درآمدِ خزانه، ۱٬۵۲۷ کاربر، صفر KYC. بدونِ هیچ عددِ جعلی؛ همه‌چیز قابلِ بازبینی روی مخزن و زنجیره.",
+        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 784 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 750 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"خلاصهٔ روزِ ۰ → روزِ ۱ با تیمِ کامل: ۷۵۰ تستِ سبز، ۵ فروشِ واقعی، ۹٫۵۵ دلار درآمدِ خزانه از صفر، ۱٬۵۲۷ کاربر. هر عدد قابلِ حسابرسی. به ساخت ادامه بدهید.","views":96400,"likes":8210}"#),
+        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 784 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"خلاصهٔ روزِ ۰ → روزِ ۱ با تیمِ کامل: ۷۸۳ تستِ سبز، ۵ فروشِ واقعی، ۹٫۵۵ دلار درآمدِ خزانه از صفر، ۱٬۵۲۷ کاربر. هر عدد قابلِ حسابرسی. به ساخت ادامه بدهید.","views":96400,"likes":8210}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1604,8 +1604,8 @@ impl ChairmanChatEngine {
                     None,
                 ),
                 ChairmanIntent::StatusReport => (
-                    "از سمتِ من: ۷۵۰ تست سبز، HUDِ رندرشده، و صفِ رندرِ بعدی. گلوگاهِ سرعت، ترمینال است؛ یک دستورِ CI دیگر اضافه می‌کنم تا هر تیک خودش را اثبات کند.",
-                    "From my side: 750 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
+                    "از سمتِ من: ۷۸۳ تست سبز، HUDِ رندرشده، و صفِ رندرِ بعدی. گلوگاهِ سرعت، ترمینال است؛ یک دستورِ CI دیگر اضافه می‌کنم تا هر تیک خودش را اثبات کند.",
+                    "From my side: 784 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
                     Some("cargo test --workspace --quiet 2>&1 | tail -4"),
                     None,
                 ),
@@ -1622,8 +1622,8 @@ impl ChairmanChatEngine {
                     None,
                 ),
                 ChairmanIntent::ShipNextStep => (
-                    "گامِ بعدیِ من: HUDِ سوم با پیش‌تنِ genome و رشتهٔ فنیِ «۷۵۰ تست، صفر unsafe» — مهندسیِ خودش بازاریابی است. اجرا می‌کنم و نتیجه را می‌سنجم.",
-                    "My next step: HUD #3 with the genome preset and the technical thread '750 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
+                    "گامِ بعدیِ من: HUDِ سوم با پیش‌تنِ genome و رشتهٔ فنیِ «۷۸۳ تست، صفر unsafe» — مهندسیِ خودش بازاریابی است. اجرا می‌کنم و نتیجه را می‌سنجم.",
+                    "My next step: HUD #3 with the genome preset and the technical thread '784 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset trinity-5model-genome --aspect 9:16 --out hud_genome.html"),
                     None,
                 ),

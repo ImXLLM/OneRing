@@ -1,10 +1,12 @@
 //! هندلرهای اتاقِ جنگِ بنیان‌گذار (Wave 10 — Commit #30).
 //!
-//! چهار اندپوینتِ تازه:
+//! پنج اندپوینتِ تازه:
 //! - [`war_room_state`] — عمومی؛ وضعیتِ روزِ صفر + سناریویِ کانونیِ ۲۴ تیک؛
 //! - [`war_room_step`] — نشستِ شهروند؛ پیشرویِ علّیِ تک‌گام + ماندگاریِ تیک؛
 //! - [`war_room_directive`] — نشستِ شهروند؛ دستورِ رئیس + سه پاسخِ
 //!   در-شخصیت + ماندگاریِ لاگ؛
+//! - [`war_room_reset`] — نشستِ شهروند؛ بازنشانیِ علایی به روزِ صفر
+//!   (پاک‌سازیِ تیک‌ها و دستورهایِ رئیس تا `step` از نو رانده شود)؛
 //! - [`war_room_explain_simple`] — عمومی؛ توضیحِ «۰ تا ۱۰۰» برای سوادِ صفر.
 //!
 //! همهٔ اعداد از [`kian_hermes::war_room_simulation_engine`] می‌آیند — هیچ
@@ -20,8 +22,8 @@ use sha2::{Digest, Sha256};
 
 use kian_contracts::wave10::{
     FounderReplyView, FounderView, WalletLedgerView, WarRoomDirectiveRequest,
-    WarRoomDirectiveResponse, WarRoomExplainResponse, WarRoomStateResponse, WarRoomStepRequest,
-    WarRoomStepResponse, WarRoomTickView,
+    WarRoomDirectiveResponse, WarRoomExplainResponse, WarRoomResetResponse,
+    WarRoomStateResponse, WarRoomStepRequest, WarRoomStepResponse, WarRoomTickView,
 };
 use kian_db::now_iso;
 use kian_db::wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow};
@@ -287,6 +289,36 @@ pub async fn war_room_directive(
     }))
 }
 
+/// `POST /war-room/reset` — نشستِ شهروند؛ بازنشانیِ علایی به روزِ صفر.
+///
+/// همهٔ تیک‌هایِ ثبت‌شده و لاگِ دستورهایِ رئیس در یک تراکنش پاک می‌شوند تا
+/// `POST /war-room/step` بدونِ برخورد بهِ اتمامِ سناریو از نو رانده شود.
+/// خواندنِ وضعیتِ کانونی از [`kian_hermes::war_room_simulation_engine`] —
+/// بازنشانیِ دفترِ فرمان، وضعیتِ عمومیِ روزِ صفر را تغییر نمی‌دهد.
+///
+/// # Errors
+/// ۴۰۱ نشستِ غایب؛ ۵۰۰ db.
+pub async fn war_room_reset(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> ApiResult<Json<WarRoomResetResponse>> {
+    let _user = require_session(&state, &headers).await?;
+    let (deleted_ticks, deleted_directives) = state
+        .store
+        .reset_war_room_state()
+        .await
+        .map_err(ApiFailure::from)?;
+    Ok(Json(WarRoomResetResponse {
+        signature: WAR_ROOM_SIGNATURE.to_owned(),
+        deleted_ticks: i64::try_from(deleted_ticks).unwrap_or(i64::MAX),
+        deleted_directives: i64::try_from(deleted_directives).unwrap_or(i64::MAX),
+        tick_cursor: 0,
+        progress_percent: 0,
+        message_fa: "اتاقِ جنگ به روزِ صفر بازنشانی شد — سناریویِ ۲۴تایی از نو قابلِ رانش است".to_owned(),
+        message_en: "war-room reset to Day 0 — the 24-tick scenario can be re-driven".to_owned(),
+    }))
+}
+
 /// `GET /war-room/explain-simple?locale=fa|en` — عمومی؛ توضیحِ «۰ تا ۱۰۰».
 ///
 /// # Errors
@@ -368,4 +400,148 @@ fn reply_views(
             social_post_json: r.social_post_json.clone(),
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::body::Body;
+    use kian_db::V3Store;
+    use tower::ServiceExt;
+
+    /// اپِ کامل با نشستِ dev — همان الگویِ تست‌هایِ routes.rs.
+    async fn hardened_app() -> axum::Router {
+        let mut cfg = crate::config::ServerConfig::base();
+        cfg.admin_key = Some("test-admin-key-0123456789".to_owned());
+        cfg.rate_limit = 10_000;
+        cfg.cors_origins = vec!["https://mini.0xkia.app".to_owned()];
+        cfg.dev_mode = true;
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+        store.ensure_system_accounts().await.unwrap();
+        crate::routes::build_router(crate::state::AppState::new(store, cfg).shared())
+    }
+
+    /// نشستِ رئیس از مسیرِ رسمیِ dev-login — توکنِ bearer برایِ اندپوینت‌هایِ نشست‌دار.
+    async fn chairman_session(app: &axum::Router) -> String {
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/auth/dev-login")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"tgUserId":"6398636666","username":"chairman"}"#))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 201, "dev-login must mint the chairman session");
+        let bytes = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        json["token"].as_str().expect("session token").to_owned()
+    }
+
+    async fn json_of(res: axum::response::Response) -> serde_json::Value {
+        let bytes = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+        serde_json::from_slice(&bytes).expect("json body")
+    }
+
+    /// `GET /war-room/state` — عمومی و کانونی: امضا + سناریویِ ۲۴ تیک + ولتِ صادقانهٔ روزِ صفر.
+    #[tokio::test]
+    async fn war_room_state_retrieval_is_public_and_canonical() {
+        let app = hardened_app().await;
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/state")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "war-room/state is public");
+        let json = json_of(res).await;
+        assert_eq!(json["signature"], "KIA-WAR-ROOM-W10");
+        assert_eq!(json["scenario"].as_array().map(Vec::len), Some(24));
+        assert_eq!(json["wallet"]["cryptoSeedMicros"], 33_000_000);
+        assert_eq!(json["wallet"]["earnedRevenueMicros"], 0);
+        assert_eq!(json["day1TotalEarnedMicros"], 9_550_000);
+        assert_eq!(json["founders"].as_array().map(Vec::len), Some(4));
+    }
+
+    /// `POST /war-room/directive` — کلاسه‌بندیِ قطعی + سه پاسخِ در-شخصیتِ دوزبانه.
+    #[tokio::test]
+    async fn war_room_directive_executes_with_three_in_character_replies() {
+        let app = hardened_app().await;
+        let token = chairman_session(&app).await;
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/directive")
+            .header("content-type", "application/json")
+            .header("authorization", format!("Bearer {token}"))
+            .body(Body::from(
+                r#"{"directiveText":"گزارش ولت امروز چیست؟","locale":"fa","triggeredTick":3}"#,
+            ))
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "directive must execute for a citizen session");
+        let json = json_of(res).await;
+        assert!(json["intentId"].as_str().is_some(), "deterministic intent must be wired");
+        assert_eq!(json["triggeredTick"], 3);
+        let replies = json["replies"].as_array().expect("three replies");
+        assert_eq!(replies.len(), 3, "elon + CZ + bezos must all answer");
+        for r in replies {
+            assert_ne!(r["messageFa"].as_str().unwrap_or_default(), "");
+            assert_ne!(r["messageEn"].as_str().unwrap_or_default(), "");
+        }
+    }
+
+    /// `POST /war-room/reset` — بازگشتِ علایی به روزِ صفر؛ `step` از نو رانده می‌شود.
+    #[tokio::test]
+    async fn war_room_reset_restores_day0_and_step_can_be_redriven() {
+        let app = hardened_app().await;
+        let token = chairman_session(&app).await;
+        let bearer = format!("Bearer {token}");
+        // دو گامِ علایی — تیک‌های ۰ و ۱ در دفترِ فرمان ماندگار می‌شوند.
+        for cursor in [0, 1] {
+            let req = axum::http::Request::builder()
+                .method("POST")
+                .uri("/api/v1/war-room/step")
+                .header("content-type", "application/json")
+                .header("authorization", &bearer)
+                .body(Body::from(format!("{{\"tickCursor\":{cursor},\"speedMultiplier\":1}}")))
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            assert_eq!(res.status().as_u16(), 200, "step must advance at cursor {cursor}");
+        }
+        // یک دستورِ رئیس — در لاگِ فرمان ماندگار می‌شود.
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/directive")
+            .header("content-type", "application/json")
+            .header("authorization", &bearer)
+            .body(Body::from(r#"{"directiveText":"probe","locale":"en","triggeredTick":2}"#))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200);
+        // بازنشانی — شمارشِ دقیقِ پاک‌شده‌ها.
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/reset")
+            .header("authorization", &bearer)
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "reset must succeed for a citizen session");
+        let json = json_of(res).await;
+        assert_eq!(json["signature"], "KIA-WAR-ROOM-W10");
+        assert_eq!(json["deletedTicks"], 2, "exactly the two persisted ticks");
+        assert_eq!(json["deletedDirectives"], 1, "exactly the one persisted directive");
+        assert_eq!(json["tickCursor"], 0);
+        assert_eq!(json["progressPercent"], 0);
+        // رانشِ دوباره — step بدونِ اتمامِ سناریو جواب می‌دهد.
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/step")
+            .header("content-type", "application/json")
+            .header("authorization", bearer)
+            .body(Body::from(r#"{"tickCursor":0,"speedMultiplier":1}"#))
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "step must be re-drivable after reset");
+        let json = json_of(res).await;
+        assert_eq!(json["executed"]["tickIndex"], 0, "fresh drive starts at tick 0");
+    }
 }

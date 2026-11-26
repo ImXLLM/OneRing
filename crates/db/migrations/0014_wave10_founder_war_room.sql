@@ -12,7 +12,8 @@
 
 CREATE TABLE IF NOT EXISTS "FounderWarRoomTick" (
     "id" TEXT PRIMARY KEY,
-    "tick_index" INTEGER NOT NULL,
+    -- schema-level guards: the canonical scenario is exactly 24 ticks
+    "tick_index" INTEGER NOT NULL CHECK ("tick_index" BETWEEN 0 AND 23),
     "simulation_second" INTEGER NOT NULL,
     "speaker_id" TEXT NOT NULL,
     "speaker_name" TEXT NOT NULL,
@@ -21,7 +22,8 @@ CREATE TABLE IF NOT EXISTS "FounderWarRoomTick" (
     "terminal_cmd" TEXT,
     "social_post_json" TEXT,
     "wallet_delta_usdc_micros" INTEGER NOT NULL DEFAULT 0,
-    "wallet_total_usdc_micros" INTEGER NOT NULL DEFAULT 0,
+    -- schema-level guard: the sovereign wallet never goes negative
+    "wallet_total_usdc_micros" INTEGER NOT NULL DEFAULT 0 CHECK ("wallet_total_usdc_micros" >= 0),
     "active_pipeline_stage" TEXT NOT NULL,
     "created_at" TEXT NOT NULL
 );

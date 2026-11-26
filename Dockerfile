@@ -18,6 +18,12 @@ WORKDIR /app
 COPY --from=build /kian/target/release/kian-server /app/kian-server
 COPY seed/kian-production.db /app/seed/kian-production.db
 COPY start-railway.sh /app/start-railway.sh
+# Wave-10 runtime alignment — standalone dashboards + genome/brain assets ship
+# inside the image so GET /war-room and GET /neural-hud work live on Railway.
+COPY tools/war-room/war_room.html /app/tools/war-room/war_room.html
+COPY tools/neural-hud/neural_hud.html /app/tools/neural-hud/neural_hud.html
+COPY OMNI-MODEL-GENOME /app/OMNI-MODEL-GENOME
+COPY KIA-BRAIN-OS /app/KIA-BRAIN-OS
 RUN chmod +x /app/start-railway.sh && mkdir -p /data && chown -R kian:kian /app /data
 USER kian
 ENV KIAN_HOST=0.0.0.0 \

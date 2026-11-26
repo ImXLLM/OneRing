@@ -7,7 +7,7 @@ Telegram Mini-App 前端结合：包含 7 角色自主智能体舰队、免密�
 带 CAS 锁定托管的复式微型账本，以及 `Mairon REA + 5 星贝叶斯` 双信任市场引擎。
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
-[![Workspace Tests](https://img.shields.io/badge/tests-779_passed_%7C_0_failed-success.svg)](#验证)
+[![Workspace Tests](https://img.shields.io/badge/tests-784_passed_%7C_0_failed-success.svg)](#验证)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#验证)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -30,7 +30,7 @@ KIAN v2 是一个完整的 sovereign AI agent 内核与创作者市场，以 **1
 | Web · Mini-App · 管理（Next.js 16，pnpm + Turborepo） | `apps/` |
 | 共享 TypeScript 包（契约、SDK、UI） | `packages/` |
 | 创作者 DNA 宪法与模型基因组 | `KIA-BRAIN-OS/` · `OMNI-MODEL-GENOME/` |
-| 生产种子数据库 —— 325 技能、466 公民、平衡账本 | `seed/kian-production.db` |
+| 生产种子数据库 —— 334 技能、466 公民、平衡账本 | `seed/kian-production.db` |
 | REA 质量门证据（92/100，0 硬失败） | `REA_FINAL_VERDICT.json` · `docs/rea/` |
 | Wave 10 创始人作战室（四象限 OLED 指挥甲板） | `tools/war-room/war_room.html` |
 
@@ -38,7 +38,7 @@ KIAN v2 是一个完整的 sovereign AI agent 内核与创作者市场，以 **1
 
 ```bash
 cargo clippy --workspace --all-targets -- -D warnings   # 0 lint 警告
-cargo test --workspace                                   # 779 通过 / 0 失败
+cargo test --workspace                                   # 784 通过 / 0 失败
 cat REA_FINAL_VERDICT.json                               # 92/100 PASS, hard_failures: []
 ```
 

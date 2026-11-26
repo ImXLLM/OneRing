@@ -196,6 +196,26 @@ impl V3Store {
             })
             .collect())
     }
+
+    /// بازنشانیِ علاییِ اتاقِ جنگ به روزِ صفر — پاک‌کردنِ همهٔ تیک‌هایِ ثبت‌شده
+    /// و لاگِ دستورهایِ رئیس در یک تراکنش؛ `POST /war-room/step` پس از آن
+    /// بدونِ برخورد بهِ اتمامِ سناریو از نو رانده می‌شود.
+    ///
+    /// # Errors
+    /// خطای SQL.
+    pub async fn reset_war_room_state(&self) -> DbResult<(u64, u64)> {
+        let mut tx = self.pool_ref().begin().await?;
+        let ticks = sqlx::query(r#"DELETE FROM "FounderWarRoomTick""#)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+        let directives = sqlx::query(r#"DELETE FROM "ChairmanDirectiveLog""#)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+        tx.commit().await?;
+        Ok((ticks, directives))
+    }
 }
 
 #[cfg(test)]

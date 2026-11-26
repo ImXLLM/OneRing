@@ -8,7 +8,7 @@ sin claves, un estudio de productos HTML con IA, una microcontabilidad de doble 
 escrow bloqueado por CAS y el motor de mercado de doble confianza `Mairon REA + 5 estrellas bayesianas`.
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
-[![Workspace Tests](https://img.shields.io/badge/tests-779_passed_%7C_0_failed-success.svg)](#verificación)
+[![Workspace Tests](https://img.shields.io/badge/tests-784_passed_%7C_0_failed-success.svg)](#verificación)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#verificación)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
@@ -32,7 +32,7 @@ toda la documentación de linaje evolutivo.
 | Web · Mini-App · Admin (Next.js 16, pnpm + Turborepo) | `apps/` |
 | Paquetes TypeScript compartidos (contratos, SDK, UI) | `packages/` |
 | Constitución ADN del creador y genomas de modelos | `KIA-BRAIN-OS/` · `OMNI-MODEL-GENOME/` |
-| Base de datos semilla de producción — 325 habilidades, 466 ciudadanos, libro balanceado | `seed/kian-production.db` |
+| Base de datos semilla de producción — 334 habilidades, 466 ciudadanos, libro balanceado | `seed/kian-production.db` |
 | Evidencia del control de calidad REA (92/100, 0 fallos duros) | `REA_FINAL_VERDICT.json` · `docs/rea/` |
 | Wave 10 Sala de Guerra de Fundadores (puente de mando OLED de 4 cuadrantes) | `tools/war-room/war_room.html` |
 
@@ -40,7 +40,7 @@ toda la documentación de linaje evolutivo.
 
 ```bash
 cargo clippy --workspace --all-targets -- -D warnings   # 0 advertencias de lint
-cargo test --workspace                                   # 779 aprobadas / 0 fallidas
+cargo test --workspace                                   # 784 aprobadas / 0 fallidas
 cat REA_FINAL_VERDICT.json                               # 92/100 PASS, hard_failures: []
 ```
 

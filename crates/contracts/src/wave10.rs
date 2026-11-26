@@ -269,3 +269,26 @@ pub struct WarRoomExplainResponse {
     /// بدنهٔ انگلیسیِ هر گام.
     pub step_bodies_en: Vec<String>,
 }
+
+/// پاسخِ `POST /api/v1/war-room/reset` — بازگشتِ علایی به روزِ صفر.
+///
+/// تیک‌هایِ ثبت‌شده و دستورهایِ رئیس از دفترِ فرمان پاک می‌شوند تا
+/// `POST /war-room/step` بدونِ برخورد بهِ اتمامِ سناریو از نو رانده شود.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct WarRoomResetResponse {
+    /// امضایِ اتاقِ جنگ.
+    pub signature: String,
+    /// تعدادِ تیک‌هایِ پاک‌شده.
+    pub deleted_ticks: i64,
+    /// تعدادِ دستورهایِ رئیسِ پاک‌شده.
+    pub deleted_directives: i64,
+    /// نشانگرِ تیک پس از بازنشانی — همیشه صفر.
+    pub tick_cursor: i64,
+    /// درصدِ پیشرفت پس از بازنشانی — همیشه صفر.
+    pub progress_percent: i64,
+    /// پیامِ فارسی.
+    pub message_fa: String,
+    /// پیامِ انگلیسی.
+    pub message_en: String,
+}

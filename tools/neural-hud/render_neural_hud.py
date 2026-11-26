@@ -30,6 +30,8 @@ import json
 import math
 import shutil
 import subprocess
+import threading
+import threading
 from pathlib import Path
 
 SPHERE_RADIUS = 160.0
@@ -471,6 +473,76 @@ def video_command(resolution: str, aspect: str, fps: int, with_audio: bool) -> l
     return argv
 
 
+def _spawn_stderr_drain(proc: subprocess.Popen) -> threading.Thread:
+    """stderr drain — background thread that keeps reading the child stderr
+    pipe until EOF so a verbose ffmpeg never fills the OS pipe buffer and
+    deadlocks the render loop. Every Popen with stderr=PIPE gets one."""
+    def _drain() -> None:
+        try:
+            if proc.stderr:
+                for _line in proc.stderr:
+                    pass  # drain — output intentionally discarded
+        finally:
+            if proc.stderr:
+                proc.stderr.close()
+    thread = threading.Thread(target=_drain, daemon=True)
+    thread.start()
+    return thread
+
+
+def ensure_hud_audio(duration: int) -> bool:
+    """Auto-generate hud_audio.wav before the video mux when it does not yet
+    exist (stderr drained in the background — no BrokenPipeError possible).
+    Returns True when the audio input is available for video_command."""
+    if os.path.exists("hud_audio.wav"):
+        return True
+    if not shutil.which("ffmpeg"):
+        return False
+    gen = subprocess.Popen(
+        audio_command(duration),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    _spawn_stderr_drain(gen)  # stderr drain for the audio generation pass
+    gen.wait()
+    return os.path.exists("hud_audio.wav")
+
+
+def _spawn_stderr_drain(proc: subprocess.Popen) -> threading.Thread:
+    """stderr drain — background thread that keeps reading the child stderr
+    pipe until EOF so a verbose ffmpeg never fills the OS pipe buffer and
+    deadlocks the render loop. Every Popen with stderr=PIPE gets one."""
+    def _drain() -> None:
+        try:
+            if proc.stderr:
+                for _line in proc.stderr:
+                    pass  # drain — output intentionally discarded
+        finally:
+            if proc.stderr:
+                proc.stderr.close()
+    thread = threading.Thread(target=_drain, daemon=True)
+    thread.start()
+    return thread
+
+
+def ensure_hud_audio(duration: int) -> bool:
+    """Auto-generate hud_audio.wav before the video mux when it does not yet
+    exist (stderr drained in the background — no BrokenPipeError possible).
+    Returns True when the audio input is available for video_command."""
+    if os.path.exists("hud_audio.wav"):
+        return True
+    if not shutil.which("ffmpeg"):
+        return False
+    gen = subprocess.Popen(
+        audio_command(duration),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    _spawn_stderr_drain(gen)  # stderr drain for the audio generation pass
+    gen.wait()
+    return os.path.exists("hud_audio.wav")
+
+
 def render_frames(preset: dict, resolution: str, aspect: str, fps: int,
                   duration: int, out: Path) -> None:
     try:
@@ -500,11 +572,16 @@ def render_frames(preset: dict, resolution: str, aspect: str, fps: int,
     ffmpeg = shutil.which("ffmpeg")
     proc: subprocess.Popen | None = None
     if ffmpeg:
+        # auto-generate hud_audio.wav first (falls back to video-only when the
+        # audio pipeline is unavailable) — eliminates the BrokenPipeError class
+        with_audio = ensure_hud_audio(duration)
         proc = subprocess.Popen(
-            video_command(resolution, aspect, fps, with_audio=True),
+            video_command(resolution, aspect, fps, with_audio=with_audio),
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
         )
+        _spawn_stderr_drain(proc)  # stderr drain — the pipe can never deadlock
     for frame in range(total_frames):
         t = frame / fps
         phase = phases[-1]

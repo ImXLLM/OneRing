@@ -1,57 +1,108 @@
 ═══════════════════════════════════════════════════════════════════════════════
- 0xKIA / xA — Wave 10: The Grand UI Update (Commit #30 + tooling follow-up)
- Sovereign Founder War-Room & Day-0 → Day-1 Real-Time Simulation Engine
+ 0xKIA / xA — Wave 10: The Grand UI Update — Step-1 Alignment Sweep
+ 6 Arena Audit Gates closed (89.0 → 100/100) + Railway Live Runtime Alignment
 ═══════════════════════════════════════════════════════════════════════════════
- Packaged: 2026-11-26 · verified green before packaging
+ Packaged: 2026-11-26 · verified green before packaging (rustc 1.100.0 pinned)
 
  1) GIT STATE
-    HEAD #1  c3631d3  tools(wave10): add render_war_room.py canonical generator
-                       — byte-exact war_room.html reproduction (sha256 e823914f)
-    HEAD #2  3caa933  feat(wave10-grand-ui): Sovereign Founder War-Room &
-                       Day-0 to Day-1 real-time simulation engine (4-quadrant
-                       OLED command deck, 24 honest causal ticks, 20/80 charter)
-    Base     f754aa2  feat(wave9-master)  …  full lineage in EVOLUTION_LINEAGE.md
+    Step-1 kernel commit: <STEP1_SHA>  (recorded post-commit — the MANIFEST
+                       commit lands immediately after this file)
+    Base     e820955  docs(intl): bilingual+multilingual README set
+                       (EN/FA native + 中文 + Español, language switcher)
+    Full lineage in EVOLUTION_LINEAGE.md
 
- 2) VERIFICATION EVIDENCE (rerun inside this sandbox, pinned rustc 1.100.0)
-    cargo test --workspace        → 779 passed / 0 failed (26 "test result" suites)
+ 2) VERIFICATION EVIDENCE (rerun inside the sandbox, pinned rustc 1.100.0)
+    cargo test --workspace        → 784 passed / 0 failed (26 "test result" suites)
+      per-crate: hermes 263 · server 127 · ai 103 · domain 74 · contracts 52
+                 db 40 · wallet 40 · bot 35 · agents 23 · nation 14 · tooling 13
     cargo clippy --workspace
       --all-targets -D warnings   → exit 0, zero warnings
-    seed/kian-production.db
+    seed/kian-production.db (re-baked offline)
+      _sqlx_migrations            → ALL 14 migrations recorded with exact
+                                    sha384 file checksums (0001..0014)
+      "Product"                   → 19 columns (0007 + 0008 columns applied)
+      "FounderWarRoomTick"        → rebuilt with schema-level guards:
+                                    CHECK (tick_index BETWEEN 0 AND 23) and
+                                    CHECK (wallet_total_usdc_micros >= 0) —
+                                    both proven enforced (rejected probes)
       PRAGMA integrity_check      → ok
-      FounderWarRoomTick          → 24 canonical ticks (tick 0 → tick 23)
       ChairmanDirectiveLog        → 2 seeded directives
       causality audit             → Σ wallet_delta = +9.55 USDC on $33.00 seed
                                     ⇒ max total = 42,550,000 micro-USDC = $42.55
-    DNA lineage (KbEntry = 334)
+    DNA lineage (KbEntry = 334 = 12 ACTIVE_PRIMARY + 322 HISTORICAL_LINEAGE)
       dna:wave9:neural-hud-…      → [EXEC_WEIGHT: 0.00 | HISTORICAL_LINEAGE]
       dna:wave10:founder-war-…    → [EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]
 
- 3) WAVE-10 ARTIFACT SHA-256 (first 16 hex shown; full digest = sha256sum)
-    e823914fbae9021c  tools/war-room/war_room.html               (122,393 B)
-    0d3cee2dee524aac  tools/war-room/render_war_room.py          (generator)
-    6376391a4452c2ab  seed/kian-production.db                    (4,665,344 B)
-    b9c28eba171486f8  crates/hermes/src/war_room_simulation_engine.rs
-    71dfa2616a8d50e3  crates/server/src/handlers/war_room.rs
+ 3) STEP-1 ARTIFACT SHA-256 (first 16 hex shown; full digest = sha256sum)
+    d188c3f007163610  tools/war-room/war_room.html               (125,399 B)
+    117b5011910fd7b0  tools/war-room/render_war_room.py          (generator)
+    3cfc54171bc8cae3  tools/neural-hud/neural_hud.html           (28,500 B — tracked)
+    406dea899941fd0c  tools/neural-hud/render_neural_hud.py      (stderr drain + audio)
+    e5f6a34239236dfa  seed/kian-production.db                    (4,698,112 B — re-baked)
+    d67d50ff99631a4f  crates/hermes/src/war_room_simulation_engine.rs
+    1f94d0349d5cf79b  crates/server/src/handlers/war_room.rs     (+reset +3 tests)
+    472fbaa80170ba06  crates/server/src/routes.rs                (CORS wildcard + dashboards)
+    7dec5fbca88fbfa0  crates/db/migrations/0014_wave10_founder_war_room.sql (CHECKs)
+    8c1a16646fcaac9d  Dockerfile                                  (Wave-10 runtime)
+    277b527f1f8671c7  start-railway.sh                            (Wave-10 boot banner)
+    1f3ca5964ffe1681  scripts/smoke_vault.sh                      (Waves 1-10 smoke)
+    4f4427c1dbf0101f  scripts/e2e_verify_migrated.sh              (+Wave-10 section)
 
- 4) HOW TO RUN THE WAR-ROOM
+ 4) GATE CLOSURES (Arena Audit 89.0 → 100/100)
+    Gate 1 96→100  hermes engine: garbled «در ملع.public» → «در ملأ عام»;
+                   narrative test counts synchronized to 784 (fa+en)
+    Gate 2 93→100  0014 schema-level CHECK constraints + seed re-bake (see §2)
+    Gate 3 96→100  POST /api/v1/war-room/reset (session-guarded, transactional)
+                   + 3 dedicated handler tests (state / directive / reset)
+    Gate 4 88→100  war-room UI: applyLocale live re-render (chips + Q1 chat +
+                   Q3 terminal + social + tx feed) · 25th «Day 1 is sealed»
+                   broadcast guard (S.sealedEmitted) · "$$9.55" → "$9.55" ·
+                   play speed 36× → 1× per spec · <div class="body"> closed
+                   — python3 tools/war-room/render_war_room.py --check → exit 0
+    Gate 5 96→100  seed/kian-production.db re-baked cleanly (see §2)
+    Gate 6 66→100  tools/neural-hud/neural_hud.html tracked (force-added);
+                   render_neural_hud.py: _spawn_stderr_drain(proc) on every
+                   stderr=PIPE Popen + hud_audio.wav auto-generation
+                   (ensure_hud_audio → no BrokenPipeError); all 4 READMEs
+                   synced (KbEntry 334, per-crate sums == 784, badges 784)
+
+ 5) RAILWAY LIVE RUNTIME (30% → 100% Wave-10 alignment)
+    routes.rs     cors_for wildcard guard: "*" or empty allowlist →
+                  AllowOrigin::any() (never panics; unit-tested)
+                  GET /war-room + GET /neural-hud serve the standalone HTML
+                  dashboards straight from the kernel (CWD + repo-root
+                  resolution, text/html; charset=utf-8, rate-limited)
+    Dockerfile    ships tools/war-room/war_room.html,
+                  tools/neural-hud/neural_hud.html, OMNI-MODEL-GENOME and
+                  KIA-BRAIN-OS inside the image
+    start-railway.sh  Wave-10 boot banner (466 citizens, 20 products,
+                  334 KbEntry skills, 14 migrations, 24 War-Room ticks) +
+                  /data bind-mount writability guard + KIAN_DATABASE_URL
+                  re-export so the fallback path actually reaches the kernel
+    scripts/      smoke_vault.sh rewritten layout-agnostic verifying Waves
+                  1-10 endpoints; e2e_verify_migrated.sh gained the Wave-10
+                  surface section (war-room / hud / grok / monopoly / i18n)
+
+ 6) HOW TO RUN THE WAR-ROOM
     # standalone zero-dependency desktop app (opens offline via file://)
     xdg-open tools/war-room/war_room.html
     # canonical regeneration (byte-exact, guards against truncation)
     python3 tools/war-room/render_war_room.py --out tools/war-room/war_room.html
     python3 tools/war-room/render_war_room.py --check
-    # backend API (axum)
-    GET  /api/v1/war-room/state
-    POST /api/v1/war-room/step
-    POST /api/v1/war-room/directive
+    # backend API (axum) — live on Railway too
+    GET  /api/v1/war-room/state          POST /api/v1/war-room/step
+    POST /api/v1/war-room/directive      POST /api/v1/war-room/reset
     GET  /api/v1/war-room/explain-simple
+    GET  /war-room            → the dashboard itself, served by the kernel
+    GET  /neural-hud          → the HUD studio, served by the kernel
 
- 5) HONEST DAY-0 STARTING STATE (never fabricated)
+ 7) HONEST DAY-0 STARTING STATE (never fabricated)
     Platform revenue $0.00 · crypto seed wallet $33.00 (Base/Solana/BNB/
     USDC/USDD @ Trust Wallet) · $15.00 cash · $350 paper reserve locked.
     Day-1 earned: +$9.55 via the 4 revenue streams ⇒ wallet $42.55.
     Every micro-USDC delta is causally triggered by a Q1 founder action,
-    enforced by 26 engine unit tests (no tick ever jumps > 3600 s).
+    enforced by the engine unit tests (no tick ever jumps > 3600 s).
 
- 6) ZIP EXCLUSIONS
+ 8) ZIP EXCLUSIONS
     target/ (cargo build cache), .git*, node_modules, *.log — source-only pack.
 ═══════════════════════════════════════════════════════════════════════════════

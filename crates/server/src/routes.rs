@@ -23,7 +23,7 @@ use axum::middleware;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
 use std::sync::Arc;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use crate::handlers::{
@@ -46,12 +46,47 @@ async fn api_not_found() -> Response {
         .into_response()
 }
 
+/// سروِ داشبوردِ مستقلِ HTML از درونِ خودِ کرنل (Wave-10 Railway alignment):
+/// مسیرِ نسبی اول نسبت به CWD (محصول: `/app`) و بعد نسبت به ریشهٔ مخزن
+/// (تست‌ها: `crates/server`) امتحان می‌شود.
+async fn serve_tool_html(rel: &str) -> Response {
+    for candidate in [rel.to_owned(), format!("../../{rel}")] {
+        if let Ok(bytes) = tokio::fs::read(&candidate).await {
+            return Response::builder()
+                .status(StatusCode::OK)
+                .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                .body(axum::body::Body::from(bytes))
+                .unwrap();
+        }
+    }
+    Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+        .body(axum::body::Body::from(
+            "<pre>dashboard artifact not found in this deployment</pre>",
+        ))
+        .unwrap()
+}
+
+/// `GET /war-room` — اتاقِ جنگِ بنیان‌گذار، مستقیماً از کرنل.
+async fn serve_war_room_html() -> Response {
+    serve_tool_html("tools/war-room/war_room.html").await
+}
+
+/// `GET /neural-hud` — استودیوی HUD عصبی، مستقیماً از کرنل.
+async fn serve_neural_hud_html() -> Response {
+    serve_tool_html("tools/neural-hud/neural_hud.html").await
+}
+
 /// لایهٔ CORS مینی‌اپ — allowlist دقیق از پیکربندی؛ اوریجین ناشناخته هرگز
 /// پاسخ preflight نمی‌گیرد (fail-closed). بدون کوکی — احراز با هدر Bearer است.
+///
+/// Wave-10 wildcard guard — `tower-http`'s `AllowOrigin::list` روی مقدار `"*"`
+/// رفتارِ نامعجمت دارد؛ هر اوریجینِ `"*"` (یا allowlistِ خالی) به
+/// [`AllowOrigin::any`] می‌افتد تا `cors_for` هرگز panic نکند.
 fn cors_for(origins: &[String]) -> CorsLayer {
-    let allowed: Vec<HeaderValue> = origins.iter().filter_map(|o| o.parse().ok()).collect();
-    CorsLayer::new()
-        .allow_origin(allowed)
+    let wildcard = origins.iter().any(|o| o.trim() == "*");
+    let base = CorsLayer::new()
         // D3 — DELETE/PUT/PATCH هم مجازند: «حذف محصول ادمین» بدون preflight
         // مرده ماندن بود؛ مینی‌اپِ CRUD کامل اکنون از یک Allowlist واحد عبور می‌کند.
         .allow_methods([
@@ -67,7 +102,13 @@ fn cors_for(origins: &[String]) -> CorsLayer {
             header::CONTENT_TYPE,
             header::HeaderName::from_static("x-kian-key"),
         ])
-        .allow_credentials(false)
+        .allow_credentials(false);
+    if origins.is_empty() || wildcard {
+        base.allow_origin(AllowOrigin::any())
+    } else {
+        let allowed: Vec<HeaderValue> = origins.iter().filter_map(|o| o.parse().ok()).collect();
+        base.allow_origin(allowed)
+    }
 }
 
 /// ساخت روتر کامل.
@@ -191,10 +232,12 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             post(admin::export_training_dataset),
         )
         // war-room — Wave 10 (Commit #30): اتاقِ جنگِ بنیان‌گذارِ حاکم
-        // (وضعیتِ روزِ صفر عمومی؛ گامِ علّی و دستورِ رئیس با نشستِ شهروند)
+        // (وضعیتِ روزِ صفر عمومی؛ گامِ علّی و دستورِ رئیس با نشستِ شهروند؛
+        //  بازنشانیِ علایی به روزِ صفر برایِ رانشِ دوبارهٔ step)
         .route("/war-room/state", get(war_room::war_room_state))
         .route("/war-room/step", post(war_room::war_room_step))
         .route("/war-room/directive", post(war_room::war_room_directive))
+        .route("/war-room/reset", post(war_room::war_room_reset))
         .route(
             "/war-room/explain-simple",
             get(war_room::war_room_explain_simple),
@@ -280,9 +323,19 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             state.clone(),
             rate_limit_middleware,
         ));
+    // Wave-10 — داشبوردهایِ مستقلِ HTML از درونِ خودِ کرنل سرو می‌شوند:
+    // بازدیدِ زندهٔ Railway روی `/war-room` و `/neural-hud` بدونِ سرورِ خارجی.
+    let dashboards = Router::new()
+        .route("/war-room", get(serve_war_room_html))
+        .route("/neural-hud", get(serve_neural_hud_html))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            rate_limit_middleware,
+        ));
     Router::new()
         .nest("/api/v1", api)
         .merge(well_known)
+        .merge(dashboards)
         .with_state(state)
 }
 
@@ -391,8 +444,66 @@ mod tests {
         assert_ne!(res.status(), 404, "orchestrate alias must be routed");
     }
 
-    /// Wave 10 (Commit #30) — چهار مسیرِ اتاقِ جنگِ بنیان‌گذار ثبت شده‌اند:
-    /// state/explain-simple عمومی (200)، step/directive با گوارِ نشست (401).
+    /// Wave 10 — wildcard CORS هرگز panic نمی‌کند: `"*"` به `AllowOrigin::any`
+    /// می‌افتد و preflight با `access-control-allow-origin: *` پاس می‌گیرد.
+    #[tokio::test]
+    async fn cors_for_with_wildcard_origin_does_not_panic_and_allows_any() {
+        let mut cfg = crate::config::ServerConfig::base();
+        cfg.admin_key = Some("test-admin-key-0123456789".to_owned());
+        cfg.rate_limit = 10_000;
+        cfg.cors_origins = vec!["*".to_owned()];
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+        store.ensure_system_accounts().await.unwrap();
+        let app = build_router(crate::state::AppState::new(store, cfg).shared());
+        let req = axum::http::Request::builder()
+            .method("OPTIONS")
+            .uri("/api/v1/war-room/state")
+            .header("origin", "https://any.example")
+            .header("access-control-request-method", "GET")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.oneshot(req).await.unwrap();
+        assert_eq!(res.status(), 200, "wildcard preflight must succeed without panicking");
+        let allow = res
+            .headers()
+            .get("access-control-allow-origin")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or_default()
+            .to_owned();
+        assert_eq!(allow, "*", "wildcard allowlist must answer access-control-allow-origin: *");
+    }
+
+    /// Wave 10 — داشبوردهایِ مستقلِ `/war-room` و `/neural-hud` از خودِ کرنل
+    /// سرو می‌شوند (HTML با charset=utf-8؛ نه ۴۰۴، نه JSON).
+    #[tokio::test]
+    async fn standalone_dashboards_are_served_by_the_kernel() {
+        let app = hardened_app(10_000).await;
+        for path in ["/war-room", "/neural-hud"] {
+            let req = axum::http::Request::builder()
+                .method("GET")
+                .uri(path)
+                .body(Body::empty())
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            let status = res.status().as_u16();
+            assert_ne!(status, 404, "{path} must be routed by the kernel");
+            assert_eq!(status, 200, "{path} must serve the committed dashboard");
+            let ctype = res
+                .headers()
+                .get("content-type")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or_default()
+                .to_owned();
+            assert!(
+                ctype.starts_with("text/html") && ctype.contains("charset=utf-8"),
+                "{path} must be text/html; charset=utf-8, got {ctype}"
+            );
+        }
+    }
+
+    /// Wave 10 — پنج مسیرِ اتاقِ جنگ ثبت شده‌اند:
+    /// state/explain-simple عمومی (200)، step/directive/reset با گوارِ نشست (401).
     #[tokio::test]
     async fn war_room_routes_are_registered() {
         let app = hardened_app(10_000).await;
@@ -419,6 +530,7 @@ mod tests {
                 "/api/v1/war-room/directive",
                 r#"{"directiveText":"probe","locale":"fa","triggeredTick":0}"#,
             ),
+            ("POST", "/api/v1/war-room/reset", ""),
         ] {
             let req = axum::http::Request::builder()
                 .method(method)
