@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * KIAN REA gate — گام ۶ (M6: بات تلگرام teloxide 0.17 — orchestrator خالص) — ۱۰/۱۰
+ * KIAN REA gate — step 6 (M6: Telegram bot, teloxide 0.17 — pure orchestrator) — 10/10
  *
- * ستون‌های این گام:
- *  ۱) هستهٔ خالص بات — صفر I/O در orchestrator، سقف نرخ با ساعت تزریقی،
- *     فرمان‌ها و برش پیام — همهٔ تست‌ها آفلاین با FakePort.
- *  ۲) هویت تک‌مسیره — ضرب initData فقط با `build_bot_init_data` (دارندهٔ
- *     توکن) و تأیید فقط با `verify_telegram_init_data`؛ هیچ مسیر جانبی
- *     (بدون X-KIAN-Key در kian-bot، بدون endpoint هویت جدید).
- *  ۳) وبهوک fail-closed — BOT_DISABLED/BOT_UNAUTHORIZED با مقایسهٔ زمان‌ثابت؛
- *     ران‌تایم فقط با هر دو راز؛ health صادقانه.
- *  ۴) سلام کل workspace — cargo test همه سبز.
- *  ۵) clippy -D warnings صفر خطا.
- *  ۶) بدون credential در سورس.
- *  ۷) audit-release-exposure روی سه آرتیفکت (kernel/admin/web) با fail_on low.
+ * Pillars of this step:
+ *  1) Pure bot core — zero I/O in the orchestrator, rate cap with an injected clock,
+ *     commands and message truncation — all tests offline with FakePort.
+ *  2) Single-path identity — initData minted only via `build_bot_init_data` (the
+ *     token holder) and verified only via `verify_telegram_init_data`; no side path
+ *     (no X-KIAN-Key in kian-bot, no new identity endpoint).
+ *  3) Fail-closed webhook — BOT_DISABLED/BOT_UNAUTHORIZED with constant-time comparison;
+ *     runtime only with both secrets; honest health.
+ *  4) Whole-workspace health — cargo test all green.
+ *  5) clippy -D warnings zero errors.
+ *  6) No credentials in source.
+ *  7) audit-release-exposure on three artifacts (kernel/admin/web) with fail_on low.
  *
- * خروج: 0 = پاس (۱۰/۱۰)، 3 = شکست. گزارش: docs/rea/step6-m6-gate-report.txt
+ * Exit: 0 = pass (10/10), 3 = failure. Report: docs/rea/step6-m6-gate-report.txt
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -29,14 +29,14 @@ const AUDIT = path.join(ROOT, "tools/rea/release-exposure.mjs");
 let failures = 0;
 const lines = [];
 const say = (s = "") => { lines.push(s); console.log(s); };
-// cargo ممکن است در ~/.cargo/bin باشد — PATH صریح برای spawnSync بدون shell
+// cargo may live in ~/.cargo/bin — explicit PATH for spawnSync without a shell
 const ENV = {
   ...process.env,
   PATH: `${process.env.HOME ?? ""}/.cargo/bin:${process.env.PATH ?? ""}`,
   CARGO_INCREMENTAL: "0",
 };
 const run = (cmd, args, opts = {}) => {
-  // maxBuffer ۶۴MB — خروجی cargo test --workspace از ۱MB پیش‌فرض عبور می‌کند
+  // maxBuffer 64MB — cargo test --workspace output exceeds the 1MB default
   const res = spawnSync(cmd, args, {
     cwd: ROOT, encoding: "utf8", timeout: opts.timeout ?? 900_000, shell: false, env: ENV,
     maxBuffer: 64 * 1024 * 1024,
@@ -61,7 +61,7 @@ say("# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on 
 say("# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low");
 say("");
 
-/* ── ۱) هستهٔ خالص بات — آفلاین‌تست‌پذیر ─────────────────────────────────── */
+/* ── 1) Pure bot core — offline-testable ─────────────────────────────────── */
 say("════ 1) bot orchestrator — pure, offline-testable ════");
 {
   const orch = read("crates/bot/src/orchestrator.rs");
@@ -88,7 +88,7 @@ say("════ 1) bot orchestrator — pure, offline-testable ════");
 }
 say("");
 
-/* ── ۲) هویت تک‌مسیره — ضرب و تأیید رسمی initData ───────────────────────── */
+/* ── 2) Single-path identity — official initData minting and verification ───────────────────────── */
 say("════ 2) identity — single official path (mint → verify HMAC) ════");
 {
   const security = read("crates/contracts/src/security.rs");
@@ -111,7 +111,7 @@ say("════ 2) identity — single official path (mint → verify HMAC) �
 }
 say("");
 
-/* ── ۳) وبهوک fail-closed + health صادقانه ──────────────────────────────── */
+/* ── 3) Fail-closed webhook + honest health ──────────────────────────────── */
 say("════ 3) webhook fail-closed — BOT_DISABLED / BOT_UNAUTHORIZED ════");
 {
   const serverBot = read("crates/server/src/handlers/bot.rs");
@@ -136,7 +136,7 @@ say("════ 3) webhook fail-closed — BOT_DISABLED / BOT_UNAUTHORIZED ═
 }
 say("");
 
-/* ── ۴) سلام کل workspace ───────────────────────────────────────────────── */
+/* ── 4) Whole-workspace health ───────────────────────────────────────────────── */
 say("════ 4) whole-workspace tests green ════");
 {
   const t = run("cargo", ["test", "--workspace"], { timeout: 900_000 });
@@ -148,7 +148,7 @@ say("════ 4) whole-workspace tests green ════");
 }
 say("");
 
-/* ── ۵) clippy -D warnings صفر ──────────────────────────────────────────── */
+/* ── 5) clippy -D warnings zero ──────────────────────────────────────────── */
 say("════ 5) clippy -D warnings = 0 errors ════");
 {
   const t = run("cargo", ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"], { timeout: 900_000 });
@@ -157,7 +157,7 @@ say("════ 5) clippy -D warnings = 0 errors ════");
 }
 say("");
 
-/* ── ۶) بدون credential در سورس ─────────────────────────────────────────── */
+/* ── 6) No credentials in source ─────────────────────────────────────────── */
 say("════ 6) no credential markers in source ════");
 {
   let hits = 0;
@@ -179,7 +179,7 @@ say("════ 6) no credential markers in source ════");
 }
 say("");
 
-/* ── ۷) audit-release-exposure روی سه آرتیفکت ───────────────────────────── */
+/* ── 7) audit-release-exposure on three artifacts ───────────────────────────── */
 say("════ 7) audit-release-exposure (fail_on low) ════");
 mkdirSync(path.join(ROOT, "docs/rea"), { recursive: true });
 {
@@ -206,7 +206,7 @@ mkdirSync(path.join(ROOT, "docs/rea"), { recursive: true });
 }
 say("");
 
-/* ── جمع‌بندی ───────────────────────────────────────────────────────────── */
+/* ── Summary ───────────────────────────────────────────────────────────── */
 say(`════ verdict: ${failures === 0 ? "PASS — M6 gate 10/10 green (exit 0)" : `FAIL — ${failures} failing check(s) (exit 3)`} ════`);
 writeFileSync(REPORT, `${lines.join("\n")}\n`);
 console.log(`\nreport: ${REPORT}`);

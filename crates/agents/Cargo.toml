@@ -4,12 +4,12 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "تیم ایجنت‌ها — ۷ نقش، MCP، A2A، ناوگان"
+description = "\u062a\u06cc\u0645 \u0627\u06cc\u062c\u0646\u062a‌\u0647\u0627 — \u06f7 \u0646\u0642\u0634\u060c MCP\u060c A2A\u060c \u0646\u0627\u0648\u06af\u0627\u0646"
 
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-# thiserror/tracing اینجا مصرفی ندارند — حذف شد تا هشدار manifest صفر شود.
+# thiserror/tracing are unused here — dropped so manifest warnings stay at zero.
 
 [lints.rust]
 unsafe_code = "forbid"

@@ -10,7 +10,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // پکیج‌های workspace با سورس TS خام — باید ترنسپایل شوند
+  // Workspace packages with raw TS sources — they must be transpiled
   transpilePackages: ["@kian/ui", "@kian/contracts"],
   // REA gate: javascript.source_maps / source_map_sources → never expose
   productionBrowserSourceMaps: false,

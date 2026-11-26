@@ -1,14 +1,14 @@
--- مهاجرت 0014 — Wave 10 (Commit #30): اتاق جنگِ بنیان‌گذارِ حاکم +
--- موتورِ شبیه‌سازیِ واقعیِ زمانیِ «روزِ ۰ → روزِ ۱»
+-- Migration 0014 — Wave 10 (Commit #30): the sovereign founder war room +
+-- the real-time "Day 0 → Day 1" simulation engine
 --
--- دو جدولِ additive:
--- - `FounderWarRoomTick`: هر گامِ عملیاتیِ ۲۴تاییِ روزِ صفر — سخنران، پیامِ
---   دوزبانه (فارسی/انگلیسی)، فرمانِ ترمینال، پستِ اجتماعی، دلتا و جمعِ
---   ولتِ سازمان (µUSDC)، مرحلهٔ خطِ لوله و جریانِ درآمدِ فعال؛
--- - `ChairmanDirectiveLog`: هر دستورِ تاکتیکیِ رئیسِ `0xKIA` + پاسخِ
---   در-شخصیتِ سه هم‌بنیان‌گذار (ایلان/CZ/جف) به هر دو زبان.
+-- two additive tables:
+-- - `FounderWarRoomTick`: each of the 24 Day-0 operational steps — speaker, bilingual
+--   message (Persian/English), terminal command, social post, wallet delta and total
+--   (µUSDC), pipeline stage, and active revenue stream;
+-- - `ChairmanDirectiveLog`: every tactical directive from the chairman `0xKIA` + the
+--   in-persona replies of the three co-founders (Elon/CZ/Jeff) in both languages.
 --
--- هیچ جدولِ دفتریِ دوطرفه‌ای لمس نمی‌شود — صفرجمعِ `Posting` دست‌نخورده می‌ماند.
+-- no double-entry ledger table is touched — the `Posting` zero-sum stays untouched.
 
 CREATE TABLE IF NOT EXISTS "FounderWarRoomTick" (
     "id" TEXT PRIMARY KEY,

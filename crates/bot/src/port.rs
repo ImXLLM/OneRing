@@ -1,85 +1,85 @@
-//! پورت کرنل برای orchestrator خالص — async-trait.
+//! Kernel port for the pure orchestrator — async-trait.
 //!
-//! پیاده‌سازی‌ها:
-//! * [`crate::kernel_http::KernelHttpClient`] — HTTP واقعی کرنل (طول‌کشی).
-//! * `InProcessPort` در `crates/server` — وبوک درون‌پردازشی (همان مسیر هویت).
-//! * تست‌ها: `FakePort` اسکریپت‌شده — صفر شبکه.
+//! Implementations:
+//! * [`crate::kernel_http::KernelHttpClient`] — real kernel HTTP (long-polling).
+//! * `InProcessPort` in `crates/server` — in-process webhook (the same identity path).
+//! * Tests: the scripted `FakePort` — zero network.
 
 use async_trait::async_trait;
 
-/// خطای پورت — پیام‌های بات صادقانه از همین میان‌می‌آیند.
+/// Port error — the bot’s honest messages come out of this enum.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum BotError {
-    /// کرنل در دسترس نیست (شبکه/HTTP غلط).
+    /// Kernel unreachable (network/wrong HTTP).
     #[error("kernel unreachable: {0}")]
     Transport(String),
-    /// کرنل پاکت خطای شکل‌دار داد — `{code}`.
+    /// The kernel returned a shaped error envelope — `{code}`.
     #[error("kernel error {code}: {message}")]
     Kernel { code: String, message: String },
 }
 
 impl BotError {
-    /// متن کاربر-رو (فارسی، بدون نشت جزئیات فنی/راز).
+    /// User-facing text (Persian, no technical/secret leakage).
     #[must_use]
     pub fn user_text(&self) -> String {
         match self {
             Self::Transport(_) => {
-                "کرنل در دسترس نیست — کمی بعد دوباره امتحان کنید (/help)".to_owned()
+                "\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a} — \u{6a9}\u{645}\u{6cc} \u{628}\u{639}\u{62f} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{627}\u{645}\u{62a}\u{62d}\u{627}\u{646} \u{6a9}\u{646}\u{6cc}\u{62f} (/help)".to_owned()
             }
             Self::Kernel { code, .. } => match code.as_str() {
-                "IDENTITY_DISABLED" => "هویت روی کرنل غیرفعال است (KIAN_BOT_TOKEN تنظیم نشده)".to_owned(),
-                "INVALID_INIT_DATA" => "امضای هویت پذیرفته نشد — دوباره تلاش کنید".to_owned(),
-                "SESSION_EXPIRED" | "SESSION_REQUIRED" => "نشست منقضی شد — دوباره تلاش کنید".to_owned(),
-                _ => format!("کرنل خطا داد ({code}) — دوباره تلاش کنید"),
+                "IDENTITY_DISABLED" => "\u{647}\u{648}\u{6cc}\u{62a} \u{631}\u{648}\u{6cc} \u{6a9}\u{631}\u{646}\u{644} \u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644} \u{627}\u{633}\u{62a} (KIAN_BOT_TOKEN \u{62a}\u{646}\u{638}\u{6cc}\u{645} \u{646}\u{634}\u{62f}\u{647})".to_owned(),
+                "INVALID_INIT_DATA" => "\u{627}\u{645}\u{636}\u{627}\u{6cc} \u{647}\u{648}\u{6cc}\u{62a} \u{67e}\u{630}\u{6cc}\u{631}\u{641}\u{62a}\u{647} \u{646}\u{634}\u{62f} — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}".to_owned(),
+                "SESSION_EXPIRED" | "SESSION_REQUIRED" => "\u{646}\u{634}\u{633}\u{62a} \u{645}\u{646}\u{642}\u{636}\u{6cc} \u{634}\u{62f} — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}".to_owned(),
+                _ => format!("\u{6a9}\u{631}\u{646}\u{644} \u{62e}\u{637}\u{627} \u{62f}\u{627}\u{62f} ({code}) — \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{62a}\u{644}\u{627}\u{634} \u{6a9}\u{646}\u{6cc}\u{62f}"),
             },
         }
     }
 }
 
-/// نمای تراز شهروند — اسنپ‌شات مینیمال از `/me` (Din روی سیم عدد خام است).
+/// Citizen balance view — minimal snapshot from `/me` (Din is a raw number on the wire).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BotMe {
-    /// username تلگرام روی پرونده.
+    /// Telegram username on the profile.
     pub username: Option<String>,
-    /// حساب دفتر (`citizen:{tg}`).
+    /// Ledger account (`citizen:{tg}`).
     pub account_id: String,
-    /// آدرس TON ثبت‌شده — Option صریح.
+    /// Registered TON address — explicit Option.
     pub ton_address: Option<String>,
-    /// تراز آزاد به Din.
+    /// Free balance in Din.
     pub balance: i64,
-    /// قفل اسکرو (خریدار) به Din.
+    /// Escrow-locked (buyer) amount in Din.
     pub escrow_locked: i64,
 }
 
-/// نمای اقتصاد ملی — اسنپ‌شات مینیمال از `/economy` (مادهٔ ۶).
+/// National economy view — minimal snapshot from `/economy` (Article 6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BotEconomy {
-    /// عرضه در گردش.
+    /// Circulating supply.
     pub circulating: i64,
-    /// تراز خزانه.
+    /// Treasury balance.
     pub treasury: i64,
-    /// قفل در امانت‌ها.
+    /// Locked in escrows.
     pub escrow_locked: i64,
-    /// کل ضرب از آغاز.
+    /// Total minted since inception.
     pub minted_all: i64,
-    /// کل سوزانده.
+    /// Total burned.
     pub burned_all: i64,
-    /// شمار حساب‌ها.
+    /// Account count.
     pub accounts: i64,
-    /// امانت‌های باز.
+    /// Open escrows.
     pub open_escrows: i64,
 }
 
-/// پورت کرنل — تنها دروازهٔ داده برای orchestrator.
+/// Kernel port — the only data gateway for the orchestrator.
 #[async_trait]
 pub trait KernelPort: Send + Sync {
-    /// `GET /economy` — عمومی.
+    /// `GET /economy` — public.
     ///
     /// # Errors
     /// [`BotError::Transport`] / [`BotError::Kernel`]
     async fn economy(&self) -> Result<BotEconomy, BotError>;
 
-    /// نشست شهروند از مسیر رسمی هویت: ضرب initData با `KIAN_BOT_TOKEN`
+    /// Citizen session via the official identity path: HMAC of the initData with `KIAN_BOT_TOKEN`
     /// (`build_bot_init_data`) → `POST /auth/telegram` → `GET /me`.
     ///
     /// # Errors

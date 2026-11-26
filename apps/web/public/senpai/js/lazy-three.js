@@ -1,12 +1,12 @@
-/* lazy-three.js — بارگذاری تنبل three.js فقط هنگام نیاز (BUG-14 / ایدهٔ ۱۹)
-   قبلاً در <head> بلوک‌کننده بود؛ اکنون فقط پیش از init صحنهٔ 3D تزریق می‌شود. */
+/* lazy-three.js — lazy-loads three.js only when needed (BUG-14 / idea 19)
+   was previously render-blocking in <head>; it is now injected only before 3D scene init. */
 (function () {
   "use strict";
   window.loadThree = function () {
     if (window.THREE) return Promise.resolve(window.THREE);
     return new Promise(function (resolve, reject) {
       var s = document.createElement("script");
-      s.src = "./vendor/three.min.js"; // آفلاین کامل — هم‌مسیر با /senpai/
+      s.src = "./vendor/three.min.js"; // Fully offline — co-located with /senpai/
       s.onload = function () { resolve(window.THREE); };
       s.onerror = function () { reject(new Error("three.js load failed")); };
       document.head.appendChild(s);

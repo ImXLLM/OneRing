@@ -1,13 +1,13 @@
 /**
- * KIAN M3 — استخراج initData تلگرام.
+ * KIAN M3 — Telegram initData extraction.
  *
- * دو مسیر رسمی:
- * 1. داخل اپ تلگرام: `window.Telegram.WebApp.initData` — رشتهٔ خام امضاشده.
- * 2. باز شدن در مرورگر (لینک مستقیم مینی‌اپ): تلگرام همان رشته را در
- *    URL fragment به‌شکل `#tgWebAppData=...` می‌فرستد.
+ * The two official paths:
+ * 1. Inside the Telegram app: `window.Telegram.WebApp.initData` — the raw signed string.
+ * 2. Opening in a browser (the mini-app direct link): Telegram sends the same string in the
+ *    URL fragment as `#tgWebAppData=...`.
  *
- * هیچ هویتی اینجا ساخته نمی‌شود — فقط رشتهٔ خام به کرنل می‌رود تا HMAC
- * رسمی همان‌جا تأیید شود (هویت هرگز از بدنه نمی‌آید).
+ * No identity is fabricated here — the raw string goes to the kernel so the official
+ * HMAC is verified there (identity never comes from the body).
  */
 
 type TelegramWebApp = {
@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-/** آماده‌سازی WebApp داخل تلگرام — ready + expand (بی‌ضرر در مرورگر). */
+/** Prepare the WebApp inside Telegram — ready + expand (harmless in a browser). */
 export function setupTelegramWebApp(): void {
   if (typeof window === "undefined") return;
   const app = window.Telegram?.WebApp;
@@ -32,17 +32,17 @@ export function setupTelegramWebApp(): void {
     app.ready?.();
     app.expand?.();
   } catch {
-    /* نسخه‌های قدیمی — بی‌اهمیت */
+    /* Old versions — irrelevant */
   }
 }
 
-/** رشتهٔ خام initData از هر مسیر رسمی — `null` یعنی خارج از تلگرام. */
+/** The raw initData string from either official path — `null` means outside Telegram. */
 export function extractInitData(): string | null {
   if (typeof window === "undefined") return null;
   const fromApp = window.Telegram?.WebApp?.initData;
   if (fromApp && fromApp.trim().length > 0) return fromApp;
 
-  // مسیر مرورگر: `#tgWebAppData=user%3D...%26hash%3D...`
+  // browser path: `#tgWebAppData=user%3D...%26hash%3D...`
   const fragment = window.location.hash.replace(/^#/, "");
   const match = /(?:^|&)tgWebAppData=([^&]+)/.exec(fragment);
   if (match) {
@@ -56,7 +56,7 @@ export function extractInitData(): string | null {
   return null;
 }
 
-/** فقط برای نمایشِ دوستانه — هویت واقعی فقط از تأیید HMAC کرنل می‌آید. */
+/** For friendly display only — real identity comes only from kernel HMAC verification. */
 export function peekTelegramName(): string | null {
   if (typeof window === "undefined") return null;
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;

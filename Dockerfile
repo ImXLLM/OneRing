@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-#  KIAN v2 — Railway production image (kernel + migrated seed DB + volume boot)
+#  MAIRON — Railway production image (kernel + migrated seed DB + volume boot)
 #  Build: docker build -t kian-v2 .
 #  Run:   docker run -p 8088:8088 -v kian_data:/data kian-v2
 #  Railway: attach a Volume at /data — start-railway.sh seeds /data/kian.db
@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=build /kian/target/release/kian-server /app/kian-server
 COPY seed/kian-production.db /app/seed/kian-production.db
 COPY start-railway.sh /app/start-railway.sh
-# Wave-10 runtime alignment — standalone dashboards + genome/brain assets ship
+# Sovereign runtime alignment — standalone dashboards + genome/brain assets ship
 # inside the image so GET /war-room and GET /neural-hud work live on Railway.
 COPY tools/war-room/war_room.html /app/tools/war-room/war_room.html
 COPY tools/neural-hud/neural_hud.html /app/tools/neural-hud/neural_hud.html

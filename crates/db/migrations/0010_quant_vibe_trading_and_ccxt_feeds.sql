@@ -1,15 +1,15 @@
--- 0010_quant_vibe_trading_and_ccxt_feeds — موتور کوانتِ علّیِ `Vibe-Trading`
--- و هستهٔ `ccxt` (Wave 6 — Step 3/4).
+-- 0010_quant_vibe_trading_and_ccxt_feeds — the causal `Vibe-Trading` quant engine
+-- and the `ccxt` core (Wave 6 — Step 3/4).
 --
--- قواعد (همان قرارداد 0005/0007/0008/0009):
---  * جدولِ تازهٔ `quant_strategies` — هر استراتژیِ AST تایپ‌دار با سنجه‌های
---    نهادی، هشِ دفترِ ادعاها و مُهرِ گیتِ مایرون ماندگار می‌شود؛ هیچ جدولِ
---    دفتری لمس نمی‌شود تا همهٔ ناورنی‌ها (User=466، Product=20،
---    Posting SUM=0) دست‌نخورده بمانند.
---  * `strategy_ast_json` — AST تایپ‌دارِ صفر-اجرای-پویا (درمانِ قضاییِ #1).
---  * `mairon_approved` پیش‌فرضِ ۱ — فقط ردیف‌هایِ سبزِ گیت درج می‌شوند.
---  * `sharpe_ratio` / `max_drawdown_pct` ستون‌هایِ پرس‌وجوی مستقیم برای
---    رتبه‌بندیِ ویترینِ کوانت.
+-- Rules (same convention as 0005/0007/0008/0009):
+--  * the new `quant_strategies` table persists every typed AST strategy with institutional
+--    metrics, the claims-ledger hash, and the Mairon gate seal; no ledger
+--    table is touched so that every invariant (User=466, Product=20,
+--    Posting SUM=0) stays untouched.
+--  * `strategy_ast_json` — a typed AST with zero dynamic execution (remedy #1).
+--  * `mairon_approved` defaults to 1 — only gate-green rows are inserted.
+--  * `sharpe_ratio` / `max_drawdown_pct` are direct-query columns for
+--    quant storefront ranking.
 
 CREATE TABLE IF NOT EXISTS "quant_strategies" (
     "id" TEXT PRIMARY KEY,

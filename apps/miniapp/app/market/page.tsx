@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * KIAN miniapp — بازار: پیش‌نمایش امن HTML، لینک‌های وایرال رفرال، خرید اتمی
- * با ثبت خودکار معرف، اجرای/دانلود آنی محصول پس از خرید و ثبت اختلاف خریدار.
+ * KIAN miniapp — market: safe HTML preview, viral referral links, atomic purchase
+ * with automatic referrer registration, instant product run/download after purchase and buyer dispute filing.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -54,9 +54,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/** تایم‌لاین بصری سه‌مرحله‌ای معاملهٔ امانی — قابل‌فهم برای هر کاربری. */
+/** Three-step visual timeline of the escrow deal — understandable to any user. */
 function EscrowTimeline({ status }: { status: string }) {
-  // مرحلهٔ فعلی: ۱ تأمین، ۲ تحویل، ۳ آزادسازی؛ ۰ یعنی هنوز تأمین نشده
+  // current stage: 1 funded, 2 delivered, 3 released; 0 means not yet funded
   const step =
     status === "CREATED"
       ? 0
@@ -68,15 +68,15 @@ function EscrowTimeline({ status }: { status: string }) {
             ? 3
             : 0;
   const nodes = [
-    { n: 1, label: "پرداخت در امانت 🔒" },
-    { n: 2, label: "فایل HTML آمادهٔ اجرا 🚀" },
-    { n: 3, label: "تأیید و آزادسازی وجه ✅" },
+    { n: 1, label: "\u067e\u0631\u062f\u0627\u062e\u062a \u062f\u0631 \u0627\u0645\u0627\u0646\u062a 🔒" },
+    { n: 2, label: "\u0641\u0627\u06cc\u0644 HTML \u0622\u0645\u0627\u062f\u0647\u0654 \u0627\u062c\u0631\u0627 🚀" },
+    { n: 3, label: "\u062a\u0623\u06cc\u06cc\u062f \u0648 \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0648\u062c\u0647 ✅" },
   ];
   const closedNote: Record<string, string> = {
-    DISPUTED: "⚠️ معامله در داوری است — وجه تا حل اختلاف در امانت قفل می‌ماند.",
-    REFUNDED: "↩️ وجه به خریدار برگشت خورد و معامله بسته شد.",
-    CANCELLED: "این معامله لغو شد.",
-    EXPIRED: "مهلت این معامله تمام شد.",
+    DISPUTED: "⚠️ \u0645\u0639\u0627\u0645\u0644\u0647 \u062f\u0631 \u062f\u0627\u0648\u0631\u06cc \u0627\u0633\u062a — \u0648\u062c\u0647 \u062a\u0627 \u062d\u0644 \u0627\u062e\u062a\u0644\u0627\u0641 \u062f\u0631 \u0627\u0645\u0627\u0646\u062a \u0642\u0641\u0644 \u0645\u06cc‌\u0645\u0627\u0646\u062f.",
+    REFUNDED: "↩️ \u0648\u062c\u0647 \u0628\u0647 \u062e\u0631\u06cc\u062f\u0627\u0631 \u0628\u0631\u06af\u0634\u062a \u062e\u0648\u0631\u062f \u0648 \u0645\u0639\u0627\u0645\u0644\u0647 \u0628\u0633\u062a\u0647 \u0634\u062f.",
+    CANCELLED: "\u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u0644\u063a\u0648 \u0634\u062f.",
+    EXPIRED: "\u0645\u0647\u0644\u062a \u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u062a\u0645\u0627\u0645 \u0634\u062f.",
   };
   return (
     <div className="mt-3 rounded-xl bg-zinc-950/70 px-3 py-3 ring-1 ring-zinc-800/80">
@@ -142,23 +142,23 @@ export default function MarketPage() {
   const [myProducts, setMyProducts] = useState<ProductView[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // شیر اعتبار آزمایشی — برای پرسوناهای دمو داخل بنرِ موجودی ناکافی
+  // demo credit faucet — for demo personas inside the insufficient-balance banner
   const [claimingFaucet, setClaimingFaucet] = useState(false);
 
-  // رفرال فعال + محصول هدفِ لینک مستقیم وایرال
+  // active referral + the viral direct-link target product
   const [activeReferrer, setActiveReferrer] = useState<string | null>(null);
   const [spotlightProduct, setSpotlightProduct] = useState<ProductView | null>(null);
   const [previewProduct, setPreviewProduct] = useState<ProductView | null>(null);
 
-  // تحویل HTML خریداری‌شده و ثبت اختلاف خریدار
+  // delivery of the purchased HTML and buyer dispute filing
   const [deliveryView, setDeliveryView] = useState<EscrowDeliveryView | null>(null);
   const [disputeEscrowId, setDisputeEscrowId] = useState<string | null>(null);
   const [disputeReason, setDisputeReason] = useState("");
 
-  // بنر دوستانهٔ موجودی ناکافی — با میان‌بر شارژ کیف و درآمد رفرال
+  // friendly insufficient-balance banner — with wallet top-up and referral income shortcuts
   const [needFunds, setNeedFunds] = useState<{ product: ProductView } | null>(null);
 
-  // فرم ثبت دستی محصول
+  // manual product listing form
   const [showCreate, setShowCreate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState("");
@@ -167,7 +167,7 @@ export default function MarketPage() {
   const [category, setCategory] = useState("");
   const [affiliateBps, setAffiliateBps] = useState("1000");
 
-  // خواندن لینک وایرال ورودی و بارگیری تک‌محصول هدف (حتی قبل از نشست)
+  // read the incoming viral link and load the single target product (even before a session)
   useEffect(() => {
     const inbound = captureInboundViralLink();
     setActiveReferrer(inbound.referrer ?? getActiveReferrer());
@@ -176,7 +176,7 @@ export default function MarketPage() {
         .getProduct(inbound.productId)
         .then((p) => setSpotlightProduct(p))
         .catch(() => {
-          /* محصول ناموجود — لیست عادی نمایش داده می‌شود */
+          /* Product missing — the regular list is shown */
         });
     }
   }, []);
@@ -186,7 +186,7 @@ export default function MarketPage() {
       const res = await api.listProducts();
       setProducts(res.items);
     } catch {
-      /* لیست عمومی — بی‌سروصدا */
+      /* Public list — silent */
     }
     if (token) {
       try {
@@ -194,7 +194,7 @@ export default function MarketPage() {
         setOrders(mine.orders);
         setMyProducts(mine.products);
       } catch {
-        /* نشست ممکن است تازه مرده باشد */
+        /* The session may have just died */
       }
     }
   }, []);
@@ -209,7 +209,7 @@ export default function MarketPage() {
       <MiniShell>
         <div className="flex items-center justify-center gap-3 py-24 text-zinc-500">
           <Loader2 className="size-5 animate-spin" aria-hidden />
-          <span className="text-sm">برقراری نشست با کرنل…</span>
+          <span className="text-sm">&#x628;&#x631;&#x642;&#x631;&#x627;&#x631;&#x6cc; &#x646;&#x634;&#x633;&#x62a; &#x628;&#x627; &#x6a9;&#x631;&#x646;&#x644;…</span>
         </div>
       </MiniShell>
     );
@@ -226,7 +226,7 @@ export default function MarketPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="inline-block rounded-full bg-gold-400/15 px-2.5 py-0.5 text-[11px] font-bold text-gold-400">
-                    پیش‌نمایش لینک مستقیم
+                    &#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x644;&#x6cc;&#x646;&#x6a9; &#x645;&#x633;&#x62a;&#x642;&#x6cc;&#x645;
                   </span>
                   <h1 className="mt-1 text-lg font-black">{spotlightProduct.title}</h1>
                   <p className="mt-1 text-xs leading-5 text-zinc-400">
@@ -241,20 +241,20 @@ export default function MarketPage() {
                 <HtmlPreviewFrame
                   html={spotlightProduct.previewHtml}
                   title={spotlightProduct.title}
-                  badgeLabel="پیش‌نمایش عمومی"
+                  badgeLabel="&#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x639;&#x645;&#x648;&#x645;&#x6cc;"
                 />
               )}
             </section>
           )}
           {preview ? (
             <p className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-center text-xs leading-6 text-zinc-400">
-              در حالت مرورگر فقط تماشا فعال است؛ برای خرید و فروش از داخل تلگرام
-              وارد شو — دکمهٔ «تلاش برای ورود واقعی» بالای همین صفحه است.
+              &#x62f;&#x631; &#x62d;&#x627;&#x644;&#x62a; &#x645;&#x631;&#x648;&#x631;&#x6af;&#x631; &#x641;&#x642;&#x637; &#x62a;&#x645;&#x627;&#x634;&#x627; &#x641;&#x639;&#x627;&#x644; &#x627;&#x633;&#x62a;&#x61b; &#x628;&#x631;&#x627;&#x6cc; &#x62e;&#x631;&#x6cc;&#x62f; &#x648; &#x641;&#x631;&#x648;&#x634; &#x627;&#x632; &#x62f;&#x627;&#x62e;&#x644; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645;
+              &#x648;&#x627;&#x631;&#x62f; &#x634;&#x648; — &#x62f;&#x6a9;&#x645;&#x647;&#x654; «&#x62a;&#x644;&#x627;&#x634; &#x628;&#x631;&#x627;&#x6cc; &#x648;&#x631;&#x648;&#x62f; &#x648;&#x627;&#x642;&#x639;&#x6cc;» &#x628;&#x627;&#x644;&#x627;&#x6cc; &#x647;&#x645;&#x6cc;&#x646; &#x635;&#x641;&#x62d;&#x647; &#x627;&#x633;&#x62a;.
             </p>
           ) : (
             <GuestGate
-              title="بازار KIAN با ورود از تلگرام باز می‌شود"
-              hint="خرید اتمی با اسکرو مادهٔ ۸ نیازمند نشست احرازشدهٔ توست — اما می‌توانی همین حالا با «ورود آزمایشی» محصولات و پیش‌نمایش‌ها را ببینی."
+              title="&#x628;&#x627;&#x632;&#x627;&#x631; KIAN &#x628;&#x627; &#x648;&#x631;&#x648;&#x62f; &#x627;&#x632; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x628;&#x627;&#x632; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;"
+              hint="&#x62e;&#x631;&#x6cc;&#x62f; &#x627;&#x62a;&#x645;&#x6cc; &#x628;&#x627; &#x627;&#x633;&#x6a9;&#x631;&#x648; &#x645;&#x627;&#x62f;&#x647;&#x654; &#x6f8; &#x646;&#x6cc;&#x627;&#x632;&#x645;&#x646;&#x62f; &#x646;&#x634;&#x633;&#x62a; &#x627;&#x62d;&#x631;&#x627;&#x632;&#x634;&#x62f;&#x647;&#x654; &#x62a;&#x648;&#x633;&#x62a; — &#x627;&#x645;&#x627; &#x645;&#x6cc;‌&#x62a;&#x648;&#x627;&#x646;&#x6cc; &#x647;&#x645;&#x6cc;&#x646; &#x62d;&#x627;&#x644;&#x627; &#x628;&#x627; «&#x648;&#x631;&#x648;&#x62f; &#x622;&#x632;&#x645;&#x627;&#x6cc;&#x634;&#x6cc;» &#x645;&#x62d;&#x635;&#x648;&#x644;&#x627;&#x62a; &#x648; &#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634;‌&#x647;&#x627; &#x631;&#x627; &#x628;&#x628;&#x6cc;&#x646;&#x6cc;."
             />
           )}
         </div>
@@ -264,21 +264,21 @@ export default function MarketPage() {
 
   const { me, token } = state;
 
-  // شیر اعتبار آزمایشی — فقط برای پرسوناهای دمو (در تولید سرور صادقانه ۴۰۳ می‌دهد)
+  // demo credit faucet — demo personas only (in production the server honestly returns 403)
   const claimFaucet = async () => {
     setClaimingFaucet(true);
     try {
       const res = await api.claimDemoFaucet(token);
       toast({
-        title: "🎁 اعتبار تست اضافه شد",
-        description: `${formatDin(res.balance)} در کیف‌پول تو آمادهٔ خرید است.`,
+        title: "🎁 \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0627\u0636\u0627\u0641\u0647 \u0634\u062f",
+        description: `${formatDin(res.balance)} \u062f\u0631 \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u062a\u0648 \u0622\u0645\u0627\u062f\u0647\u0654 \u062e\u0631\u06cc\u062f \u0627\u0633\u062a.`,
         variant: "success",
       });
       setNeedFunds(null);
       await refresh();
     } catch (err) {
       toast({
-        title: "دریافت اعتبار تست ناموفق",
+        title: "\u062f\u0631\u06cc\u0627\u0641\u062a \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -290,11 +290,11 @@ export default function MarketPage() {
   const purchase = async (p: ProductView) => {
     const refNote =
       activeReferrer && activeReferrer !== me.user.telegramId
-        ? `\nپاداش معرفی (${formatAffiliatePercent(p.affiliateBps)}) به معرف ثبت می‌شود.`
+        ? `\n\u067e\u0627\u062f\u0627\u0634 \u0645\u0639\u0631\u0641\u06cc (${formatAffiliatePercent(p.affiliateBps)}) \u0628\u0647 \u0645\u0639\u0631\u0641 \u062b\u0628\u062a \u0645\u06cc‌\u0634\u0648\u062f.`
         : "";
     if (
       !window.confirm(
-        `خرید «${p.title}» به قیمت ${formatDin(p.priceDin)}؟\nمبلغ بلافاصله در اسکرو قفل می‌شود.${refNote}`,
+        `\u062e\u0631\u06cc\u062f «${p.title}» \u0628\u0647 \u0642\u06cc\u0645\u062a ${formatDin(p.priceDin)}\u061f\n\u0645\u0628\u0644\u063a \u0628\u0644\u0627\u0641\u0627\u0635\u0644\u0647 \u062f\u0631 \u0627\u0633\u06a9\u0631\u0648 \u0642\u0641\u0644 \u0645\u06cc‌\u0634\u0648\u062f.${refNote}`,
       )
     )
       return;
@@ -307,25 +307,25 @@ export default function MarketPage() {
       );
       toast({
         title: res.replayed
-          ? "این خرید قبلاً ثبت شده بود (replay)"
-          : "خرید انجام شد — محصول آمادهٔ مشاهده و تحویل است",
+          ? "\u0627\u06cc\u0646 \u062e\u0631\u06cc\u062f \u0642\u0628\u0644\u0627\u064b \u062b\u0628\u062a \u0634\u062f\u0647 \u0628\u0648\u062f (replay)"
+          : "\u062e\u0631\u06cc\u062f \u0627\u0646\u062c\u0627\u0645 \u0634\u062f — \u0645\u062d\u0635\u0648\u0644 \u0622\u0645\u0627\u062f\u0647\u0654 \u0645\u0634\u0627\u0647\u062f\u0647 \u0648 \u062a\u062d\u0648\u06cc\u0644 \u0627\u0633\u062a",
         description:
-          "از بخش «سفارش‌های من» فایل HTML را باز کن و پس از بررسی، آزادسازی یا اختلاف ثبت کن.",
+          "\u0627\u0632 \u0628\u062e\u0634 «\u0633\u0641\u0627\u0631\u0634‌\u0647\u0627\u06cc \u0645\u0646» \u0641\u0627\u06cc\u0644 HTML \u0631\u0627 \u0628\u0627\u0632 \u06a9\u0646 \u0648 \u067e\u0633 \u0627\u0632 \u0628\u0631\u0631\u0633\u06cc\u060c \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u06cc\u0627 \u0627\u062e\u062a\u0644\u0627\u0641 \u062b\u0628\u062a \u06a9\u0646.",
         variant: "success",
       });
       setPreviewProduct(null);
       setNeedFunds(null);
       await Promise.all([loadMarket(token), refresh()]);
     } catch (err) {
-      // تجربهٔ خرید بدون اصطکاک: موجودی ناکافی → بنر دوستانه + دو میان‌بر، نه خطای خام
+      // frictionless purchase experience: insufficient balance → friendly banner + two shortcuts, not a raw error
       if (
         err instanceof ApiError &&
         (err.code === "ACCOUNT_OVERDRAFT" || err.code === "INSUFFICIENT_BALANCE")
       ) {
         setNeedFunds({ product: p });
         toast({
-          title: "موجودی کیف‌پول کافی نیست",
-          description: "از میان‌برهای پایین بازار: شارژ کیف یا درآمد رایگان رفرال.",
+          title: "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a",
+          description: "\u0627\u0632 \u0645\u06cc\u0627\u0646‌\u0628\u0631\u0647\u0627\u06cc \u067e\u0627\u06cc\u06cc\u0646 \u0628\u0627\u0632\u0627\u0631: \u0634\u0627\u0631\u0698 \u06a9\u06cc\u0641 \u06cc\u0627 \u062f\u0631\u0622\u0645\u062f \u0631\u0627\u06cc\u06af\u0627\u0646 \u0631\u0641\u0631\u0627\u0644.",
           variant: "destructive",
         });
       } else {
@@ -345,13 +345,13 @@ export default function MarketPage() {
     try {
       await navigator.clipboard.writeText(telegramUrl);
       toast({
-        title: "لینک رفرال شما کپی شد!",
-        description: `با هر خرید از لینک شما، ${formatAffiliatePercent(p.affiliateBps)} پورسانت به کیف شما واریز می‌شود.`,
+        title: "\u0644\u06cc\u0646\u06a9 \u0631\u0641\u0631\u0627\u0644 \u0634\u0645\u0627 \u06a9\u067e\u06cc \u0634\u062f!",
+        description: `\u0628\u0627 \u0647\u0631 \u062e\u0631\u06cc\u062f \u0627\u0632 \u0644\u06cc\u0646\u06a9 \u0634\u0645\u0627\u060c ${formatAffiliatePercent(p.affiliateBps)} \u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0628\u0647 \u06a9\u06cc\u0641 \u0634\u0645\u0627 \u0648\u0627\u0631\u06cc\u0632 \u0645\u06cc‌\u0634\u0648\u062f.`,
         variant: "success",
       });
     } catch {
       toast({
-        title: "کپی خودکار مجاز نبود",
+        title: "\u06a9\u067e\u06cc \u062e\u0648\u062f\u06a9\u0627\u0631 \u0645\u062c\u0627\u0632 \u0646\u0628\u0648\u062f",
         description: telegramUrl,
         variant: "destructive",
       });
@@ -365,7 +365,7 @@ export default function MarketPage() {
       setDeliveryView(del);
     } catch (err) {
       toast({
-        title: "دریافت محتوای محصول ناموفق بود",
+        title: "\u062f\u0631\u06cc\u0627\u0641\u062a \u0645\u062d\u062a\u0648\u0627\u06cc \u0645\u062d\u0635\u0648\u0644 \u0646\u0627\u0645\u0648\u0641\u0642 \u0628\u0648\u062f",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -380,22 +380,22 @@ export default function MarketPage() {
       if (kind === "deliver") {
         await api.deliver(token, escrowId);
         toast({
-          title: "تحویل ثبت شد",
-          description: "حالا خریدار می‌تواند آزادسازی کند.",
+          title: "\u062a\u062d\u0648\u06cc\u0644 \u062b\u0628\u062a \u0634\u062f",
+          description: "\u062d\u0627\u0644\u0627 \u062e\u0631\u06cc\u062f\u0627\u0631 \u0645\u06cc‌\u062a\u0648\u0627\u0646\u062f \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u06a9\u0646\u062f.",
           variant: "success",
         });
       } else {
         await api.release(token, escrowId);
         toast({
-          title: "آزادسازی و تسویه انجام شد",
-          description: "تقسیم خودکار بین فروشنده، خزانه و معرف (در صورت وجود) ثبت شد.",
+          title: "\u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0648 \u062a\u0633\u0648\u06cc\u0647 \u0627\u0646\u062c\u0627\u0645 \u0634\u062f",
+          description: "\u062a\u0642\u0633\u06cc\u0645 \u062e\u0648\u062f\u06a9\u0627\u0631 \u0628\u06cc\u0646 \u0641\u0631\u0648\u0634\u0646\u062f\u0647\u060c \u062e\u0632\u0627\u0646\u0647 \u0648 \u0645\u0639\u0631\u0641 (\u062f\u0631 \u0635\u0648\u0631\u062a \u0648\u062c\u0648\u062f) \u062b\u0628\u062a \u0634\u062f.",
           variant: "success",
         });
       }
       await Promise.all([loadMarket(token), refresh()]);
     } catch (err) {
       toast({
-        title: kind === "deliver" ? "تحویل ناموفق" : "آزادسازی ناموفق",
+        title: kind === "deliver" ? "\u062a\u062d\u0648\u06cc\u0644 \u0646\u0627\u0645\u0648\u0641\u0642" : "\u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -407,15 +407,15 @@ export default function MarketPage() {
   const submitDispute = async (escrowId: string) => {
     const clean = disputeReason.trim();
     if (!clean) {
-      toast({ title: "دلیل اختلاف را بنویسید", variant: "destructive" });
+      toast({ title: "\u062f\u0644\u06cc\u0644 \u0627\u062e\u062a\u0644\u0627\u0641 \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633\u06cc\u062f", variant: "destructive" });
       return;
     }
     setBusyId(escrowId);
     try {
       await api.disputeEscrow(token, escrowId, clean);
       toast({
-        title: "اختلاف ثبت شد — وجه در اسکرو قفل ماند",
-        description: "پرونده تا داوری بررسی می‌شود.",
+        title: "\u0627\u062e\u062a\u0644\u0627\u0641 \u062b\u0628\u062a \u0634\u062f — \u0648\u062c\u0647 \u062f\u0631 \u0627\u0633\u06a9\u0631\u0648 \u0642\u0641\u0644 \u0645\u0627\u0646\u062f",
+        description: "\u067e\u0631\u0648\u0646\u062f\u0647 \u062a\u0627 \u062f\u0627\u0648\u0631\u06cc \u0628\u0631\u0631\u0633\u06cc \u0645\u06cc‌\u0634\u0648\u062f.",
         variant: "success",
       });
       setDisputeEscrowId(null);
@@ -423,7 +423,7 @@ export default function MarketPage() {
       await Promise.all([loadMarket(token), refresh()]);
     } catch (err) {
       toast({
-        title: "ثبت اختلاف ناموفق بود",
+        title: "\u062b\u0628\u062a \u0627\u062e\u062a\u0644\u0627\u0641 \u0646\u0627\u0645\u0648\u0641\u0642 \u0628\u0648\u062f",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -443,7 +443,7 @@ export default function MarketPage() {
         affiliateBps: Number(affiliateBps) || 1000,
         ...(category.trim() ? { category: category.trim() } : {}),
       });
-      toast({ title: "محصول ثبت شد و فعال است", variant: "success" });
+      toast({ title: "\u0645\u062d\u0635\u0648\u0644 \u062b\u0628\u062a \u0634\u062f \u0648 \u0641\u0639\u0627\u0644 \u0627\u0633\u062a", variant: "success" });
       setTitle("");
       setDescription("");
       setPrice("");
@@ -453,7 +453,7 @@ export default function MarketPage() {
       await loadMarket(token);
     } catch (err) {
       toast({
-        title: "ثبت محصول ناموفق",
+        title: "\u062b\u0628\u062a \u0645\u062d\u0635\u0648\u0644 \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -465,16 +465,16 @@ export default function MarketPage() {
   return (
     <MiniShell>
       <div className="flex flex-col gap-5">
-        {/* سرصفحه + میان‌بر استودیو AI و فروش دستی */}
+        {/* Header + AI studio and manual-sale shortcuts */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg font-black">بازار</h1>
+          <h1 className="text-lg font-black">&#x628;&#x627;&#x632;&#x627;&#x631;</h1>
           <div className="flex items-center gap-2">
             <Link
               href="/builder"
               className="flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-3 py-2 text-xs font-bold text-white ring-1 ring-gold-400/40 hover:opacity-90"
             >
               <Sparkles className="size-4" aria-hidden />
-              ساخت با AI
+              &#x633;&#x627;&#x62e;&#x62a; &#x628;&#x627; AI
             </Link>
             <button
               type="button"
@@ -482,41 +482,41 @@ export default function MarketPage() {
               className="flex items-center gap-1.5 rounded-xl bg-royal-500/20 px-3 py-2 text-xs font-bold text-gold-400 ring-1 ring-gold-400/30 hover:bg-royal-500/30"
             >
               <PackagePlus className="size-4" aria-hidden />
-              فروش دستی
+              &#x641;&#x631;&#x648;&#x634; &#x62f;&#x633;&#x62a;&#x6cc;
             </button>
           </div>
         </div>
 
-        {/* نشانگر معرف فعالِ ذخیره‌شده از لینک وایرال */}
+        {/* Saved active-referrer badge from the viral link */}
         {activeReferrer && activeReferrer !== me.user.telegramId && (
           <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/25 px-3 py-2 text-xs text-emerald-300">
             <Gift className="size-4 shrink-0" aria-hidden />
             <span>
-              لینک معرفی فعال است (شناسهٔ معرف:{" "}
+              &#x644;&#x6cc;&#x646;&#x6a9; &#x645;&#x639;&#x631;&#x641;&#x6cc; &#x641;&#x639;&#x627;&#x644; &#x627;&#x633;&#x62a; (&#x634;&#x646;&#x627;&#x633;&#x647;&#x654; &#x645;&#x639;&#x631;&#x641;:{" "}
               <strong className="font-mono" dir="ltr">
                 #{activeReferrer}
               </strong>
-              ) — هنگام خرید به‌طور خودکار ثبت می‌شود.
+              ) — &#x647;&#x646;&#x6af;&#x627;&#x645; &#x62e;&#x631;&#x6cc;&#x62f; &#x628;&#x647;‌&#x637;&#x648;&#x631; &#x62e;&#x648;&#x62f;&#x6a9;&#x627;&#x631; &#x62b;&#x628;&#x62a; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
             </span>
           </div>
         )}
 
-        {/* بنر دوستانهٔ موجودی ناکافی — با دو میان‌بر مستقیم */}
+        {/* Friendly insufficient-balance banner — with two direct shortcuts */}
         {needFunds && (
           <div className="flex flex-col gap-2.5 rounded-2xl border border-amber-500/40 bg-amber-950/25 p-4">
             <p className="text-sm font-black text-amber-300">
-              💳 موجودی کیف‌پول برای این خرید کافی نیست
+              💳 &#x645;&#x648;&#x62c;&#x648;&#x62f;&#x6cc; &#x6a9;&#x6cc;&#x641;‌&#x67e;&#x648;&#x644; &#x628;&#x631;&#x627;&#x6cc; &#x627;&#x6cc;&#x646; &#x62e;&#x631;&#x6cc;&#x62f; &#x6a9;&#x627;&#x641;&#x6cc; &#x646;&#x6cc;&#x633;&#x62a;
             </p>
             <p className="text-xs leading-6 text-zinc-300">
-              برای خرید «{needFunds.product.title}» به{" "}
+              &#x628;&#x631;&#x627;&#x6cc; &#x62e;&#x631;&#x6cc;&#x62f; «{needFunds.product.title}» &#x628;&#x647;{" "}
               <strong className="font-mono text-gold-400" dir="ltr">
                 {formatDin(needFunds.product.priceDin)}
               </strong>{" "}
-              نیاز داری؛ موجودی فعلی تو{" "}
+              &#x646;&#x6cc;&#x627;&#x632; &#x62f;&#x627;&#x631;&#x6cc;&#x61b; &#x645;&#x648;&#x62c;&#x648;&#x62f;&#x6cc; &#x641;&#x639;&#x644;&#x6cc; &#x62a;&#x648;{" "}
               <strong className="font-mono text-zinc-100" dir="ltr">
                 {formatDin(me.balance)}
               </strong>{" "}
-              است. دو راه سریع داری:
+              &#x627;&#x633;&#x62a;. &#x62f;&#x648; &#x631;&#x627;&#x647; &#x633;&#x631;&#x6cc;&#x639; &#x62f;&#x627;&#x631;&#x6cc;:
             </p>
             <div className="flex flex-wrap gap-2">
               {activePersona && (
@@ -526,7 +526,7 @@ export default function MarketPage() {
                   onClick={() => void claimFaucet()}
                   className="flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3.5 py-2.5 text-xs font-black text-white shadow-lg shadow-emerald-600/25 ring-1 ring-emerald-400/50 transition hover:opacity-90 disabled:opacity-50"
                 >
-                  {claimingFaucet ? "در حال دریافت…" : "🎁 دریافت ۵٬۰۰۰ KIAN اعتبار تست رایگان (Faucet)"}
+                  {claimingFaucet ? "\u062f\u0631 \u062d\u0627\u0644 \u062f\u0631\u06cc\u0627\u0641\u062a…" : "🎁 \u062f\u0631\u06cc\u0627\u0641\u062a \u06f5\u066c\u06f0\u06f0\u06f0 KIAN \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0631\u0627\u06cc\u06af\u0627\u0646 (Faucet)"}
                 </button>
               )}
               <Link
@@ -534,37 +534,37 @@ export default function MarketPage() {
                 onClick={() => setNeedFunds(null)}
                 className="flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-gold-400 to-gold-600 px-3.5 py-2.5 text-xs font-black text-zinc-950 shadow-lg shadow-gold-500/20 ring-1 ring-gold-400/50 hover:opacity-90"
               >
-                ➕ شارژ کیف‌پول
+                ➕ &#x634;&#x627;&#x631;&#x698; &#x6a9;&#x6cc;&#x641;‌&#x67e;&#x648;&#x644;
               </Link>
               <button
                 type="button"
                 onClick={() => void copyReferralLink(needFunds.product)}
                 className="flex items-center gap-1.5 rounded-xl bg-emerald-500/15 px-3.5 py-2.5 text-xs font-bold text-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-500/25"
               >
-                🔗 کسب درآمد رایگان با کپیِ لینک رفرال محصولات
+                🔗 &#x6a9;&#x633;&#x628; &#x62f;&#x631;&#x622;&#x645;&#x62f; &#x631;&#x627;&#x6cc;&#x6af;&#x627;&#x646; &#x628;&#x627; &#x6a9;&#x67e;&#x6cc;&#x650; &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644; &#x645;&#x62d;&#x635;&#x648;&#x644;&#x627;&#x62a;
               </button>
               <button
                 type="button"
                 onClick={() => setNeedFunds(null)}
                 className="rounded-xl bg-zinc-800 px-3 py-2.5 text-xs text-zinc-400 hover:bg-zinc-700"
               >
-                بستن
+                &#x628;&#x633;&#x62a;&#x646;
               </button>
             </div>
             <p className="text-[11px] leading-5 text-zinc-500">
-              راهنما: با هر خریدِ دیگران از لینک رفرال تو، پورسانت آنی واریز می‌شود؛
-              یا با ثبت اثبات واریز TON، دیین ضرب می‌شود.
+              &#x631;&#x627;&#x647;&#x646;&#x645;&#x627;: &#x628;&#x627; &#x647;&#x631; &#x62e;&#x631;&#x6cc;&#x62f;&#x650; &#x62f;&#x6cc;&#x6af;&#x631;&#x627;&#x646; &#x627;&#x632; &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644; &#x62a;&#x648;&#x60c; &#x67e;&#x648;&#x631;&#x633;&#x627;&#x646;&#x62a; &#x622;&#x646;&#x6cc; &#x648;&#x627;&#x631;&#x6cc;&#x632; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;&#x61b;
+              &#x6cc;&#x627; &#x628;&#x627; &#x62b;&#x628;&#x62a; &#x627;&#x62b;&#x628;&#x627;&#x62a; &#x648;&#x627;&#x631;&#x6cc;&#x632; TON&#x60c; &#x62f;&#x6cc;&#x6cc;&#x646; &#x636;&#x631;&#x628; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
             </p>
           </div>
         )}
 
-        {/* کارت ویژهٔ محصول لینک مستقیم (`startapp=p_<id>_r_<ref>`) */}
+        {/* Special card for the direct-link product (`startapp=p_<id>_r_<ref>`) */}
         {spotlightProduct && (
           <section className="flex flex-col gap-3 rounded-2xl border border-gold-400/40 bg-zinc-900/80 p-4 shadow-xl shadow-black/40">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <span className="inline-flex items-center gap-1 rounded-full bg-gold-400/15 px-2.5 py-0.5 text-[11px] font-bold text-gold-400">
-                  لینک مستقیم محصول
+                  &#x644;&#x6cc;&#x646;&#x6a9; &#x645;&#x633;&#x62a;&#x642;&#x6cc;&#x645; &#x645;&#x62d;&#x635;&#x648;&#x644;
                 </span>
                 <h2 className="mt-1 text-base font-black">{spotlightProduct.title}</h2>
                 <p className="mt-1 text-xs leading-5 text-zinc-300">
@@ -574,7 +574,7 @@ export default function MarketPage() {
               <button
                 type="button"
                 onClick={() => setSpotlightProduct(null)}
-                aria-label="بستن کارت محصول"
+                aria-label="\u0628\u0633\u062a\u0646 \u06a9\u0627\u0631\u062a \u0645\u062d\u0635\u0648\u0644"
                 className="grid size-7 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-400 hover:text-white"
               >
                 <X className="size-4" aria-hidden />
@@ -586,7 +586,7 @@ export default function MarketPage() {
                 html={spotlightProduct.previewHtml}
                 title={spotlightProduct.title}
                 heightClassName="h-[340px]"
-                badgeLabel="پیش‌نمایش زنده پیش از خرید"
+                badgeLabel="&#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x632;&#x646;&#x62f;&#x647; &#x67e;&#x6cc;&#x634; &#x627;&#x632; &#x62e;&#x631;&#x6cc;&#x62f;"
               />
             )}
 
@@ -597,7 +597,7 @@ export default function MarketPage() {
                 </span>
                 {spotlightProduct.affiliateBps > 0 && (
                   <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/30">
-                    🎁 {formatAffiliatePercent(spotlightProduct.affiliateBps)} پاداش معرفی
+                    🎁 {formatAffiliatePercent(spotlightProduct.affiliateBps)} &#x67e;&#x627;&#x62f;&#x627;&#x634; &#x645;&#x639;&#x631;&#x641;&#x6cc;
                   </span>
                 )}
               </div>
@@ -608,7 +608,7 @@ export default function MarketPage() {
                   className="flex items-center gap-1 rounded-lg bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-700"
                 >
                   <Link2 className="size-3.5" aria-hidden />
-                  کپی لینک رفرال
+                  &#x6a9;&#x67e;&#x6cc; &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644;
                 </button>
                 <button
                   type="button"
@@ -620,34 +620,34 @@ export default function MarketPage() {
                   className="rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-4 py-2 text-xs font-black text-white ring-1 ring-gold-400/40 hover:opacity-90 disabled:opacity-40"
                 >
                   {spotlightProduct.sellerId === me.user.id
-                    ? "محصول من"
-                    : "خرید آنی با اسکرو"}
+                    ? "\u0645\u062d\u0635\u0648\u0644 \u0645\u0646"
+                    : "\u062e\u0631\u06cc\u062f \u0622\u0646\u06cc \u0628\u0627 \u0627\u0633\u06a9\u0631\u0648"}
                 </button>
               </div>
             </div>
           </section>
         )}
 
-        {/* فرم ثبت دستی محصول */}
+        {/* manual product listing form */}
         {showCreate && (
           <form
             onSubmit={(e) => void createProduct(e)}
             className="grid gap-3 rounded-2xl border border-royal-500/20 bg-zinc-900/60 p-5"
           >
             <label className="text-xs text-zinc-400">
-              عنوان
+              &#x639;&#x646;&#x648;&#x627;&#x646;
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 minLength={3}
                 maxLength={120}
-                placeholder="مثلاً: کانال VIP سیگنال"
+                placeholder="\u0645\u062b\u0644\u0627\u064b: \u06a9\u0627\u0646\u0627\u0644 VIP \u0633\u06cc\u06af\u0646\u0627\u0644"
                 className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-gold-400/50"
               />
             </label>
             <label className="text-xs text-zinc-400">
-              توضیحات
+              &#x62a;&#x648;&#x636;&#x6cc;&#x62d;&#x627;&#x62a;
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -660,7 +660,7 @@ export default function MarketPage() {
             </label>
             <div className="grid grid-cols-3 gap-3">
               <label className="text-xs text-zinc-400">
-                قیمت (Đ)
+                &#x642;&#x6cc;&#x645;&#x62a; (Đ)
                 <input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
@@ -672,27 +672,27 @@ export default function MarketPage() {
                 />
               </label>
               <label className="text-xs text-zinc-400">
-                پورسانت معرف
+                &#x67e;&#x648;&#x631;&#x633;&#x627;&#x646;&#x62a; &#x645;&#x639;&#x631;&#x641;
                 <select
                   value={affiliateBps}
                   onChange={(e) => setAffiliateBps(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-2 text-sm outline-none focus:border-gold-400/50"
                 >
-                  <option value="0">۰٪</option>
-                  <option value="1000">۱۰٪</option>
-                  <option value="1500">۱۵٪</option>
-                  <option value="2000">۲۰٪</option>
-                  <option value="3000">۳۰٪</option>
-                  <option value="5000">۵۰٪</option>
+                  <option value="0">&#x6f0;&#x66a;</option>
+                  <option value="1000">&#x6f1;&#x6f0;&#x66a;</option>
+                  <option value="1500">&#x6f1;&#x6f5;&#x66a;</option>
+                  <option value="2000">&#x6f2;&#x6f0;&#x66a;</option>
+                  <option value="3000">&#x6f3;&#x6f0;&#x66a;</option>
+                  <option value="5000">&#x6f5;&#x6f0;&#x66a;</option>
                 </select>
               </label>
               <label className="text-xs text-zinc-400">
-                دسته
+                &#x62f;&#x633;&#x62a;&#x647;
                 <input
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   maxLength={40}
-                  placeholder="خدمات"
+                  placeholder="\u062e\u062f\u0645\u0627\u062a"
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-gold-400/50"
                 />
               </label>
@@ -702,20 +702,20 @@ export default function MarketPage() {
               disabled={submitting}
               className="rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-royal-600/30 ring-1 ring-gold-400/40 hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "در حال ثبت…" : "ثبت محصول"}
+              {submitting ? "\u062f\u0631 \u062d\u0627\u0644 \u062b\u0628\u062a…" : "\u062b\u0628\u062a \u0645\u062d\u0635\u0648\u0644"}
             </button>
           </form>
         )}
 
-        {/* محصولات فعال */}
+        {/* Active products */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 font-bold">
             <HandCoins className="size-4 text-gold-400" aria-hidden />
-            محصولات فعال
+            &#x645;&#x62d;&#x635;&#x648;&#x644;&#x627;&#x62a; &#x641;&#x639;&#x627;&#x644;
           </h2>
           {products.length === 0 ? (
             <p className="rounded-2xl border border-zinc-800 bg-zinc-900/60 py-8 text-center text-sm text-zinc-600">
-              هنوز محصولی فعال نیست — اولین محصول تعاملی را در استودیو AI بساز.
+              &#x647;&#x646;&#x648;&#x632; &#x645;&#x62d;&#x635;&#x648;&#x644;&#x6cc; &#x641;&#x639;&#x627;&#x644; &#x646;&#x6cc;&#x633;&#x62a; — &#x627;&#x648;&#x644;&#x6cc;&#x646; &#x645;&#x62d;&#x635;&#x648;&#x644; &#x62a;&#x639;&#x627;&#x645;&#x644;&#x6cc; &#x631;&#x627; &#x62f;&#x631; &#x627;&#x633;&#x62a;&#x648;&#x62f;&#x6cc;&#x648; AI &#x628;&#x633;&#x627;&#x632;.
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -738,7 +738,7 @@ export default function MarketPage() {
                         )}
                         {p.affiliateBps > 0 && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/25">
-                            🎁 {formatAffiliatePercent(p.affiliateBps)} پاداش معرفی
+                            🎁 {formatAffiliatePercent(p.affiliateBps)} &#x67e;&#x627;&#x62f;&#x627;&#x634; &#x645;&#x639;&#x631;&#x641;&#x6cc;
                           </span>
                         )}
                       </div>
@@ -756,13 +756,13 @@ export default function MarketPage() {
                         {busyId === p.id
                           ? "…"
                           : p.sellerId === me.user.id
-                            ? "محصول من"
-                            : "خرید"}
+                            ? "\u0645\u062d\u0635\u0648\u0644 \u0645\u0646"
+                            : "\u062e\u0631\u06cc\u062f"}
                       </button>
                     </div>
                   </div>
 
-                  {/* دکمه‌های پیش‌نمایش زنده و کپی لینک رفرال */}
+                  {/* Live preview and referral link copy buttons */}
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-zinc-800/80 pt-3">
                     {p.previewHtml && (
                       <button
@@ -771,7 +771,7 @@ export default function MarketPage() {
                         className="flex items-center gap-1.5 rounded-lg bg-royal-500/20 px-2.5 py-1.5 text-[11px] font-bold text-gold-300 ring-1 ring-gold-400/30 hover:bg-royal-500/30"
                       >
                         <Eye className="size-3.5" aria-hidden />
-                        پیش‌نمایش زنده
+                        &#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x632;&#x646;&#x62f;&#x647;
                       </button>
                     )}
                     <button
@@ -780,7 +780,7 @@ export default function MarketPage() {
                       className="flex items-center gap-1.5 rounded-lg bg-zinc-800/90 px-2.5 py-1.5 text-[11px] font-semibold text-zinc-200 ring-1 ring-zinc-700 hover:bg-zinc-700"
                     >
                       <Link2 className="size-3.5 text-emerald-400" aria-hidden />
-                      کپی لینک رفرال من
+                      &#x6a9;&#x67e;&#x6cc; &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644; &#x645;&#x646;
                     </button>
                   </div>
                 </li>
@@ -789,15 +789,15 @@ export default function MarketPage() {
           )}
         </section>
 
-        {/* سفارش‌های من (اسکروها + تحویل آنی HTML + آزادسازی + ثبت اختلاف) */}
+        {/* My orders (escrows + instant HTML delivery + release + dispute filing) */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 font-bold">
             <Truck className="size-4 text-royal-400" aria-hidden />
-            سفارش‌های من (اسکروها)
+            &#x633;&#x641;&#x627;&#x631;&#x634;‌&#x647;&#x627;&#x6cc; &#x645;&#x646; (&#x627;&#x633;&#x6a9;&#x631;&#x648;&#x647;&#x627;)
           </h2>
           {orders.length === 0 ? (
             <p className="rounded-2xl border border-zinc-800 bg-zinc-900/60 py-8 text-center text-sm text-zinc-600">
-              سفارشی ندارید.
+              &#x633;&#x641;&#x627;&#x631;&#x634;&#x6cc; &#x646;&#x62f;&#x627;&#x631;&#x6cc;&#x62f;.
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -824,7 +824,7 @@ export default function MarketPage() {
                         {o.amount.toLocaleString("fa-IR")} Đ
                       </span>
                       <span className="text-[11px] text-zinc-500">
-                        {iAmSeller ? "فروشندهٔ این معامله" : "خریدار این معامله"}
+                        {iAmSeller ? "\u0641\u0631\u0648\u0634\u0646\u062f\u0647\u0654 \u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647" : "\u062e\u0631\u06cc\u062f\u0627\u0631 \u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647"}
                       </span>
                       <span className="mr-auto text-[11px] text-zinc-600">
                         {formatWhen(o.createdAt)}
@@ -833,11 +833,11 @@ export default function MarketPage() {
 
                     {o.disputeReason && (
                       <p className="mt-2 rounded-lg bg-rose-950/40 px-2.5 py-1.5 text-xs text-rose-300 ring-1 ring-rose-500/30">
-                        دلیل اختلاف: {o.disputeReason}
+                        &#x62f;&#x644;&#x6cc;&#x644; &#x627;&#x62e;&#x62a;&#x644;&#x627;&#x641;: {o.disputeReason}
                       </p>
                     )}
 
-                    {/* تایم‌لاین بصری معامله: امانت ← تحویل ← آزادسازی */}
+                    {/* Deal visual timeline: escrow ← delivery ← release */}
                     <EscrowTimeline status={o.status} />
 
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -849,7 +849,7 @@ export default function MarketPage() {
                           className="flex items-center gap-1.5 rounded-lg bg-gradient-to-b from-royal-400 to-royal-600 px-3 py-1.5 text-xs font-bold text-white ring-1 ring-gold-400/40 hover:opacity-90 disabled:opacity-40"
                         >
                           <Rocket className="size-3.5" aria-hidden />
-                          باز کردن / دانلود محصول (HTML)
+                          &#x628;&#x627;&#x632; &#x6a9;&#x631;&#x62f;&#x646; / \u062f\u0627\u0646\u0644\u0648\u062f \u0645\u062d\u0635\u0648\u0644 (HTML)
                         </button>
                       )}
 
@@ -860,7 +860,7 @@ export default function MarketPage() {
                           disabled={busyId === o.id}
                           className="rounded-lg bg-royal-500/20 px-3 py-1.5 text-xs font-bold text-gold-400 ring-1 ring-gold-400/30 hover:bg-royal-500/30 disabled:opacity-40"
                         >
-                          ثبت تحویل
+                          &#x62b;&#x628;&#x62a; &#x62a;&#x62d;&#x648;&#x6cc;&#x644;
                         </button>
                       )}
 
@@ -873,7 +873,7 @@ export default function MarketPage() {
                             className="flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-400/30 hover:bg-emerald-500/25 disabled:opacity-40"
                           >
                             <CheckCircle2 className="size-3.5" aria-hidden />
-                            تایید و آزادسازی وجه
+                            &#x62a;&#x627;&#x6cc;&#x6cc;&#x62f; &#x648; &#x622;&#x632;&#x627;&#x62f;&#x633;&#x627;&#x632;&#x6cc; &#x648;&#x62c;&#x647;
                           </button>
                           <button
                             type="button"
@@ -885,13 +885,13 @@ export default function MarketPage() {
                             className="flex items-center gap-1 rounded-lg bg-rose-500/15 px-3 py-1.5 text-xs font-bold text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/25 disabled:opacity-40"
                           >
                             <AlertTriangle className="size-3.5" aria-hidden />
-                            ثبت اختلاف
+                            &#x62b;&#x628;&#x62a; &#x627;&#x62e;&#x62a;&#x644;&#x627;&#x641;
                           </button>
                         </>
                       )}
                     </div>
 
-                    {/* فرم درون‌خطی ثبت اختلاف */}
+                    {/* Inline dispute filing form */}
                     {disputingThis && (
                       <div className="mt-3 flex flex-col gap-2 rounded-xl border border-rose-500/30 bg-zinc-950/80 p-3">
                         <textarea
@@ -899,7 +899,7 @@ export default function MarketPage() {
                           onChange={(e) => setDisputeReason(e.target.value)}
                           rows={2}
                           maxLength={500}
-                          placeholder="دلیل اختلاف را کوتاه بنویس (مثلاً فایل خراب یا ناقص است)…"
+                          placeholder="\u062f\u0644\u06cc\u0644 \u0627\u062e\u062a\u0644\u0627\u0641 \u0631\u0627 \u06a9\u0648\u062a\u0627\u0647 \u0628\u0646\u0648\u06cc\u0633 (\u0645\u062b\u0644\u0627\u064b \u0641\u0627\u06cc\u0644 \u062e\u0631\u0627\u0628 \u06cc\u0627 \u0646\u0627\u0642\u0635 \u0627\u0633\u062a)…"
                           className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs outline-none focus:border-rose-400/60"
                         />
                         <div className="flex justify-end gap-2">
@@ -908,7 +908,7 @@ export default function MarketPage() {
                             onClick={() => setDisputeEscrowId(null)}
                             className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700"
                           >
-                            انصراف
+                            &#x627;&#x646;&#x635;&#x631;&#x627;&#x641;
                           </button>
                           <button
                             type="button"
@@ -916,7 +916,7 @@ export default function MarketPage() {
                             disabled={busyId === o.id}
                             className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-500 disabled:opacity-50"
                           >
-                            ارسال اختلاف و قفل وجه
+                            &#x627;&#x631;&#x633;&#x627;&#x644; &#x627;&#x62e;&#x62a;&#x644;&#x627;&#x641; &#x648; &#x642;&#x641;&#x644; &#x648;&#x62c;&#x647;
                           </button>
                         </div>
                       </div>
@@ -928,10 +928,10 @@ export default function MarketPage() {
           )}
         </section>
 
-        {/* محصولات من */}
+        {/* My products */}
         {myProducts.length > 0 && (
           <section>
-            <h2 className="mb-3 font-bold">محصولات فروشگاه من</h2>
+            <h2 className="mb-3 font-bold">&#x645;&#x62d;&#x635;&#x648;&#x644;&#x627;&#x62a; &#x641;&#x631;&#x648;&#x634;&#x6af;&#x627;&#x647; &#x645;&#x646;</h2>
             <ul className="flex flex-col gap-2">
               {myProducts.map((p) => (
                 <li
@@ -945,7 +945,7 @@ export default function MarketPage() {
                       onClick={() => void copyReferralLink(p)}
                       className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-emerald-300 hover:bg-zinc-700"
                     >
-                      لینک فروش
+                      &#x644;&#x6cc;&#x646;&#x6a9; &#x641;&#x631;&#x648;&#x634;
                     </button>
                     <span className="font-mono text-xs text-gold-400" dir="ltr">
                       {p.priceDin.toLocaleString("fa-IR")} Đ
@@ -958,7 +958,7 @@ export default function MarketPage() {
         )}
       </div>
 
-      {/* مودال پیش‌نمایش زندهٔ محصول پیش از خرید */}
+      {/* Live product preview modal before purchase */}
       {previewProduct && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm"
@@ -975,14 +975,14 @@ export default function MarketPage() {
                 <p className="text-xs text-zinc-400">
                   {formatDin(previewProduct.priceDin)}
                   {previewProduct.affiliateBps > 0
-                    ? ` • 🎁 ${formatAffiliatePercent(previewProduct.affiliateBps)} پاداش معرفی`
+                    ? ` • 🎁 ${formatAffiliatePercent(previewProduct.affiliateBps)} \u067e\u0627\u062f\u0627\u0634 \u0645\u0639\u0631\u0641\u06cc`
                     : ""}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewProduct(null)}
-                aria-label="بستن پیش‌نمایش"
+                aria-label="\u0628\u0633\u062a\u0646 \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634"
                 className="grid size-8 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-300 hover:text-white"
               >
                 <X className="size-4" aria-hidden />
@@ -993,7 +993,7 @@ export default function MarketPage() {
               html={previewProduct.previewHtml}
               title={previewProduct.title}
               heightClassName="h-[460px]"
-              badgeLabel="پیش‌نمایش زنده پیش از خرید"
+              badgeLabel="&#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; &#x632;&#x646;&#x62f;&#x647; &#x67e;&#x6cc;&#x634; &#x627;&#x632; &#x62e;&#x631;&#x6cc;&#x62f;"
             />
 
             <div className="flex justify-end gap-2">
@@ -1002,7 +1002,7 @@ export default function MarketPage() {
                 onClick={() => void copyReferralLink(previewProduct)}
                 className="rounded-xl bg-zinc-800 px-3.5 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-700"
               >
-                کپی لینک رفرال
+                &#x6a9;&#x67e;&#x6cc; &#x644;&#x6cc;&#x646;&#x6a9; &#x631;&#x641;&#x631;&#x627;&#x644;
               </button>
               <button
                 type="button"
@@ -1014,15 +1014,15 @@ export default function MarketPage() {
                 className="rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-4 py-2 text-xs font-black text-white ring-1 ring-gold-400/40 hover:opacity-90 disabled:opacity-40"
               >
                 {previewProduct.sellerId === me.user.id
-                  ? "محصول من"
-                  : "خرید و دریافت فایل کامل"}
+                  ? "\u0645\u062d\u0635\u0648\u0644 \u0645\u0646"
+                  : "\u062e\u0631\u06cc\u062f \u0648 \u062f\u0631\u06cc\u0627\u0641\u062a \u0641\u0627\u06cc\u0644 \u06a9\u0627\u0645\u0644"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* مودال تحویل و اجرای فایل کامل HTML خریداری‌شده */}
+      {/* Modal for delivering and running the purchased full HTML file */}
       {deliveryView && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm"
@@ -1037,13 +1037,13 @@ export default function MarketPage() {
                   🚀 {deliveryView.title}
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  نسخهٔ کامل محصول تحویلی — وضعیت اسکرو: {deliveryView.state}
+                  &#x646;&#x633;&#x62e;&#x647;&#x654; &#x6a9;&#x627;&#x645;&#x644; &#x645;&#x62d;&#x635;&#x648;&#x644; &#x62a;&#x62d;&#x648;&#x6cc;&#x644;&#x6cc; — &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x627;&#x633;&#x6a9;&#x631;&#x648;: {deliveryView.state}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setDeliveryView(null)}
-                aria-label="بستن تحویل"
+                aria-label="\u0628\u0633\u062a\u0646 \u062a\u062d\u0648\u06cc\u0644"
                 className="grid size-8 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-300 hover:text-white"
               >
                 <X className="size-4" aria-hidden />
@@ -1056,7 +1056,7 @@ export default function MarketPage() {
               allowDownload
               downloadFilename={`${deliveryView.title || deliveryView.productId}.html`}
               heightClassName="h-[520px]"
-              badgeLabel="فایل کامل تحویلی (سندباکس امن)"
+              badgeLabel="&#x641;&#x627;&#x6cc;&#x644; &#x6a9;&#x627;&#x645;&#x644; &#x62a;&#x62d;&#x648;&#x6cc;&#x644;&#x6cc; (&#x633;&#x646;&#x62f;&#x628;&#x627;&#x6a9;&#x633; &#x627;&#x645;&#x646;)"
             />
           </div>
         </div>

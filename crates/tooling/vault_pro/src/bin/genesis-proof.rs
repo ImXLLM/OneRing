@@ -1,7 +1,7 @@
-//! پورت `back/server/scripts/genesis-proof.ts` — ممیزی خارجی genesis.
+//! Port of `back/server/scripts/genesis-proof.ts` — external genesis audit.
 //!
-//! SQL خام و فقط‌خواندنی — عمداً از دامنه و store نمی‌گذرد تا اعداد نتوانند
-//! باگ کدِ ممیزی‌شونده را به ارث ببرند. خروجی ۱ اگر هر انتظاری نقض شود.
+//! Raw read-only SQL — deliberately bypasses the domain and store so the numbers cannot
+//! inherit bugs from the audited code. Exits 1 if any expectation is violated.
 //!
 //! ```text
 //! cargo run -p dropagentx-tooling --bin genesis-proof -- --db file:./db/v3.db

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** دروازه REA 10/10 — هر ردیف exposed = شکست بیلد. */
+/** REA 10/10 gate — every exposed row is a build failure. */
 import { spawnSync } from "node:child_process";
 
 const target = process.argv[2];

@@ -1,42 +1,42 @@
-//! `history_repair` — ترمیم تاریخچهٔ گفتگو، پایدارسازی آرگومان استریم و حلقهٔ خودترمیم استودیو.
+//! `history_repair` — conversation history repair, stream-argument stabilization, and the studio self-healing loop.
 //!
-//! پورت خط‌به‌خط از گنجینهٔ CopilotKit/OpenBot (Wave 2):
+//! Line-by-line port from the CopilotKit/OpenBot treasury (Wave 2):
 //! - `openbot/app/src/lib/copilot/repair-history.ts` → [`repair_unanswered_tool_calls`]:
-//!   هر فراخوانی ابزارِ بی‌پاسخ (قطع استریم، ریلود صفحه، جابه‌جایی نتیجه) بلافاصله
-//!   بعد از نوبت دستیار با نتیجهٔ مصنوعی «UNANSWERED» پر می‌شود تا ارائه‌دهندهٔ
-//!   بالادستی هرگز با `MissingToolResultsError` / HTTP ۴۰۰ کل گفتگو را نکشد.
-//! - `openbot/settled-args.ts` → [`is_settled_stream_arg`]: هنگام استریم، مقدارهای
-//!   نیمه‌راه (رنگ هگز ناقص، URL ناتمام، عددِ با «.» یا «-» پایانی) نگه داشته
-//!   می‌شوند تا کامپوننت‌های UI هنگام تایپ نمی‌پرند (zero-jitter).
+//!   Every unanswered tool call (stream cut, page reload, result relocation) is immediately
+//!   filled right after the assistant turn with the synthetic "UNANSWERED" result so the upstream
+//!   provider never kills the whole conversation with `MissingToolResultsError` / HTTP 400.
+//! - `openbot/settled-args.ts` → [`is_settled_stream_arg`]: during streaming, values
+//!   mid-way (incomplete hex color, unfinished URL, number ending in "." or "-") are held
+//!   back so UI components do not jump while typing (zero-jitter).
 //! - `a2ui-toolkit/recovery.ts` → [`validate_and_build_self_healing_feedback`]:
-//!   اعتبارسنجی پاکت خروجی استودیو و ساخت پرامپت ترمیمِ دقیق برای نوبت بعدی مدل.
+//!   Validation of the studio output envelope and construction of a precise repair prompt for the model's next turn.
 //!
-//! همهٔ توابع قطعی‌اند (بدون شبکه، بدون شانس) و بر ساختارهای سبک سری‌شونده کار
-//! می‌کنند — این کرِیت هیچ‌چیز از دیتابیس نمی‌داند.
+//! All functions are deterministic (no network, no randomness) and operate on lightweight
+//! serializable structures — this crate knows nothing about the database.
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-/// نتیجهٔ مصنوعی برای فراخوانی‌ای که پاسخی نیامد — صدای یکدست «اجرا نشد»
-/// (پورت `notRun` در `shared/approval-outcomes.ts`): چه شد + دو راهِ بعد.
+/// Synthetic result for a call whose answer never arrived — a uniform "did not run" voice
+/// (port of `notRun` in `shared/approval-outcomes.ts`): what happened + two next paths.
 pub const UNANSWERED: &str = "Not run: no result came back for this call before the conversation moved on. Run it again if you still need it, or say in your answer that you could not get it.";
 
-/// سقف پیش‌فرض تلاش‌های حلقهٔ خودترمیم استودیو (تلاش اول + دوباره‌ها).
+/// Default cap on studio self-healing loop attempts (first try + retries).
 pub const MAX_A2UI_ATTEMPTS: u8 = 3;
 
-/// اعلان یک فراخوانی ابزار داخل پیام دستیار.
+/// Announcement of a tool call inside an assistant message.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ToolCallDecl {
-    /// شناسهٔ فراخوانی — نتیجه با همین شناسه به این اعلان گره می‌خورد.
+    /// Call id — the result binds to this announcement by that same id.
     pub id: String,
-    /// نام ابزار (برای لاگ و صفحات ممیزی).
+    /// Tool name (for logs and audit pages).
     pub name: String,
 }
 
-/// یک نوبت سبک و سری‌شونده از ترننسکریپت رو‌به‌روی ارائه‌دهنده — نقش‌های
-/// AG-UI/OpenBot: `system` / `user` / `assistant` / `tool` (نتیجهٔ ابزار نقشِ
-/// مستقل خودش را دارد). هیچ وابستگی به ارائه‌دهنده یا دیتابیس ندارد؛ فیلدها
-/// camelCase سری می‌شوند (قرارداد AG-UI: `toolCalls`، `toolCallId`).
+/// A lightweight, serializable turn from the transcript facing the provider — AG-UI/OpenBot
+/// roles: `system` / `user` / `assistant` / `tool` (a tool result carries its own
+/// independent role). No dependency on any provider or database; fields are
+/// serialized camelCase (AG-UI convention: `toolCalls`, `toolCallId`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "role", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum ToolCallTurn {
@@ -47,20 +47,20 @@ pub enum ToolCallTurn {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         tool_calls: Vec<ToolCallDecl>,
     },
-    /// نتیجهٔ ابزار — با `toolCallId` به اعلانِ بالای خودش گره می‌خورد.
+    /// Tool result — binds to the announcement above it via `toolCallId`.
     Tool { tool_call_id: String, content: String },
 }
 
-/// خروجی ترمیم: پیام اصلی دست‌نخورده یا نتیجهٔ مصنوعی تزریق‌شده.
+/// Repair output: the original message untouched, or an injected synthetic result.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RepairedMessage {
-    /// خود پیام (اصلی یا مصنوعی).
+    /// The message itself (original or synthetic).
     pub turn: ToolCallTurn,
-    /// `true` یعنی این نتیجه توسط ترمیم ساخته شده، نه توسط ابزار واقعی.
+    /// `true` means this result was produced by the repair, not by the real tool.
     pub synthesized: bool,
 }
 
-/// نتیجهٔ ابزار با `toolCallId` آن.
+/// Tool result with its `toolCallId`.
 fn tool_call_id_of(turn: &ToolCallTurn) -> Option<&str> {
     match turn {
         ToolCallTurn::Tool { tool_call_id, .. } => Some(tool_call_id),
@@ -68,11 +68,11 @@ fn tool_call_id_of(turn: &ToolCallTurn) -> Option<&str> {
     }
 }
 
-/// فراخوانی‌های ابزاری که هیچ نتیجه‌ای در کل آرایه ندارند — بدون توجه به ترتیب
-/// (پورت `unansweredToolCalls`). شناسه‌های تکراری یک‌بار برمی‌گردند.
+/// Tool calls with no result anywhere in the array — regardless of ordering
+/// (port of `unansweredToolCalls`). Duplicate ids are returned once.
 ///
 /// # Errors
-/// ندارد.
+/// None.
 #[must_use]
 pub fn unanswered_tool_calls(turns: &[ToolCallTurn]) -> BTreeSet<String> {
     let answered: BTreeSet<&str> = turns.iter().filter_map(tool_call_id_of).collect();
@@ -89,32 +89,32 @@ pub fn unanswered_tool_calls(turns: &[ToolCallTurn]) -> BTreeSet<String> {
     unanswered
 }
 
-/// همان پیام‌ها، با این تفاوت که هر فراخوانی ابزار نتیجه‌ای دارد که «بعد از
-/// آن» می‌آید (پورت `repairUnansweredToolCalls`).
+/// The same messages, except every tool call has a result that comes "after
+/// it" (port of `repairUnansweredToolCalls`).
 ///
-/// موقعیت همهٔ ماجراست: ارائه‌دهنده نتیجه را به اعلانِ بالای خودش گره می‌زند، پس
-/// نتیجه‌ای که «قبل از» فراخوانی خودش ذخیره شده (بعد از هند‌آف/ AskPerson/MCP
-/// همین‌طور ذخیره می‌شود) در نظر ارائه‌دهنده یعنی فراخوانی بی‌پاسخ و مرگ کل
-/// گفتگو. نتیجهٔ زودرس «جابه‌جا» می‌شود نه جایگزین — واقعی است و حرف بیشتری
-/// برای گفتن دارد؛ فقط فراخوانی‌ای که هیچ‌جا نتیجه ندارد جملهٔ مصنوعیِ
-/// [`UNANSWERED`] را می‌گیرد. نتیجه‌ای که پاسخ هیچ فراخوانی‌ای نیست حذف می‌شود.
+/// The crux of the whole matter: the provider binds a result to the announcement above it, so
+/// a result stored "before" its own call (as happens after handoff/AskPerson/MCP
+/// storage) means, to the provider, an unanswered call and the death of the entire
+/// conversation. The early result is "relocated", not replaced — it is real and has more
+/// to say; only a call with no result anywhere receives the synthetic
+/// [`UNANSWERED`] sentence. A result that answers no call is dropped.
 ///
-/// پاسخ‌های شناخته‌شدهٔ بیرون از ترننسکریپت (مثلاً تصمیم HITL که روی درخواست
-/// مانده) از `known` می‌آیند و بر جملهٔ مصنوعی مقدم‌اند.
+/// Known answers from outside the transcript (e.g. a HITL decision still pending on a
+/// request) come from `known` and take precedence over the synthetic sentence.
 ///
-/// ورودی خالی یا سالم، بدون تغییر برمی‌گردد؛ دو بار اجرا idempotent است.
+/// Empty or healthy input is returned unchanged; running twice is idempotent.
 #[must_use]
 pub fn repair_unanswered_tool_calls(
     given: &[ToolCallTurn],
     known: &BTreeMap<String, String>,
 ) -> Vec<RepairedMessage> {
-    // شناسه‌های اعلان‌شده به ترتیب وقوع.
+    // Announced ids in order of occurrence.
     let mut called: BTreeSet<&str> = BTreeSet::new();
-    // پاسخ‌داده از دید ارائه‌دهنده: نتیجه‌ای بعد از فراخوانی خودش.
+    // Answered from the provider's perspective: a result after its own call.
     let mut answered: BTreeSet<&str> = BTreeSet::new();
-    // نتیجهٔ واقعی که قبل از فراخوانی خودش آمد — برای جای‌گذاری درست نگه داشته می‌شود.
+    // A real result that arrived before its own call — kept for correct placement.
     let mut early: BTreeMap<&str, &ToolCallTurn> = BTreeMap::new();
-    // اندیس نتیجه‌هایی که همان‌جا که هستند پاسخ هیچ‌چیز نیستند.
+    // Indices of results that, where they sit, answer nothing.
     let mut misplaced: BTreeSet<usize> = BTreeSet::new();
 
     for (index, turn) in given.iter().enumerate() {
@@ -129,8 +129,8 @@ pub fn repair_unanswered_tool_calls(
                 {
                     answered.insert(tool_call_id.as_str());
                 } else {
-                    // قبل از فراخوانی خودش، یا نتیجهٔ دومِ فراخوانیِ پاسخ‌خورده،
-                    // یا نتیجه‌ای که پاسخ هیچ فراخوانی‌ای نیست.
+                    // before its own call, a second result for an already-answered call,
+                    // or a result that answers no call.
                     early.entry(tool_call_id.as_str()).or_insert(turn);
                     misplaced.insert(index);
                 }
@@ -172,9 +172,9 @@ pub fn repair_unanswered_tool_calls(
                 if filled.contains(call.id.as_str()) {
                     continue;
                 }
-                // بلافاصله بعد از پیام دستیار و قبل از هر پیام بعدی: ارائه‌دهنده
-                // نتیجه را باید بعد از اعلان ببیند و ترتیب، ترتیب خود آرایهٔ
-                // `tool_calls` باشد.
+                // immediately after the assistant message and before any later message: the provider
+                // must see the result after the announcement, and the order must be the order of the
+                // `tool_calls` array itself.
                 let (synthesized_turn, synthesized) = match early.get(call.id.as_str()) {
                     Some(moved) => ((*moved).clone(), false),
                     None => (
@@ -189,7 +189,7 @@ pub fn repair_unanswered_tool_calls(
                     ),
                 };
                 repaired.push(RepairedMessage { turn: synthesized_turn, synthesized });
-                // فراخوانی تکراری فقط یک نتیجهٔ ترمیم می‌گیرد.
+                // A duplicated call receives only one repair result.
                 filled.insert(call.id.as_str());
             }
         }
@@ -197,34 +197,34 @@ pub fn repair_unanswered_tool_calls(
     repaired
 }
 
-/// آیا مقدارِ در حال استریم «settled» است و اجازهٔ نمایش در UI زنده را دارد؟
+/// Is the value being streamed "settled" and allowed to render in the live UI?
 ///
-/// تا وقتی فراخوانی کامل نشده (`is_stream_complete == false`) مقدارهای نیمه‌راه
-/// نگه داشته می‌شوند تا کامپوننت‌ها نمی‌پرند:
-/// - رنگ هگز ناقص: با `#` شروع می‌شود و طولش ۴/۷/۹ نیست (`#abc` کامل، `#abcde`
-///   هنوز در راه است)؛
-/// - URL ناتمام: با `http://` یا `https://` شروع می‌شود و به `/` یا `.` ختم
-///   می‌شود یا کوتاه‌تر از ۱۲ نویسه است؛
-/// - عددِ در حال تایپ که با «.» یا «-» ختم می‌شود («۱۲» در راهِ «۱۲.۵»).
+/// Until the call completes (`is_stream_complete == false`), mid-way values are
+/// held back so components do not jump:
+/// - Incomplete hex color: starts with `#` and its length is not 4/7/9 (`#abc` is complete, `#abcde`
+///   is still in flight);
+/// - Unfinished URL: starts with `http://` or `https://` and ends with
+///   `/` or `.`, or is shorter than 12 characters;
+/// - A number being typed that ends in "." or "-" ("12" on the way to "12.5").
 ///
-/// با `is_stream_complete == true` همه‌چیز بلافاصله settled است.
+/// With `is_stream_complete == true`, everything is settled immediately.
 #[must_use]
 pub fn is_settled_stream_arg(key: &str, raw_val: &str, is_stream_complete: bool) -> bool {
-    let _ = key; // نام کلید در قرارداد فعلی بی‌اثر است؛ مقدار حرف آخر را می‌زند.
+    let _ = key; // The key name is a no-op under the current contract; the value has the final say.
     if is_stream_complete {
         return true;
     }
-    // رنگ هگز — فقط طول‌های کامل (۳/۶/۸ رقم + `#`).
+    // Hex color — only complete lengths (3/6/8 digits + `#`).
     if raw_val.starts_with('#') {
         return matches!(raw_val.chars().count(), 4 | 7 | 9);
     }
-    // URL ناتمام.
+    // Unfinished URL.
     if raw_val.starts_with("http://") || raw_val.starts_with("https://") {
         return !(raw_val.ends_with('/')
             || raw_val.ends_with('.')
             || raw_val.chars().count() < 12);
     }
-    // عددِ با «.» یا «-» پایانی — هنوز عدد بعدی نمی‌داند چند رقم می‌آید.
+    // A number ending in "." or "-" — it does not yet know how many digits come next.
     if (raw_val.ends_with('.') || raw_val.ends_with('-')) && is_all_digits(&raw_val[..raw_val.len() - 1])
     {
         return false;
@@ -232,12 +232,12 @@ pub fn is_settled_stream_arg(key: &str, raw_val: &str, is_stream_complete: bool)
     true
 }
 
-/// آیا رشتهٔ خالی‌نشده فقط رقم ASCII است؟
+/// Is the non-empty string composed only of ASCII digits?
 fn is_all_digits(s: &str) -> bool {
     !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())
 }
 
-/// شمارش تگ بازِ `<tag …>` با مرز واژه (پورت `<(style|script)\b` در TS).
+/// Counts open `<tag …>` tags with a word boundary (port of `<(style|script)\b` in TS).
 fn count_open_tags(lower_html: &str, tag: &str) -> usize {
     let pattern = format!("<{tag}");
     let mut count = 0;
@@ -258,31 +258,31 @@ fn count_open_tags(lower_html: &str, tag: &str) -> usize {
     count
 }
 
-/// عیب‌های پاکت خروجی استودیو — هر عیب با کد و توضیح دقیق برای پرامپت ترمیم.
+/// Defects of the studio output envelope — each defect with a code and a precise description for the repair prompt.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StudioDefect {
-    /// کد عیب — همان‌که در پرامپت ترمیم مدل می‌بیند (`[missing_doctype]` …).
+    /// Defect code — exactly what the model sees in the repair prompt (`[missing_doctype` …).
     pub code: String,
-    /// توضیح یک‌جمله‌ای دقیق: چه تگ/بخشی کم یا اضافه است.
+    /// Precise one-sentence description: which tag/section is missing or extra.
     pub message: String,
 }
 
-/// اعتبارسنجی کامل پاکت استودیو + ساخت بازخورد خودترمیم (پورت `recovery.ts`).
+/// Full validation of the studio envelope + construction of self-healing feedback (port of `recovery.ts`).
 ///
-/// خروجی کامل استودیو باید پاکت کامل HTML داشته باشد: `<!DOCTYPE html>` آغازین و
-/// `</html>` پایانی، تگ‌های `<script>` و `<style>` بالانس، و بدون نشت حصار
-/// markdown (` ``` `). اگر سالم است `Ok(())`؛ وگرنه:
-/// - `attempt < max_attempts` → `Err` با پرامپت ساخت‌یافتهٔ ترمیم که دقیقاً
-///   می‌گوید کدام تگ/عیب کم است (مدل نوبت بعد دقیقاً همان را می‌سازد)؛
-/// - تلاش‌ها تمام شده → `Err` با پاکت `A2UI_RECOVERY_EXHAUSTED` برای رندر
-///   فال‌بک امن.
+/// A complete studio output must have a full HTML envelope: a leading `<!DOCTYPE html>` and
+/// a trailing `</html>`, balanced `<script>` and `<style>` tags, and no leak of the
+/// markdown fence (` ``` `). If healthy, `Ok(())`; otherwise:
+/// - `attempt < max_attempts` → `Err` with a structured repair prompt that states exactly
+///   which tag/defect is missing (the model builds exactly that on its next turn);
+/// - Attempts exhausted → `Err` with the `A2UI_RECOVERY_EXHAUSTED` envelope for
+///   a safe fallback render.
 ///
-/// همین اعتبارسنجی باید هم تصمیم retry ابزار و هم تصمیم suppress رندر را بگیرد
-/// تا هیچ‌وقت با هم در تضاد نباشند (اصل «ONE validator» در recovery.ts).
+/// This same validation must decide both the tool retry and the render suppress
+/// decisions so they never conflict (the "ONE validator" principle in recovery.ts).
 ///
 /// # Errors
-/// هر خروجی نامعتبر یک `Err` ساخت‌یافته است — خودِ این بازخورد ورودیِ نوبت
-/// بعدی مدل می‌شود.
+/// Every invalid output is a structured `Err` — this feedback itself becomes the input
+/// of the model's next turn.
 pub fn validate_and_build_self_healing_feedback(
     html_or_json: &str,
     attempt: u8,
@@ -309,7 +309,7 @@ pub fn validate_and_build_self_healing_feedback(
     ))
 }
 
-/// فهرست عیب‌های ساختاری خروجی استودیو (بدون قضاوت محتوایی).
+/// List of structural defects of the studio output (no content judgment).
 #[must_use]
 pub fn studio_defects(html_or_json: &str) -> Vec<StudioDefect> {
     let mut defects = Vec::new();
@@ -353,7 +353,7 @@ pub fn studio_defects(html_or_json: &str) -> Vec<StudioDefect> {
     defects
 }
 
-/// میان‌بر اعتبارسنجی بدون پرامپت ترمیم — سالم یا نه.
+/// Validation shortcut without a repair prompt — healthy or not.
 #[must_use]
 pub fn is_valid_studio_output(html_or_json: &str) -> bool {
     studio_defects(html_or_json).is_empty()
@@ -377,13 +377,13 @@ mod tests {
         ToolCallTurn::Tool { tool_call_id: id.into(), content: content.into() }
     }
 
-    /// فراخوانی بی‌پاسخ → نتیجهٔ مصنوعی UNANSWERED بلافاصله بعد از نوبت دستیار.
+    /// Unanswered call → the synthetic UNANSWERED result immediately after the assistant turn.
     #[test]
     fn orphaned_tool_call_gets_synthetic_result_right_after_assistant() {
         let turns = vec![
-            ToolCallTurn::User { content: "قیمت را بگو".into() },
+            ToolCallTurn::User { content: "\u{642}\u{6cc}\u{645}\u{62a} \u{631}\u{627} \u{628}\u{6af}\u{648}".into() },
             assistant(&[("c1", "market.price")]),
-            ToolCallTurn::User { content: "خوب است".into() },
+            ToolCallTurn::User { content: "\u{62e}\u{648}\u{628} \u{627}\u{633}\u{62a}".into() },
         ];
         let repaired = repair_unanswered_tool_calls(&turns, &BTreeMap::new());
         assert_eq!(repaired.len(), 4);
@@ -396,29 +396,29 @@ mod tests {
         assert_eq!(repaired[3].turn, turns[2], "later user turn stays after the repair");
     }
 
-    /// نتیجه‌ای که قبل از فراخوانی ذخیره شده جابه‌جا می‌شود، نه جایگزین؛ نتیجهٔ
-    /// بی‌صاحب حذف می‌شود؛ دو بار اجرا idempotent است.
+    /// A result stored before its call is relocated, not replaced; an orphaned
+    /// result is dropped; running twice is idempotent.
     #[test]
     fn early_result_is_moved_orphans_dropped_and_repair_is_idempotent() {
         let turns = vec![
-            tool("c9", "نتیجهٔ بی‌صاحب"),
-            tool("c1", "Handed to Knowledge — پاسخ واقعی"),
+            tool("c9", "\u{646}\u{62a}\u{6cc}\u{62c}\u{647}\u{654} \u{628}\u{6cc}‌\u{635}\u{627}\u{62d}\u{628}"),
+            tool("c1", "Handed to Knowledge — \u{67e}\u{627}\u{633}\u{62e} \u{648}\u{627}\u{642}\u{639}\u{6cc}"),
             assistant(&[("c1", "kb.search"), ("c2", "market.price")]),
         ];
         let repaired = repair_unanswered_tool_calls(&turns, &BTreeMap::new());
-        // c9 حذف؛ c1 جابه‌جا بعد از دستیار؛ c2 مصنوعی.
+        // c9 dropped; c1 relocated after the assistant; c2 synthetic.
         assert_eq!(repaired.len(), 3, "orphan dropped; assistant + moved + synthetic");
         assert!(matches!(repaired[0].turn, ToolCallTurn::Assistant { .. }));
         assert!(!repaired[1].synthesized);
         assert_eq!(
             repaired[1].turn,
-            tool("c1", "Handed to Knowledge — پاسخ واقعی"),
+            tool("c1", "Handed to Knowledge — \u{67e}\u{627}\u{633}\u{62e} \u{648}\u{627}\u{642}\u{639}\u{6cc}"),
             "the real early result is moved, not replaced"
         );
         assert!(repaired[2].synthesized);
         assert_eq!(repaired[2].turn, tool("c2", UNANSWERED));
 
-        // سالم از دید ارائه‌دهنده: هر اعلان بعد از خودش نتیجه دارد.
+        // Healthy from the provider's perspective: every announcement has a result after it.
         let plain: Vec<ToolCallTurn> = repaired.iter().map(|m| m.turn.clone()).collect();
         let second = repair_unanswered_tool_calls(&plain, &BTreeMap::new());
         assert_eq!(
@@ -429,62 +429,62 @@ mod tests {
         assert!(second.iter().all(|m| !m.synthesized));
     }
 
-    /// پاسخ شناخته‌شدهٔ بیرونی بر جملهٔ مصنوعی مقدم است؛ نتیجهٔ دومِ تکراری حذف می‌شود.
+    /// A known external answer takes precedence over the synthetic sentence; the duplicated second result is dropped.
     #[test]
     fn known_answer_wins_and_duplicate_results_are_dropped() {
         let turns = vec![
             assistant(&[("c1", "escrow.create")]),
-            tool("c1", "نتیجهٔ اول"),
-            tool("c1", "نتیجهٔ دوم تکراری"),
+            tool("c1", "\u{646}\u{62a}\u{6cc}\u{62c}\u{647}\u{654} \u{627}\u{648}\u{644}"),
+            tool("c1", "\u{646}\u{62a}\u{6cc}\u{62c}\u{647}\u{654} \u{62f}\u{648}\u{645} \u{62a}\u{6a9}\u{631}\u{627}\u{631}\u{6cc}"),
         ];
         let mut known = BTreeMap::new();
-        known.insert("c1".to_owned(), "تأیید شد: پاکت‌ساز بسته شد".to_owned());
+        known.insert("c1".to_owned(), "\u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{634}\u{62f}: \u{67e}\u{627}\u{6a9}\u{62a}‌\u{633}\u{627}\u{632} \u{628}\u{633}\u{62a}\u{647} \u{634}\u{62f}".to_owned());
         let repaired = repair_unanswered_tool_calls(&turns, &known);
-        // هر دو نتیجهٔ موجود بعد از فراخوانی‌اند: اولی answered، دومی misplaced → حذف.
+        // Both existing results come after the call: the first answered, the second misplaced → dropped.
         assert_eq!(repaired.len(), 2);
         assert!(!repaired[1].synthesized);
-        assert_eq!(repaired[1].turn, tool("c1", "نتیجهٔ اول"));
+        assert_eq!(repaired[1].turn, tool("c1", "\u{646}\u{62a}\u{6cc}\u{62c}\u{647}\u{654} \u{627}\u{648}\u{644}"));
 
-        // و اگر هیچ نتیجه‌ای نبود، پاسخ known جای UNANSWERED می‌نشیند.
+        // And if there is no result at all, the known answer takes UNANSWERED's place.
         let orphan = vec![assistant(&[("c1", "escrow.create")])];
         let repaired = repair_unanswered_tool_calls(&orphan, &known);
         assert_eq!(repaired.len(), 2);
         assert!(repaired[1].synthesized);
-        assert_eq!(repaired[1].turn, tool("c1", "تأیید شد: پاکت‌ساز بسته شد"));
+        assert_eq!(repaired[1].turn, tool("c1", "\u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{634}\u{62f}: \u{67e}\u{627}\u{6a9}\u{62a}‌\u{633}\u{627}\u{632} \u{628}\u{633}\u{62a}\u{647} \u{634}\u{62f}"));
     }
 
-    /// فارسی‌نویسی در ترننسکریپت نباید مسیر ترمیم را بشکند (ورودی واقعی کاربر).
+    /// Persian text in the transcript must not break the repair path (a real user input).
     #[test]
     fn unanswered_scan_ignores_user_and_system_turns() {
         let turns = vec![
-            ToolCallTurn::System { content: "تو مغز کیانی".into() },
-            ToolCallTurn::User { content: "tool متن با کلمهٔ tool".into() },
+            ToolCallTurn::System { content: "\u{62a}\u{648} \u{645}\u{63a}\u{632} \u{6a9}\u{6cc}\u{627}\u{646}\u{6cc}".into() },
+            ToolCallTurn::User { content: "tool \u{645}\u{62a}\u{646} \u{628}\u{627} \u{6a9}\u{644}\u{645}\u{647}\u{654} tool".into() },
             assistant(&[("c1", "kb.search"), ("c2", "kb.search")]),
         ];
         let unanswered = unanswered_tool_calls(&turns);
         assert_eq!(unanswered.iter().cloned().collect::<Vec<_>>(), vec!["c1", "c2"]);
-        // فراخوانی تکراری فقط یک نتیجهٔ ترمیم می‌گیرد.
+        // A duplicated call receives only one repair result.
         let repaired = repair_unanswered_tool_calls(&turns, &BTreeMap::new());
         assert_eq!(repaired.len(), 5);
         assert!(repaired[3].synthesized && repaired[4].synthesized);
     }
 
-    /// رنگ هگز: کامل‌ها (۴/۷/۹) settled، نیمه‌راه unsettled.
+    /// Hex color: complete ones (4/7/9) settled, mid-way unsettled.
     #[test]
     fn hex_colors_settle_only_on_complete_lengths() {
         for (val, expect) in [
-            ("#abc", true),      // ۴ نویسه — کامل
-            ("#abcdef", true),   // ۷ نویسه — کامل
-            ("#aabbccdd", true), // ۹ نویسه — کامل با آلفا
-            ("#ab", false),      // نیمه‌راه
-            ("#abcde", false),   // نیمه‌راه
+            ("#abc", true),      // 4 characters — complete
+            ("#abcdef", true),   // 7 characters — complete
+            ("#aabbccdd", true), // 9 characters — complete with alpha
+            ("#ab", false),      // mid-way
+            ("#abcde", false),   // mid-way
             ("#", false),
         ] {
             assert_eq!(is_settled_stream_arg("color", val, false), expect, "val={val}");
         }
     }
 
-    /// URL ناتمام (به «/» یا «.» ختم می‌شود یا کوتاه‌تر از ۱۲) نگه داشته می‌شود.
+    /// An unfinished URL (ending in "/" or ".", or shorter than 12) is held back.
     #[test]
     fn incomplete_urls_are_held_back() {
         assert!(!is_settled_stream_arg("url", "http://", false));
@@ -496,26 +496,26 @@ mod tests {
         assert!(is_settled_stream_arg("url", "https://a.io/", true), "complete stream always settles");
     }
 
-    /// عددِ با «.» یا «-» پایانی unsettled است تا نوار UI نپرد.
+    /// A number ending in "." or "-" is unsettled so the UI bar does not jump.
     #[test]
     fn trailing_numeric_strings_are_held_back() {
         assert!(!is_settled_stream_arg("amount", "12.", false), "12 is on its way to 12.5");
         assert!(!is_settled_stream_arg("amount", "125-", false));
         assert!(is_settled_stream_arg("amount", "12.5", false));
         assert!(is_settled_stream_arg("amount", "125", false));
-        assert!(is_settled_stream_arg("label", "سلام.", false), "non-numeric tail is not a number");
+        assert!(is_settled_stream_arg("label", "\u{633}\u{644}\u{627}\u{645}.", false), "non-numeric tail is not a number");
         assert!(is_settled_stream_arg("amount", "-", false), "empty digits before '-'");
     }
 
-    /// سند کامل سالم است؛ عیب‌ها دقیقاً نام‌گذاری می‌شوند.
+    /// The full document is healthy; defects are named precisely.
     #[test]
     fn self_healing_validates_complete_envelope_and_names_exact_defects() {
-        let good = "<!DOCTYPE html><html><head><style>body{color:#0ff}</style></head><body><script>const x=1;</script>سلام</body></html>";
+        let good = "<!DOCTYPE html><html><head><style>body{color:#0ff}</style></head><body><script>const x=1;</script>\u{633}\u{644}\u{627}\u{645}</body></html>";
         assert_eq!(validate_and_build_self_healing_feedback(good, 0, MAX_A2UI_ATTEMPTS), Ok(()));
         assert!(is_valid_studio_output(good));
 
-        // بدون doctype و بدون </html> — هر دو عیب با کد دقیق گزارش می‌شود.
-        let feedback = validate_and_build_self_healing_feedback("<div>سلام</div>", 0, MAX_A2UI_ATTEMPTS)
+        // No doctype and no </html> — both defects reported with a precise code.
+        let feedback = validate_and_build_self_healing_feedback("<div>\u{633}\u{644}\u{627}\u{645}</div>", 0, MAX_A2UI_ATTEMPTS)
             .expect_err("incomplete envelope must fail");
         assert!(feedback.contains("A2UI_REPAIR_FEEDBACK"), "feedback: {feedback}");
         assert!(feedback.contains("[missing_doctype]"));
@@ -523,7 +523,7 @@ mod tests {
         assert!(feedback.contains("attempt 0/3"));
     }
 
-    /// اسکریپت/استایلِ باز مانده و حصار markdown عیبِ نام‌دار می‌گیرند.
+    /// An unclosed script/style and a markdown fence each get a named defect.
     #[test]
     fn self_healing_flags_unclosed_script_and_markdown_fence() {
         let feedback = validate_and_build_self_healing_feedback(
@@ -535,7 +535,7 @@ mod tests {
         assert!(feedback.contains("[unclosed_script]"), "feedback: {feedback}");
         assert!(feedback.contains("[markdown_fence_leak]"));
 
-        // تگ کست‌شدهٔ اضافی هم گزارش می‌شود (نشت پاکت).
+        // The extra cast-off tag is reported too (envelope leak).
         let feedback = validate_and_build_self_healing_feedback(
             "<!DOCTYPE html><html></html></style>",
             0,
@@ -545,10 +545,10 @@ mod tests {
         assert!(feedback.contains("[unbalanced_style]"), "feedback: {feedback}");
     }
 
-    /// قبل از سقف، پرامپت ترمیم؛ بعد از سقف، پاکت EXHAUSTED برای فال‌بک امن.
+    /// Before the cap, the repair prompt; after the cap, the EXHAUSTED envelope for a safe fallback.
     #[test]
     fn self_healing_switches_to_exhausted_envelope_after_max_attempts() {
-        let bad = "<div>ناقص</div>";
+        let bad = "<div>\u{646}\u{627}\u{642}\u{635}</div>";
         let repair = validate_and_build_self_healing_feedback(bad, 2, MAX_A2UI_ATTEMPTS)
             .expect_err("attempt 2 of 3 still repairs");
         assert!(repair.starts_with("A2UI_REPAIR_FEEDBACK"));
@@ -558,7 +558,7 @@ mod tests {
         assert!(exhausted.contains("after 3 attempt(s)"));
     }
 
-    /// ساختارهای سبک سری‌شونده‌اند و نقش‌ها با تگ `role` سری می‌شوند (قرارداد AG-UI).
+    /// The structures are lightweight and serializable, and roles are serialized with the `role` tag (AG-UI convention).
     #[test]
     fn turns_serialize_with_role_tag_and_repaired_flags() {
         let turns = vec![assistant(&[("c1", "kb.search")])];

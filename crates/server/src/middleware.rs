@@ -1,15 +1,15 @@
-//! امنیت چندلایه روی سیم — پورت `guards.ts` به‌صورت middleware آکسوم.
+//! Layered wire security — port of `guards.ts` as Axum middleware.
 //!
-//! دو لایه، به همان ترتیب TS:
-//! ۱. **نرخ** — پنجرهٔ لغزان ۶۰ثانیه‌ای؛ تماس‌گیرندهٔ دارای کلید ادمین معتبر باکت
-//!    مشترک `admin` می‌گیرد، بقیه با کلید ip (X-Forwarded-For اول، سپس
-//!    `ConnectInfo`، وگرنه `local`). بدنهٔ ۴۲۹ عین فاز ۳ است (`meta.limit`).
-//! ۲. **ادمین** — fail-closed: کلید سرور تنظیم‌نشده → 503 `ADMIN_DISABLED`؛
-//!    هدر غایب → 401 `ADMIN_KEY_REQUIRED`؛ نادرست → 401 `INVALID_ADMIN_KEY`.
-//!    مقایسهٔ زمان‌ثابت از `contracts::security` (subtle).
+//! Two layers, in the same order as TS:
+//! 1. **Rate** — a 60-second sliding window; a caller with a valid admin key gets the
+//!    shared `admin` bucket; the rest key by ip (X-Forwarded-For first, then
+//!    `ConnectInfo`, otherwise `local`). The 429 body is exactly Phase 3 (`meta.limit`).
+//! 2. **Admin** — fail-closed: server key unset → 503 `ADMIN_DISABLED`;
+//!    missing header → 401 `ADMIN_KEY_REQUIRED`; wrong → 401 `INVALID_ADMIN_KEY`.
+//!    Constant-time comparison from `contracts::security` (subtle).
 //!
-//! هویت کاربر مینی‌اپ (`initData` → نشست bearer) در هندلرهای M3 بررسی می‌شود —
-//! همین‌جا دو لایهٔ عمومی هر مسیر اعمال می‌شوند.
+//! Mini-app user identity (`initData` → bearer session) is verified in the M3 handlers —
+//! the two general layers apply to every route right here.
 
 use axum::extract::{ConnectInfo, Request, State};
 use axum::http::HeaderMap;
@@ -24,13 +24,13 @@ use kian_contracts::{verify_kian_key, HttpFailure};
 use crate::error::ApiFailure;
 use crate::state::AppState;
 
-/// کلید باکت ادمین — همهٔ تماس‌های معتمد یک باکت مشترک دارند (مثل TS).
+/// Admin bucket key — all trusted callers share one bucket (as in TS).
 const ADMIN_BUCKET: &str = "admin";
 
-/// گارد ادمین — از هندلرها صدا زده می‌شود (هر مسیر `Security::Admin`).
+/// Admin guard — invoked by handlers (every route `Security::Admin`).
 ///
 /// # Errors
-/// سه خطای صریح فاز ۳: `ADMIN_DISABLED`/`ADMIN_KEY_REQUIRED`/`INVALID_ADMIN_KEY`.
+/// The three explicit Phase 3 errors: `ADMIN_DISABLED`/`ADMIN_KEY_REQUIRED`/`INVALID_ADMIN_KEY`.
 pub fn require_admin(headers: &HeaderMap, admin_key: Option<&str>) -> Result<(), ApiFailure> {
     let header_value = headers.get("x-kian-key").and_then(|v| v.to_str().ok());
     if admin_key.is_none() {
@@ -45,12 +45,12 @@ pub fn require_admin(headers: &HeaderMap, admin_key: Option<&str>) -> Result<(),
     Ok(())
 }
 
-/// کلید باکت برای این درخواست — ادمین معتبر → باکت مشترک؛ بقیه → ip.
+/// Bucket key for this request — valid admin → shared bucket; everyone else → ip.
 ///
-/// اصلاح امنیتی (تست بار ۲۰۲۵-۱۱): X-Forwarded-For فقط وقتی خوانده می‌شود که
-/// `trust_proxy` فعال باشد (استقرار پشت پروکسی معتبر مثل Railway). با
-/// `trust_proxy=false` فقط IP سوکت ملاک است — در استقرار مستقیم، هر کلاینت
-/// با XFF جعلی می‌توانست سقف نرخ را دور بزند.
+/// Security fix (2025-11 load test): X-Forwarded-For is read only when
+/// `trust_proxy` is enabled (deployment behind a trusted proxy like Railway). With
+/// `trust_proxy=false` only the socket IP counts — in a direct deployment any client
+/// could previously bypass the rate cap with a forged XFF.
 fn bucket_key(
     headers: &HeaderMap,
     admin_key: Option<&str>,
@@ -63,7 +63,7 @@ fn bucket_key(
     }
     if trust_proxy
         && let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-            // اولین ip زنجیره = کلاینت واقعی (پشت proxy)
+            // first ip in the chain = the real client (behind a proxy)
             if let Some(first) = xff.split(',').next() {
                 let trimmed = first.trim();
                 if !trimmed.is_empty() {
@@ -74,14 +74,14 @@ fn bucket_key(
     if let Some(addr) = connect_info {
         return format!("ip:{}", addr.ip());
     }
-    // oneshot تست‌ها و فراخوانی درون‌پردازشی — بدون ip
+    // oneshot tests and in-process calls — no ip
     "local".to_owned()
 }
 
-/// middleware نرخ — قبل از همهٔ مسیرهای `/api/v1` اعمال می‌شود.
+/// Rate middleware — applied before every `/api/v1` route.
 ///
 /// # Errors
-/// ۴۲۹ با بدنهٔ دقیق فاز ۳ (`RATE_LIMITED` + `meta.limit`).
+/// 429 with the exact Phase 3 body (`RATE_LIMITED` + `meta.limit`).
 pub async fn rate_limit_middleware(
     State(state): State<Arc<AppState>>,
     request: Request,
@@ -94,7 +94,7 @@ pub async fn rate_limit_middleware(
         connect_info,
         state.config.trust_proxy,
     );
-    // limiter شاردشده — قفل per-shard درون check؛ بدون قفل سراسری
+    // sharded limiter — per-shard lock inside check; no global lock
     let decision = state.limiter.check(&key);
     if let Err(failure) = decision {
         tracing::warn!(bucket = %key, "rate limited");
@@ -103,9 +103,9 @@ pub async fn rate_limit_middleware(
     Ok(next.run(request).await)
 }
 
-// ── نشست bearer M3 ──────────────────────────────────────────────────────────
+// ── M3 bearer session ──────────────────────────────────────────────────────────
 
-/// استخراج توکن نشست از `Authorization: Bearer <token>` — غایب/بدشکل → `None`.
+/// Extract the session token from `Authorization: Bearer <token>` — missing/malformed → `None`.
 #[must_use]
 pub fn bearer_token(headers: &HeaderMap) -> Option<String> {
     let raw = headers.get("authorization")?.to_str().ok()?;
@@ -113,13 +113,13 @@ pub fn bearer_token(headers: &HeaderMap) -> Option<String> {
     if token.is_empty() { None } else { Some(token.to_owned()) }
 }
 
-/// گوار نشست M3 — کاربرِ معتبر را برمی‌گرداند یا 401 می‌دهد.
+/// M3 session guard — returns a valid user or yields 401.
 ///
-/// fail-closed همان گارد ادمین: توکن غایب → `SESSION_REQUIRED`؛ ناشناخته یا
-/// منقضی → `SESSION_EXPIRED`. هویت هرگز از بدنهٔ درخواست خوانده نمی‌شود.
+/// fail-closed like the admin guard: missing token → `SESSION_REQUIRED`; unknown or
+/// expired → `SESSION_EXPIRED`. Identity is never read from the request body.
 ///
 /// # Errors
-/// `SESSION_REQUIRED` (۴۰۱) / `SESSION_EXPIRED` (۴۰۱) / خطای SQL (۵۰۰).
+/// `SESSION_REQUIRED` (401) / `SESSION_EXPIRED` (401) / SQL error (500).
 pub async fn require_session(state: &AppState, headers: &HeaderMap) -> Result<UserRow, ApiFailure> {
     let token =
         bearer_token(headers).ok_or_else(kian_contracts::HttpFailure::session_required)?;
@@ -140,14 +140,14 @@ mod tests {
     #[test]
     fn admin_guard_fail_closed_matrix() {
         let mut headers = HeaderMap::new();
-        // سرور بدون کلید → 503 همیشه (هرگز open)
+        // server without a key → 503 always (never open)
         assert_eq!(require_admin(&headers, None).unwrap_err().status(), 503);
-        // هدر غایب → 401
+        // missing header → 401
         assert_eq!(require_admin(&headers, Some(KEY)).unwrap_err().status(), 401);
-        // هدر نادرست → 401
+        // wrong header → 401
         headers.insert("x-kian-key", "wrong-key-0123456789".parse().unwrap());
         assert_eq!(require_admin(&headers, Some(KEY)).unwrap_err().status(), 401);
-        // هدر درست → عبور
+        // correct header → pass
         headers.insert("x-kian-key", KEY.parse().unwrap());
         assert!(require_admin(&headers, Some(KEY)).is_ok());
     }
@@ -167,19 +167,19 @@ mod tests {
         );
     }
 
-    /// اصلاح امنیتی (تست بار ۲۰۲۵-۱۱): با `trust_proxy=false`، XFF جعلی نادیده
-    /// می‌شود — باکت از IP سوکت گرفته می‌شود، نه از هدر کنترل‌شدهٔ کلاینت.
+    /// Security fix (2025-11 load test): with `trust_proxy=false` a forged XFF is
+    /// ignored — the bucket comes from the socket IP, not from a client-controlled header.
     #[test]
     fn bucket_key_ignores_xff_when_proxy_untrusted() {
         let mut headers = HeaderMap::new();
         headers.insert("x-forwarded-for", "1.2.3.4".parse().unwrap());
-        // بدون اعتماد: هدر بی‌اثر — سوکت غایب → local، سوکت → ip سوکت
+        // without trust: the header is inert — no socket → local, socket → socket ip
         assert_eq!(bucket_key(&headers, None, None, false), "local");
         assert_eq!(
             bucket_key(&headers, None, Some("9.9.9.9:80".parse().unwrap()), false),
             "ip:9.9.9.9"
         );
-        // با اعتماد: همان هدر ملاک است (رفتار پشت پروکسی)
+        // with trust: the same header is authoritative (behavior behind a proxy)
         assert_eq!(bucket_key(&headers, None, Some("9.9.9.9:80".parse().unwrap()), true), "ip:1.2.3.4");
     }
 }

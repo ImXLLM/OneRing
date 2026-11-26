@@ -1,112 +1,112 @@
-//! قراردادهای کیف پول — ضرب و سوزاندن (ماده‌های ۳ و ۴ منشور) — پورت `wallet.ts`.
+//! Wallet contracts — mint and burn (Charter Articles 3 and 4) — port of `wallet.ts`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::{Din, Id, IdempotencyKey};
 
-/// درخواست ضرب — `mintRequestSchema` (سقف سالانه در فاز ۴ اعمال می‌شود).
+/// Mint request — `mintRequestSchema` (the annual cap is enforced in Phase 4).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MintRequest {
-    /// حساب مقصد
+    /// destination account
     pub account_id: Id,
-    /// مبلغ دیین
+    /// amount in Din
     pub amount: Din,
-    /// یادداشت اختیاری (≤۲۰۰)
+    /// optional note (≤200)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(max_length = 200)]
     pub memo: Option<String>,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// درخواست سوزاندن — `burnRequestSchema` (overdraft ناممکن است).
+/// Burn request — `burnRequestSchema` (overdraft is impossible).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BurnRequest {
-    /// حساب مبدأ
+    /// source account
     pub account_id: Id,
-    /// مبلغ دیین
+    /// amount in Din
     pub amount: Din,
-    /// یادداشت اختیاری (≤۲۰۰)
+    /// optional note (≤200)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(max_length = 200)]
     pub memo: Option<String>,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// پاسخ جابه‌جایی کیف پول — `walletMoveResponseSchema`.
+/// Wallet move response — `walletMoveResponseSchema`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletMoveResponse {
-    /// شناسهٔ تراکنش
+    /// transaction id
     pub tx_id: String,
-    /// حساب
+    /// account
     pub account_id: String,
-    /// موجودی پس از عملیات
+    /// balance after the operation
     #[schema(minimum = -9_007_199_254_740_991_i64, maximum = 9_007_199_254_740_991_i64)]
     pub balance: i64,
-    /// آیا این پاسخ replay بود؟
+    /// was this response a replay?
     pub replayed: bool,
 }
 
-/// درخواست ثبت برداشت کریپتویی توسط شهروند (`POST /api/v1/wallet/withdrawals`).
+/// Citizen’s crypto withdrawal registration request (`POST /api/v1/wallet/withdrawals`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateWithdrawalRequest {
-    /// زنجیره مقصد (`TON` / `TRX` / `SOL` / `BSC`)
+    /// destination chain (`TON` / `TRX` / `SOL` / `BSC`)
     pub chain: String,
-    /// دارایی مقصد (`TON` یا `USDT`)
+    /// destination asset (`TON` or `USDT`)
     pub asset: String,
-    /// آدرس کیف پول مقصد (چک‌سام رسمی توسط `kian-wallet`)
+    /// destination wallet address (checksum verified by `kian-wallet`)
     pub destination_address: String,
-    /// مبلغ برداشتی به دیین (حداقل ۱)
+    /// amount withdrawn in Din (minimum 1)
     pub amount_din: Din,
 }
 
-/// درخواست تأیید پرداخت برداشت توسط ادمین (`POST /api/v1/wallet/withdrawals/{id}/confirm`).
+/// Admin’s withdrawal payment confirmation request (`POST /api/v1/wallet/withdrawals/{id}/confirm`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfirmWithdrawalRequest {
-    /// هش تراکنش پرداخت‌شده روی زنجیره (۸..=۱۲۸ کاراکتر)
+    /// on-chain payment transaction hash (8..=128 characters)
     pub tx_hash: String,
 }
 
-/// نمای یک درخواست برداشت روی سیم.
+/// Wire view of one withdrawal request.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawalRequestView {
-    /// شناسه (`wdr:{uuid}`)
+    /// id (`wdr:{uuid}`)
     pub id: String,
-    /// حساب شهروند (`citizen:{tg_id}`)
+    /// The citizen account (`citizen:{tg_id}`)
     pub account_id: String,
-    /// زنجیره (`TON`/`TRX`/`SOL`/`BSC`)
+    /// chain (`TON`/`TRX`/`SOL`/`BSC`)
     pub chain: String,
-    /// دارایی (`TON`/`USDT`)
+    /// asset (`TON`/`USDT`)
     pub asset: String,
-    /// آدرس مقصد
+    /// destination address
     pub destination_address: String,
-    /// مبلغ به دیین
+    /// amount in Din
     pub amount_din: Din,
-    /// هش تراکنش پرداخت — تا پیش از تأیید `null`
+    /// payment transaction hash — `null` until confirmed
     pub tx_hash: Option<String>,
-    /// وضعیت (`PENDING` / `CONFIRMED` / `REJECTED`)
+    /// status (`PENDING` / `CONFIRMED` / `REJECTED`)
     pub status: String,
-    /// زمان ایجاد (Unix epoch ثانیه)
+    /// creation time (Unix epoch seconds)
     pub created_at: i64,
-    /// زمان تصمیم ادمین (Unix epoch ثانیه)
+    /// admin decision time (Unix epoch seconds)
     pub resolved_at: Option<i64>,
 }
 
-/// فهرست درخواست‌های برداشت.
+/// Withdrawal request list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawalListResponse {
-    /// درخواست‌ها — جدیدترین اول
+    /// requests — newest first
     pub items: Vec<WithdrawalRequestView>,
 }
 

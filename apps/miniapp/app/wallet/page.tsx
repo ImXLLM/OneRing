@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * KIAN miniapp — ولت: تراز دفتر دوطرفه، اتصال TON، ثبت اثبات واریز، تاریخچه.
+ * KIAN miniapp — wallet: double-entry ledger balance, TON connect, deposit proof registration, history.
  */
 
 import dynamic from "next/dynamic";
@@ -26,27 +26,27 @@ const WITHDRAWAL_STATUS: Record<
   { fa: string; className: string }
 > = {
   PENDING: {
-    fa: "قفل‌شده · در صف پرداخت",
+    fa: "\u0642\u0641\u0644‌\u0634\u062f\u0647 · \u062f\u0631 \u0635\u0641 \u067e\u0631\u062f\u0627\u062e\u062a",
     className: "bg-gold-400/15 text-gold-300 ring-gold-400/30",
   },
   CONFIRMED: {
-    fa: "واریز شد",
+    fa: "\u0648\u0627\u0631\u06cc\u0632 \u0634\u062f",
     className: "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30",
   },
   REJECTED: {
-    fa: "رد شد · وجه برگشت خورد",
+    fa: "\u0631\u062f \u0634\u062f · \u0648\u062c\u0647 \u0628\u0631\u06af\u0634\u062a \u062e\u0648\u0631\u062f",
     className: "bg-rose-500/15 text-rose-300 ring-rose-400/30",
   },
 };
 
 const WITHDRAWAL_CHAINS: { chain: WithdrawalChain; label: string; placeholder: string }[] = [
-  { chain: "TON", label: "TON (TON / USDT)", placeholder: "UQ… یا EQ…" },
+  { chain: "TON", label: "TON (TON / USDT)", placeholder: "UQ… \u06cc\u0627 EQ…" },
   { chain: "TRX", label: "TRON · TRC-20 (USDT)", placeholder: "T…" },
-  { chain: "SOL", label: "Solana · SPL (USDT)", placeholder: "آدرس Base58 سولانا" },
+  { chain: "SOL", label: "Solana · SPL (USDT)", placeholder: "\u0622\u062f\u0631\u0633 Base58 \u0633\u0648\u0644\u0627\u0646\u0627" },
   { chain: "BSC", label: "BNB Chain · BEP-20 (USDT)", placeholder: "0x…" },
 ];
 
-// TON Connect فقط روی کلاینت — کتابخانه در سطح ماژول به مرورگر وابسته است
+// TON Connect on the client only — the library is browser-dependent at module level
 const TonConnectSection = dynamic(
   () => import("@/components/kian/ton-connect"),
   {
@@ -62,7 +62,7 @@ export default function WalletPage() {
   const [registering, setRegistering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
-  // شیر اعتبار آزمایشی — فقط برای پرسوناهای دمو نمایش داده می‌شود
+  // trial-credit faucet — shown only for demo personas
   const [claimingFaucet, setClaimingFaucet] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -81,7 +81,7 @@ export default function WalletPage() {
       setDeposits(depRes.items);
       setWithdrawals(wdrRes.items);
     } catch {
-      /* لیست غیرحیاتی — بی‌سروصدا */
+      /* Non-critical list — silently */
     }
   }, []);
 
@@ -94,7 +94,7 @@ export default function WalletPage() {
       <MiniShell>
         <div className="flex items-center justify-center gap-3 py-24 text-zinc-500">
           <Loader2 className="size-5 animate-spin" aria-hidden />
-          <span className="text-sm">برقراری نشست با کرنل…</span>
+          <span className="text-sm">&#x628;&#x631;&#x642;&#x631;&#x627;&#x631;&#x6cc; &#x646;&#x634;&#x633;&#x62a; &#x628;&#x627; &#x6a9;&#x631;&#x646;&#x644;…</span>
         </div>
       </MiniShell>
     );
@@ -106,8 +106,8 @@ export default function WalletPage() {
         <div className="flex flex-col gap-4">
           {state.phase === "preview" && <PreviewBanner />}
           <GuestGate
-            title="ولت امن KIAN داخل تلگرام باز می‌شود"
-            hint="اتصال ولت TON، ثبت واریز و برداشت کریپتو همه از نشست احرازشدهٔ تلگرام شما می‌گذرد تا دارایی‌تان همیشه امن بماند."
+            title="&#x648;&#x644;&#x62a; &#x627;&#x645;&#x646; KIAN &#x62f;&#x627;&#x62e;&#x644; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x628;&#x627;&#x632; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;"
+            hint="&#x627;&#x62a;&#x635;&#x627;&#x644; &#x648;&#x644;&#x62a; TON&#x60c; &#x62b;&#x628;&#x62a; &#x648;&#x627;&#x631;&#x6cc;&#x632; &#x648; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a; &#x6a9;&#x631;&#x6cc;&#x67e;&#x62a;&#x648; &#x647;&#x645;&#x647; &#x627;&#x632; &#x646;&#x634;&#x633;&#x62a; &#x627;&#x62d;&#x631;&#x627;&#x632;&#x634;&#x62f;&#x647;&#x654; &#x62a;&#x644;&#x6af;&#x631;&#x627;&#x645; &#x634;&#x645;&#x627; &#x645;&#x6cc;‌&#x6af;&#x630;&#x631;&#x62f; &#x62a;&#x627; &#x62f;&#x627;&#x631;&#x627;&#x6cc;&#x6cc;‌&#x62a;&#x627;&#x646; &#x647;&#x645;&#x6cc;&#x634;&#x647; &#x627;&#x645;&#x646; &#x628;&#x645;&#x627;&#x646;&#x62f;."
             whatWorksInPreview={state.phase !== "preview"}
           />
         </div>
@@ -117,20 +117,20 @@ export default function WalletPage() {
 
   const { me, token } = state;
 
-  // شیر اعتبار آزمایشی (faucet) — ۵٬۰۰۰ KIAN رایگان؛ فقط در حالت devِ سرور
+  // trial-credit faucet — 5,000 free KIAN; only in the server's dev mode
   const claimFaucet = async () => {
     setClaimingFaucet(true);
     try {
       const res = await api.claimDemoFaucet(token);
       toast({
-        title: "🎁 اعتبار تست اضافه شد",
-        description: `${formatDin(res.balance)} در کیف‌پول تو آمادهٔ خرید و تست است.`,
+        title: "🎁 \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0627\u0636\u0627\u0641\u0647 \u0634\u062f",
+        description: `${formatDin(res.balance)} \u062f\u0631 \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u062a\u0648 \u0622\u0645\u0627\u062f\u0647\u0654 \u062e\u0631\u06cc\u062f \u0648 \u062a\u0633\u062a \u0627\u0633\u062a.`,
         variant: "success",
       });
       await refresh();
     } catch (err) {
       toast({
-        title: "دریافت اعتبار تست ناموفق",
+        title: "\u062f\u0631\u06cc\u0627\u0641\u062a \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -143,11 +143,11 @@ export default function WalletPage() {
     setRegistering(true);
     try {
       await api.setTonAddress(token, address);
-      toast({ title: "آدرس TON ثبت شد", variant: "success" });
+      toast({ title: "\u0622\u062f\u0631\u0633 TON \u062b\u0628\u062a \u0634\u062f", variant: "success" });
       await refresh();
     } catch (err) {
       toast({
-        title: "ثبت آدرس ناموفق",
+        title: "\u062b\u0628\u062a \u0622\u062f\u0631\u0633 \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -166,8 +166,8 @@ export default function WalletPage() {
         amountTon: amountTon.trim(),
       });
       toast({
-        title: "اثبات واریز ثبت شد",
-        description: "پس از تأیید ادمین، دیین مطابق مادهٔ ۳ ضرب می‌شود.",
+        title: "\u0627\u062b\u0628\u0627\u062a \u0648\u0627\u0631\u06cc\u0632 \u062b\u0628\u062a \u0634\u062f",
+        description: "\u067e\u0633 \u0627\u0632 \u062a\u0623\u06cc\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646\u060c \u062f\u06cc\u06cc\u0646 \u0645\u0637\u0627\u0628\u0642 \u0645\u0627\u062f\u0647\u0654 \u06f3 \u0636\u0631\u0628 \u0645\u06cc‌\u0634\u0648\u062f.",
         variant: "success",
       });
       setTxHash("");
@@ -175,7 +175,7 @@ export default function WalletPage() {
       await Promise.all([loadHistory(token), refresh()]);
     } catch (err) {
       toast({
-        title: "ثبت واریز ناموفق",
+        title: "\u062b\u0628\u062a \u0648\u0627\u0631\u06cc\u0632 \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -196,8 +196,8 @@ export default function WalletPage() {
     const amountDin = Number.parseInt(wAmount.trim(), 10);
     if (!Number.isFinite(amountDin) || amountDin < 1) {
       toast({
-        title: "مبلغ نامعتبر",
-        description: "مبلغ برداشت باید عدد صحیح بزرگ‌تر از صفر باشد.",
+        title: "\u0645\u0628\u0644\u063a \u0646\u0627\u0645\u0639\u062a\u0628\u0631",
+        description: "\u0645\u0628\u0644\u063a \u0628\u0631\u062f\u0627\u0634\u062a \u0628\u0627\u06cc\u062f \u0639\u062f\u062f \u0635\u062d\u06cc\u062d \u0628\u0632\u0631\u06af‌\u062a\u0631 \u0627\u0632 \u0635\u0641\u0631 \u0628\u0627\u0634\u062f.",
         variant: "destructive",
       });
       return;
@@ -214,14 +214,14 @@ export default function WalletPage() {
       setWAddress("");
       setWAmount("");
       toast({
-        title: "درخواست برداشت ثبت و قفل شد",
-        description: `${formatDin(created.amountDin)} برای پرداخت روی ${created.chain} (${created.asset}) در صف قرار گرفت.`,
+        title: "\u062f\u0631\u062e\u0648\u0627\u0633\u062a \u0628\u0631\u062f\u0627\u0634\u062a \u062b\u0628\u062a \u0648 \u0642\u0641\u0644 \u0634\u062f",
+        description: `${formatDin(created.amountDin)} \u0628\u0631\u0627\u06cc \u067e\u0631\u062f\u0627\u062e\u062a \u0631\u0648\u06cc ${created.chain} (${created.asset}) \u062f\u0631 \u0635\u0641 \u0642\u0631\u0627\u0631 \u06af\u0631\u0641\u062a.`,
         variant: "success",
       });
       await refresh();
     } catch (err) {
       toast({
-        title: "ثبت برداشت ناموفق",
+        title: "\u062b\u0628\u062a \u0628\u0631\u062f\u0627\u0634\u062a \u0646\u0627\u0645\u0648\u0641\u0642",
         description: friendlyError(err),
         variant: "destructive",
       });
@@ -233,33 +233,33 @@ export default function WalletPage() {
   return (
     <MiniShell>
       <div className="flex flex-col gap-5">
-        {/* هویت و تراز */}
+        {/* Identity and balance */}
         <section className="rounded-2xl border border-royal-500/20 bg-gradient-to-b from-royal-500/10 to-transparent p-5">
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <Coins className="size-4 text-gold-400" aria-hidden />
-            تراز مشتق‌شده از دفتر دوطرفه
+            &#x62a;&#x631;&#x627;&#x632; &#x645;&#x634;&#x62a;&#x642;‌&#x634;&#x62f;&#x647; &#x627;&#x632; &#x62f;&#x641;&#x62a;&#x631; &#x62f;&#x648;&#x637;&#x631;&#x641;&#x647;
           </div>
           <p className="mt-3 text-3xl font-black text-gold-400">{formatDin(me.balance)}</p>
           <p className="mt-2 text-xs text-zinc-500">
-            قفل‌شده در اسکرو خریدها:{" "}
+            &#x642;&#x641;&#x644;‌&#x634;&#x62f;&#x647; &#x62f;&#x631; &#x627;&#x633;&#x6a9;&#x631;&#x648; &#x62e;&#x631;&#x6cc;&#x62f;&#x647;&#x627;:{" "}
             <span className="font-semibold text-zinc-300">{formatDin(me.escrowLocked)}</span>
           </p>
           <p className="mt-2 text-xs text-zinc-500">
-            ولت متصل:{" "}
+            &#x648;&#x644;&#x62a; &#x645;&#x62a;&#x635;&#x644;:{" "}
             {me.user.tonAddress ? (
               <span className="font-mono text-emerald-400" dir="ltr">
                 {me.user.tonAddress.slice(0, 10)}…{me.user.tonAddress.slice(-6)}
               </span>
             ) : (
-              <span className="text-zinc-600">هنوز وصل نشده</span>
+              <span className="text-zinc-600">&#x647;&#x646;&#x648;&#x632; &#x648;&#x635;&#x644; &#x646;&#x634;&#x62f;&#x647;</span>
             )}
           </p>
 
-          {/* شیر اعتبار آزمایشی — فقط پرسوناهای دمو (۱۰۰۱/۲۰۰۲/۳۰۰۳) */}
+          {/* Trial-credit faucet — demo personas only (1001/2002/3003) */}
           {activePersona && (
             <div className="mt-4 flex flex-col gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3">
               <p className="text-xs font-bold leading-5 text-emerald-300">
-                حالت تست فعال است — برای امتحانِ کاملِ خرید و برداشت، اعتبار رایگان بگیر:
+                &#x62d;&#x627;&#x644;&#x62a; &#x62a;&#x633;&#x62a; &#x641;&#x639;&#x627;&#x644; &#x627;&#x633;&#x62a; — &#x628;&#x631;&#x627;&#x6cc; &#x627;&#x645;&#x62a;&#x62d;&#x627;&#x646;&#x650; &#x6a9;&#x627;&#x645;&#x644;&#x650; &#x62e;&#x631;&#x6cc;&#x62f; &#x648; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a;&#x60c; &#x627;&#x639;&#x62a;&#x628;&#x627;&#x631; &#x631;&#x627;&#x6cc;&#x6af;&#x627;&#x646; &#x628;&#x6af;&#x6cc;&#x631;:
               </p>
               <button
                 type="button"
@@ -268,8 +268,8 @@ export default function WalletPage() {
                 className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-600/25 ring-1 ring-emerald-400/50 transition hover:opacity-90 disabled:opacity-50"
               >
                 {claimingFaucet
-                  ? "در حال دریافت…"
-                  : "🎁 دریافت ۵٬۰۰۰ KIAN اعتبار تست رایگان (Faucet)"}
+                  ? "\u062f\u0631 \u062d\u0627\u0644 \u062f\u0631\u06cc\u0627\u0641\u062a…"
+                  : "🎁 \u062f\u0631\u06cc\u0627\u0641\u062a \u06f5\u066c\u06f0\u06f0\u06f0 KIAN \u0627\u0639\u062a\u0628\u0627\u0631 \u062a\u0633\u062a \u0631\u0627\u06cc\u06af\u0627\u0646 (Faucet)"}
               </button>
             </div>
           )}
@@ -279,7 +279,7 @@ export default function WalletPage() {
         <section className="rounded-2xl border border-royal-500/20 bg-zinc-900/60 p-5">
           <h2 className="mb-3 flex items-center gap-2 font-bold">
             <Link2 className="size-4 text-royal-400" aria-hidden />
-            اتصال ولت TON
+            &#x627;&#x62a;&#x635;&#x627;&#x644; &#x648;&#x644;&#x62a; TON
           </h2>
           <TonConnectSection
             onRegisterAddress={(addr) => void registerAddress(addr)}
@@ -287,16 +287,16 @@ export default function WalletPage() {
           />
         </section>
 
-        {/* واریز TON */}
+        {/* TON deposit */}
         <section className="rounded-2xl border border-royal-500/20 bg-zinc-900/60 p-5">
-          <h2 className="mb-1 font-bold">واریز TON — ثبت اثبات</h2>
+          <h2 className="mb-1 font-bold">&#x648;&#x627;&#x631;&#x6cc;&#x632; TON — &#x62b;&#x628;&#x62a; &#x627;&#x62b;&#x628;&#x627;&#x62a;</h2>
           <p className="mb-4 text-xs leading-5 text-zinc-500">
-            مبلغ را به TON وارد کنید (حداکثر ۶ رقم اعشار). پس از تأیید ادمین،
-            دیین با نرخ تبدیل کرنل مطابق مادهٔ ۳ ضرب می‌شود.
+            &#x645;&#x628;&#x644;&#x63a; &#x631;&#x627; &#x628;&#x647; TON &#x648;&#x627;&#x631;&#x62f; &#x6a9;&#x646;&#x6cc;&#x62f; (&#x62d;&#x62f;&#x627;&#x6a9;&#x62b;&#x631; &#x6f6; &#x631;&#x642;&#x645; &#x627;&#x639;&#x634;&#x627;&#x631;). &#x67e;&#x633; &#x627;&#x632; &#x62a;&#x623;&#x6cc;&#x6cc;&#x62f; &#x627;&#x62f;&#x645;&#x6cc;&#x646;&#x60c;
+            &#x62f;&#x6cc;&#x6cc;&#x646; &#x628;&#x627; &#x646;&#x631;&#x62e; &#x62a;&#x628;&#x62f;&#x6cc;&#x644; &#x6a9;&#x631;&#x646;&#x644; &#x645;&#x637;&#x627;&#x628;&#x642; &#x645;&#x627;&#x62f;&#x647;&#x654; &#x6f3; &#x636;&#x631;&#x628; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
           </p>
           <form onSubmit={(e) => void submitDeposit(e)} className="grid gap-3">
             <label className="text-xs text-zinc-400">
-              مبلغ (TON)
+              &#x645;&#x628;&#x644;&#x63a; (TON)
               <input
                 value={amountTon}
                 onChange={(e) => setAmountTon(e.target.value)}
@@ -308,7 +308,7 @@ export default function WalletPage() {
               />
             </label>
             <label className="text-xs text-zinc-400">
-              هش تراکنش زنجیره
+              &#x647;&#x634; &#x62a;&#x631;&#x627;&#x6a9;&#x646;&#x634; &#x632;&#x646;&#x62c;&#x6cc;&#x631;&#x647;
               <input
                 value={txHash}
                 onChange={(e) => setTxHash(e.target.value)}
@@ -321,7 +321,7 @@ export default function WalletPage() {
               />
             </label>
             <label className="text-xs text-zinc-400">
-              آدرس ولت فرستنده
+              &#x622;&#x62f;&#x631;&#x633; &#x648;&#x644;&#x62a; &#x641;&#x631;&#x633;&#x62a;&#x646;&#x62f;&#x647;
               <input
                 value={walletAddress}
                 onChange={(e) => setWalletAddress(e.target.value)}
@@ -336,19 +336,19 @@ export default function WalletPage() {
               disabled={submitting}
               className="rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-royal-600/30 ring-1 ring-gold-400/40 transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "در حال ثبت…" : "ثبت اثبات واریز"}
+              {submitting ? "\u062f\u0631 \u062d\u0627\u0644 \u062b\u0628\u062a…" : "\u062b\u0628\u062a \u0627\u062b\u0628\u0627\u062a \u0648\u0627\u0631\u06cc\u0632"}
             </button>
           </form>
         </section>
 
-        {/* تاریخچهٔ واریز */}
+        {/* Deposit history */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
           <h2 className="mb-3 flex items-center gap-2 font-bold">
             <ReceiptText className="size-4 text-royal-400" aria-hidden />
-            واریزهای من
+            &#x648;&#x627;&#x631;&#x6cc;&#x632;&#x647;&#x627;&#x6cc; &#x645;&#x646;
           </h2>
           {deposits.length === 0 ? (
-            <p className="py-4 text-center text-sm text-zinc-600">هنوز واریزی ثبت نشده است.</p>
+            <p className="py-4 text-center text-sm text-zinc-600">&#x647;&#x646;&#x648;&#x632; &#x648;&#x627;&#x631;&#x6cc;&#x632;&#x6cc; &#x62b;&#x628;&#x62a; &#x646;&#x634;&#x62f;&#x647; &#x627;&#x633;&#x62a;.</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {deposits.map((d) => {
@@ -378,20 +378,20 @@ export default function WalletPage() {
           )}
         </section>
 
-        {/* فاز ۶ — درخواست برداشت درآمد (TON / USDT) */}
+        {/* Phase 6 — earnings withdrawal request (TON / USDT) */}
         <section className="rounded-2xl border border-gold-400/25 bg-zinc-900/60 p-5">
           <div className="mb-1 flex items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 font-bold">
               <ArrowUpRight className="size-4 text-gold-400" aria-hidden />
-              📤 درخواستِ برداشتِ درآمد (TON / USDT)
+              📤 &#x62f;&#x631;&#x62e;&#x648;&#x627;&#x633;&#x62a;&#x650; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a;&#x650; &#x62f;&#x631;&#x622;&#x645;&#x62f; (TON / USDT)
             </h2>
             <Badge variant="default" className="bg-gold-400/15 text-gold-300 ring-1 ring-gold-400/30">
-              قفل اتمی
+              &#x642;&#x641;&#x644; &#x627;&#x62a;&#x645;&#x6cc;
             </Badge>
           </div>
           <p className="mb-4 text-xs leading-5 text-zinc-500">
-            با ثبت درخواست، مبلغ Đ به‌صورت اتمی در دفتر دوطرفه قفل می‌شود تا از دابل‌اسپند جلوگیری
-            شود. اگر ادمین درخواست را رد کند، کل مبلغ به موجودی شما برمی‌گردد.
+            &#x628;&#x627; &#x62b;&#x628;&#x62a; &#x62f;&#x631;&#x62e;&#x648;&#x627;&#x633;&#x62a;&#x60c; &#x645;&#x628;&#x644;&#x63a; Đ &#x628;&#x647;‌&#x635;&#x648;&#x631;&#x62a; &#x627;&#x62a;&#x645;&#x6cc; &#x62f;&#x631; &#x62f;&#x641;&#x62a;&#x631; &#x62f;&#x648;&#x637;&#x631;&#x641;&#x647; &#x642;&#x641;&#x644; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f; &#x62a;&#x627; &#x627;&#x632; &#x62f;&#x627;&#x628;&#x644;‌&#x627;&#x633;&#x67e;&#x646;&#x62f; &#x62c;&#x644;&#x648;&#x6af;&#x6cc;&#x631;&#x6cc;
+            &#x634;&#x648;&#x62f;. &#x627;&#x6af;&#x631; &#x627;&#x62f;&#x645;&#x6cc;&#x646; &#x62f;&#x631;&#x62e;&#x648;&#x627;&#x633;&#x62a; &#x631;&#x627; &#x631;&#x62f; &#x6a9;&#x646;&#x62f;&#x60c; &#x6a9;&#x644; &#x645;&#x628;&#x644;&#x63a; &#x628;&#x647; &#x645;&#x648;&#x62c;&#x648;&#x62f;&#x6cc; &#x634;&#x645;&#x627; &#x628;&#x631;&#x645;&#x6cc;‌&#x6af;&#x631;&#x62f;&#x62f;.
           </p>
           <form onSubmit={(e) => void submitWithdrawal(e)} className="grid gap-3">
             <div className="grid grid-cols-2 gap-2">
@@ -424,14 +424,14 @@ export default function WalletPage() {
                         : "border-zinc-800 bg-zinc-950/60 text-zinc-400"
                     }`}
                   >
-                    دارایی: {asset}
+                    &#x62f;&#x627;&#x631;&#x627;&#x6cc;&#x6cc;: {asset}
                   </button>
                 ))}
               </div>
             )}
 
             <label className="text-xs text-zinc-400">
-              آدرس کیف پول مقصد ({wChain})
+              &#x622;&#x62f;&#x631;&#x633; &#x6a9;&#x6cc;&#x641; &#x67e;&#x648;&#x644; &#x645;&#x642;&#x635;&#x62f; ({wChain})
               <input
                 value={wAddress}
                 onChange={(e) => setWAddress(e.target.value)}
@@ -445,7 +445,7 @@ export default function WalletPage() {
             </label>
 
             <label className="text-xs text-zinc-400">
-              مبلغ برداشت به دیین (موجودی آزاد: {formatDin(me.balance)})
+              &#x645;&#x628;&#x644;&#x63a; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a; &#x628;&#x647; &#x62f;&#x6cc;&#x6cc;&#x646; (&#x645;&#x648;&#x62c;&#x648;&#x62f;&#x6cc; &#x622;&#x632;&#x627;&#x62f;: {formatDin(me.balance)})
               <input
                 value={wAmount}
                 onChange={(e) => setWAmount(e.target.value)}
@@ -463,14 +463,14 @@ export default function WalletPage() {
               className="rounded-xl bg-gradient-to-b from-gold-400 to-gold-600 px-4 py-2.5 text-sm font-black text-zinc-950 shadow-lg shadow-gold-500/20 transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {withdrawing
-                ? "در حال قفل و ثبت…"
-                : `ثبت برداشت ${wChain === "TON" ? wAsset : "USDT"} روی ${wChain}`}
+                ? "\u062f\u0631 \u062d\u0627\u0644 \u0642\u0641\u0644 \u0648 \u062b\u0628\u062a…"
+                : `\u062b\u0628\u062a \u0628\u0631\u062f\u0627\u0634\u062a ${wChain === "TON" ? wAsset : "USDT"} \u0631\u0648\u06cc ${wChain}`}
             </button>
           </form>
 
           {withdrawals.length > 0 && (
             <div className="mt-5 border-t border-zinc-800 pt-4">
-              <h3 className="mb-3 text-xs font-bold text-zinc-400">وضعیت برداشت‌های من</h3>
+              <h3 className="mb-3 text-xs font-bold text-zinc-400">&#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x628;&#x631;&#x62f;&#x627;&#x634;&#x62a;‌&#x647;&#x627;&#x6cc; &#x645;&#x646;</h3>
               <ul className="flex flex-col gap-2.5">
                 {withdrawals.map((w) => {
                   const st = WITHDRAWAL_STATUS[w.status] ?? {
@@ -512,11 +512,11 @@ export default function WalletPage() {
           )}
         </section>
 
-        {/* آخرین ردیف‌های دفتر */}
+        {/* Latest ledger rows */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-          <h2 className="mb-3 font-bold">آخرین ردیف‌های دفتر</h2>
+          <h2 className="mb-3 font-bold">&#x622;&#x62e;&#x631;&#x6cc;&#x646; &#x631;&#x62f;&#x6cc;&#x641;‌&#x647;&#x627;&#x6cc; &#x62f;&#x641;&#x62a;&#x631;</h2>
           {me.recentTxs.length === 0 ? (
-            <p className="py-4 text-center text-sm text-zinc-600">دفتر برای این حساب خالی است.</p>
+            <p className="py-4 text-center text-sm text-zinc-600">&#x62f;&#x641;&#x62a;&#x631; &#x628;&#x631;&#x627;&#x6cc; &#x627;&#x6cc;&#x646; &#x62d;&#x633;&#x627;&#x628; &#x62e;&#x627;&#x644;&#x6cc; &#x627;&#x633;&#x62a;.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {me.recentTxs.map((tx) => (

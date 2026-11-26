@@ -1,29 +1,29 @@
-//! حافظهٔ ۷لایهٔ هرمس — طبقه‌بندی ثابت یادداشت‌ها.
+//! The Hermes 7-layer memory — the fixed classification of notes.
 //!
-//! هر یادداشت فقط در یک لایه زندگی می‌کند؛ لایه‌ها enum بستهٔ کامپایل‌زمان
-//! هستند تا رشتهٔ آزادِ قابل‌خراش وجود نداشته باشد.
+//! Each note lives in exactly one layer; the layers are a compile-time closed
+//! enum so there is no scratchable free-form string.
 
-/// لایه‌های حافظه — همان ۷ لایهٔ منشور مغز.
+/// Memory layers — the brain charter's 7 layers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MemoryLayer {
-    /// کاری — جمله‌های کوتاه همین نشست
+    /// Working — short sentences from the current session
     Working,
-    /// رویدادی — «کاربر چه پرسید/چه گرفت»
+    /// Episodic — "what the user asked / received"
     Episodic,
-    /// مفهومی — واقعیت‌های پایدار دربارهٔ کاربر
+    /// Semantic — stable facts about the user
     Semantic,
-    /// رویه‌ای — الگوی کارِ تکرارشونده
+    /// Procedural — recurring work patterns
     Procedural,
-    /// هویتی — امتیاز اعتبار و تغییرات آن
+    /// Identity — the reputation score and its changes
     Identity,
-    /// مالی — رویدادهای پولی خوانده‌شده (هرگز مبلغ روی خودش نگه نمی‌دارد)
+    /// Financial — money events as read (never stores an amount itself)
     Financial,
-    /// اجتماعی — روابط و ارجاع‌ها
+    /// Social — relationships and referrals
     Social,
 }
 
 impl MemoryLayer {
-    /// رشتهٔ ذخیره در دیتابیس — `snake_case` ثابت.
+    /// The database storage string — fixed `snake_case`.
     #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
@@ -42,7 +42,7 @@ impl MemoryLayer {
 mod tests {
     use super::*;
 
-    /// دقیقاً ۷ لایه با رشته‌های یکتا — قرارداد دیتابیس.
+    /// Exactly 7 layers with unique strings — the database contract.
     #[test]
     fn seven_layers_with_unique_strings() {
         let all = [

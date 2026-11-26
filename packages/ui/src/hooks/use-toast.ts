@@ -28,7 +28,7 @@ function getSnapshot() {
   return items;
 }
 
-/** فراخوانی imperative — از هر جای کلاینت: toast({ title: "...", variant: "success" }) */
+/** Imperative call — from anywhere in the client: toast({ title: "...", variant: "success" }) */
 export function toast(input: Omit<ToastItem, "id">) {
   const id = ++counter;
   items = [...items, { id, ...input }];

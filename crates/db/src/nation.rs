@@ -1,68 +1,68 @@
-//! لایهٔ حاکمیت M5 — لایحه‌ها و رأی‌های پارلمان.
+//! M5 governance layer — parliament bills and votes.
 //!
-//! همهٔ کوئری‌ها از [`V3Store`] می‌گذرند. منطق گذارها (چه چیزی PASSED می‌شود،
-//! گیت مادهٔ ۷، یک رأی به ازای هر رأی‌دهنده) در `kian-nation` است — اینجا فقط
-//! ماندگاری صادقانه: درج، خواندن، بستن (فقط از OPEN)، اجرا (فقط از PASSED).
+//! All queries pass through [`V3Store`]. Transition logic (what becomes PASSED,
+//! the Article 7 gate, one vote per voter) lives in `kian-nation` — here only
+//! honest persistence: insert, read, close (only from OPEN), execute (only from PASSED).
 //!
-//! قراردادهای جدول‌ها: `crates/db/migrations/0004_m5_nation_wallet.sql`.
+//! Table contracts: `crates/db/migrations/0004_m5_nation_wallet.sql`.
 
 use crate::error::{DbError, DbResult};
 use crate::store::{V3Store, now_iso};
 use kian_domain::{DomainError, DomainErrorCode};
 
-/// ردیف لایحه — یک‌به‌یک با جدول `Bill`.
+/// Bill row — one-to-one with the `Bill` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BillRow {
-    /// شناسه (`bill:…`)
+    /// ID (`bill:…`)
     pub id: String,
     /// `escrowRelease` / `treasuryMove`
     pub kind: String,
-    /// شناسهٔ اسکرو یا حساب مقصد
+    /// Escrow or destination account ID
     pub subject: String,
-    /// مبلغ دیین (۰ برای بی‌مبلغ)
+    /// Din amount (0 for unpaid)
     pub amount_din: i64,
-    /// `release` / `refund` — فقط escrowRelease
+    /// `release` / `refund` — escrowRelease only
     pub resolution: Option<String>,
-    /// عنوان
+    /// Title
     pub title: String,
     /// `OPEN` / `PASSED` / `REJECTED` / `EXECUTED`
     pub status: String,
-    /// دلیل قطعی پس از بستن
+    /// Deterministic reason after closing
     pub decision_reason: Option<String>,
-    /// زمان باز شدن ISO
+    /// ISO opened-at time
     pub opened_at: String,
-    /// زمان بستن ISO
+    /// ISO closed-at time
     pub closed_at: Option<String>,
-    /// زمان اجرا ISO
+    /// ISO executed-at time
     pub executed_at: Option<String>,
-    /// مادهٔ ۷ — مبلغ ≥ ۵۰,۰۰۰ Đ؟
+    /// Article 7 — amount ≥ 50,000 Đ?
     pub hitl_required: bool,
-    /// شمارش موافق پس از بستن
+    /// Yes count after closing
     pub votes_yes: i64,
-    /// شمارش مخالف پس از بستن
+    /// No count after closing
     pub votes_no: i64,
-    /// شمارش موافق انسانی پس از بستن
+    /// Human yes count after closing
     pub human_yes: i64,
 }
 
-/// ردیف رأی — یک‌به‌یک با جدول `BillVote`.
+/// Vote row — one-to-one with the `BillVote` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VoteRow {
-    /// لایحهٔ هدف
+    /// Target bill
     pub bill_id: String,
-    /// رأی‌دهنده (`citizen:…` یا `agent:…`)
+    /// Voter (`citizen:…` or `agent:…`)
     pub voter: String,
-    /// انسان؟ (گیت مادهٔ ۷)
+    /// Human? (Article 7 gate)
     pub is_human: bool,
-    /// موافق؟
+    /// In favor?
     pub approve: bool,
-    /// زمان رأی ISO
+    /// ISO voted-at time
     pub created_at: String,
 }
 
 const BILL_SELECT: &str = r#"SELECT "id","kind","subject","amountDin","resolution","title","status","decisionReason","openedAt","closedAt","executedAt","hitlRequired","votesYes","votesNo","humanYes" FROM "Bill""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx: مالکیت Row از نتیجهٔ fetch می‌آید
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern: Row ownership comes from the fetch result
 fn bill_row_from(row: sqlx::sqlite::SqliteRow) -> BillRow {
     use sqlx::Row as _;
     BillRow {
@@ -87,7 +87,7 @@ fn bill_row_from(row: sqlx::sqlite::SqliteRow) -> BillRow {
 const VOTE_SELECT: &str =
     r#"SELECT "billId","voter","isHuman","approve","createdAt" FROM "BillVote""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern
 fn vote_row_from(row: sqlx::sqlite::SqliteRow) -> VoteRow {
     use sqlx::Row as _;
     VoteRow {
@@ -100,10 +100,10 @@ fn vote_row_from(row: sqlx::sqlite::SqliteRow) -> VoteRow {
 }
 
 impl V3Store {
-    /// درج لایحهٔ باز — id ثابت (`bill:{uuid}`)؛ وضعیت همیشه `OPEN` شروع می‌شود.
+    /// Insert open bill — fixed ID (`bill:{uuid}`); status always starts `OPEN`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_bill(&self, b: &BillRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "Bill"
@@ -125,12 +125,12 @@ impl V3Store {
         Ok(())
     }
 
-    /// خواندن یک لایحه.
+    /// Read one bill.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_bill(&self, id: &str) -> DbResult<Option<BillRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // Audited: const prefix + bind — no user input in the string
         let sql = format!("{BILL_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlx::AssertSqlSafe(sql))
             .bind(id)
@@ -139,12 +139,12 @@ impl V3Store {
         Ok(row.map(bill_row_from))
     }
 
-    /// فهرست لایحه‌ها — اختیاری فیلتر وضعیت؛ جدیدترین اول (حداکثر ۱۰۰).
+    /// List bills — optional status filter; newest first (max 100).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_bills(&self, status: Option<&str>) -> DbResult<Vec<BillRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // Audited: const prefix + bind — no user input in the string
         let sql = match status {
             Some(_) => {
                 format!(r#"{BILL_SELECT} WHERE "status" = ? ORDER BY "openedAt" DESC LIMIT 100"#)
@@ -159,11 +159,11 @@ impl V3Store {
         Ok(rows.into_iter().map(bill_row_from).collect())
     }
 
-    /// ثبت رأی — قید PRIMARY KEY (billId, voter) مسابقهٔ هم‌زمانی را می‌بندد؛
-    /// برخورد → `InvalidTransition` (پیام صادقانه: قبلاً رأی داده).
+    /// Cast vote — the PRIMARY KEY (billId, voter) constraint closes the race;
+    /// collision → `InvalidTransition` (honest message: already voted).
     ///
     /// # Errors
-    /// خطای SQL یا رأی تکراری.
+    /// SQL error or a duplicate vote.
     pub async fn insert_vote(&self, v: &VoteRow) -> DbResult<()> {
         let res = sqlx::query(
             r#"INSERT INTO "BillVote" ("billId","voter","isHuman","approve","createdAt")
@@ -177,7 +177,7 @@ impl V3Store {
         .execute(self.pool_ref())
         .await;
         if let Err(sqlx::Error::Database(db)) = &res {
-            // قید PK (billId, voter) — پیام صادقانهٔ «قبلاً رأی داده»
+            // PK constraint (billId, voter) — the honest "already voted" message
             let is_dup = db.constraint().is_some_and(|c| c.contains("BillVote"))
                 || db.message().contains("UNIQUE constraint failed: BillVote");
             if is_dup {
@@ -193,12 +193,12 @@ impl V3Store {
         Ok(())
     }
 
-    /// رأی‌های یک لایحه به ترتیب زمانی.
+    /// Votes of one bill in chronological order.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn votes_for(&self, bill_id: &str) -> DbResult<Vec<VoteRow>> {
-        // حسابرسی‌شده: پیشوند const + bind
+        // Audited: const prefix + bind
         let sql =
             format!("{VOTE_SELECT} WHERE \"billId\" = ? ORDER BY \"createdAt\" ASC, \"voter\" ASC");
         let rows = sqlx::query(sqlx::AssertSqlSafe(sql))
@@ -208,10 +208,10 @@ impl V3Store {
         Ok(rows.into_iter().map(vote_row_from).collect())
     }
 
-    /// آیا این رأی‌دهنده به این لایحه رأی داده؟ — پیش‌چک صادقانهٔ ۴۰۹.
+    /// Has this voter voted on this bill? — honest 409 precheck.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_vote(&self, bill_id: &str, voter: &str) -> DbResult<Option<VoteRow>> {
         let sql = format!("{VOTE_SELECT} WHERE \"billId\" = ? AND \"voter\" = ?");
         let row = sqlx::query(sqlx::AssertSqlSafe(sql))
@@ -222,10 +222,10 @@ impl V3Store {
         Ok(row.map(vote_row_from))
     }
 
-    /// بستن لایحه با شمارش قطعی — فقط از `OPEN` (گذار یک‌طرفه).
+    /// Close a bill with a deterministic tally — only from `OPEN` (a one-way transition).
     ///
     /// # Errors
-    /// لایحهٔ ناشناخته → `EscrowNotFound`؛ غیر-OPEN → `InvalidTransition`.
+    /// Unknown bill → `EscrowNotFound`; non-OPEN → `InvalidTransition`.
     pub async fn close_bill(
         &self,
         id: &str,
@@ -268,10 +268,10 @@ impl V3Store {
             .ok_or_else(|| DbError::Config(format!("bill {id} vanished after close")))
     }
 
-    /// علامت اجرا — فقط از `PASSED`؛ یک‌بار برای همیشه.
+    /// Execute flag — only from `PASSED`; once and for all.
     ///
     /// # Errors
-    /// ناشناخته → `EscrowNotFound`؛ غیر-PASSED → `InvalidTransition`.
+    /// Unknown → `EscrowNotFound`; non-PASSED → `InvalidTransition`.
     pub async fn mark_bill_executed(&self, id: &str) -> DbResult<BillRow> {
         let res = sqlx::query(
             r#"UPDATE "Bill" SET "status" = 'EXECUTED', "executedAt" = ?
@@ -319,7 +319,7 @@ mod tests {
             subject: "citizen:1".into(),
             amount_din: 10_000,
             resolution: None,
-            title: "جابه‌جایی خزانه".into(),
+            title: "\u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647}".into(),
             status: "OPEN".into(),
             decision_reason: None,
             opened_at: now_iso(),
@@ -337,7 +337,7 @@ mod tests {
         let store = fresh_store().await;
         store.insert_bill(&open_bill("bill:1")).await.unwrap();
 
-        // رأی‌ها — تکراری رد می‌شود (قید PK با پیام صادقانه)
+        // Votes — duplicates rejected (PK constraint with an honest message)
         store
             .insert_vote(&VoteRow {
                 bill_id: "bill:1".into(),
@@ -358,7 +358,7 @@ mod tests {
             })
             .await
             .unwrap_err();
-        assert!(matches!(dup, DbError::Domain(_)), "تکراری → خطای دامنه");
+        assert!(matches!(dup, DbError::Domain(_)), "\u{62a}\u{6a9}\u{631}\u{627}\u{631}\u{6cc} → \u{62e}\u{637}\u{627}\u{6cc} \u{62f}\u{627}\u{645}\u{646}\u{647}");
 
         let votes = store.votes_for("bill:1").await.unwrap();
         assert_eq!(votes.len(), 1);
@@ -384,7 +384,7 @@ mod tests {
         assert_eq!(closed.status, "PASSED");
         assert_eq!(closed.decision_reason.as_deref(), Some("passed"));
 
-        // بستن دوباره — ۴۲۲
+        // Double close — 422
         assert!(
             store
                 .close_bill("bill:1", "REJECTED", "majority_no", 1, 2, 0)
@@ -395,7 +395,7 @@ mod tests {
         let executed = store.mark_bill_executed("bill:1").await.unwrap();
         assert_eq!(executed.status, "EXECUTED");
         assert!(executed.executed_at.is_some());
-        // اجرای دوباره — ۴۲۲
+        // Double execute — 422
         assert!(store.mark_bill_executed("bill:1").await.is_err());
     }
 

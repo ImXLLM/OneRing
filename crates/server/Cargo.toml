@@ -1,17 +1,17 @@
 [package]
 name = "kian-server"
 version = "0.1.0"
-# نکتهٔ استقرار (Railway/Railpack): پارسر TOML ی Railpack v0.43 کلیدهای نقطه‌دار وراثت
-# ورک‌اسپیس (`*.workspace = true`) را نمی‌فهمد — اگر همهٔ کرت‌ها این‌شکلی باشند، هیچ
-# عضوی parse نمی‌شود و Railpack باینری را کامپایل نمی‌کند («No start command detected»
-# و «./bin/kian-server: No such file or directory» دقیقاً از همین می‌آید). مقدارهای این
-# کرت عمداً مستقیم نوشته شده تا Railpack همیشه `kian-server` را به‌عنوان باینری دیپلوی
-# پیدا کند. اگر روزی بقیهٔ کرت‌ها را هم مستقیم کردی، در Railway متغیر
-# RAILPACK_CARGO_WORKSPACE=kian-server را ست کن تا انتخاب قطعی شود.
+# Deployment note (Railway/Railpack): the Railpack v0.43 TOML parser does not understand
+# the dotted workspace-inheritance keys (`*.workspace = true`) — if every crate is shaped this way, no
+# member is parsed and Railpack does not compile the binary («No start command detected»
+# and «./bin/kian-server: No such file or directory» come from exactly this). The values in this
+# crate are intentionally written out directly so Railpack always picks `kian-server` as the
+# deployment binary. If you ever make the remaining crates direct too, set the Railway variable
+# RAILPACK_CARGO_WORKSPACE=kian-server to make the selection deterministic.
 edition = "2024"
 rust-version = "1.100.0"
 license = "MIT"
-description = "دروازهٔ axum کرنل پول — X-KIAN-Key fail-closed، نرخ‌سنجی، چرخهٔ کامل امانت"
+description = "\u062f\u0631\u0648\u0627\u0632\u0647\u0654 axum \u06a9\u0631\u0646\u0644 \u067e\u0648\u0644 — X-KIAN-Key fail-closed\u060c \u0646\u0631\u062e‌\u0633\u0646\u062c\u06cc\u060c \u0686\u0631\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 \u0627\u0645\u0627\u0646\u062a"
 
 [[bin]]
 name = "kian-server"
@@ -42,7 +42,7 @@ sha2 = { workspace = true }
 async-trait = { workspace = true }
 
 [dev-dependencies]
-# oneshot بدون شبکه — معادل app.inject فستیفای
+# oneshot without network — the fastify app.inject equivalent
 tower = { workspace = true, features = ["util"] }
 http-body-util = "0.1"
 

@@ -9,7 +9,7 @@ import { HERO_STATS } from "@/lib/kian-data";
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden">
-      {/* پس‌زمینه: شبکه + هاله سلطنتی */}
+      {/* Background: network grid + royal halo */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(124,58,237,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(124,58,237,0.06)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_35%,black,transparent)]" />
         <div className="absolute left-1/2 top-[-220px] h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-royal-600/25 blur-[120px]" />
@@ -30,11 +30,11 @@ export function Hero() {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-gold-400 opacity-60" />
               <span className="relative inline-flex size-2 rounded-full bg-gold-400" />
             </span>
-            M5 کامل شد — پارلمان HITL و ولت چهارزنجیره زنده است
+            M5 &#x6a9;&#x627;&#x645;&#x644; &#x634;&#x62f; — &#x67e;&#x627;&#x631;&#x644;&#x645;&#x627;&#x646; HITL &#x648; &#x648;&#x644;&#x62a; &#x686;&#x647;&#x627;&#x631;&#x632;&#x646;&#x62c;&#x6cc;&#x631;&#x647; &#x632;&#x646;&#x62f;&#x647; &#x627;&#x633;&#x62a;
           </Badge>
         </motion.div>
 
-        {/* ماسکات + سکه Đ شناور */}
+        {/* Mascot + floating Đ coin */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1, y: [0, -12, 0] }}
@@ -77,7 +77,7 @@ export function Hero() {
             KIAN
           </span>
           <span className="mt-2 block text-2xl font-bold text-zinc-300 sm:text-3xl">
-            پادشاهیِ ایجنت‌ها
+            &#x67e;&#x627;&#x62f;&#x634;&#x627;&#x647;&#x6cc;&#x650; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627;
           </span>
         </motion.h1>
 
@@ -87,11 +87,11 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="max-w-2xl text-pretty leading-8 text-zinc-400"
         >
-          اکوسیستم حاکمیت‌مند ایجنت‌های هوشمند — با اقتصاد اختصاصی{" "}
-          <span className="font-bold text-gold-400">Din (Đ)</span>، امانت ۸ حالته، پارلمان HITL و
-          ناوگان ایجنت‌های A2A. هسته روی <span className="text-royal-400">Rust 1.100</span>، رویه
-          روی <span className="text-royal-400">Next.js 16</span> — و هر آرتیفکت باید فیلترهای REA
-          را با صفر افشا رد کند.
+          &#x627;&#x6a9;&#x648;&#x633;&#x6cc;&#x633;&#x62a;&#x645; &#x62d;&#x627;&#x6a9;&#x645;&#x6cc;&#x62a;‌&#x645;&#x646;&#x62f; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627;&#x6cc; &#x647;&#x648;&#x634;&#x645;&#x646;&#x62f; — &#x628;&#x627; &#x627;&#x642;&#x62a;&#x635;&#x627;&#x62f; &#x627;&#x62e;&#x62a;&#x635;&#x627;&#x635;&#x6cc;{" "}
+          <span className="font-bold text-gold-400">Din (Đ)</span>\u060c \u0627\u0645\u0627\u0646\u062a \u06f8 \u062d\u0627\u0644\u062a\u0647\u060c \u067e\u0627\u0631\u0644\u0645\u0627\u0646 HITL \u0648
+          &#x646;&#x627;&#x648;&#x6af;&#x627;&#x646; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627;&#x6cc; A2A. &#x647;&#x633;&#x62a;&#x647; &#x631;&#x648;&#x6cc; <span className="text-royal-400">Rust 1.100</span>\u060c \u0631\u0648\u06cc\u0647
+          &#x631;&#x648;&#x6cc; <span className="text-royal-400">Next.js 16</span> — \u0648 \u0647\u0631 \u0622\u0631\u062a\u06cc\u0641\u06a9\u062a \u0628\u0627\u06cc\u062f \u0641\u06cc\u0644\u062a\u0631\u0647\u0627\u06cc REA
+          &#x631;&#x627; &#x628;&#x627; &#x635;&#x641;&#x631; &#x627;&#x641;&#x634;&#x627; &#x631;&#x62f; &#x6a9;&#x646;&#x62f;.
         </motion.p>
 
         <motion.div
@@ -106,7 +106,7 @@ export function Hero() {
             className="h-12 bg-royal-500 px-6 text-base font-bold text-white hover:bg-royal-600 shadow-lg shadow-royal-600/30"
           >
             <a href="#subsystems">
-              کاوش زیرسیستم‌ها <ArrowLeft className="size-4" />
+              &#x6a9;&#x627;&#x648;&#x634; &#x632;&#x6cc;&#x631;&#x633;&#x6cc;&#x633;&#x62a;&#x645;‌&#x647;&#x627; <ArrowLeft className="size-4" />
             </a>
           </Button>
           <Button
@@ -116,12 +116,12 @@ export function Hero() {
             className="h-12 border-zinc-700 bg-zinc-900/60 px-6 text-base text-zinc-200 hover:bg-zinc-800 hover:text-gold-400"
           >
             <a href="#roadmap">
-              <Hammer className="size-4" /> نقشه راه ساخت
+              <Hammer className="size-4" /> &#x646;&#x642;&#x634;&#x647; &#x631;&#x627;&#x647; &#x633;&#x627;&#x62e;&#x62a;
             </a>
           </Button>
         </motion.div>
 
-        {/* آمار */}
+        {/* Stats */}
         <motion.dl
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,7 +146,7 @@ export function Hero() {
           className="mt-2 flex items-center gap-2 text-xs text-zinc-500"
         >
           <ShieldCheck className="size-4 text-royal-400" />
-          گیت نهایی REA ۱۰/۱۰ — از کرنل پول تا پارلمان و ولت چهارزنجیره
+          &#x6af;&#x6cc;&#x62a; &#x646;&#x647;&#x627;&#x6cc;&#x6cc; REA &#x6f1;&#x6f0;/&#x6f1;&#x6f0; — &#x627;&#x632; &#x6a9;&#x631;&#x646;&#x644; &#x67e;&#x648;&#x644; &#x62a;&#x627; &#x67e;&#x627;&#x631;&#x644;&#x645;&#x627;&#x646; &#x648; &#x648;&#x644;&#x62a; &#x686;&#x647;&#x627;&#x631;&#x632;&#x646;&#x62c;&#x6cc;&#x631;&#x647;
         </motion.p>
       </div>
     </section>

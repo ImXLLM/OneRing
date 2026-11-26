@@ -1,18 +1,18 @@
 /**
- * studio-html-guard — گارد HTML نیمه‌راه استودیو با پیش‌نمایش بدون پرش (zero-flicker).
+ * studio-html-guard — guard for the studio's in-flight HTML with zero-flicker preview.
  *
- * پورت Wave 2 از گنجینهٔ CopilotKit/OpenIntelligentUI
- * (`04_.../open-generative-ui/process-partial-html.ts`) با قرارداد مأموریت:
- * تابع خالص، بدون وابستگی به DOM — فقط متن ورودی، متن خروجی.
+ * Wave 2 port from the CopilotKit/OpenIntelligentUI vault
+ * (`04_.../open-generative-ui/process-partial-html.ts`) with the mission contract:
+ * pure function, no DOM dependency — input text in, output text out.
  *
- * چرا؟ در استریم زندهٔ استودیو، iframe پیش‌نمایش هر لحظه HTML ناقص می‌بیند:
- * - تگ `<...` بازِ ته سند → مرورگر خودش تفسیرش می‌کند و صفحه می‌پرد؛
- * - بلوک `<script` بدون `</script>` → خطای syntax در iframe و چراغ قرمز کنسول؛
- * - `&...` ناقصِ ته سند → موجودیت گم‌شده و پرش متن؛
- * - بدون گارد layout → محتوای استریم‌شده افقی سرریز می‌شود.
+ * Why? During the studio's live stream, the preview iframe sees partial HTML at every moment:
+ * - an unterminated `<...` tag at the end of the document → the browser interprets it and the page jumps;
+ * - a `<script` block without `</script>` → a syntax error in the iframe and a red console light;
+ * - an incomplete trailing `&...` → lost entity and text jump;
+ * - without a layout guard → streamed content overflows horizontally.
  */
 
-/** استایل گارد واکنش‌گرا و بدون کروما — یک‌بار و فقط اگر نباشد. */
+/** Responsive, chroma-free guard style — injected once, only if absent. */
 const ZERO_CHROMA_FALLBACK_STYLE =
   `<style data-kian-studio-guard>` +
   `*,*::before,*::after{box-sizing:border-box!important}` +
@@ -21,35 +21,35 @@ const ZERO_CHROMA_FALLBACK_STYLE =
   `</style>`;
 
 /**
- * پاک‌سازی HTML در حال استریم برای تزریق امن در iframe پیش‌نمایش.
+ * Sanitize streaming HTML for safe injection into the preview iframe.
  *
- * خط لوله (ترتیب مهم است):
- * 1. تگ بازِ ته سند حذف می‌شود (`<...` بدون `>`)؛
- * 2. بلوک `<script` بازِ ته سند با کل محتوایش حذف می‌شود تا JS ناقص هرگز
- *    خطای syntax نیندازد (بلوک‌های کامل دست‌نخورده می‌مانند)؛
- * 3. موجودیت HTML ناقصِ ته سند حذف می‌شود (`&...` بدون `;`)؛
- * 4. اگر گارد واکنش‌گرا (box-sizing/overflow) در سند نبود، تزریق می‌شود.
+ * Pipeline (order matters):
+ * 1. Trailing open tags are removed (`<...` without `>`);
+ * 2. A trailing unterminated `<script` block is removed with all of its content so partial JS never
+ *    throws a syntax error (complete blocks stay untouched);
+ * 3. Trailing incomplete HTML entities are removed (`&...` without `;`);
+ * 4. If the document lacks the responsive guard (box-sizing/overflow), it is injected.
  *
- * سند کاملِ سالم عملاً دست‌نخورده بیرون می‌آید (فقط شاید گارد اضافه شود)، پس
- * روشن نگه‌داشتن همیشگی این گارد روی پیش‌نمایش هیچ هزینهٔ بصری ندارد.
+ * A healthy complete document comes out essentially untouched (at most the guard is added), so
+ * keeping this guard always on for the preview carries no visual cost.
  */
 export function sanitizePartialStudioHtml(rawHtml: string): string {
   let result = typeof rawHtml === "string" ? rawHtml : "";
 
-  // ۱) تگ بازِ ته سند — `<div class=…` که هنوز بسته نشده.
+  // 1) Trailing open tag — a `<div class=…` that is not yet closed.
   result = result.replace(/<[^>]*$/, "");
 
-  // ۲) بلوک اسکریپت بازِ ته سند — آخرین `<script` که هیچ `</script>` بعدش نیست.
+  // 2) Trailing unterminated script block — the last `<script` with no `</script>` after it.
   const lower = result.toLowerCase();
   const openScript = lower.lastIndexOf("<script");
   if (openScript !== -1 && lower.indexOf("</script>", openScript) === -1) {
     result = result.slice(0, openScript);
   }
 
-  // ۳) موجودیت ناقصِ ته سند — `&amp` در راهِ `&amp;`.
+  // 3) Trailing incomplete entity — `&amp` on its way to `&amp;`.
   result = result.replace(/&[a-zA-Z0-9#]*$/, "");
 
-  // ۴) گارد واکنش‌گرا — فقط اگر سند خودش box-sizing را قفل نکرده باشد.
+  // 4) Responsive guard — only if the document has not already locked box-sizing.
   if (!/box-sizing\s*:\s*border-box/i.test(result)) {
     const lowerAfter = result.toLowerCase();
     const headClose = lowerAfter.indexOf("</head>");

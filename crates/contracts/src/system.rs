@@ -1,12 +1,12 @@
-//! قراردادهای متای سیستم (health و backup) — پورت `system.ts`.
+//! System meta contracts (health and backup) — port of `system.ts`.
 //!
-//! فیلدهای LLM (ADR-006) فقط «وجود کانفیگ» را نشان می‌دهند — هرگز کلید،
-//! هرگز base URL. مدل null یعنی سیکل AI غیرفعال است.
+//! The LLM fields (ADR-006) only reveal "configuration exists" — never a key,
+//! never a base URL. A null model means the AI cycle is disabled.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// `status` literal — همیشه `"ok"`.
+/// `status` literal — always `"ok"`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum HealthStatus {
     /// `"ok"`
@@ -14,7 +14,7 @@ pub enum HealthStatus {
     Ok,
 }
 
-/// `service` literal — همیشه `"kian-kernel-server"`.
+/// `service` literal — always `"kian-kernel-server"`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum HealthService {
     /// `"kian-kernel-server"`
@@ -22,50 +22,50 @@ pub enum HealthService {
     KianKernelServer,
 }
 
-/// `healthResponseSchema` — liveness عمیق: سروری که به دفترش نمی‌رسد سالم نیست.
-/// فیلدهای چیپ‌های داشبورد (صفحهٔ settings) additive و optional هستند تا
-/// کلاینت‌های قدیمی هم بتوانند validate کنند.
+/// `healthResponseSchema` — deep liveness: a server that cannot reach its ledger is not healthy.
+/// The dashboard chip fields (settings page) are additive and optional so
+/// older clients can still validate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HealthResponse {
-    /// همیشه `"ok"`
+    /// always `"ok"`
     pub status: HealthStatus,
-    /// همیشه `"kian-kernel-server"`
+    /// always `"kian-kernel-server"`
     pub service: HealthService,
-    /// نسخهٔ سرور
+    /// Server version
     pub version: String,
-    /// آیا LLM کانفیگ شده؟ (فقط وجود — هرگز جزئیات)
+    /// Is an LLM configured? (existence only — never details)
     pub llm_configured: bool,
-    /// نام مدل یا null (null = AI غیرفعال — صریح روی سیم)
+    /// Model name or null (null = AI disabled — explicit on the wire)
     #[schema(required = true)]
     pub llm_model: Option<String>,
-    /// چیپ DB — `"ok"`
+    /// DB chip — `"ok"`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub db: Option<String>,
-    /// چیپ بات — `"ok"` یا `"disabled"`
+    /// Bot chip — `"ok"` or `"disabled"`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bot: Option<String>,
-    /// چیپ AI — `"ok"` یا `"disabled"`
+    /// AI chip — `"ok"` or `"disabled"`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ai: Option<String>,
-    /// آپ‌تایم پروسه (ثانیه، float)
+    /// Process uptime (seconds, float)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uptime: Option<f64>,
 }
 
-/// `backupCreatedSchema` — پاسخ `POST /system/backup`.
+/// `backupCreatedSchema` — the `POST /system/backup` response.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupCreated {
-    /// مسیر مطلق اسنپ‌شات داخل volume (db/backups/…)
+    /// Absolute snapshot path inside the volume (db/backups/…)
     pub file: String,
-    /// حجم به بایت
+    /// Size in bytes
     #[schema(minimum = 0_i64, maximum = 9_007_199_254_740_991_i64)]
     pub size_bytes: i64,
-    /// تعداد اسنپ‌شات‌های نگه‌داشته‌شده بعد از prune
+    /// Number of snapshots retained after pruning
     #[schema(minimum = 0_i64, maximum = 9_007_199_254_740_991_i64)]
     pub kept: i64,
-    /// زمان ایجاد
+    /// Creation time
     pub created_at: String,
 }
 
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn health_missing_required_fields_is_rejected() {
-        // آزمون RESPONSE_MISMATCH — بدنهٔ ناقص باید رد شود (مثل client.test.ts)
+        // RESPONSE_MISMATCH test — an incomplete body must be rejected (like client.test.ts)
         let bad: Result<HealthResponse, _> = serde_json::from_str(r#"{"status":"ok"}"#);
         assert!(bad.is_err());
     }

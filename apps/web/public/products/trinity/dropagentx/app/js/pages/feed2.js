@@ -9,19 +9,19 @@ DGX.tile = p => `
       ? `<img src="${DGX.esc(p.photo_url)}" loading="lazy" onerror="this.remove()">`
       : DGX.icon('box', 'ic-xl ph-g')}</div>
     <b>${DGX.esc(p.title)}</b>
-    <span class="num">${DGX.fmt(p.price_credits)} کردит · ≈${(+p.usd || 0).toFixed(2)}$</span>
+    <span class="num">${DGX.fmt(p.price_credits)} \u06a9\u0631\u062fит · ≈${(+p.usd || 0).toFixed(2)}$</span>
   </a>`;
 
 /* ── 1) REELS — vertical snap product theater ── */
 DGX.pages.reels = async (view) => {
-  view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('film','big-ic')}</div>در حال بارگذاری…</div>`;
+  view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('film','big-ic')}</div>\u062f\u0631 \u062d\u0627\u0644 \u0628\u0627\u0631\u06af\u0630\u0627\u0631\u06cc…</div>`;
   let d;
   try { d = await DGX.api('/api/app/feed?mode=trend&cursor=0'); }
-  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || 'خطا'}<br><br>
-    <a class="btn btn-ghost" href="#/home">برگشت به فید</a></div>`; return; }
-  if (!d.items.length) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('film','big-ic')}</div>هنوز محصولی برای ریلز نیست<br><br>
-    <a class="btn btn-primary" href="#/create">${DGX.icon('plus','ic-s')} اولین را بساز</a></div>`; return; }
-  view.innerHTML = `<p class="page-hint">بالا/پایین بکش — لمس دکمه‌ی ❤ برای پسندیدن</p><div class="reels" id="reels"></div>`;
+  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || '\u062e\u0637\u0627'}<br><br>
+    <a class="btn btn-ghost" href="#/home">\u0628\u0631\u06af\u0634\u062a \u0628\u0647 \u0641\u06cc\u062f</a></div>`; return; }
+  if (!d.items.length) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('film','big-ic')}</div>\u0647\u0646\u0648\u0632 \u0645\u062d\u0635\u0648\u0644\u06cc \u0628\u0631\u0627\u06cc \u0631\u06cc\u0644\u0632 \u0646\u06cc\u0633\u062a<br><br>
+    <a class="btn btn-primary" href="#/create">${DGX.icon('plus','ic-s')} \u0627\u0648\u0644\u06cc\u0646 \u0631\u0627 \u0628\u0633\u0627\u0632</a></div>`; return; }
+  view.innerHTML = `<p class="page-hint">\u0628\u0627\u0644\u0627/\u067e\u0627\u06cc\u06cc\u0646 \u0628\u06a9\u0634 — \u0644\u0645\u0633 \u062f\u06a9\u0645\u0647‌\u06cc ❤ \u0628\u0631\u0627\u06cc \u067e\u0633\u0646\u062f\u06cc\u062f\u0646</p><div class="reels" id="reels"></div>`;
   const box = DGX.$('#reels');
   box.innerHTML = d.items.map(p => `
     <section class="reel post" data-pid="${+p.id}">
@@ -37,9 +37,9 @@ DGX.pages.reels = async (view) => {
         <div class="reel-cap">
           <a class="post-title" href="#/product?id=${+p.id}">${DGX.esc(p.title)}</a>
           <div class="price-row" style="margin-top:6px">
-            <span class="price num">${DGX.fmt(p.price_credits)} <small>کردیت</small></span>
+            <span class="price num">${DGX.fmt(p.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span>
             <button class="btn btn-primary" style="flex:none;padding:8px 14px" data-buy="${+p.id}"
-              data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} خرید</button>
+              data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} \u062e\u0631\u06cc\u062f</button>
           </div>
         </div>
       </div>
@@ -54,20 +54,20 @@ DGX.pages.drops = async (view) => {
   try {
     [cats, tr] = await Promise.all([
       DGX.api('/api/app/categories'), DGX.api('/api/app/trending?limit=6')]);
-  } catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || 'خطا'}</div>`; return; }
+  } catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || '\u062e\u0637\u0627'}</div>`; return; }
   const dayEnd = () => { const d = new Date(); d.setHours(23,59,59,0); return d; };
   const left = () => { const s = Math.max(0, (dayEnd() - Date.now()) / 1000);
     return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; };
   view.innerHTML = `
     <div id="stories" class="stories">${DGX.storiesBox(cats.items)}</div>
-    <div class="seg" style="margin:2px 0 12px"><button class="on">${DGX.icon('flame','ic-s')} دراپ‌های امروز</button></div>
+    <div class="seg" style="margin:2px 0 12px"><button class="on">${DGX.icon('flame','ic-s')} \u062f\u0631\u0627\u067e‌\u0647\u0627\u06cc \u0627\u0645\u0631\u0648\u0632</button></div>
     <div id="dropCards">${tr.items.map((p, i) => `
       <article class="post drop-card">
         <div class="post-head">
           <img class="avatar" src="/app/assets/logo.jpg" onerror="this.style.opacity=.25">
-          <div><div class="p-name">${DGX.esc(p.creator_name || 'سازنده')} ${DGX.icon('check','ic-xs vf')}</div>
-          <div class="p-sub">دراپ ویژه · ${DGX.timeAgo(p.created_at || Date.now()/1000)}</div></div>
-          <span class="pill p-live" style="margin-inline-start:auto">${DGX.icon('live','ic-xs')} زنده</span>
+          <div><div class="p-name">${DGX.esc(p.creator_name || '\u0633\u0627\u0632\u0646\u062f\u0647')} ${DGX.icon('check','ic-xs vf')}</div>
+          <div class="p-sub">\u062f\u0631\u0627\u067e \u0648\u06cc\u0698\u0647 · ${DGX.timeAgo(p.created_at || Date.now()/1000)}</div></div>
+          <span class="pill p-live" style="margin-inline-start:auto">${DGX.icon('live','ic-xs')} \u0632\u0646\u062f\u0647</span>
         </div>
         <a class="post-media" href="#/product?id=${+p.id}">
           ${p.photo_url ? `<img src="${DGX.esc(p.photo_url)}" loading="lazy">` : `<div class="ph-media">${DGX.icon('box','ic-xl')}</div>`}
@@ -75,16 +75,16 @@ DGX.pages.drops = async (view) => {
         </a>
         <div class="post-body">
           <a class="post-title" href="#/product?id=${+p.id}" style="text-decoration:none;color:inherit">${DGX.esc(p.title)}</a>
-          <div class="price-row"><span class="price num">${DGX.fmt(p.price_credits)} <small>کردیت</small></span>
+          <div class="price-row"><span class="price num">${DGX.fmt(p.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span>
             <span class="usd num">≈${(+p.usd || 0).toFixed(2)}$</span>
             <span class="pill" style="margin-inline-start:auto" id="cd_${i}">${DGX.icon('history','ic-xs')} ${left()}</span></div>
         </div>
         <div class="post-actions">
-          <button class="btn btn-primary" data-buy="${+p.id}" data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} خرید دراپ</button>
-          <button class="btn btn-ghost" data-share="1">${DGX.icon('link','ic-s')} اشتراک</button>
+          <button class="btn btn-primary" data-buy="${+p.id}" data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} \u062e\u0631\u06cc\u062f \u062f\u0631\u0627\u067e</button>
+          <button class="btn btn-ghost" data-share="1">${DGX.icon('link','ic-s')} \u0627\u0634\u062a\u0631\u0627\u06a9</button>
         </div>
       </article>`).join('')}</div>
-    <div style="text-align:center;padding:10px"><a class="lnk" href="#/trending">دیدن همه‌ی ترندها ←</a></div>`;
+    <div style="text-align:center;padding:10px"><a class="lnk" href="#/trending">\u062f\u06cc\u062f\u0646 \u0647\u0645\u0647‌\u06cc \u062a\u0631\u0646\u062f\u0647\u0627 ←</a></div>`;
   DGX.wireFeed(DGX.$('#dropCards'));
   const tick = setInterval(() => { if (!document.getElementById('cd_0')) return clearInterval(tick);
     tr.items.forEach((_, i) => { const el = document.getElementById('cd_' + i);
@@ -96,7 +96,7 @@ DGX.pages.trending = async (view) => {
   view.innerHTML = DGX.skelCards(2);
   let d;
   try { d = await DGX.api('/api/app/trending?limit=10'); }
-  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('chart','big-ic')}</div>${e.msg || 'خطا'}</div>`; return; }
+  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('chart','big-ic')}</div>${e.msg || '\u062e\u0637\u0627'}</div>`; return; }
   const WIN = { d1: 86400, d7: 604800, d30: 2592000 };
   const win = WIN[params_win()] || 0;
   function params_win() { return (location.hash.split('win=')[1] || '').slice(0, 3); }
@@ -105,39 +105,39 @@ DGX.pages.trending = async (view) => {
   const hero = rows[0] || d.items[0];
   view.innerHTML = `
     <div class="chips">
-      ${[['all', 'همه‌ی زمان‌ها'], ['d1', '۲۴ ساعت'], ['d7', '۷ روز'], ['d30', '۳۰ روز']].map(([k, t]) =>
+      ${[['all', '\u0647\u0645\u0647‌\u06cc \u0632\u0645\u0627\u0646‌\u0647\u0627'], ['d1', '\u06f2\u06f4 \u0633\u0627\u0639\u062a'], ['d7', '\u06f7 \u0631\u0648\u0632'], ['d30', '\u06f3\u06f0 \u0631\u0648\u0632']].map(([k, t]) =>
         `<button class="chip ${(!win && k === 'all') || (win === WIN[k] && k !== 'all') ? 'on' : ''}"
           onclick="location.hash='#/trending?win=${k}'">${t}</button>`).join('')}
     </div>
     ${hero ? `<article class="post" data-pid="${+hero.id}">
       <div class="post-head"><span class="rank-badge big">1</span>
-        <div><div class="p-name">ترند شماره‌ی یک امروز ${DGX.icon('flame','ic-xs')}</div>
-        <div class="p-sub">${DGX.kfmt(hero.sales_count)} فروش · ${DGX.kfmt(hero.like_count)} پسند</div></div></div>
+        <div><div class="p-name">\u062a\u0631\u0646\u062f \u0634\u0645\u0627\u0631\u0647‌\u06cc \u06cc\u06a9 \u0627\u0645\u0631\u0648\u0632 ${DGX.icon('flame','ic-xs')}</div>
+        <div class="p-sub">${DGX.kfmt(hero.sales_count)} \u0641\u0631\u0648\u0634 · ${DGX.kfmt(hero.like_count)} \u067e\u0633\u0646\u062f</div></div></div>
       <a class="post-media" href="#/product?id=${+hero.id}">
         ${hero.photo_url ? `<img src="${DGX.esc(hero.photo_url)}">` : `<div class="ph-media">${DGX.icon('box','ic-xl')}</div>`}</a>
       <div class="post-body"><a class="post-title" href="#/product?id=${+hero.id}" style="text-decoration:none;color:inherit">${DGX.esc(hero.title)}</a>
-        <div class="price-row"><span class="price num">${DGX.fmt(hero.price_credits)} <small>کردیت</small></span></div></div>
+        <div class="price-row"><span class="price num">${DGX.fmt(hero.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span></div></div>
       <div class="post-actions">
-        <button class="btn btn-primary" data-buy="${+hero.id}" data-title="${DGX.esc(hero.title)}" data-price="${+hero.price_credits || 0}">${DGX.icon('cart','ic-s')} خرید فوری</button>
-        <a class="btn btn-ghost" href="#/product?id=${+hero.id}">جزئیات ↗</a></div>
+        <button class="btn btn-primary" data-buy="${+hero.id}" data-title="${DGX.esc(hero.title)}" data-price="${+hero.price_credits || 0}">${DGX.icon('cart','ic-s')} \u062e\u0631\u06cc\u062f \u0641\u0648\u0631\u06cc</button>
+        <a class="btn btn-ghost" href="#/product?id=${+hero.id}">\u062c\u0632\u0626\u06cc\u0627\u062a ↗</a></div>
     </article>` : ''}
     <div class="rank-list" id="rk">${rows.slice(1).map((p, i) => `
       <a class="rank-row" href="#/product?id=${+p.id}">
         <span class="rank-badge">${i + 2}</span>
         <div class="rr-img">${p.photo_url ? `<img src="${DGX.esc(p.photo_url)}" loading="lazy">` : DGX.icon('box')}</div>
         <div style="flex:1;min-width:0"><b>${DGX.esc(p.title)}</b>
-          <span class="p-sub">${DGX.esc(p.creator_name || 'سازنده')} · ${DGX.kfmt(p.sales_count)} فروش</span></div>
+          <span class="p-sub">${DGX.esc(p.creator_name || '\u0633\u0627\u0632\u0646\u062f\u0647')} · ${DGX.kfmt(p.sales_count)} \u0641\u0631\u0648\u0634</span></div>
         <div style="text-align:end"><b class="num" style="color:var(--em)">${DGX.fmt(p.price_credits)}</b>
           <span class="p-sub num">≈${(+p.usd || 0).toFixed(2)}$</span></div>
-      </a>`).join('') || '<div class="empty" style="padding:20px">در این بازه چیزی نیست</div>'}</div>
-    <div style="text-align:center;padding:12px"><a class="lnk" href="#/drops">دراپ‌های زنده ←</a> · <a class="lnk" href="#/reels">ریلز ←</a></div>`;
+      </a>`).join('') || '<div class="empty" style="padding:20px">\u062f\u0631 \u0627\u06cc\u0646 \u0628\u0627\u0632\u0647 \u0686\u06cc\u0632\u06cc \u0646\u06cc\u0633\u062a</div>'}</div>
+    <div style="text-align:center;padding:12px"><a class="lnk" href="#/drops">\u062f\u0631\u0627\u067e‌\u0647\u0627\u06cc \u0632\u0646\u062f\u0647 ←</a> · <a class="lnk" href="#/reels">\u0631\u06cc\u0644\u0632 ←</a></div>`;
   if (hero) DGX.wireFeed(view);
 };
 
 /* ── 4) FRESH — newest-first infinite feed ── */
 DGX.pages.fresh = async (view) => {
   let cursor = 0, ended = false, busy = false;
-  view.innerHTML = `<p class="page-hint">${DGX.icon('deposit','ic-s')} تازه‌ترین محصولات — بدون رتبه‌بندی، دقیقاً به ترتیب انتشار</p>
+  view.innerHTML = `<p class="page-hint">${DGX.icon('deposit','ic-s')} \u062a\u0627\u0632\u0647‌\u062a\u0631\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644\u0627\u062a — \u0628\u062f\u0648\u0646 \u0631\u062a\u0628\u0647‌\u0628\u0646\u062f\u06cc\u060c \u062f\u0642\u06cc\u0642\u0627\u064b \u0628\u0647 \u062a\u0631\u062a\u06cc\u0628 \u0627\u0646\u062a\u0634\u0627\u0631</p>
     <div id="ffeed"></div><div id="more" style="text-align:center;color:var(--dim2);padding:14px"></div>`;
   const feed = DGX.$('#ffeed'), more = DGX.$('#more');
   async function load() {
@@ -148,8 +148,8 @@ DGX.pages.fresh = async (view) => {
       [...d.items].sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
         .forEach(p => feed.insertAdjacentHTML('beforeend', DGX.postCard(p)));
       DGX.wireFeed(feed); cursor = d.next ?? cursor;
-      more.textContent = ended ? 'همه‌ی تازه‌ها را دیدی' : '';
-    } catch (e) { more.textContent = ''; DGX.toast(e.msg || 'خطا', true); }
+      more.textContent = ended ? '\u0647\u0645\u0647‌\u06cc \u062a\u0627\u0632\u0647‌\u0647\u0627 \u0631\u0627 \u062f\u06cc\u062f\u06cc' : '';
+    } catch (e) { more.textContent = ''; DGX.toast(e.msg || '\u062e\u0637\u0627', true); }
     busy = false;
   }
   await load();
@@ -161,8 +161,8 @@ DGX.pages.fresh = async (view) => {
 DGX.pages.story = async (view, params) => {
   let d;
   try { d = await DGX.api('/api/app/trending?limit=10'); }
-  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || 'خطا'}</div>`; return; }
-  const items = d.items; if (!items.length) { view.innerHTML = '<div class="empty">استوری‌ای نیست</div>'; return; }
+  catch (e) { view.innerHTML = `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || '\u062e\u0637\u0627'}</div>`; return; }
+  const items = d.items; if (!items.length) { view.innerHTML = '<div class="empty">\u0627\u0633\u062a\u0648\u0631\u06cc‌\u0627\u06cc \u0646\u06cc\u0633\u062a</div>'; return; }
   let i = Math.max(0, items.findIndex(p => +p.id === +params.id));
   view.innerHTML = `
     <div class="story-v" id="sv">
@@ -189,10 +189,10 @@ DGX.pages.story = async (view, params) => {
       <div class="sv-card">
         <b>${DGX.esc(p.title)}</b>
         <div class="price-row" style="margin-top:6px">
-          <span class="price num">${DGX.fmt(p.price_credits)} <small>کردیت</small></span>
+          <span class="price num">${DGX.fmt(p.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span>
           <span style="margin-inline-start:auto;display:flex;gap:8px">
             <button class="btn btn-primary" style="padding:8px 14px" data-buy="${+p.id}"
-              data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} خرید</button>
+              data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} \u062e\u0631\u06cc\u062f</button>
             <a class="btn btn-ghost" style="padding:8px 12px" href="#/product?id=${+p.id}">↗</a></span>
         </div>
       </div>`;

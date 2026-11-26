@@ -8,7 +8,7 @@
 #    of seed/kian-production.db → dev-login founder → builder chat
 #    forceGenerate:true → assert usedFallback:false + provider=primary +
 #    Persian RTL <!DOCTYPE html> → publish), retrying up to 3 times.
-# 4. Fills section ۷ of OPENROUTER_BENCHMARK_REPORT_FA.md with real numbers.
+# 4. Fills section 7 of OPENROUTER_BENCHMARK_REPORT_FA.md with real numbers.
 # 5. Refreshes download/kian-v2-railway-migrated.zip from the committed tree
 #    (git archive — .env.local is gitignored, so no secret ever ships).
 #
@@ -74,34 +74,34 @@ if [ "$PASS" != "1" ]; then
   echo "E2E FAILED after 3 attempts — last 40 lines:"; tail -40 "$LOG"; exit 3
 fi
 
-# ── 3) fill report section ۷ with the real numbers ────────────────────────
+# ── 3) fill report section 7 with the real numbers ────────────────────────
 python3 - <<'PY'
 import json, pathlib, datetime
 res = json.load(open("/tmp/kian-e2e-or/e2e_result.json", encoding="utf-8"))
 c = res["chat"]
 now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-slots = "، ".join(f"{s['name']}=`{s['model']}`" for s in res["ai_slots"] if s["enabled"])
-fa_bool = lambda b: "✅ بله" if b else "❌ خیر"
-section = f"""اجرای زنده در {now} — اسکریپت `scripts/e2e_openrouter_live.sh` روی کپی پایگاه‌دادهٔ مهاجرت‌شده (`seed/kian-production.db`):
+slots = ", ".join(f"{s['name']}=`{s['model']}`" for s in res["ai_slots"] if s["enabled"])
+fa_bool = lambda b: "✅ Yes" if b else "❌ No"
+section = f"""Live run at {now} — script `scripts/e2e_openrouter_live.sh` on a copy of the migrated database (`seed/kian-production.db`):
 
-| سنجه | مقدار اندازه‌گیری‌شده |
+| Metric | Measured value |
 |---|---|
-| اسلات‌های فعال | {slots} |
-| `usedFallback` | **{fa_bool(not c['usedFallback'])} — `{str(c['usedFallback']).lower()}`** (یعنی پاسخ واقعی LLM، نه سنتز محلی) |
-| `provider` | **`{c['provider']}`** (اسلات ۱ برنده شد) |
-| کل نوبت سازنده | {res['chat_ms']:,} ms |
-| توکن مصرفی نوبت | {c['totalTokens']:,} |
-| مرحلهٔ سشن | `{c['stage']}` |
-| عنوان محصول | {c['title']} |
-| آرتیفکت HTML | {c['html_bytes']:,} بایت — doctype: {fa_bool(c['html_doctype'])}، RTL فارسی: {fa_bool(c['html_rtl'])}، بستهٔ کامل: {fa_bool(c['html_close'])} |
-| انتشار در بازار | محصول `{res['published']['productId']}` — «{res['published']['title']}» با قیمت {res['published']['price']} دیین، فعال: {fa_bool(res['published']['active'])} |
+| Active slots | {slots} |
+| `usedFallback` | **{fa_bool(not c['usedFallback'])} — `{str(c['usedFallback']).lower()}`** (i.e., a real LLM response, not local synthesis) |
+| `provider` | **`{c['provider']}`** (slot 1 won) |
+| Total builder turn | {res['chat_ms']:,} ms |
+| Tokens consumed in the turn | {c['totalTokens']:,} |
+| Session stage | `{c['stage']}` |
+| Product title | {c['title']} |
+| HTML artifact | {c['html_bytes']:,} bytes — doctype: {fa_bool(c['html_doctype'])}, Persian RTL: {fa_bool(c['html_rtl'])}, fully closed: {fa_bool(c['html_close'])} |
+| Marketplace publication | product `{res['published']['productId']}` — «{res['published']['title']}» at price {res['published']['price']} dinar, active: {fa_bool(res['published']['active'])} |
 
-**نتیجه: Slot 1 (`openrouter/free`) با HTTP 200 پاسخ داد، `usedFallback: false` بود و یک سند HTML فارسی RTL تولیدی LLM واقعی ساخته و در بازار کیان منتشر شد.** ابتدای پاسخ مدل: «{c['replyHead']}…»
+**Result: Slot 1 (`openrouter/free`) responded with HTTP 200, `usedFallback: false`, and a real-LLM-generated RTL Persian HTML document was produced and published on the KIAN market.** Model response head: «{c['replyHead']}…»
 
-نسخهٔ نهایی آرتیفکت برای بازبینی آفلاین: `/tmp/kian-e2e-or/generated.html` (پس از انتشار در محصول شمارهٔ {res['published']['productId']} داخل پایگاه‌دادهٔ زنده هم موجود است)."""
+Final artifact copy for offline review: `/tmp/kian-e2e-or/generated.html` (after publication it also exists as product #{res['published']['productId']} inside the live database)."""
 p = pathlib.Path("/home/z/my-project/download/OPENROUTER_BENCHMARK_REPORT_FA.md")
 t = p.read_text(encoding="utf-8")
-marker = "(بخش پس از اجرا تکمیل می‌شود.)"
+marker = "(The post-run section is filled in after execution.)"
 assert marker in t, "report section 7 marker missing"
 p.write_text(t.replace(marker, section), encoding="utf-8")
 print("report section 7 filled with live numbers")

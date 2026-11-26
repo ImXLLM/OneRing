@@ -7,11 +7,11 @@ edition = "2021"
 [package.metadata]
 cargo-fuzz = true
 
-# اسکلت cargo-fuzz فاز ۸ (ADR-009 §۷ فاز ۸ / §۱۴.۳):
+# Phase 8 cargo-fuzz skeleton (ADR-009 §7 phase 8 / §14.3):
 #   cargo +nightly fuzz build
 #   cargo +nightly fuzz run fuzz_ai_chat -- -max_total_time=300
-# هدف‌ها همان پارسرهای مرزی‌اند که در tests/fuzz_lite.rs به‌صورت قطعی هم
-# پوشش داده می‌شوند؛ این نسخه libfuzzer روی nightly است (فقط CI).
+# The targets are the same boundary parsers that are also covered deterministically in
+# tests/fuzz_lite.rs; this libfuzzer edition runs on nightly (CI only).
 
 [dependencies]
 libfuzzer-sys = "0.4"

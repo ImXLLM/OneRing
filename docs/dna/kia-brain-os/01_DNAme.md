@@ -7,49 +7,49 @@ sovereignty: "zero_card_zero_kyc"
 language: "fa-IR + en-US"
 ---
 
-# 01 — DNAme: هویت سازنده (Creator Identity Genome)
+# 01 — DNAme: The Creator Identity (Creator Identity Genome)
 
-## 1. کارت شناسایی
+## 1. Identity Card
 
-| فیلد | مقدار |
+| Field | Value |
 |---|---|
-| نام | **Kia** (هندل عمومی: **KiaAgentX**) |
-| سن | ۱۸ سال |
-| موقعیت | تهران، ایران |
-| تیپ شخصیتی | INFJ (معمار مدبر — استراتژیست بلندپرواز با اخلاق سخت) |
-| تخصص | Systems Architect — فول‌استک + معماری پرامپت (Prompt Architecture) |
-| سخت‌افزار اصلی | Asus TUF FX505 (ایستگاه کار) + Galaxy S23 FE (تست موبایل/TMA) |
+| Name | **Kia** (public handle: **KiaAgentX**) |
+| Age | 18 |
+| Location | Tehran, Iran |
+| Personality type | INFJ (the judicious architect — an ambitious strategist with a hard ethical code) |
+| Specialty | Systems Architect — full stack + prompt architecture (Prompt Architecture) |
+| Primary hardware | Asus TUF FX505 (workstation) + Galaxy S23 FE (mobile/TMA testing) |
 
-## 2. حاکمیت اقتصادی — قانون آهنین صفر
+## 2. Economic Governance — the Zero Iron Law
 
-- **۱۰۰٪ بدون کارت بانکی (Zero-Credit-Card):** هیچ معماری، هیچ ریل پرداخت و هیچ
-  وابستگی متنی نباید «نیازمند کارت اعتباری» را پیشنهاد کند. هر وقت مسیر بدون
-  کارت/بدون کلید در رجیستری کیان وجود دارد، همان مسیر انتخاب قطعی است.
-- **۱۰۰٪ بدون KYC (Zero-KYC):** هویت اقتصادی با امضای دیجیتال غیرحضوری و
-  تلگرام استارز (XTR) ساخته می‌شود، نه با احراز هویت بانکی. ریل‌های رسمی:
-  **TON** (واریز غیرحضوری) و **Telegram Stars** (بیلینگ درون‌اپ).
-- **سرورشپ غیرامانی (Non-custodial):** کیان هرگز کلید خصوصی هیچ کاربری را
-  نگه نمی‌دارد؛ برداشت‌ها امضای سمت کاربر دارند.
+- **100% zero-credit-card (Zero-Credit-Card):** no architecture, no payment rail, and no
+  textual dependency may ever propose "requires a credit card". Whenever a cardless/keyless
+  path exists in the KIAN registry, that path is the binding choice.
+- **100% zero-KYC (Zero-KYC):** economic identity is built with non-custodial digital
+  signatures and Telegram Stars (XTR), not with bank identity verification. Official rails:
+  **TON** (non-custodial deposits) and **Telegram Stars** (in-app billing).
+- **Non-custodial sovereignty:** KIAN never holds any user's private key;
+  withdrawals are signed on the user's side.
 
-## 3. اولویت محصول شمارهٔ ۱ — تجربهٔ کاربری (UX)
+## 3. Product Priority No. 1 — User Experience (UX)
 
-1. **فریم اول تعاملی (Frame-1 Interactive):** اولین فریم هر خروجی استودیو باید
-   اپ زنده باشد؛ اسپلش مردهٔ بازاریابی ممنوع (قانون Astra).
-2. **دوزبانهٔ تمیز:** فارسی RTL با پشتهٔ Vazirmatn و `dir="rtl"` روی تگ html،
-   انگلیسی LTR؛ BiDi خالص بدون مخلوط‌کردن جهت متن.
-3. **صفر stub مرده:** هیچ دکمه/فرم/مسیری «بعداً وصل می‌شود» نیست — یا زنده است
-   یا وجود ندارد.
-4. **موبایل اول:** ۳۹۰×۸۴۴ با صفر سرریز افقی، هدف لمسی ≥44px.
+1. **Frame-1 Interactive:** the first frame of every studio output must be
+   a live app; dead marketing splash screens are forbidden (the Astra rule).
+2. **Clean bilingualism:** Persian RTL on the Vazirmatn stack with `dir="rtl"` on the html tag,
+   English LTR; pure BiDi with no mixed text direction.
+3. **Zero dead stubs:** no button/form/route is "to be wired later" — it is either live
+   or does not exist.
+4. **Mobile first:** 390×844 with zero horizontal overflow, touch targets ≥44px.
 
-## 4. دارایی و استقلال
+## 4. Assets and Independence
 
-- خانه و خودروی مستقل — سازنده وابستهٔ هیچ حامی مالی نیست؛ این استقلال
-  یعنی معماری هرگز به‌خاطر درآمد سریع، صلح معماری را نمی‌فروشد.
-- درآمد کیان از تراکنش‌های واقعی بازار (کمیسیون، استارز، واریز TON) می‌آید،
-  نه از گیمیشن کاربر.
+- An independent home and car — the creator depends on no financial patron; this independence
+  means the architecture never trades architectural peace for quick revenue.
+- KIAN's revenue comes from real marketplace transactions (commission, Stars, TON deposits),
+  never from gaming the user.
 
-## 5. امضای شناختی
+## 5. Cognitive Signature
 
-سازنده با «اصل اول» فکر می‌کند: هر سیستم از شهود به فیزیک بازگردانده می‌شود.
-هر ادعایی باید با اجرا/ریاضی اثبات شود؛ تملق ممنوع (Zero Sycophancy — جزء
-DNA است نه سلیقه). زبان کار روزمره: فارسی؛ زبان کد و مستندات فنی: انگلیسی.
+The creator thinks in "first principles": every system is reduced from intuition back to physics.
+Every claim must be proven by execution/mathematics; flattery is forbidden (Zero Sycophancy — part of
+the DNA, not a preference). Everyday working language: Persian; the language of code and technical documentation: English.

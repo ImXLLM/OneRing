@@ -1,99 +1,99 @@
-//! برنامهٔ genesis — محاسبهٔ «خالص» مهاجرت لگاسی (بدون IO) + ثابت‌های قرارداد.
+//! Genesis plan — pure "net" computation of the legacy migration (no IO) + contract constants.
 //!
-//! اعداد روز-اول (آدیت genesis، مهر ۱۴۰۵ — هر وقت خواستی دوباره راستی‌آزمایی کن):
-//!   ۴۶۶ کاربر · ۱٬۵۵۴ تراکنش · Σ ترازهای ذخیره‌شده 187,672.8 Đ
-//!   دفتر لگاسی 187,735.8 را تلمیح می‌کرد → گپ −63.0 صددرصد توضیح‌داده‌شده:
-//!   ۹ خرید ۵۰-کردیتی بدون ردیف تراکنش (−450) + یک شارژ دستی مالک (+387).
+//! Day-one numbers (genesis audit, Mehr 1405 — re-verify at any time):
+//!   466 users · 1,554 transactions · Σ stored balances 187,672.8 Đ
+//!   the legacy ledger implied 187,735.8 → a gap of −63.0, fully explained:
+//!   9 fifty-credit purchases without transaction rows (−450) + one manual owner top-up (+387).
 //!
-//! بازنمایی v3 (ADR-002/003 — پول صحیح، دوطرفه):
-//!  - یک حساب برای هر کاربر لگاسی: `user:tg:<id>` (هر ۴۶۶ نفر، ban شده یا نه)
-//!  - فقط «یک» تراکنش genesis با کلید یکسان‌سازی `legacy:genesis:v1`:
-//!    mint:genesis  −Σ(floor(credits))     (ضرب هرگز مثبت نمی‌شود)
-//!    `user_i`        +`floor(credits_i)`      (گردکردن صریح هر شهروند)
-//!    یادداشت genesis خودش ردیف تعدیل شفاف است (تصمیم #۵): دقیقاً می‌گوید
-//!    چرا دفتر از ۱۸۷٬۶۷۲ شروع می‌شود نه ۱۸۷٬۷۳۵.
+//! v3 representation (ADR-002/003 — integer money, double-entry):
+//!  - one account per legacy user: `user:tg:<id>` (all 466, banned or not)
+//!  - exactly "one" genesis transaction with the dedup key `legacy:genesis:v1`:
+//!    mint:genesis  −Σ(floor(credits))     (the mint is never positive)
+//!    `user_i`        +`floor(credits_i)`      (an explicit floor per citizen)
+//!    the genesis note is itself a transparent adjustment row (decision #5): it states exactly
+//!    why the ledger starts at 187,672 and not 187,735.
 
 use kian_domain::Din;
 
-/// کلید یکسان‌سازی genesis — مصرف‌یک‌بار با قید UNIQUE.
+/// Genesis dedup key — consumed once via a UNIQUE constraint.
 pub const GENESIS_KEY: &str = "legacy:genesis:v1";
 
-/// شناسه ثابت تراکنش genesis — برای گزارش‌ها و ممیزی.
+/// Fixed genesis transaction ID — for reports and audit.
 pub const GENESIS_TX_ID: &str = "tx_legacy_genesis";
 
-/// عرضهٔ مورد انتظار پس از مهاجرت — عدد پذیرش فاز ۲ (ADR-009).
+/// Expected supply after migration — the phase-2 acceptance number (ADR-009).
 pub const EXPECTED_SUPPLY: i64 = 187_672;
 
-/// یک کاربر جدول `users` دیتابیس لگاسی (خام، بدون تفسیر).
+/// One `users` row of the legacy database (raw, no interpretation).
 #[derive(Debug, Clone, PartialEq)]
 pub struct LegacyUserRow {
-    /// شناسه TEXT — شناسه‌های لگاسی از Int32 بزرگ‌ترند (مثل 5010703739)
+    /// TEXT ID — legacy IDs exceed Int32 (e.g. 5010703739)
     pub user_id: String,
-    /// نام کاربری اختیاری
+    /// Optional username
     pub username: Option<String>,
-    /// نام اختیاری
+    /// Optional name
     pub first_name: Option<String>,
-    /// اعتبار اعشاری لگاسی (REAL)
+    /// Legacy fractional credits (REAL)
     pub credits: f64,
-    /// ۱ = ban شده
+    /// 1 = banned
     pub is_banned: i64,
 }
 
-/// یک محصول جدول `products` دیتابیس لگاسی (خام).
+/// One `products` row of the legacy database (raw).
 #[derive(Debug, Clone, PartialEq)]
 pub struct LegacyProductRow {
-    /// شناسه لگاسی (TEXT)
+    /// Legacy ID (TEXT)
     pub id: String,
-    /// فروشنده (TEXT)
+    /// Seller (TEXT)
     pub creator_id: String,
-    /// عنوان
+    /// Title
     pub title: String,
-    /// توضیح اختیاری
+    /// Optional description
     pub description: Option<String>,
-    /// قیمت اعشاری لگاسی
+    /// Legacy fractional price
     pub price_credits: f64,
-    /// دسته اختیاری
+    /// Optional category
     pub category: Option<String>,
-    /// لینک تحویل — تنها محتوای تحویل که از Railway نجات آمد
+    /// Delivery link — the only delivery content that survived from Railway
     pub link: Option<String>,
-    /// ۱ = فعال
+    /// 1 = active
     pub is_active: i64,
 }
 
-/// یک شهروند در برنامهٔ genesis — حساب + گردکردن صریح ADR-002.
+/// One citizen in the genesis plan — account + the explicit ADR-002 floor.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GenesisCitizen {
-    /// شناسه حساب — `user:tg:<id>`
+    /// Account ID — `user:tg:<id>`
     pub account_id: String,
-    /// برچسب — `username` ?? `first_name` ?? `tg:<id>`
+    /// Label — `username` ?? `first_name` ?? `tg:<id>`
     pub label: String,
-    /// مبلغ گردشده به پایین (Din)
+    /// Floored amount (Din)
     pub din: i64,
 }
 
-/// برنامهٔ کامل genesis — خروجی محاسبهٔ خالص؛ اجرایش با `migrate_legacy`.
+/// Full genesis plan — the output of the pure computation; executed by `migrate_legacy`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenesisPlan {
-    /// همهٔ شهروندان (۴۶۶ — حتی صفرها؛ فقط holders ردیف می‌گیرند)
+    /// All citizens (466 — even zeros; only holders get rows)
     pub citizens: Vec<GenesisCitizen>,
-    /// Σ اعتبارهای اعشاری لگاسی (مثل 187,672.8)
+    /// Σ legacy fractional credits (e.g. 187,672.8)
     pub sum_credits: f64,
-    /// Σ floor هر شهروند = عرضهٔ ضرب‌شده (۱۸۷٬۶۷۲)
+    /// Σ per-citizen floors = the minted supply (187,672)
     pub sum_din: i64,
-    /// تعداد کیف‌های دارای موجودی
+    /// Number of wallets with a balance
     pub holders: usize,
-    /// تعداد کاربران ban‌شده (باز هم حساب می‌گیرند — تاریخچه مال خودشان است)
+    /// Number of banned users (they still get accounts — their history belongs to them)
     pub banned: usize,
-    /// یادداشت genesis — خودش ردیف تعدیل شفاف است (تصمیم #۵)
+    /// Genesis note — itself a transparent adjustment row (decision #5)
     pub memo: String,
 }
 
-/// ساخت برنامهٔ genesis از ردیف‌های خام لگاسی — تابع خالص، بدون ساعت و IO.
+/// Build the genesis plan from raw legacy rows — a pure function, no clock or IO.
 ///
-/// گردکردن ADR-002: `floor(credits)` برای هر شهروند؛ کسور جمعی (۰.۸ Đ)
-/// در سطح جمع حذف می‌شوند نه در سطح فرد — و همین در یادداشت مستند است.
+/// ADR-002 rounding: `floor(credits)` per citizen; aggregate fractions (0.8 Đ)
+/// are dropped at the aggregate level, not per individual — documented in the note.
 #[must_use]
-#[allow(clippy::cast_possible_truncation)] // floor() پیش از cast — گردکردن صریح ADR-002
+#[allow(clippy::cast_possible_truncation)] // floor() before cast — explicit ADR-002 rounding
 pub fn plan_genesis(users: &[LegacyUserRow]) -> GenesisPlan {
     let sum_credits: f64 = users.iter().map(|u| u.credits).sum();
     let citizens: Vec<GenesisCitizen> = users
@@ -114,15 +114,15 @@ pub fn plan_genesis(users: &[LegacyUserRow]) -> GenesisPlan {
     let memo = format!(
         "legacy genesis — Σ held {sum_din} Đ (floor per citizen from {sum_credits:.1}) — \
          legacy tx log implied 187,735.8; stored balances 187,672.8; gap −63.0 resolved: \
-         9×50 purchases without tx rows (−450) + manual owner credit (+387) — genesis audit ۱۴۰۵"
+         9×50 purchases without tx rows (−450) + manual owner credit (+387) — genesis audit \u{6f1}\u{6f4}\u{6f0}\u{6f5}"
     );
     GenesisPlan { citizens, sum_credits, sum_din, holders, banned, memo }
 }
 
-/// Din امن برای یک مبلغ برنامهٔ genesis — helper برای تست و گزارش.
+/// Wire-safe Din for a genesis-plan amount — a helper for tests and reports.
 ///
 /// # Errors
-/// اگر مقدار از مرز امن 2^53−1 بگذرد (در عمل برای genesis لگاسی غیرممکن).
+/// Fires if the value crosses the safe 2^53−1 boundary (in practice impossible for the legacy genesis).
 pub fn citizen_din(c: &GenesisCitizen) -> kian_domain::DomainResult<Din> {
     Din::new(c.din)
 }
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn floors_per_citizen_and_sums_to_expected_supply() {
-        // ۴۶۵ کاربر ۴۰۳.۰ + یک کاربر ۲۷۷.۸ = Σ ۱۸۷٬۶۷۲.۸ → Σ floor = ۱۸۷٬۶۷۲
+        // 465 users at 403.0 + one user at 277.8 = Σ 187,672.8 → Σ floor = 187,672
         let mut users: Vec<LegacyUserRow> =
             (0..465).map(|i| user(&format!("u{i}"), 403.0, 0)).collect();
         users.push(user("last", 277.8, 0));
@@ -156,7 +156,7 @@ mod tests {
         assert!(plan.memo.contains("Σ held 187672 Đ"));
         assert!(plan.memo.contains("187672.8"));
         assert!(plan.memo.contains("gap −63.0"));
-        assert!(plan.memo.contains("۱۴۰۵"));
+        assert!(plan.memo.contains("\u{6f1}\u{6f4}\u{6f0}\u{6f5}"));
     }
 
     #[test]
@@ -165,14 +165,14 @@ mod tests {
             LegacyUserRow {
                 user_id: "1".into(),
                 username: Some("kia".into()),
-                first_name: Some("کیا".into()),
+                first_name: Some("\u{6a9}\u{6cc}\u{627}".into()),
                 credits: 10.9,
                 is_banned: 0,
             },
             LegacyUserRow {
                 user_id: "2".into(),
                 username: None,
-                first_name: Some("آدا".into()),
+                first_name: Some("\u{622}\u{62f}\u{627}".into()),
                 credits: 0.0,
                 is_banned: 1,
             },
@@ -180,12 +180,12 @@ mod tests {
         ];
         let plan = plan_genesis(&users);
         assert_eq!(plan.citizens[0].label, "kia");
-        assert_eq!(plan.citizens[1].label, "آدا");
+        assert_eq!(plan.citizens[1].label, "\u{622}\u{62f}\u{627}");
         assert_eq!(plan.citizens[2].label, "tg:3");
         assert_eq!(plan.citizens[0].account_id, "user:tg:1");
-        // floor(10.9) = 10 — کسر حذف‌شده در سطح فرد
+        // floor(10.9) = 10 — the fraction dropped per individual
         assert_eq!(plan.citizens[0].din, 10);
-        assert_eq!(plan.holders, 2); // شهروند صفر hodlr نیست
+        assert_eq!(plan.holders, 2); // A zero-balance citizen is not a hodlr
         assert_eq!(plan.banned, 1);
     }
 }

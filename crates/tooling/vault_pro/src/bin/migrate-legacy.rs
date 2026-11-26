@@ -1,8 +1,8 @@
-//! پورت `back/server/scripts/migrate-legacy.ts` — پل روز-اول از دیتابیس
-//! بازیابی‌شدهٔ Railway به v3.
+//! Port of `back/server/scripts/migrate-legacy.ts` — day-one bridge from the
+//! recovered Railway database to v3.
 //!
-//! رفتار TS حفظ شده: replay-safe (اجرای دوم فقط گزارش می‌دهد)، `--dry-run`
-//! هیچ نوشتنی ندارد، و گزارش آشتی Σ کیف‌ها را برابر ۱۸۷٬۶۷۲ Đ نشان می‌دهد.
+//! TS behavior preserved: replay-safe (a second run only reports), `--dry-run`
+//! writes nothing, and the reconciliation report shows Σ wallets = 187,672 Đ.
 //!
 //! ```text
 //! cargo run -p dropagentx-tooling --bin migrate-legacy -- \

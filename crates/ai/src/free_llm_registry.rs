@@ -1,32 +1,32 @@
-//! `free_llm_registry` — رجیستری چندتأمین‌کنندهٔ صفر-کارت کیان (`crates/ai`, Wave 2 — Step 4/6).
+//! `free_llm_registry` — Kian's zero-card multi-provider registry (`crates/ai`, Wave 2 — Step 4/6).
 //!
-//! سه بخش:
-//! 1. **گاردهای ضد-429 جعلی 9Router (`v0.5.123`)** — سانتی‌سایز نام ابزار
-//!    `terminal*` → `shell_exec` (بازگشت‌پذیر) و بازنویسی پرامپت هویتی هرمس برای
-//!    Google Antigravity (پورت commit `bb399170`)؛ بدون این دو، لِین‌های رایگان
-//!    `429 FreeUsageLimit` جعلی می‌گیرند.
-//! 2. **کاتالوگ پلتفرم‌های رایگان** (تقطیر `tashfeenahmed/freellmapi`
-//!    `62526e0` + کاتالوگ `2026.11.23.4b4737`): همهٔ ورودی‌ها OpenAI-compatible
-//!    و بدون کارت بانکی — آبشار ۳لایهٔ Tier1 ناشناس → Tier2 ثبت‌نام رایگان →
-//!    Tier3 کاتالوگ ۱۲۰ API عمومی CORS-دار برای `fetch()` زندهٔ استودیو.
-//! 3. **میان‌افزار تاب‌آوری** (`langflow` + `langchain`): کشف آرگومان ابزارِ
-//!    placeholder-مانند (`<result-from-…>`/`{{step_…}}`) با hint تلاش یک‌باره،
-//!    و چک فیلد refusal پیش از پارس JSON Schema + ردیاب سلامت لِین با
-//!    بک‌آف نمایی `2s × 2^level` (سقف ۵ دقیقه).
+//! Three sections:
+//! 1. **Guards against 9Router's fake 429s (`v0.5.123`)** — sanitizing tool names
+//!    `terminal*` → `shell_exec` (reversible) and rewriting the Hermes identity prompt for
+//!    Google Antigravity (port of commit `bb399170`); without these two, free lanes
+//!    pick up fake `429 FreeUsageLimit` errors.
+//! 2. **Free platform catalog** (a distillation of `tashfeenahmed/freellmapi`
+//!    `62526e0` + the `2026.11.23.4b4737` catalog): every entry is OpenAI-compatible
+//!    and card-free — a 3-layer cascade: anonymous Tier1 → free-signup Tier2 →
+//!    Tier3, a catalog of 120 public CORS-enabled APIs for the studio's live `fetch()`.
+//! 3. **Resilience middleware** (`langflow` + `langchain`): detection of placeholder-like
+//!    tool arguments (`<result-from-…>`/`{{step_…}}`) with a one-shot retry hint,
+//!    and a refusal-field check before JSON Schema parsing + a lane health tracker with
+//!    exponential backoff `2s × 2^level` (a 5-minute cap).
 //!
-//! هیچ ورودی این ماژول راز نیست؛ کلیدهای واقعی فقط از env سرور می‌آیند.
+//! No input of this module is a secret; real keys come only from the server env.
 
 use serde_json::Value;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::time::{Duration, Instant};
 
-// ───────────────────── گارد ۱: سانتی‌سایز نام ابزار OpenCode ─────────────────────
+// ───────────────────── Guard 1: OpenCode tool-name sanitization ─────────────────────
 
-/// نام‌های ابزار حاوی `terminal` (غیرحساس به بزرگی حرف) به `shell_exec`
-/// بازنویسی می‌شوند — `OpenCode` Free هر ابزار terminal-دار را با
-/// `429 FreeUsageLimitError` جعلی رد می‌کند. نقشهٔ بازگشت برای پاسخ برمی‌گردد:
-/// `aliased -> original`. برخورد نام‌ها با پسوند `_2`, `_3` … حل می‌شود.
+/// Tool names containing `terminal` (case-insensitive) are rewritten to `shell_exec` —
+/// `OpenCode` Free rejects any terminal-bearing tool with
+/// a fake `429 FreeUsageLimitError`. The restore map is returned for the response:
+/// `aliased -> original`. Name collisions resolve with the `_2`, `_3`, ... suffixes.
 pub fn sanitize_tool_names_for_opencode(tools: &mut [Value]) -> HashMap<String, String> {
     let mut restore_map = HashMap::new();
     let mut taken: HashMap<String, usize> = HashMap::new();
@@ -52,8 +52,8 @@ pub fn sanitize_tool_names_for_opencode(tools: &mut [Value]) -> HashMap<String, 
     restore_map
 }
 
-/// بازگرداندن نام ابزارها در پاسخ مدل — معکوسِ قطعی `sanitize_tool_names_for_opencode`.
-/// `None` یعنی نام دست‌نخورده است و همان را پاس می‌دهیم.
+/// Restore tool names in the model response — the deterministic inverse of `sanitize_tool_names_for_opencode`.
+/// `None` means the name is untouched and passes through as-is.
 #[must_use]
 pub fn restore_tool_names<'m, S: BuildHasher>(
     tool_name_in_response: &str,
@@ -62,14 +62,14 @@ pub fn restore_tool_names<'m, S: BuildHasher>(
     restore_map.get(tool_name_in_response).map(String::as_str)
 }
 
-// ───────────────────── گارد ۲: پرامپت هویتی Antigravity ─────────────────────
+// ───────────────────── Guard 2: the Antigravity identity prompt ─────────────────────
 
-/// هویت هرمس — خطِ محرکِ `429 RESOURCE_EXHAUSTED` جعلی روی Antigravity.
+/// The Hermes identity — the trigger line for fake `429 RESOURCE_EXHAUSTED` on Antigravity.
 pub const HERMES_IDENTITY_TRIGGER: &str = "You are Hermes Agent, built by Nous Research";
-/// بازنویسی کیانی — همان قانونِ `KIA-BRAIN-OS/03_DNAmind.md` (هویت مستقل).
+/// The Kian rewrite — the same rule as `KIA-BRAIN-OS/03_DNAmind.md` (independent identity).
 pub const KIAN_IDENTITY_REWRITE: &str = "You are KIAN Autonomous Agent, built by KIAN Systems";
 
-/// خطوط دقیق دیگری که Antigravity را به 429 جعلی می‌کشانند (پورت `bb399170`).
+/// The other exact lines that drag Antigravity into fake 429s (port of `bb399170`).
 pub const ANTIGRAVITY_TRIGGER_LINES: &[&str] = &[
     "<!-- End Hermes runtime environment -->",
     "# Google model operational directives",
@@ -79,9 +79,9 @@ pub const ANTIGRAVITY_TRIGGER_LINES: &[&str] = &[
     "Mid-turn, the user can steer you: Hermes delivers their message",
 ];
 
-/// سانتی‌سایز پرامپت سیستم برای Antigravity:
-/// ۱) هویت هرمس → هویت کیان (بقیهٔ جمله دست‌نخورده)؛
-/// ۲) حذف کامل خطوط محرکِ 429 جعلی.
+/// Sanitize the system prompt for Antigravity:
+/// 1) Hermes identity → Kian identity (the rest of the sentence untouched);
+/// 2) full removal of the fake-429 trigger lines.
 #[must_use]
 pub fn sanitize_system_prompt_for_antigravity(system_prompt: &str) -> String {
     let mut out = Vec::new();
@@ -96,20 +96,20 @@ pub fn sanitize_system_prompt_for_antigravity(system_prompt: &str) -> String {
     out.join("\n")
 }
 
-// ───────────────────── کاتالوگ پلتفرم‌های رایگان ─────────────────────
+// ───────────────────── Free platform catalog ─────────────────────
 
-/// لایهٔ ثبت‌نام پلتفرم.
+/// The platform signup layer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SignupTier {
-    /// ناشناس کار می‌کند — بدون حساب و بدون کلید.
+    /// Works anonymously — no account, no key.
     Keyless,
-    /// ثبت‌نام رایگان با کلید — کارت بانکی ممنوع (حاکمیت `DNAme`).
+    /// Free signup with a key — bank cards forbidden (`DNAme` governance).
     NoCardFree,
-    /// نیازمند احراز هویت واقعی چین — فقط برای کامل بودن کاتالوگ.
+    /// Requires Chinese real-name authentication — in the catalog for completeness only.
     CnRealName,
 }
 
-/// مشخصهٔ یک پلتفرم LLM رایگان — همه OpenAI-compatible.
+/// The spec of one free LLM platform — all OpenAI-compatible.
 #[derive(Debug, Clone, Copy)]
 pub struct FreeLlmProviderSpec {
     pub platform: &'static str,
@@ -126,8 +126,8 @@ pub struct FreeLlmProviderSpec {
     pub quirks: &'static str,
 }
 
-/// کاتالوگ گزینش‌شدهٔ ۳۲ پلتفرم صفر-کارت (از ۵۲ پلتفرم کاتالوگ کامل —
-/// بقیه در `docs/vault/freellm_public_apis/` مونت‌اند).
+/// The curated catalog of 32 zero-card platforms (out of 52 in the full catalog —
+/// the rest are mounted in `docs/vault/freellm_public_apis/`).
 pub const FREE_LLM_PROVIDERS: &[FreeLlmProviderSpec] = &[
     FreeLlmProviderSpec {
         platform: "kilo",
@@ -593,21 +593,21 @@ pub const FREE_LLM_PROVIDERS: &[FreeLlmProviderSpec] = &[
     },
 ];
 
-/// پلتفرم را با نام پیدا می‌کند.
+/// Finds a platform by name.
 #[must_use]
 pub fn get_free_provider(platform: &str) -> Option<&'static FreeLlmProviderSpec> {
     FREE_LLM_PROVIDERS.iter().find(|p| p.platform == platform)
 }
 
-/// لِین‌های Tier-1 — ناشناس مطلق، هیچ حسابی لازم نیست
-/// (`opencode-zen` در [`crate::opencode_zen`] با `Bearer public` مدیریت می‌شود).
+/// Tier-1 lanes — fully anonymous, no account required
+/// (`opencode-zen` in [`crate::opencode_zen`] is managed with `Bearer public`).
 pub const TIER_ONE_KEYLESS_CHAIN: &[&str] = &["opencode-zen", "kilo", "ovh", "llm7", "pollinations"];
 
-/// لِین‌های Tier-2 — ثبت‌نام رایگان بدون کارت (آبشار اصلی کیان).
+/// Tier-2 lanes — free card-free signup (Kian's main cascade).
 pub const TIER_TWO_NO_CARD_CHAIN: &[&str] =
     &["cerebras", "groq", "google", "openrouter", "mistral", "nvidia", "zhipu", "cloudflare"];
 
-/// آبشار کامل صفر-کارت: Tier1 → Tier2؛ Tier3 کاتالوگ مرورگری است، نه سروری.
+/// The full zero-card cascade: Tier1 → Tier2; Tier3 is a browser-side catalog, not server-side.
 #[must_use]
 pub fn zero_card_waterfall() -> Vec<&'static FreeLlmProviderSpec> {
     TIER_ONE_KEYLESS_CHAIN
@@ -617,9 +617,9 @@ pub fn zero_card_waterfall() -> Vec<&'static FreeLlmProviderSpec> {
         .collect()
 }
 
-// ───────────────────── Tier-3: کاتالوگ ۱۲۰ API عمومی استودیو ─────────────────────
+// ───────────────────── Tier-3: the studio's 120 public-API catalog ─────────────────────
 
-/// یک API عمومی بدون کلید — برای `fetch()` زنده در استودیوی کیان.
+/// One keyless public API — for live `fetch()` in the Kian studio.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PublicApiSpec {
     pub name: &'static str,
@@ -629,8 +629,8 @@ pub struct PublicApiSpec {
     pub cors: bool,
 }
 
-/// کاتالوگ ۱۲۰ API عمومی HTTPS/CORS (`top_120_studio_browser_apis.json`
-/// مونت‌شده در `docs/vault/freellm_public_apis/`) — `(name, url, category, https, cors)`.
+/// The 120-entry HTTPS/CORS public-API catalog (`top_120_studio_browser_apis.json`
+/// mounted in `docs/vault/freellm_public_apis/`) — `(name, url, category, https, cors)`.
 pub const STUDIO_PUBLIC_APIS_120: &[(&str, &str, &str, bool, bool)] = &[
     ("Cat Facts", "https://catfact.ninja", "Animals", true, true),
     ("HTTP Cat", "https://http.cat", "Animals", true, true),
@@ -790,11 +790,11 @@ pub const STUDIO_PUBLIC_APIS_120: &[(&str, &str, &str, bool, bool)] = &[
     ("contix", "https://contix.es/api/#herramientas", "Finance", true, true),
 ];
 
-/// شمار کاتالوگ Tier-3 — قرارداد سخت: ۱۲۰.
+/// The Tier-3 catalog count — a hard contract: 120.
 pub const STUDIO_PUBLIC_APIS_120_COUNT: usize = 120;
 
-/// APIهای مرورگر-آماده (HTTPS+CORS) به‌صورت struct — فقط همین‌ها در `fetch()`
-/// زندهٔ استودیو مجازند.
+/// Browser-ready APIs (HTTPS+CORS) as structs — only these are allowed in the studio's
+/// live `fetch()`.
 pub fn browser_ready_public_apis() -> impl Iterator<Item = PublicApiSpec> {
     STUDIO_PUBLIC_APIS_120
         .iter()
@@ -808,15 +808,15 @@ pub fn browser_ready_public_apis() -> impl Iterator<Item = PublicApiSpec> {
         })
 }
 
-// ───────────────────── میان‌افزار تاب‌آوری ─────────────────────
+// ───────────────────── Resilience middleware ─────────────────────
 
-/// نشانگرهای جای‌نگهدارِ آرگومان ابزار — کشف قطعی (langflow `WatsonX` الگو).
+/// Tool-argument placeholder markers — deterministic detection (the langflow `WatsonX` pattern).
 const PLACEHOLDER_MARKERS: [&str; 5] =
     ["<result-from-", "<previous-output>", "{{step_", "{{result", "<insert-"];
 
-/// کشف آرگومان ابزارِ placeholder-مانند — مدل به‌جای مقدار واقعی، علامت
-/// جای‌نگهدار نتیجهٔ ابزار دیگر را گذاشته است (`langflow` `WatsonXPlaceholderMiddleware`).
-/// `Some(hint)` = hint تلاش یک‌باره برای دور بعد.
+/// Detect placeholder-like tool arguments — the model put a placeholder marker for
+/// another tool's result instead of a real value (`langflow` `WatsonXPlaceholderMiddleware`).
+/// `Some(hint)` = a one-shot retry hint for the next round.
 #[must_use]
 pub fn detect_unresolved_placeholder_tool_args(tool_args_json: &str) -> Option<String> {
     let lower = tool_args_json.to_ascii_lowercase();
@@ -835,13 +835,13 @@ pub fn detect_unresolved_placeholder_tool_args(tool_args_json: &str) -> Option<S
     ))
 }
 
-/// آغازگرهای ردِ صریح مدل — الگوی `langchain` `OutputFixing`.
+/// Explicit model-refusal openers — the `langchain` `OutputFixing` pattern.
 const REFUSAL_OPENERS: [&str; 4] =
     ["i'm sorry, but", "i am sorry, but", "i can't help with", "i cannot help with"];
 
-/// چک فیلد refusal صریح پیش از پارس JSON Schema — الگوی `langchain` `OutputFixing`.
-/// `Some(reason)` یعنی مدل رد کرده و پارس schema بی‌معنی است؛ caller باید
-/// retry prompt بسازد نه اینکه خروجی خراب را schema-pars کند.
+/// Explicit refusal-field check before JSON Schema parsing — the `langchain` `OutputFixing` pattern.
+/// `Some(reason)` means the model refused and schema parsing is pointless; the caller must
+/// build a retry prompt rather than schema-parse the broken output.
 #[must_use]
 pub fn check_model_refusal(completion: &Value) -> Option<String> {
     let top_refusal = completion
@@ -874,22 +874,22 @@ pub fn check_model_refusal(completion: &Value) -> Option<String> {
     None
 }
 
-// ───────────────────── سلامت لِین و فال‌بک ─────────────────────
+// ───────────────────── Lane health and fallback ─────────────────────
 
-/// تصمیم پس از شکست HTTP لِین — پورت `9router` (`accountFallback.js` + `errorConfig.js`).
+/// Decision after a lane's HTTP failure — port of `9router` (`accountFallback.js` + `errorConfig.js`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LaneFailureAction {
-    /// 410/404 مدل‌ناپیدا/بازنشسته → لِین برای کل نشست سیاه‌می‌شود.
+    /// 410/404 unknown/retired model → the lane is blacklisted for the whole session.
     RetireLane,
-    /// 400 خطای اعتبارسنجی درخواست → فوری لِین بعدی، بدون کول‌داون حساب.
+    /// 400 request validation error → the next lane immediately, no account cooldown.
     AdvanceNoCooldown,
-    /// 429 → بک‌آف نمایی `2s × 2^level` (سقف ۵ دقیقه).
+    /// 429 → exponential backoff `2s × 2^level` (5-minute cap).
     BackoffCooldown(Duration),
-    /// 5xx ترانزیت → کول‌داون کوتاه ۳۰ ثانیه.
+    /// 5xx transit → a short 30-second cooldown.
     TransientCooldown(Duration),
 }
 
-/// طبقه‌بندی شکست HTTP لِین (قطعی و تست‌پذیر).
+/// Lane HTTP-failure classification (deterministic and testable).
 #[must_use]
 pub fn classify_http_failure(status: u16, body_text: &str, backoff_level: u32) -> LaneFailureAction {
     let lower = body_text.to_ascii_lowercase();
@@ -915,7 +915,7 @@ pub fn classify_http_failure(status: u16, body_text: &str, backoff_level: u32) -
     LaneFailureAction::TransientCooldown(Duration::from_secs(30))
 }
 
-/// ردیاب سلامت لِین‌ها در طول نشست — بازنشسته‌ها + کول‌داون‌ها.
+/// Lane health tracker across a session — blackouts + cooldowns.
 #[derive(Debug, Default)]
 pub struct LaneHealthTracker {
     cooldowns: HashMap<String, (Instant, u32)>,
@@ -923,7 +923,7 @@ pub struct LaneHealthTracker {
 }
 
 impl LaneHealthTracker {
-    /// آیا لِین الان قابل استفاده است؟
+    /// Is the lane usable right now?
     #[must_use]
     pub fn is_available(&self, model_id: &str) -> bool {
         if self.retired.contains_key(model_id) {
@@ -935,7 +935,7 @@ impl LaneHealthTracker {
         true
     }
 
-    /// ثبت شکست و گرفتن تصمیم.
+    /// Record a failure and take the decision.
     pub fn record_failure(&mut self, model_id: &str, status: u16, body: &str) -> LaneFailureAction {
         let prev_level = self.cooldowns.get(model_id).map_or(0, |(_, lvl)| *lvl);
         let action = classify_http_failure(status, body, prev_level + 1);
@@ -952,13 +952,13 @@ impl LaneHealthTracker {
         action
     }
 
-    /// ثبت موفقیت — کول‌داون پاک می‌شود.
+    /// Record a success — the cooldown clears.
     pub fn record_success(&mut self, model_id: &str) {
         self.cooldowns.remove(model_id);
     }
 }
 
-// ───────────────────── تست‌ها ─────────────────────
+// ───────────────────── Tests ─────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -978,7 +978,7 @@ mod tests {
         assert_eq!(map.get("shell_exec_2").map(String::as_str), Some("MyTerminalTool"));
         assert_eq!(restore_tool_names("shell_exec_2", &map), Some("MyTerminalTool"));
         assert_eq!(restore_tool_names("unrelated_tool", &map), None);
-        // ابزار بدون terminal دست‌نخورده می‌ماند
+        // a tool without terminal stays untouched
         let mut clean = vec![json!({"type": "function", "function": {"name": "read_file"}})];
         assert!(sanitize_tool_names_for_opencode(&mut clean).is_empty(), "clean tool must not be renamed");
         assert_eq!(clean[0]["function"]["name"], "read_file");
@@ -1007,7 +1007,7 @@ mod tests {
         for p in &waterfall {
             assert_ne!(p.signup_tier, SignupTier::CnRealName, "waterfall must stay zero-card");
         }
-        // cerebras 1M TPD و zhipu 1M TPD در Tier-2 هستند
+        // cerebras 1M TPD and zhipu 1M TPD are in Tier-2
         assert_eq!(get_free_provider("cerebras").unwrap().tpd_cap, Some(1_000_000));
         assert_eq!(get_free_provider("zhipu").unwrap().tpd_cap, Some(1_000_000));
         assert!(get_free_provider("kilo").unwrap().base_url.contains("kilo.ai"));
@@ -1065,7 +1065,7 @@ mod tests {
             classify_http_failure(429, "rate limit exceeded", 1),
             LaneFailureAction::BackoffCooldown(_)
         ));
-        // بک‌آف نمایی با سقف ۵ دقیقه
+        // exponential backoff with a 5-minute cap
         let level1 = classify_http_failure(429, "", 1);
         assert_eq!(level1, LaneFailureAction::BackoffCooldown(Duration::from_secs(2)));
         let level8 = classify_http_failure(429, "", 8);
@@ -1084,7 +1084,7 @@ mod tests {
         assert!(tracker.is_available("oc/beam-free"));
         tracker.record_failure("oc/beam-free", 410, "gone");
         assert!(!tracker.is_available("oc/beam-free"), "410 must retire the lane");
-        tracker.record_success("oc/deepseek-v4.1-flash-free"); // بدون کول‌داون — no-op امن
+        tracker.record_success("oc/deepseek-v4.1-flash-free"); // no cooldown — a safe no-op
         assert!(tracker.is_available("oc/deepseek-v4.1-flash-free"));
         let action = tracker.record_failure("oc/deepseek-v4.1-flash-free", 429, "rate limit");
         assert!(matches!(action, LaneFailureAction::BackoffCooldown(_)));
@@ -1093,8 +1093,8 @@ mod tests {
 
     #[test]
     fn providers_catalog_is_zero_card_by_dna() {
-        // حاکمیت DNAme: هیچ پلتفرمی از آبشار رسمی کارت نمی‌خواهد؛
-        // CnRealName فقط در کاتالوگ برای کامل بودن است و در آبشار نیست.
+        // DNAme governance: no platform in the official cascade asks for a card;
+        // CnRealName is in the catalog for completeness only and is not in the cascade.
         let waterfall = zero_card_waterfall();
         assert!(waterfall.iter().all(|p| p.signup_tier != SignupTier::CnRealName));
         assert_eq!(get_free_provider("modelscope").unwrap().signup_tier, SignupTier::CnRealName);

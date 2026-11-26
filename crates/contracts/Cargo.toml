@@ -4,22 +4,22 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "قراردادهای وایر — DTOهای serde + utoipa 6 + طبقه‌بندی خطا + امنیت قراردادی X-KIAN-Key"
+description = "\u0642\u0631\u0627\u0631\u062f\u0627\u062f\u0647\u0627\u06cc \u0648\u0627\u06cc\u0631 — DTO\u0647\u0627\u06cc serde + utoipa 6 + \u0637\u0628\u0642\u0647‌\u0628\u0646\u062f\u06cc \u062e\u0637\u0627 + \u0627\u0645\u0646\u06cc\u062a \u0642\u0631\u0627\u0631\u062f\u0627\u062f\u06cc X-KIAN-Key"
 
 [dependencies]
-# وایر — همان JSON ای که TS روی سیم می‌فرستد (camelCase، null صریح، صحیح 2^53−1)
+# Wire — the same JSON the TS side sends on the wire (camelCase, explicit null, integers within 2^53−1)
 serde = { workspace = true }
 serde_json = { workspace = true }
-# اسکیمای OpenAPI 3.1 از همان DTOها — بدون منبع دوم حقیقت (ADR-005)
+# OpenAPI 3.1 schema from the same DTOs — no second source of truth (ADR-005)
 utoipa = { workspace = true }
-# امنیت قراردادی — مقایسهٔ زمان‌ثابت + طرح رسمی HMAC تلگرام
+# Contractual security — constant-time comparison + the official Telegram HMAC scheme
 subtle = { workspace = true }
 sha2 = { workspace = true }
 hmac = { workspace = true }
 hex = { workspace = true }
-# اعتبارسنجی IsoDateTime (z.string().datetime({offset:true}))
+# IsoDateTime validation (z.string().datetime({offset:true}))
 chrono = { workspace = true }
-# طبقه‌بندی خطا — نگاشت ۲۰ کد دامنه به وضعیت HTTP (منبع واحد کدها)
+# Error classification — maps the 20 domain codes onto HTTP statuses (single source for the codes)
 kian-domain = { path = "../domain" }
 
 [lints.rust]

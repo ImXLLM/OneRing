@@ -1,20 +1,20 @@
-//! فشرده‌ساز خروجی ابزار با حفظ رازها — پورت `10x/engine/token_saver.py` (پوشهٔ ۰۲).
+//! Secret-preserving tool output compressor — port of `10x/engine/token_saver.py` (folder 02).
 //!
-//! هدف: متن خام خروجی ابزار (دیفاگیت، لاگ بیلد، درخت پوشه‌ها…) پیش از رسیدن
-//! به مدل فشرده شود تا توکن ورودی کمتری بسوزد (معمولاً ۲۰–۴۰٪ کمتر) — بدون
-//! دست‌زدن به هیچ متنی که بوی راز می‌دهد (`sk-`، `PRIVATE KEY`، `password`،
-//! `api_key`، `secret`، `token`، `BEGIN `، `content-type`).
+//! Goal: compress raw tool output text (diffs, build logs, folder trees...) before it
+//! reaches the model so it burns fewer input tokens (typically 20–40% less) — without
+//! touching any text that smells like a secret (`sk-`, `PRIVATE KEY`, `password`,
+//! `api_key`, `secret`, `token`, `BEGIN `, `content-type`).
 //!
-//! فلسفهٔ ایمنی (مانند RTK):
-//! * فقط بلوک‌هایی که ۵۱۲+ نویسه‌اند و سرشان شبیه «خروجی برنامه» است؛
-//! * فشرده‌سازی تقریباً بی‌اتلاف: حذف خطوط تکراری متوالی، فروپاشی خطوط خالی،
-//!   کوتاه‌کردن خطوط ۳۰۰+ نویسه‌ای؛
-//! * fail-safe: اگر نتیجه بزرگ‌تر یا برابر شد، متن اصلی برگردانده می‌شود.
+//! Safety philosophy (like RTK):
+//! * only blocks of 512+ characters whose head looks like "program output";
+//! * near-lossless compression: remove consecutive duplicate lines, collapse blank lines,
+//!   truncate 300+ character lines;
+//! * fail-safe: if the result is larger or equal, the original text is returned.
 #![forbid(unsafe_code)]
 
-/// حداقل اندازه قبل از فشرده‌سازی — عین `_MIN_BLOCK_CHARS` پایتون.
+/// Minimum size before compression — exactly the Python `_MIN_BLOCK_CHARS`.
 const MIN_BLOCK_CHARS: usize = 512;
-/// نشانه‌های محافظت‌شده + دو نشانهٔ مأموریتی (`sk-` و `PRIVATE KEY`).
+/// Protected markers + two mission-critical ones (`sk-` and `PRIVATE KEY`).
 const PROTECTIVE_MARKERS: [&str; 8] = [
     "content-type",
     "token",
@@ -26,7 +26,7 @@ const PROTECTIVE_MARKERS: [&str; 8] = [
     "private key",
 ];
 
-/// متن «شبیه خروجی برنامه» است؟ بررسی روی سرِ ~۱KB — عین `_looks_known`.
+/// Does the text look like "program output"? Checked on the ~1KB head — exactly `_looks_known`.
 fn looks_known(text: &str) -> bool {
     let head: String = text.chars().take(MIN_BLOCK_CHARS).collect();
     [
@@ -36,18 +36,18 @@ fn looks_known(text: &str) -> bool {
         head.contains("commit ") && (head.contains("Author:") || head.contains("Date:")),
         // git status
         head.contains("On branch ") || head.contains("nothing to commit"),
-        // خروجی تست
+        // test output
         ["passed", "failed", " ok ", "error"]
             .iter()
             .any(|w| head.to_lowercase().contains(w))
             && head.chars().next().is_some_and(|c| c.is_ascii_digit()),
         // tracebacks
         head.contains("Traceback (most recent call last)") || head.contains("Exception in"),
-        // لاگ بیلد
+        // build log
         ["Compiling", "Building", "Downloading", "Installing", "Collecting"]
             .iter()
             .any(|w| head.contains(w)),
-        // فهرست فایل `ls -l`-مانند (دسترسی/مالک/سایز)
+        // `ls -l`-style file listing (permissions/owner/size)
         head.lines().next().is_some_and(|l| {
             let cols: Vec<&str> = l.split_whitespace().collect();
             cols.len() >= 8 && cols[0].chars().all(|c| "-lrwxdc".contains(c) || c.is_ascii_digit())
@@ -57,7 +57,7 @@ fn looks_known(text: &str) -> bool {
     .any(|hit| *hit)
 }
 
-/// حذف خطوط تکراری متوالی (فقط ۲ تکرار مجاز) و فروپاشی خطوط خالی به یک.
+/// Remove consecutive duplicate lines (only 2 repeats allowed) and collapse blank lines to one.
 fn compress_block(text: &str) -> String {
     let mut out: Vec<&str> = Vec::new();
     let mut prev: Option<&str> = None;
@@ -88,7 +88,7 @@ fn compress_block(text: &str) -> String {
     out.join("\n")
 }
 
-/// کوتاه‌کردن خطوط مرضی (>۳۰۰ نویسه) با نشانگر ادامه.
+/// Truncate pathological lines (>300 characters) with a continuation marker.
 fn trim_long_lines(text: &str) -> String {
     text.lines()
         .map(|line| {
@@ -103,15 +103,15 @@ fn trim_long_lines(text: &str) -> String {
         .join("\n")
 }
 
-/// فروپاشی هر دهانهٔ ۳+ فاصله/تب به دو فاصله.
+/// Collapse any run of 3+ spaces/tabs down to two spaces.
 fn compress_whitespace(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut ws_run = 0usize;
     for ch in text.chars() {
         if ch == ' ' || ch == '\t' {
             ws_run += 1;
-            // دو نویسهٔ نخست دهانه حفظ می‌شوند؛ بقیهٔ دهانهٔ ۳+ حذف —
-            // نتیجه: دقیقاً «دو فاصله» به‌جای کل دهانه (عین `WS_RUN.sub`)
+            // the first two characters of the run are kept; the rest of a 3+ run is removed —
+            // result: exactly "two spaces" in place of the whole run (exactly `WS_RUN.sub`)
             if ws_run < 3 {
                 out.push(ch);
             }
@@ -123,11 +123,11 @@ fn compress_whitespace(text: &str) -> String {
     out
 }
 
-/// فشرده‌سازی خروجی ابزار — با حفظ مطلق رازها.
+/// Compress tool output — with absolute secret preservation.
 ///
-/// * متنی که حاوی نشانهٔ راز است **هرگز** کوتاه/تغییر نمی‌کند؛
-/// * متن کوتاه (<۵۱۲) یا غیرِ «خروجی برنامه» دست‌نخورده برمی‌گردد؛
-/// * اگر فشرده‌سازی بزرگ‌تر یا برابر شد، متن اصلی برمی‌گردد.
+/// * text containing a secret marker is **never** truncated/modified;
+/// * short (<512) or non-"program output" text is returned untouched;
+/// * if compression is larger or equal, the original text is returned.
 #[must_use]
 pub fn compress_tool_output_preserving_secrets(text: &str, max_chars: usize) -> String {
     if text.chars().count() < MIN_BLOCK_CHARS {
@@ -135,7 +135,7 @@ pub fn compress_tool_output_preserving_secrets(text: &str, max_chars: usize) -> 
     }
     let lowered = text.to_lowercase();
     if PROTECTIVE_MARKERS.iter().any(|m| lowered.contains(m)) {
-        return text.to_owned(); // راز — هرگز دست نمی‌خورد، حتی کوتاه نمی‌شود
+        return text.to_owned(); // secret — never touched, not even truncated
     }
     if !looks_known(text) {
         return text.to_owned();
@@ -153,7 +153,7 @@ mod tests {
     use super::*;
     use std::fmt::Write as _;
 
-    /// خروجی بیلد بزرگ را فشرده می‌کند و هیچ رازی در آن نیست.
+    /// Compresses a large build output that contains no secrets.
     #[test]
     fn compresses_noisy_build_output() {
         let mut text = String::from("Compiling kian-server v2.0.0\nBuilding kernel\n");
@@ -162,11 +162,11 @@ mod tests {
             text.push_str("\n\n\n\n");
         }
         let out = compress_tool_output_preserving_secrets(&text, 12_000);
-        assert!(out.chars().count() < text.chars().count(), "باید کوچک‌تر شود");
-        assert!(out.contains("Compiling kian-server"), "محتوای واقعی حذف نمی‌شود");
+        assert!(out.chars().count() < text.chars().count(), "\u{628}\u{627}\u{6cc}\u{62f} \u{6a9}\u{648}\u{686}\u{6a9}‌\u{62a}\u{631} \u{634}\u{648}\u{62f}");
+        assert!(out.contains("Compiling kian-server"), "\u{645}\u{62d}\u{62a}\u{648}\u{627}\u{6cc} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{62d}\u{630}\u{641} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
     }
 
-    /// قانون طلایی — متنِ حاوی راز بایت‌به‌بایت دست‌نخورده برمی‌گردد.
+    /// Golden rule — secret-bearing text comes back byte-for-byte untouched.
     #[test]
     fn secrets_are_never_truncated_or_mutated() {
         let noisy_secret = format!(
@@ -177,37 +177,37 @@ mod tests {
         assert_eq!(
             compress_tool_output_preserving_secrets(&noisy_secret, 50),
             noisy_secret,
-            "راز sk- — هرگز کوتاه نمی‌شود"
+            "\u{631}\u{627}\u{632} sk- — \u{647}\u{631}\u{6af}\u{632} \u{6a9}\u{648}\u{62a}\u{627}\u{647} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}"
         );
         let key_block = format!("Compiling kian v2\n-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----\nCompiling done\n", "a9f3\n".repeat(300));
         assert_eq!(
             compress_tool_output_preserving_secrets(&key_block, 50),
             key_block,
-            "بلوک کلید خصوصی — دست‌نخورده"
+            "\u{628}\u{644}\u{648}\u{6a9} \u{6a9}\u{644}\u{6cc}\u{62f} \u{62e}\u{635}\u{648}\u{635}\u{6cc} — \u{62f}\u{633}\u{62a}‌\u{646}\u{62e}\u{648}\u{631}\u{62f}\u{647}"
         );
         for marker in ["api_key=abc123", "password: hunter2", "Authorization: Bearer token", "content-type: application/json"] {
             let big = format!("{marker}\n{}\n", "Compiling kian v2 line\n".repeat(60));
             assert_eq!(
                 compress_tool_output_preserving_secrets(&big, 50),
                 big,
-                "نشانهٔ {marker} باید متن را محافظت کند"
+                "\u{646}\u{634}\u{627}\u{646}\u{647}\u{654} {marker} \u{628}\u{627}\u{6cc}\u{62f} \u{645}\u{62a}\u{646} \u{631}\u{627} \u{645}\u{62d}\u{627}\u{641}\u{638}\u{62a} \u{6a9}\u{646}\u{62f}"
             );
         }
     }
 
-    /// متن کوتاه و متن غیرِ برنامه‌ای دست‌نخورده می‌ماند.
+    /// Short text and non-program text stay untouched.
     #[test]
     fn small_and_non_tool_text_pass_through() {
-        assert_eq!(compress_tool_output_preserving_secrets("سلام", 100), "سلام");
-        let prose = "این یک متن فارسی طولانی است و به هیچ الگوی خروجی برنامه شبیه نیست. ".repeat(20);
+        assert_eq!(compress_tool_output_preserving_secrets("\u{633}\u{644}\u{627}\u{645}", 100), "\u{633}\u{644}\u{627}\u{645}");
+        let prose = "\u{627}\u{6cc}\u{646} \u{6cc}\u{6a9} \u{645}\u{62a}\u{646} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{637}\u{648}\u{644}\u{627}\u{646}\u{6cc} \u{627}\u{633}\u{62a} \u{648} \u{628}\u{647} \u{647}\u{6cc}\u{686} \u{627}\u{644}\u{6af}\u{648}\u{6cc} \u{62e}\u{631}\u{648}\u{62c}\u{6cc} \u{628}\u{631}\u{646}\u{627}\u{645}\u{647} \u{634}\u{628}\u{6cc}\u{647} \u{646}\u{6cc}\u{633}\u{62a}. ".repeat(20);
         assert_eq!(
             compress_tool_output_preserving_secrets(&prose, 100),
             prose,
-            "نثر عادی فشرده نمی‌شود"
+            "\u{646}\u{62b}\u{631} \u{639}\u{627}\u{62f}\u{6cc} \u{641}\u{634}\u{631}\u{62f}\u{647} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}"
         );
     }
 
-    /// خطوط ۳۰۰+ نویسه‌ای کوتاه می‌شوند؛ fail-safe هرگز بزرگ‌تر نمی‌شود.
+    /// 300+ character lines get truncated; fail-safe never returns anything larger.
     #[test]
     fn trims_long_lines_and_never_grows() {
         let long = "x".repeat(400);
@@ -219,14 +219,14 @@ mod tests {
         let out = compress_tool_output_preserving_secrets(&text, 12_000);
         assert!(out.chars().count() < text.chars().count());
         for line in out.lines() {
-            assert!(line.chars().count() <= 302, "خط کوتاه‌شده ≤ ۳۰۲");
+            assert!(line.chars().count() <= 302, "\u{62e}\u{637} \u{6a9}\u{648}\u{62a}\u{627}\u{647}‌\u{634}\u{62f}\u{647} ≤ \u{6f3}\u{6f0}\u{6f2}");
         }
-        // max_chars رعایت می‌شود
+        // max_chars is respected
         let out2 = compress_tool_output_preserving_secrets(&text, 10);
         assert!(out2.chars().count() <= 10);
     }
 
-    /// خروجی تست و git status هم الگوهای شناخته‌شده‌اند.
+    /// Test output and git status are also recognized patterns.
     #[test]
     fn recognizes_git_and_test_outputs() {
         let mut git = String::from("On branch main\nYour branch is up to date.\n");

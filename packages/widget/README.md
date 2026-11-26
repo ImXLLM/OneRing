@@ -1,1 +1,1 @@
-# @kian/widget — ویجت قابل جاسازی (embed) برای سایت‌های بیلدرهای خارجی
+# @kian/widget — The Embeddable Widget for External Builders' Websites

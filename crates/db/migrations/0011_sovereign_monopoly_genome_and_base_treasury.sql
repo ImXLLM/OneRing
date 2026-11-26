@@ -1,13 +1,13 @@
--- مهاجرت 0011 — انحصارِ حاکم، ژنومِ چهارمدلی و خزانهٔ Base
+-- Migration 0011 — sovereign monopoly, the four-model genome, and the Base treasury
 -- (Wave 7 — Step 4/4)
 --
--- جدولِ `sovereign_treasury_splits`: لایحهٔ دفتریِ تقسیمِ اتمیِ روزِ اول —
--- خروجیِ `compute_day_one_atomic_split` و `compute_instant_boost_split`
--- (جریان‌هایِ ۱ تا ۴ منشور) قبل از انتشار روی وایر ماندگار می‌شود.
+-- the `sovereign_treasury_splits` table: the Day-1 atomic-split ledger bill —
+-- the output of `compute_day_one_atomic_split` and `compute_instant_boost_split`
+-- (charter streams 1 to 4) is persisted before hitting the wire.
 --
--- اصلِ صفرجمع: `kia_treasury_micros + referrer_micros + creator_net_micros
--- == gross_amount_micros` — ردیفِ نامتوازن هرگز درج نمی‌شود (گیتِ
--- `zero_sum_verified` در لایهٔ db).
+-- zero-sum principle: `kia_treasury_micros + referrer_micros + creator_net_micros
+-- == gross_amount_micros` — an unbalanced row is never inserted (the
+-- `zero_sum_verified` gate in the db layer).
 
 CREATE TABLE IF NOT EXISTS "sovereign_treasury_splits" (
     "id" TEXT PRIMARY KEY,

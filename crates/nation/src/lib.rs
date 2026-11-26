@@ -1,74 +1,74 @@
-//! `kian-nation` — دولت HITL — پارلمان، آستانه ۵۰,۰۰۰ Đ، اقتصاد Đ.
+//! `kian-nation` — the HITL government — parliament, the 50,000 Đ threshold, the Đ economy.
 //!
-//! پارلمان KIAN جایی است که تصمیم‌های پولیِ نیازمند رأی به شکل «لایحه» ثبت
-//! می‌شوند: هر لایحه (Bill) یک کنش واقعی روی کرنل پول را توصیف می‌کند
-//! (حل اختلاف اسکرو / جابه‌جایی خزانه)، شهروندان و ایجنت‌ها به آن رأی می‌دهند
-//! و بستن لایحه قطعی و deterministic است — همان الگوی ماشین وضعیت اسکرو M2.
+//! KIAN's parliament is where money decisions requiring a vote are recorded as "bills":
+//! each bill (Bill) describes a real action on the money kernel
+//! (escrow dispute resolution / treasury movement), citizens and agents vote on it,
+//! and bill closing is final and deterministic — the same state-machine pattern as M2 escrow.
 //!
-//! گره با منشور (مادهٔ ۷): لایحه‌ای که مبلغش ≥ ۵۰,۰۰۰ Đ است، هنگام بستن
-//! **حداقل یک رأی انسانیِ موافق** می‌خواهد؛ ایجنت‌ها هرگز نمی‌توانند تصمیم
-//! پولیِ بزرگ را تنها بگیرند (HITL — Human-in-the-Loop). آستانه از
-//! [`kian_domain::requires_hitl`] می‌آید — یک منبع حقیقت، نه عدد تکراری.
+//! Charter coupling (Article 7): a bill whose amount is ≥ 50,000 Đ requires
+//! **at least one approving human vote** at close time; agents can never make a large
+//! money decision alone (HITL — Human-in-the-Loop). The threshold comes from
+//! [`kian_domain::requires_hitl`] — one source of truth, not a duplicated number.
 //!
-//! اجرا هم صادقانه است: «اجرا» فقط از دامنهٔ خالص عبور می‌کند
-//! (release/refund اسکرو با `approved_by_admin: true` یا posting خزانه روی
-//! دفتر دوطرفه) — هیچ مسیری پول را بی‌رأی جابه‌جا نمی‌کند.
+//! Execution is honest too: "execute" only passes through the pure domain
+//! (escrow release/refund with `approved_by_admin: true`, or a treasury posting on the
+//! double-entry ledger) — no path moves money without a vote.
 //!
-//! ماژول‌ها (فایل واحد — کرت کوچک و خالص):
-//! - [`BillKind`] — دو نوع لایحه، هر دو با اثر واقعی روی دفتر
-//! - [`Bill`] — ماشین وضعیت لایحه: OPEN → PASSED/REJECTED → EXECUTED
-//! - [`NationPolicy`] — نصاب و آستانه (پیش‌فرض: نصاب ۳، آستانه منشور)
+//! Modules (single file — a small, pure crate):
+//! - [`BillKind`] — two bill kinds, both with a real ledger effect
+//! - [`Bill`] — bill state machine: OPEN → PASSED/REJECTED → EXECUTED
+//! - [`NationPolicy`] — quorum and threshold (defaults: quorum 3, the charter threshold)
 #![forbid(unsafe_code)]
 
 use kian_domain::Din;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate id — for smoke tests and logs.
 pub const NAME: &str = "kian-nation";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// سلام‌سنج — نشانه زنده‌بودن سیم‌کشی.
+/// Health probe — wiring liveness indicator.
 #[must_use]
 pub fn hello() -> &'static str {
     "kian_nation · KIAN is alive"
 }
 
-// ── خطا ─────────────────────────────────────────────────────────────────────
+// ── errors ─────────────────────────────────────────────────────────────────────
 
-/// خطای پارلمان — کدهای صریح؛ نگاشت HTTP در لایهٔ server.
+/// Parliament error — explicit codes; HTTP mapping lives in the server layer.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum NationError {
-    /// عمل روی لایحه‌ای که OPEN نیست (بستن دوباره، رأی به بسته، اجرای ردشده).
+    /// Action on a bill that is not OPEN (closing twice, voting on a closed one, executing a rejected one).
     #[error("bill {0} is not OPEN")]
     BillNotOpen(String),
-    /// هر رأی‌دهنده فقط یک رأی دارد.
+    /// Each voter gets only one vote.
     #[error("voter {0} already voted on bill {1}")]
     AlreadyVoted(String, String),
-    /// بدنهٔ لایحه نامعتبر (عنوان خالی، مبلغ صفر برای جابه‌جایی خزانه، …).
+    /// Invalid bill body (empty title, zero amount for a treasury movement, …).
     #[error("invalid bill: {0}")]
     InvalidBill(String),
-    /// اجرا فقط از PASSED ممکن است.
+    /// Execution is possible only from PASSED.
     #[error("bill {0} is not PASSED — execution refused")]
     NotPassed(String),
 }
 
-/// نتیجهٔ استاندارد پارلمان.
+/// Standard parliament result.
 pub type NationResult<T> = Result<T, NationError>;
 
-// ── انواع دامنه ─────────────────────────────────────────────────────────────
+// ── domain types ─────────────────────────────────────────────────────────────
 
-/// سیاست پارلمان — نصاب و آستانه. تغییرناپذیر در عمر سرور (env).
+/// Parliament policy — quorum and threshold. Immutable for the server's lifetime (env).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NationPolicy {
-    /// حداقل مجموع رأی‌ها برای بستن معتبر.
+    /// Minimum total votes for a valid close.
     pub quorum: i64,
-    /// آستانه HITL به Đ — پیش‌فرض منشور ۵۰,۰۰۰؛ فقط برای تست override می‌شود.
+    /// HITL threshold in Đ — charter default 50,000; overridable only for tests.
     pub hitl_threshold_din: i64,
 }
 
 impl NationPolicy {
-    /// پیش‌فرض مادهٔ ۷ — نصاب ۳، آستانه ۵۰,۰۰۰ Đ.
+    /// Article 7 defaults — quorum 3, threshold 50,000 Đ.
     #[must_use]
     pub const fn charter_default() -> Self {
         Self {
@@ -77,26 +77,26 @@ impl NationPolicy {
         }
     }
 
-    /// مادهٔ ۷ — آیا این مبلغ رأی انسانی می‌خواهد؟ همان گیت منشور.
+    /// Article 7 — does this amount require a human vote? The same charter gate.
     #[must_use]
     pub fn requires_hitl(&self, amount_din: i64) -> bool {
         self.hitl_threshold_din > 0 && amount_din >= self.hitl_threshold_din
     }
 }
 
-/// نوع لایحه — هر نوع کنش واقعی و قابل‌اجرایی روی کرنل پول دارد.
+/// Bill kind — each kind carries a real, executable action on the money kernel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BillKind {
-    /// حل اختلاف اسکرو — subject شناسهٔ اسکرو است؛ اجرا یعنی release/refund
-    /// با `approved_by_admin: true` از مسیر دامنهٔ خالص M2.
+    /// Escrow dispute resolution — the subject is the escrow id; executing means release/refund
+    /// with `approved_by_admin: true` through the pure M2 domain path.
     EscrowRelease,
-    /// جابه‌جایی خزانه — subject حساب مقصد است؛ اجرا یعنی posting دوطرفهٔ
-    /// خزانه → مقصد (مادهٔ ۶: شفافیت کامل در audit).
+    /// Treasury movement — the subject is the destination account; executing means the double-sided
+    /// treasury → destination posting (Article 6: full transparency in audit).
     TreasuryMove,
 }
 
 impl BillKind {
-    /// برچسب audit/outbox.
+    /// Audit/outbox label.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -106,17 +106,17 @@ impl BillKind {
     }
 }
 
-/// نتیجهٔ پیشنهادی برای لایحهٔ حل اختلاف — آزادسازی به فروشنده یا بازگشت به خریدار.
+/// Proposed outcome for a dispute bill — release to the seller or refund to the buyer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscrowResolution {
-    /// تسویهٔ ۹۰/۱۰ به نفع فروشنده (مادهٔ ۲).
+    /// 90/10 settlement in the seller's favor (Article 2).
     Release,
-    /// بازگشت کامل به خریدار، بدون مالیات.
+    /// Full refund to the buyer, no tax.
     Refund,
 }
 
 impl EscrowResolution {
-    /// برچسب سیمی.
+    /// Wire label.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -126,21 +126,21 @@ impl EscrowResolution {
     }
 }
 
-/// وضعیت لایحه — گذارها یک‌طرفه: OPEN → PASSED/REJECTED؛ PASSED → EXECUTED.
+/// Bill status — transitions are one-way: OPEN → PASSED/REJECTED; PASSED → EXECUTED.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BillStatus {
-    /// باز — رأی‌گیری ادامه دارد.
+    /// Open — voting is in progress.
     Open,
-    /// بسته‌شده با رأی موافق — قابل اجرا.
+    /// Closed with an approving vote — executable.
     Passed,
-    /// بسته‌شده با رد — هرگز قابل اجرا نیست.
+    /// Closed with a rejection — never executable.
     Rejected,
-    /// اجراشده روی دفتر — نهایی.
+    /// Executed on the ledger — final.
     Executed,
 }
 
 impl BillStatus {
-    /// برچسب سیمی/دیتابیسی.
+    /// Wire/database label.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -152,34 +152,34 @@ impl BillStatus {
     }
 }
 
-/// یک رأی — رأی‌دهنده شهروند (نشست) یا ایجنت (A2A) است؛ `is_human` گیت مادهٔ ۷ را می‌بندد.
+/// A vote — the voter is a citizen (session) or an agent (A2A); `is_human` closes the Article 7 gate.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Vote {
-    /// شناسهٔ رأی‌دهنده (`citizen:…` یا `agent:…`)
+    /// Voter id (`citizen:…` or `agent:…`)
     pub voter: String,
-    /// انسان است؟ (نشست تلگرام = true؛ ایجنت = false)
+    /// Human? (Telegram session = true; agent = false)
     pub is_human: bool,
-    /// موافق؟
+    /// In favor?
     pub approve: bool,
-    /// زمان رأی ISO
+    /// Vote time, ISO
     pub at: String,
 }
 
-/// دلیل قطعیِ نتیجهٔ بستن — در ردیف دیتابیس می‌ماند (شفافیت مادهٔ ۶).
+/// Deterministic reason for the close outcome — persists in the database row (Article 6 transparency).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BillDecisionReason {
-    /// اکثریت موافق + نصاب + (در صورت مادهٔ ۷) رأی انسانی.
+    /// Majority in favor + quorum + (when Article 7 applies) a human vote.
     Passed,
-    /// مجموع رأی‌ها کمتر از نصاب.
+    /// Total votes below the quorum.
     QuorumNotMet,
-    /// اکثریت مخالف.
+    /// Majority against.
     MajorityNo,
-    /// مبلغ ≥ آستانه و هیچ رأی انسانیِ موافق نیست (مادهٔ ۷).
+    /// Amount ≥ the threshold and no approving human vote (Article 7).
     HumanApprovalMissing,
 }
 
 impl BillDecisionReason {
-    /// برچسب سیمی/دیتابیسی.
+    /// Wire/database label.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -191,62 +191,62 @@ impl BillDecisionReason {
     }
 }
 
-/// نتیجهٔ قطعی بستن لایحه — شمارش‌ها برای شفافیت کامل نگه داشته می‌شوند.
+/// Deterministic bill-close outcome — the counts are kept for full transparency.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BillDecision {
-    /// دلیل نهایی
+    /// Final reason
     pub reason: BillDecisionReason,
-    /// رأی موافق
+    /// Votes in favor
     pub yes: i64,
-    /// رأی مخالف
+    /// Votes against
     pub no: i64,
-    /// رأی انسانی موافق (گیت مادهٔ ۷)
+    /// Approving human votes (the Article 7 gate)
     pub human_yes: i64,
 }
 
 impl BillDecision {
-    /// آیا این تصمیم «گذشت» است؟
+    /// Is this decision "passed"?
     #[must_use]
     pub fn is_passed(&self) -> bool {
         self.reason == BillDecisionReason::Passed
     }
 }
 
-/// لایحهٔ پارلمان — ثبت‌نشدنی روی دیتابیس؛ منطق گذار اینجا، ماندگاری در db.
+/// A parliament bill — storable in the database; transition logic here, persistence in db.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bill {
-    /// شناسه (`bill:{uuid}`) — کلید یکسان‌سازی اجرا هم هست
+    /// Id (`bill:{uuid}`) — also the execution idempotency key
     pub id: String,
-    /// نوع لایحه
+    /// Bill kind
     pub kind: BillKind,
-    /// موضوع: شناسهٔ اسکرو یا حساب مقصد
+    /// Subject: the escrow id or destination account
     pub subject: String,
-    /// مبلغ به Đ (۰ برای لایحهٔ بدون مبلغ)
+    /// Amount in Đ (0 for a bill without an amount)
     pub amount_din: i64,
-    /// نتیجهٔ پیشنهادی (فقط `EscrowRelease`)
+    /// Proposed outcome (only `EscrowRelease`)
     pub resolution: Option<EscrowResolution>,
-    /// عنوان (۱..=۲۰۰ کاراکتر)
+    /// Title (1..=200 characters)
     pub title: String,
-    /// وضعیت فعلی
+    /// Current status
     pub status: BillStatus,
-    /// تصمیم نهایی — پس از بستن
+    /// Final decision — after closing
     pub decision: Option<BillDecision>,
-    /// زمان باز شدن ISO
+    /// Opened time, ISO
     pub opened_at: String,
-    /// زمان بستن ISO
+    /// Closed time, ISO
     pub closed_at: Option<String>,
-    /// زمان اجرا ISO
+    /// Executed time, ISO
     pub executed_at: Option<String>,
-    /// رأی‌ها به ترتیب درج
+    /// Votes in insertion order
     pub votes: Vec<Vote>,
 }
 
 impl Bill {
-    /// باز کردن لایحه — اعتبارسنجی کامل در لبه (مثل zod؛ نه در دیتابیس).
+    /// Open a bill — full validation at the edge (like zod; not in the database).
     ///
     /// # Errors
-    /// عنوان خالی/طولانی، موضوع خالی، مبلغ منفی، جابه‌جایی خزانه بدون مبلغ مثبت،
-    /// حل اختلاف بدون نتیجهٔ پیشنهادی.
+    /// Empty/overlong title, empty subject, negative amount, a treasury movement without a positive amount,
+    /// a dispute without a proposed outcome.
     pub fn open(
         id: &str,
         kind: BillKind,
@@ -311,7 +311,7 @@ impl Bill {
         })
     }
 
-    /// ثبت رأی — فقط روی لایحهٔ باز؛ هر رأی‌دهنده یک‌بار.
+    /// Cast a vote — only on an open bill; each voter once.
     ///
     /// # Errors
     /// `BillNotOpen` / `AlreadyVoted`.
@@ -343,9 +343,9 @@ impl Bill {
         Ok(())
     }
 
-    /// شمارش فعلی — (موافق، مخالف، موافق انسانی).
+    /// Current tally — (in favor, against, human in favor).
     #[must_use]
-    #[allow(clippy::cast_possible_wrap)] // شمارش رأی‌ها — محدود و امن
+    #[allow(clippy::cast_possible_wrap)] // Vote tally — bounded and safe
     pub fn tally(&self) -> (i64, i64, i64) {
         let yes = self.votes.iter().filter(|v| v.approve).count() as i64;
         let no = self.votes.iter().filter(|v| !v.approve).count() as i64;
@@ -357,17 +357,18 @@ impl Bill {
         (yes, no, human_yes)
     }
 
-    /// بستن لایحه — شمارش قطعی و deterministic (الگوی گیت‌های دامنهٔ M2):
-    /// ۱. نصاب: مجموع رأی‌ها ≥ `policy.quorum`
-    /// ۲. اکثریت: موافق > مخالف
-    /// ۳. مادهٔ ۷: اگر مبلغ ≥ آستانه — حداقل یک رأی انسانیِ موافق
-    /// شکست هر گیت = `REJECTED` با دلیل صریح (شفافیت مادهٔ ۶).
+    /// Close a bill — a final, deterministic tally (the M2 domain-gate pattern):
+    /// 1. Quorum: total votes ≥ `policy.quorum`
+    /// 2. Majority: in favor > against
+    /// 3. Article 7: if the amount ≥ the threshold — at least one approving human vote
+    ///
+    /// Failing any gate = `REJECTED` with an explicit reason (Article 6 transparency).
     ///
     /// # Errors
-    /// `BillNotOpen` اگر قبلاً بسته شده باشد.
+    /// `BillNotOpen` if it has already been closed.
     ///
     /// # Panics
-    /// هیچ‌گاه — `expect` پس از ست‌کردن همان‌جا همیشه موفق است.
+    /// Never — the `expect` right after setting it in place always succeeds.
     pub fn close(&mut self, policy: &NationPolicy, closed_at: &str) -> NationResult<&BillDecision> {
         if self.status != BillStatus::Open {
             return Err(NationError::BillNotOpen(self.id.clone()));
@@ -398,16 +399,16 @@ impl Bill {
         Ok(self.decision.as_ref().expect("decision just set"))
     }
 
-    /// گیت مادهٔ ۷ برای این لایحه — از سیاست منشور.
+    /// This bill's Article 7 gate — from the charter policy.
     #[must_use]
     pub fn requires_hitl(&self) -> bool {
         NationPolicy::charter_default().requires_hitl(self.amount_din)
     }
 
-    /// علامت اجرا — فقط از PASSED؛ یک‌بار برای همیشه.
+    /// Mark executed — only from PASSED; once and for all.
     ///
     /// # Errors
-    /// `NotPassed` اگر وضعیت PASSED نباشد.
+    /// `NotPassed` if the status is not PASSED.
     pub fn mark_executed(&mut self, executed_at: &str) -> NationResult<()> {
         if self.status != BillStatus::Passed {
             return Err(NationError::NotPassed(self.id.clone()));
@@ -437,7 +438,7 @@ mod tests {
                 BillKind::EscrowRelease => Some(EscrowResolution::Release),
                 BillKind::TreasuryMove => None,
             },
-            "حل اختلاف سفارش",
+            "\u{62d}\u{644} \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{633}\u{641}\u{627}\u{631}\u{634}",
             NOW,
         )
         .unwrap()
@@ -459,7 +460,7 @@ mod tests {
         assert!(!p.requires_hitl(49_999));
         assert!(p.requires_hitl(50_000));
         assert!(p.requires_hitl(50_001));
-        // همان گیت منشور M2 — یک منبع حقیقت
+        // The same M2 charter gate — one source of truth
         assert_eq!(
             p.requires_hitl(50_000),
             kian_domain::requires_hitl(Din::new(50_000).unwrap())
@@ -473,11 +474,11 @@ mod tests {
         assert!(Bill::open("b", BillKind::TreasuryMove, "citizen:1", -1, None, "t", NOW).is_err());
         assert!(
             Bill::open("b", BillKind::TreasuryMove, "citizen:1", 0, None, "t", NOW).is_err(),
-            "جابه‌جایی خزانه بدون مبلغ مثبت ممنوع"
+            "\u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{628}\u{62f}\u{648}\u{646} \u{645}\u{628}\u{644}\u{63a} \u{645}\u{62b}\u{628}\u{62a} \u{645}\u{645}\u{646}\u{648}\u{639}"
         );
         assert!(
             Bill::open("b", BillKind::EscrowRelease, "esc:1", 100, None, "t", NOW).is_err(),
-            "حل اختلاف بدون نتیجهٔ پیشنهادی ممنوع"
+            "\u{62d}\u{644} \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{628}\u{62f}\u{648}\u{646} \u{646}\u{62a}\u{6cc}\u{62c}\u{647}\u{654} \u{67e}\u{6cc}\u{634}\u{646}\u{647}\u{627}\u{62f}\u{6cc} \u{645}\u{645}\u{646}\u{648}\u{639}"
         );
         assert!(
             Bill::open(
@@ -491,7 +492,7 @@ mod tests {
             )
             .is_err()
         );
-        let long_title = "عنوان".repeat(60); // ۲۴۰ کاراکتر
+        let long_title = "\u{639}\u{646}\u{648}\u{627}\u{646}".repeat(60); // 240 characters
         assert!(Bill::open("b", BillKind::TreasuryMove, "c", 1, None, &long_title, NOW).is_err());
     }
 
@@ -566,7 +567,7 @@ mod tests {
         assert_eq!(
             bill.status,
             BillStatus::Rejected,
-            "ایجنت‌ها هرگز پول بزرگ را تنها تصویب نمی‌کنند"
+            "\u{627}\u{6cc}\u{62c}\u{646}\u{62a}‌\u{647}\u{627} \u{647}\u{631}\u{6af}\u{632} \u{67e}\u{648}\u{644} \u{628}\u{632}\u{631}\u{6af} \u{631}\u{627} \u{62a}\u{646}\u{647}\u{627} \u{62a}\u{635}\u{648}\u{6cc}\u{628} \u{646}\u{645}\u{6cc}‌\u{6a9}\u{646}\u{646}\u{62f}"
         );
     }
 
@@ -598,7 +599,7 @@ mod tests {
         assert_eq!(
             bill.mark_executed(NOW),
             Err(NationError::NotPassed("bill:t1".into())),
-            "اجرای لایحهٔ باز ممنوع"
+            "\u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{644}\u{627}\u{6cc}\u{62d}\u{647}\u{654} \u{628}\u{627}\u{632} \u{645}\u{645}\u{646}\u{648}\u{639}"
         );
         vote(&mut bill, "a", true, true);
         vote(&mut bill, "b", true, true);

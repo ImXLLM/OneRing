@@ -1,39 +1,39 @@
-//! `opencode_zen` — درگاه صفر-کارت `OpenCode` Zen (`crates/ai`, Wave 2 — Step 4/6).
+//! `opencode_zen` — the zero-cost `OpenCode` Zen gateway (`crates/ai`, Wave 2 — Step 4/6).
 //!
-//! تقطیر از `anomalyco/opencode` (`v2.4.1`, commit `18ff071`):
-//! - `packages/core/src/plugin/provider/opencode.ts` — لِین ناشناس با
-//!   `Authorization: Bearer public` وقتی هیچ کلیدی تنظیم نشده.
-//! - `packages/core/src/models-dev/snapshot.txt` — مدل‌های فعال رایگان در برابر
-//!   مدل‌های بازنشستهٔ deprecated.
-//! - درگاه فعال `https://opencode.ai/inference/openai/v1` با فال‌بک legacy
+//! Distilled from `anomalyco/opencode` (`v2.4.1`, commit `18ff071`):
+//! - `packages/core/src/plugin/provider/opencode.ts` — the anonymous lane with
+//!   `Authorization: Bearer public` when no key is configured.
+//! - `packages/core/src/models-dev/snapshot.txt` — the active free models versus
+//!   the deprecated retired models.
+//! - the active gateway `https://opencode.ai/inference/openai/v1` with a legacy fallback
 //!   `https://opencode.ai/zen/v1`.
 //!
-//! این ماژول فقط پیکربندی و قواعد قطعی است — هیچ IO شبکه‌ای ندارد؛
-//! dispatch واقعی توسط آبشار `free_llm_registry` انجام می‌شود.
+//! This module is configuration and deterministic rules only — no network IO;
+//! real dispatch is performed by the `free_llm_registry` cascade.
 
 use std::collections::BTreeMap;
 
-/// درگاه استنتاج فعال `OpenCode` (پروتکل `OpenAI` Chat Completions).
+/// The active `OpenCode` inference gateway (`OpenAI` Chat Completions protocol).
 pub const OPENCODE_OPENAI_BASE_URL: &str = "https://opencode.ai/inference/openai/v1";
 
-/// درگاه legacy Zen — فال‌بک وقتی درگاه اصلی ۴۰۴/۵۰۲ داد.
+/// The legacy Zen gateway — the fallback when the main gateway returns 404/502.
 pub const OPENCODE_LEGACY_ZEN_BASE_URL: &str = "https://opencode.ai/zen/v1";
 
-/// کلید ناشناس عمومی — از `OpencodePlugin` وقتی `OPENCODE_API_KEY` خالی است.
-/// توکنِ sentinel عمومی است، راز نیست و در گیت راز مجاز است.
+/// The public anonymous key — from `OpencodePlugin` when `OPENCODE_API_KEY` is empty.
+/// The sentinel token is public, not a secret, and allowed through the secret gate.
 pub const OPENCODE_PUBLIC_API_KEY: &str = "public";
 
-/// UA مرجع که گیت `OpenCode` برای لِین ناشناس انتظار دارد.
+/// The reference UA the `OpenCode` gateway expects for the anonymous lane.
 pub const DEFAULT_USER_AGENT: &str = "opencode/latest/2.4.1/opencode";
 
-/// پروتکل پیام‌رسانی مدل.
+/// The model messaging protocol.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModelProtocol {
     OpenAiChatCompletions,
     AnthropicMessages,
 }
 
-/// مشخصهٔ یک مدل رایگان فعال — از snapshot مدل‌ها.
+/// Profile of one active free model — from the model snapshot.
 #[derive(Debug, Clone)]
 pub struct FreeModelSpec {
     pub id: &'static str,
@@ -45,7 +45,7 @@ pub struct FreeModelSpec {
     pub reasoning_field: Option<&'static str>,
 }
 
-/// ۱۰ مدل صفر-هزینهٔ فعال (snapshot `v2.4.1`) — همگی با `Bearer public`.
+/// 10 active zero-cost models (snapshot `v2.4.1`) — all with `Bearer public`.
 pub const ACTIVE_FREE_MODELS: &[FreeModelSpec] = &[
     FreeModelSpec {
         id: "beam-free",
@@ -139,9 +139,9 @@ pub const ACTIVE_FREE_MODELS: &[FreeModelSpec] = &[
     },
 ];
 
-/// مدل‌های بازنشسته که پیش از ضربه‌زدن به درگاه باید بلاک شوند
-/// (`410 Gone` برای longcat، `400` برای glm و deepseek قدیمی،
-/// `402 Payment Required` برای sambanova پس از پایان دورهٔ رایگان).
+/// Retired models that must be blocked before hitting the gateway
+/// (`410 Gone` for longcat, `400` for old glm and deepseek,
+/// `402 Payment Required` for sambanova after its free period ends).
 #[must_use]
 pub fn is_retired_model(model_id: &str) -> bool {
     let id = model_id.trim().trim_start_matches("oc/").to_ascii_lowercase();
@@ -158,7 +158,7 @@ pub fn is_retired_model(model_id: &str) -> bool {
     )
 }
 
-/// گاتِ بازنشسته → مدل فعال جایگزین — هرگز به درگاه نمی‌رسد.
+/// Retired gate → the active replacement model — never reaches the gateway.
 #[must_use]
 pub fn resolve_active_free_model(requested_id: &str) -> &'static str {
     match requested_id.trim().trim_start_matches("oc/").to_ascii_lowercase().as_str() {
@@ -173,7 +173,7 @@ pub fn resolve_active_free_model(requested_id: &str) -> &'static str {
     }
 }
 
-/// پیکربندی کلاینت Zen — فال‌بک ناشناس داخلی، بدون هیچ env اجباری.
+/// Zen client configuration — built-in anonymous fallback, no required env vars.
 #[derive(Debug, Clone)]
 pub struct ZenClientConfig {
     pub api_key: String,
@@ -195,7 +195,7 @@ impl Default for ZenClientConfig {
 }
 
 impl ZenClientConfig {
-    /// هدرهای ناشناس: `Bearer public` + UA مرجع + JSON.
+    /// Anonymous headers: `Bearer public` + reference UA + JSON.
     #[must_use]
     pub fn build_headers(&self) -> BTreeMap<String, String> {
         let mut headers = BTreeMap::new();
@@ -205,13 +205,13 @@ impl ZenClientConfig {
         headers
     }
 
-    /// URL درگاه فعال `…/chat/completions`.
+    /// Active gateway URL `…/chat/completions`.
     #[must_use]
     pub fn chat_completions_url(&self) -> String {
         format!("{}/chat/completions", self.primary_base_url.trim_end_matches('/'))
     }
 
-    /// URL legacy `/zen/v1/chat/completions` — فال‌بک درگاه اصلی.
+    /// Legacy URL `/zen/v1/chat/completions` — the main gateway’s fallback.
     #[must_use]
     pub fn legacy_chat_completions_url() -> String {
         format!("{OPENCODE_LEGACY_ZEN_BASE_URL}/chat/completions")
@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(resolve_active_free_model("kimi-k2.5-free"), "deepseek-v4.1-flash-free");
         assert_eq!(resolve_active_free_model("sambanova"), "nemotron-3.5-lightning-free");
         assert_eq!(resolve_active_free_model("beam-free"), "beam-free");
-        // مدل نامعلوم → پیش‌فرض امن 1M
+        // unknown model → safe default 1M
         assert_eq!(resolve_active_free_model("totally-unknown"), "beam-free");
     }
 

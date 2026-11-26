@@ -1,34 +1,34 @@
-//! قراردادهای وایرِ موتورِ برتریِ رقابتی (Wave 8 — Commit #28).
+//! Wire contracts of the competitive supremacy engine (Wave 8 — Commit #28).
 //!
-//! DTOهای روی وایر برای پنج اندپوینتِ `/api/v1/supremacy/*`:
+//! On-wire DTOs for the five `/api/v1/supremacy/*` endpoints:
 //! - [`SupremacySurgicalPatchRequest`] / [`SupremacySurgicalPatchResponse`] —
-//!   پچرِ جراحیِ `SEARCH/REPLACE` + بستهٔ بازرسِ DOM زنده (Bolt/Lovable)؛
+//!   the `SEARCH/REPLACE` surgical patcher + the live DOM inspector bundle (Bolt/Lovable);
 //! - [`SupremacyCheckpointForkRequest`] / [`SupremacyCheckpointForkResponse`] —
-//!   سفرِ زمانیِ وضعیتِ ایجنت و انشعاب از هر گامِ تاریخی (`LangGraph`)؛
+//!   agent-state time travel with forking from any historical step (`LangGraph`);
 //! - [`SupremacyWorkflowExecuteRequest`] / [`SupremacyWorkflowExecuteResponse`] —
-//!   اجرایِ DAG پویا با مرتب‌سازیِ توپولوژیکِ Kahn (Dify/n8n)؛
-//! - [`SupremacyMcpRequest`] / [`SupremacyMcpResponse`] — پلِ MCP JSON-RPC 2.0؛
+//!   dynamic DAG execution with Kahn's topological sort (Dify/n8n);
+//! - [`SupremacyMcpRequest`] / [`SupremacyMcpResponse`] — the MCP JSON-RPC 2.0 bridge;
 //! - [`SupremacySweVerifyRequest`] / [`SupremacySweVerifyResponse`] —
-//!   حلقهٔ `Plan → Approve → Execute → Verify → Self-Heal` با مُهرِ مایرون
+//!   the `Plan → Approve → Execute → Verify → Self-Heal` loop with the Mairon seal
 //!   (OpenHands/Replit Agent).
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-// ── ستونِ ۱ — پچرِ جراحی + بازرسِ DOM زنده ─────────────────────────────────
+// ── Pillar 1 — surgical patcher + live DOM inspector ─────────────────────────────────
 
-/// درخواستِ `POST /api/v1/supremacy/surgical-patch`.
+/// Request of `POST /api/v1/supremacy/surgical-patch`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySurgicalPatchRequest {
-    /// منبعِ اصلی — پچ فقط روی همین متن اعمال می‌شود (صفر بازتولیدِ کلِ فایل).
+    /// The original source — the patch applies only to this text (zero regeneration of the whole file).
     pub original_source: String,
-    /// بارِ پچ — بلوک‌هایِ `<<<<<<< SEARCH … ======= … >>>>>>> REPLACE`.
+    /// The patch payload — `<<<<<<< SEARCH … ======= … >>>>>>> REPLACE` blocks.
     pub patch_payload: String,
-    /// لوکالِ بستهٔ سندباکس زنده (`fa`, `en`, …) — پیش‌فرض `en`.
+    /// Locale of the live sandbox bundle (`fa`, `en`, …) — default `en`.
     #[serde(default)]
     pub locale: Option<String>,
-    /// تزریقِ اسکریپتِ بازرسِ Click-to-Inspect — پیش‌فرض روشن.
+    /// Injection of the Click-to-Inspect inspector script — on by default.
     #[serde(default = "default_true")]
     pub inject_sandbox_inspector: bool,
 }
@@ -37,263 +37,263 @@ fn default_true() -> bool {
     true
 }
 
-/// نمایِ بستهٔ سندباکس زنده.
+/// View of the live sandbox bundle.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySandboxBundleView {
-    /// لوکالِ بسته.
+    /// Bundle locale.
     pub locale: String,
-    /// HTML ابزارشده — هر تگِ باز `data-kia-node-id` دارد.
+    /// Instrumented HTML — every open tag carries `data-kia-node-id`.
     pub instrumented_html: String,
-    /// تعدادِ گره‌هایِ ابزارشده.
+    /// Number of instrumented nodes.
     pub node_count: usize,
-    /// تایپِ پیامِ postMessage بازرس (`KIA_DOM_INSPECT`).
+    /// postMessage type of the inspector (`KIA_DOM_INSPECT`).
     pub message_type: String,
-    /// بایت‌هایِ اسکریپتِ بازرسِ صفر-وابستگی.
+    /// Bytes of the zero-dependency inspector script.
     pub inspector_script_bytes: usize,
 }
 
-/// پاسخِ `POST /api/v1/supremacy/surgical-patch`.
+/// Response of `POST /api/v1/supremacy/surgical-patch`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySurgicalPatchResponse {
-    /// آیا پچ اعمال شد (بلوک‌ها همه یافته شدند).
+    /// Whether the patch applied (all blocks found).
     pub patch_applied: bool,
-    /// تعدادِ بلوک‌هایِ اعمال‌شده.
+    /// Number of applied blocks.
     pub hunk_count: usize,
-    /// حالتِ تطبیق — `exact` یا `whitespace_normalized`.
+    /// Match mode — `exact` or `whitespace_normalized`.
     pub patch_mode: String,
-    /// SHA-256 منبعِ پیش از پچ.
+    /// SHA-256 of the pre-patch source.
     pub before_sha256: String,
-    /// SHA-256 منبعِ پس از پچ.
+    /// SHA-256 of the post-patch source.
     pub after_sha256: String,
-    /// منبعِ پچ‌شده.
+    /// The patched source.
     pub patched_source: String,
-    /// بستهٔ سندباکس زنده — وقتی `inject_sandbox_inspector` روشن باشد.
+    /// The live sandbox bundle — when `inject_sandbox_inspector` is on.
     pub sandbox_bundle: Option<SupremacySandboxBundleView>,
 }
 
-// ── ستونِ ۲ — سفرِ زمانیِ وضعیتِ ایجنت ──────────────────────────────────────
+// ── Pillar 2 — agent-state time travel ──────────────────────────────────────
 
-/// درخواستِ `POST /api/v1/supremacy/checkpoint/fork`.
+/// Request of `POST /api/v1/supremacy/checkpoint/fork`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyCheckpointForkRequest {
-    /// شناسهٔ گردش‌کار (`wf:*`).
+    /// Workflow ID (`wf:*`).
     pub workflow_id: String,
-    /// شناسهٔ چک‌پوینتِ تاریخیِ مبدأ انشعاب.
+    /// ID of the historical checkpoint to fork from.
     pub fork_from_checkpoint_id: String,
-    /// وصلهٔ وضعیت — merge رسمیِ کلیدهایِ سطحِ بالایِ JSON.
+    /// State patch — a formal merge of the top-level JSON keys.
     pub state_patch_json: String,
-    /// نقشِ ایجنتِ سرِ شاخه — پیش‌فرض نقشِ چک‌پوینتِ مبدأ.
+    /// Agent role of the branch head — defaults to the origin checkpoint's role.
     #[serde(default)]
     pub agent_role: Option<String>,
 }
 
-/// پاسخِ `POST /api/v1/supremacy/checkpoint/fork`.
+/// Response of `POST /api/v1/supremacy/checkpoint/fork`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyCheckpointForkResponse {
-    /// شناسهٔ چک‌پوینتِ انشعابیِ نو.
+    /// ID of the new forked checkpoint.
     pub forked_checkpoint_id: String,
-    /// شناسهٔ والد (چک‌پوینتِ تاریخیِ مبدأ).
+    /// Parent ID (the origin historical checkpoint).
     pub parent_checkpoint_id: String,
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub workflow_id: String,
-    /// شمارهٔ گامِ سرِ شاخه.
+    /// Step number of the branch head.
     pub step_index: u32,
-    /// تعدادِ گام‌هایی که بدونِ اجرایِ مجدد جلو زده شد.
+    /// Number of steps skipped ahead without re-execution.
     pub rewound_steps: u32,
-    /// وضعیتِ JSON پس از merge.
+    /// The JSON state after the merge.
     pub state_json: String,
-    /// SHA-256 وضعیتِ نو.
+    /// SHA-256 of the new state.
     pub state_sha256: String,
-    /// اندازهٔ دفترِ چک‌پوینت پس از انشعاب.
+    /// Checkpoint-ledger size after the fork.
     pub ledger_size: usize,
-    /// اثباتِ سفرِ زمانی — والدِ انشعاب همان چک‌پوینتِ درخواستی است.
+    /// Time-travel proof — the fork's parent is exactly the requested checkpoint.
     pub time_travel_verified: bool,
-    /// نقشِ ایجنتِ سرِ شاخه.
+    /// Agent role of the branch head.
     pub agent_role: String,
 }
 
-// ── ستونِ ۳ — DAG پویا + MCP ────────────────────────────────────────────────
+// ── Pillar 3 — dynamic DAG + MCP ────────────────────────────────────────────────
 
-/// گرهٔ DAG روی وایر.
+/// A DAG node on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyWorkflowNodeDto {
-    /// شناسهٔ یکتای گره.
+    /// Unique node ID.
     pub id: String,
-    /// نوعِ گره — `trigger_cron_webhook` | `omni_genome_llm` | `trinity_judge` |
+    /// Node type — `trigger_cron_webhook` | `omni_genome_llm` | `trinity_judge` |
     /// `quant_vibe_strategy` | `arda_localize20` | `base_treasury_settle` |
     /// `mcp_external_tool`.
     pub kind: String,
-    /// شناسهٔ وابستگی‌ها — باید پیش از این گره اجرا شده باشند.
+    /// Dependency IDs — they must run before this node.
     #[serde(default)]
     pub depends_on: Vec<String>,
-    /// بارِ JSON گره.
+    /// The node's JSON payload.
     #[serde(default)]
     pub payload_json: String,
 }
 
-/// مشخصِ DAG روی وایر.
+/// A DAG spec on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyWorkflowSpecDto {
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub workflow_id: String,
-    /// گره‌ها.
+    /// Nodes.
     pub nodes: Vec<SupremacyWorkflowNodeDto>,
 }
 
-/// درخواستِ `POST /api/v1/supremacy/workflow/execute`.
+/// Request of `POST /api/v1/supremacy/workflow/execute`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyWorkflowExecuteRequest {
-    /// مشخصِ DAG.
+    /// The DAG spec.
     pub workflow: SupremacyWorkflowSpecDto,
 }
 
-/// نتیجهٔ اجرای یک گره.
+/// Result of one node's execution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyWorkflowNodeResultView {
-    /// شناسهٔ گره.
+    /// Node ID.
     pub node_id: String,
-    /// نوعِ گره (شناسهٔ وایر).
+    /// Node type (wire ID).
     pub kind: String,
-    /// وضعیت — `executed`.
+    /// Status — `executed`.
     pub status: String,
-    /// SHA-256 خروجیِ قطعیِ گره.
+    /// SHA-256 of the node's deterministic output.
     pub output_sha256: String,
-    /// یادداشتِ اجرا.
+    /// Execution note.
     pub note: String,
 }
 
-/// پاسخِ `POST /api/v1/supremacy/workflow/execute`.
+/// Response of `POST /api/v1/supremacy/workflow/execute`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyWorkflowExecuteResponse {
-    /// شناسهٔ رانِ ماندگار (`dagrun:<uuid>`).
+    /// Persisted run ID (`dagrun:<uuid>`).
     pub run_id: String,
-    /// شناسهٔ DAG.
+    /// DAG ID.
     pub dag_id: String,
-    /// ترتیبِ توپولوژیکِ اجرا.
+    /// Topological execution order.
     pub topo_order: Vec<String>,
-    /// وضعیتِ ران — `completed`.
+    /// Run status — `completed`.
     pub status: String,
-    /// تعدادِ گره‌هایِ اجراشده.
+    /// Number of executed nodes.
     pub executed_nodes: usize,
-    /// امتیاز REA ران (مایرون) — `92` برای رانِ کامل.
+    /// The run's REA score (Mairon) — `92` for a complete run.
     pub rea_score: u8,
-    /// نتایجِ گره‌ها به ترتیبِ توپولوژیک.
+    /// Node results in topological order.
     pub node_results: Vec<SupremacyWorkflowNodeResultView>,
-    /// آیا در `WorkflowDagRun` ماندگار شد.
+    /// Whether it was persisted in `WorkflowDagRun`.
     pub persisted: bool,
 }
 
-/// درخواستِ `POST /api/v1/supremacy/mcp` — JSON-RPC 2.0 استاندارد.
+/// Request of `POST /api/v1/supremacy/mcp` — standard JSON-RPC 2.0.
 #[derive(Debug, Clone, PartialEq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyMcpRequest {
-    /// نسخهٔ پروتکل — باید `"2.0"` باشد.
+    /// Protocol version — must be `"2.0"`.
     pub jsonrpc: String,
-    /// شناسهٔ درخواست — عدد، رشته یا `null`.
+    /// Request ID — number, string, or `null`.
     #[serde(default)]
     pub id: Option<serde_json::Value>,
-    /// متد — `initialize` | `tools/list` | `tools/call`.
+    /// Method — `initialize` | `tools/list` | `tools/call`.
     pub method: String,
-    /// پارامترها.
+    /// Parameters.
     #[serde(default)]
     pub params: Option<serde_json::Value>,
 }
 
-/// پاسخِ JSON-RPC 2.0.
+/// The JSON-RPC 2.0 response.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyMcpResponse {
-    /// نسخهٔ پروتکل — همیشه `"2.0"`.
+    /// Protocol version — always `"2.0"`.
     pub jsonrpc: String,
-    /// شناسهٔ درخواست (echo).
+    /// Request ID (echo).
     pub id: Option<serde_json::Value>,
-    /// نتیجهٔ موفق.
+    /// The success result.
     pub result: Option<serde_json::Value>,
-    /// خطای JSON-RPC — `{code, message}`.
+    /// The JSON-RPC error — `{code, message}`.
     pub error: Option<SupremacyMcpErrorView>,
 }
 
-/// خطای JSON-RPC 2.0.
+/// A JSON-RPC 2.0 error.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyMcpErrorView {
-    /// کدِ خطا (`-32601` متد ناشناخته، `-32602` پارامتر نامعتبر).
+    /// Error code (`-32601` unknown method, `-32602` invalid params).
     pub code: i32,
-    /// پیامِ خطا.
+    /// Error message.
     pub message: String,
 }
 
-// ── ستونِ ۴ — حلقهٔ SWE + مُهرِ مایرون ──────────────────────────────────────
+// ── Pillar 4 — the SWE loop + the Mairon seal ──────────────────────────────────────
 
-/// درخواستِ `POST /api/v1/supremacy/swe-verify`.
+/// Request of `POST /api/v1/supremacy/swe-verify`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySweVerifyRequest {
-    /// خلاصهٔ پلن (گامِ `Plan`).
+    /// Plan summary (the `Plan` step).
     #[serde(default)]
     pub plan_summary: String,
-    /// زبانِ آرتیفکت — `rust` | `typescript` | `solidity` | `html`.
+    /// Artifact language — `rust` | `typescript` | `solidity` | `html`.
     pub language: String,
-    /// کدِ تولیدشده برای راستی‌آزمایی.
+    /// The generated code to verify.
     pub artifact: String,
-    /// سقفِ تلاش‌هایِ خودترمیمی — پیش‌فرض ۳.
+    /// Self-repair attempt cap — default 3.
     #[serde(default)]
     pub max_repair_attempts: Option<u32>,
 }
 
-/// نتیجهٔ یک گیتِ راستی‌آزمایی.
+/// Result of one verification gate.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySweCheckView {
-    /// نامِ گیت (`balanced_delimiters`, …).
+    /// Gate name (`balanced_delimiters`, …).
     pub name: String,
-    /// عبور؟
+    /// Passed?
     pub passed: bool,
-    /// جزئیاتِ قابلِ ممیزی.
+    /// Auditable details.
     pub detail: String,
 }
 
-/// مُهرِ تأییدِ مایرون — فقط برای `rea_score >= 85`.
+/// Mairon approval seal — only for `rea_score >= 85`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacyMaironSealView {
-    /// شناسهٔ مُهر (`mairon-seal:<sha16>`).
+    /// Seal ID (`mairon-seal:<sha16>`).
     pub seal_id: String,
-    /// امتیاز REA.
+    /// REA score.
     pub rea_score: u8,
-    /// SHA-256 آرتیفکتِ مهرشده.
+    /// SHA-256 of the sealed artifact.
     pub artifact_sha256: String,
 }
 
-/// پاسخِ `POST /api/v1/supremacy/swe-verify`.
+/// Response of `POST /api/v1/supremacy/swe-verify`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SupremacySweVerifyResponse {
-    /// آیا همهٔ گیت‌ها پاس شدند.
+    /// Whether all gates passed.
     pub verified: bool,
-    /// تعدادِ تلاش‌هایِ مصرف‌شده (۱ = بدونِ ترمیم).
+    /// Attempts consumed (1 = no repair).
     pub attempts_used: u32,
-    /// امتیاز REA نهایی.
+    /// Final REA score.
     pub rea_score: u8,
-    /// گیت‌ها.
+    /// Gates.
     pub checks: Vec<SupremacySweCheckView>,
-    /// تشخیص‌هایِ ساختاری — ورودیِ پرامپتِ خودترمیمی.
+    /// Structural findings — input to the self-repair prompt.
     pub diagnostics: Vec<String>,
-    /// تعدادِ پرامپت‌هایِ خودترمیمیِ صادرشده.
+    /// Number of self-repair prompts issued.
     pub repair_prompts_issued: u32,
-    /// SHA-256 آرتیفکتِ نهایی.
+    /// SHA-256 of the final artifact.
     pub artifact_sha256: String,
-    /// مُهرِ مایرون — وقتی `rea_score >= 85`.
+    /// The Mairon seal — when `rea_score >= 85`.
     pub seal: Option<SupremacyMaironSealView>,
-    /// آیا در `SweSandboxAudit` ماندگار شد.
+    /// Whether it was persisted in `SweSandboxAudit`.
     pub persisted: bool,
 }

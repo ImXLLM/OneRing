@@ -1,7 +1,7 @@
-//! تست انتگراسیون پراکسی dual-run فاز ۸ — دو آپ‌استریم شبیه‌سازی‌شده روی
-//! پورت موقت، کل چرخهٔ shadow → pct → rollback (ADR-009 §۱۲).
+//! Phase 8 dual-run proxy integration test — two simulated upstreams on a
+//! temporary port, the full shadow → pct → rollback cycle (ADR-009 §12).
 
-// یکپارچگی‌سنجی — unwrap/expect عمدی‌اند
+// integration test — unwrap/expect are intentional
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use axum::body::Body;
@@ -13,8 +13,8 @@ use http_body_util::BodyExt;
 use tokio::net::TcpListener;
 use tower::ServiceExt;
 
-/// آپ‌استریم شبیه‌سازی‌شده — `GET /api/v1/health` و `GET /api/v1/echo/{what}`
-/// با پیشوند tag (TS/RUST) تا تفاوت پاسخ‌ها قابل دیدن باشد.
+/// Simulated upstream — `GET /api/v1/health` and `GET /api/v1/echo/{what}`
+/// with a tag prefix (TS/RUST) so response differences are visible.
 async fn spawn_upstream(tag: &'static str) -> String {
     let app: Router = Router::new()
         .route("/api/v1/health", axum::routing::get(move || async move { format!("{tag}:health") }))
@@ -26,7 +26,7 @@ async fn spawn_upstream(tag: &'static str) -> String {
                 },
             ),
         )
-        // مسیر هم‌پاسخ — هر دو آپ‌استریم بدنهٔ یکسان می‌دهند (تست parity match)
+        // same-response path — both upstreams return identical bodies (parity match test)
         .route("/api/v1/same", axum::routing::get(|| async { "ok:1" }));
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap().to_string();
@@ -34,7 +34,7 @@ async fn spawn_upstream(tag: &'static str) -> String {
     format!("http://{addr}")
 }
 
-/// یک درخواست GET به پراکسی — پاسخ (status، بدنه).
+/// One GET request to the proxy — response (status, body).
 async fn send(router: &Router, uri: &str) -> (StatusCode, String) {
     let req = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
     let res = router.clone().oneshot(req).await.unwrap();
@@ -43,7 +43,7 @@ async fn send(router: &Router, uri: &str) -> (StatusCode, String) {
     (status, String::from_utf8_lossy(&bytes).into_owned())
 }
 
-/// POST با بدنهٔ JSON به پراکسی.
+/// POST with a JSON body to the proxy.
 async fn post(router: &Router, uri: &str, body: &str) -> StatusCode {
     let req = Request::builder()
         .method("POST")
@@ -58,7 +58,7 @@ async fn post(router: &Router, uri: &str, body: &str) -> StatusCode {
 async fn proxy_full_cycle_shadow_pct_rollback() {
     let ts = spawn_upstream("TS").await;
     let rust = spawn_upstream("RUST").await;
-    // گام ۱ — shadow: پاسخ‌دهنده TS است + مقایسهٔ parity رخ می‌دهد
+    // step 1 — shadow: TS is the responder + parity comparison happens
     let state = ProxyState::new(DualRunConfig::default(), ts.clone(), rust.clone());
     let router = proxy_router(state.clone());
 
@@ -67,16 +67,16 @@ async fn proxy_full_cycle_shadow_pct_rollback() {
     assert_eq!(body, "TS:health");
     let snap = state.stats.snapshot();
     assert_eq!(snap["shadow"], 1);
-    assert_eq!(snap["parityDiff"], 1, "تگ آپ‌استریم‌ها متفاوت است — نرمال‌ساز باید مغایرت را بشمارد");
+    assert_eq!(snap["parityDiff"], 1, "\u{62a}\u{6af} \u{622}\u{67e}‌\u{627}\u{633}\u{62a}\u{631}\u{6cc}\u{645}‌\u{647}\u{627} \u{645}\u{62a}\u{641}\u{627}\u{648}\u{62a} \u{627}\u{633}\u{62a} — \u{646}\u{631}\u{645}\u{627}\u{644}‌\u{633}\u{627}\u{632} \u{628}\u{627}\u{6cc}\u{62f} \u{645}\u{63a}\u{627}\u{6cc}\u{631}\u{62a} \u{631}\u{627} \u{628}\u{634}\u{645}\u{627}\u{631}\u{62f}");
 
-    // مسیر هم‌پاسخ — parity match شمرده می‌شود
+    // same-response path — the parity match is counted
     let (status, body) = send(&router, "/api/v1/same").await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body, "ok:1");
     let snap = state.stats.snapshot();
     assert_eq!(snap["parityMatch"], 1, "{snap}");
 
-    // گام ۲ — ارتقای پله: pct=100 → همه به Rust
+    // step 2 — step promotion: pct=100 → everything to Rust
     assert_eq!(post(&router, "/_dualrun/pct", r#"{"pct":100}"#).await, StatusCode::OK);
     let (status, body) = send(&router, "/api/v1/health").await;
     assert_eq!(status, StatusCode::OK);
@@ -84,18 +84,18 @@ async fn proxy_full_cycle_shadow_pct_rollback() {
     let snap = state.stats.snapshot();
     assert_eq!(snap["rust"], 1);
 
-    // کنترل نامعتبر — pct > 100 رد می‌شود
+    // invalid control — pct > 100 is rejected
     assert_eq!(
         post(&router, "/_dualrun/pct", r#"{"pct":150}"#).await,
         StatusCode::UNPROCESSABLE_ENTITY
     );
 
-    // گام ۳ — برگشت فوری: rollback → همه به TS
+    // step 3 — instant rollback: rollback → everything to TS
     assert_eq!(post(&router, "/_dualrun/rollback", "").await, StatusCode::OK);
     let (_, body) = send(&router, "/api/v1/health").await;
     assert_eq!(body, "TS:health");
     let snap = state.stats.snapshot();
-    assert_eq!(snap["ts"], 1, "{snap} — برگشت یعنی TS خالص (بدون سایه)");
+    assert_eq!(snap["ts"], 1, "{snap} — \u{628}\u{631}\u{6af}\u{634}\u{62a} \u{6cc}\u{639}\u{646}\u{6cc} TS \u{62e}\u{627}\u{644}\u{635} (\u{628}\u{62f}\u{648}\u{646} \u{633}\u{627}\u{6cc}\u{647})");
 }
 
 #[tokio::test]
@@ -115,19 +115,19 @@ async fn pct_split_is_deterministic_and_bounded() {
             rust_hits += 1;
         }
     }
-    // تخصیص دترمینیستیک است — همان مسیر همیشه همان سمت؛ با ۲۰۰ مسیر یکتا
-    // توزیع نزدیک ۵۰٪ (باند سختی نمی‌بندد؛ فقط گارد آشوب)
+    // allocation is deterministic — the same path always goes to the same side; with 200 unique paths
+    // the distribution is near 50% (no hard bound; just a chaos guard)
     assert!(rust_hits > 40 && rust_hits < 160, "rust_hits = {rust_hits}");
-    // status endpoint — شمارنده‌ها را نشان می‌دهد
+    // status endpoint — shows the counters
     let (_, body) = send(&router, "/_dualrun/status").await;
     assert!(body.contains("\"rust\""), "{body}");
 }
 
 #[tokio::test]
 async fn dead_upstream_is_fail_closed_502() {
-    // آپ‌استریم TS زنده، Rust مرده (پورت بسته)
+    // TS upstream alive, Rust dead (closed port)
     let ts = spawn_upstream("TS").await;
-    let rust = "http://127.0.0.1:1".to_string(); // بسته
+    let rust = "http://127.0.0.1:1".to_string(); // closed
     let state = ProxyState::new(
         DualRunConfig { rust_traffic_pct: 100, shadow: false, ..DualRunConfig::default() },
         ts,
@@ -141,12 +141,12 @@ async fn dead_upstream_is_fail_closed_502() {
 
 #[tokio::test]
 async fn shadow_parity_diff_is_counted() {
-    // آپ‌استریم‌ها عمداً پاسخ متفاوت می‌دهند — parity diff باید شمرده شود
+    // the upstreams deliberately return different responses — the parity diff must be counted
     let ts = spawn_upstream("TS").await;
     let rust = spawn_upstream("RUST").await;
     let state = ProxyState::new(DualRunConfig::default(), ts, rust);
     let router = proxy_router(state.clone());
-    // مسیر echo — TS و RUST بدنهٔ متفاوت می‌دهند (tag متفاوت)
+    // echo path — TS and RUST return different bodies (different tag)
     let (_, body) = send(&router, "/api/v1/echo/x").await;
     assert_eq!(body, "TS:x");
     let snap = state.stats.snapshot();

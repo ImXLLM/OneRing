@@ -1,14 +1,14 @@
 /**
- * KIAN SDK — کلاینت فریم‌ورک-آزادِ کرنل، مشترک بین مینی‌اپ و هر کلاینت TS.
+ * KIAN SDK — framework-free kernel client, shared between the mini-app and any TS client.
  *
- * قراردادها دقیقاً قرینهٔ crates/contracts است:
- * - هر درخواست نشست‌دار `Authorization: Bearer` می‌فرستد.
- * - پاکت خطا همیشه `{ error: { code, message, meta? } }` است → `ApiError`.
- * - هویت هرگز اینجا ساخته نمی‌شود: فقط رشتهٔ خام initData تلگرام به کرنل
- *   می‌رود تا HMAC رسمی همان‌جا تأیید شود (fail-closed).
+ * Contracts mirror crates/contracts exactly:
+ * - every session-bound request sends `Authorization: Bearer`.
+ * - the error envelope is always `{ error: { code, message, meta? } }` → `ApiError`.
+ * - identity is never constructed here: only the raw Telegram initData string goes to the kernel
+ *   where the official HMAC is verified (fail-closed).
  */
 
-// ── تایپ‌های وایر ────────────────────────────────────────────────────────────
+// ── Wire types ────────────────────────────────────────────────────────────
 
 export type UserView = {
   id: string;
@@ -27,8 +27,8 @@ export type AuthResponse = {
 
 export type WalletTxView = {
   txId: string;
-  amount: number; // Din به‌صورت عدد صحیح (علامت‌دار — بدهکار منفی)
-  /** کرنل همیشه `memo` را روی سیم می‌فرستد (null صریح) — قرینهٔ WalletTxView در crates/contracts */
+  amount: number; // Din as an integer (signed — negative means owed)
+  /** The kernel always sends `memo` on the wire (explicit null) — mirror of WalletTxView in crates/contracts */
   memo: string | null;
   at: string;
 };
@@ -64,7 +64,7 @@ export type CreateWithdrawalInput = {
   amountDin: number;
 };
 
-/** پاسخ جابه‌جایی کیف — قرینهٔ WalletMoveResponse در crates/contracts. */
+/** Wallet move response — mirror of WalletMoveResponse in crates/contracts. */
 export type WalletMoveResponse = {
   txId: string;
   accountId: string;
@@ -72,7 +72,7 @@ export type WalletMoveResponse = {
   replayed: boolean;
 };
 
-/** درخواست ورود دمو/توسعه — فقط وقتی کرنل با KIAN_DEV_MODE=1 بالا آمده باشد. */
+/** Demo/dev login request — only when the kernel is booted with KIAN_DEV_MODE=1. */
 export type DevLoginInput = {
   tgUserId: string;
   username?: string;
@@ -80,16 +80,16 @@ export type DevLoginInput = {
   startParam?: string | null;
 };
 
-/** پرسوناهای آمادهٔ تستِ امشب — هم‌تراز با DEMO_PERSONAS در @kian/contracts. */
+/** Personas ready for tonight’s test — aligned with DEMO_PERSONAS in @kian/contracts. */
 export const DEMO_PERSONAS = {
-  creator: { tgUserId: "1001", username: "creator_demo", firstName: "سازنده (Creator)" },
-  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "خریدار (Buyer)" },
-  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "بازاریاب (Affiliate)" },
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "\u0633\u0627\u0632\u0646\u062f\u0647 (Creator)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "\u062e\u0631\u06cc\u062f\u0627\u0631 (Buyer)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "\u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628 (Affiliate)" },
 } as const;
 
 export type DemoPersona = keyof typeof DEMO_PERSONAS;
 
-/** شناسه‌های تلگرامی پرسوناهای دمو — برای تشخیص «کاربرِ دمو» در UI. */
+/** Telegram ids of the demo personas — for detecting a "demo user" in the UI. */
 export const DEMO_PERSONA_TG_IDS: readonly string[] = Object.values(DEMO_PERSONAS).map(
   (p) => p.tgUserId,
 );
@@ -127,7 +127,7 @@ export type EscrowView = {
   productRef: string | null;
   status: string;
   createdAt: string;
-  /** همهٔ فیلدهای nullable در Rust صریح روی سیم می‌آیند (بدون skip) — undefined هرگز رخ نمی‌دهد */
+  /** All nullable Rust fields arrive explicitly on the wire (no skip) — undefined never occurs */
   fundedTxId: string | null;
   settleTxId: string | null;
   disputeReason: string | null;
@@ -238,10 +238,10 @@ export type TonDepositView = {
   confirmedAt: string | null;
 };
 
-/** خلاصهٔ اقتصاد ملی — GET /economy (عمومی، فقط‌خواندنی، مادهٔ ۶).
+/** National economy summary — GET /economy (public, read-only, Article 6).
  *
- * قرینهٔ `EconomySummary` در crates/contracts/src/economy.rs با `#[serde(rename_all = "camelCase")]`
- * — دقیقاً هم‌نام با اسکیمای Zod در packages/contracts.
+ * Mirror of `EconomySummary` in crates/contracts/src/economy.rs with `#[serde(rename_all = "camelCase")]`
+ * - field names exactly matching the Zod schema in packages/contracts.
  */
 export type EconomySummary = {
   currency: "DNX";
@@ -260,7 +260,7 @@ export type EconomySummary = {
   openEscrows: number;
 };
 
-// ── خطا ──────────────────────────────────────────────────────────────────────
+// ── Errors ──────────────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
   readonly status: number;
@@ -273,7 +273,7 @@ export class ApiError extends Error {
   }
 }
 
-// ── موتور درخواست ────────────────────────────────────────────────────────────
+// ── Request engine ────────────────────────────────────────────────────────────
 
 const DEFAULT_BASE =
   typeof process !== "undefined" && process.env?.NEXT_PUBLIC_KIAN_API
@@ -298,16 +298,16 @@ async function request<T>(
     throw new ApiError(
       res.status,
       envelope?.code ?? "UNKNOWN",
-      envelope?.message ?? "پاسخ ناشناخته از کرنل",
+      envelope?.message ?? "\u067e\u0627\u0633\u062e \u0646\u0627\u0634\u0646\u0627\u062e\u062a\u0647 \u0627\u0632 \u06a9\u0631\u0646\u0644",
     );
   }
   return body as T;
 }
 
-// ── کلاینت ───────────────────────────────────────────────────────────────────
+// ── Client ───────────────────────────────────────────────────────────────────
 
 export type KianClientOptions = {
-  /** پایهٔ API کرنل — پیش‌فرض `NEXT_PUBLIC_KIAN_API` یا لوکال 8088. */
+  /** Kernel API base — defaults to `NEXT_PUBLIC_KIAN_API` or local 8088. */
   baseUrl?: string;
 };
 
@@ -317,21 +317,21 @@ export function createKianClient(options: KianClientOptions = {}) {
   return {
     baseUrl: base,
 
-    // M3 — نشست و هویت
+    // M3 — session and identity
     authTelegram: (initData: string) =>
       request<AuthResponse>(base, "/auth/telegram", {
         method: "POST",
         body: JSON.stringify({ initData }),
       }),
 
-    // حالت dev — ورود یک‌کلیکی پرسونا برای تستِ کامل در مرورگر (۴۰۳ در تولید)
+    // dev mode — one-click persona login for full testing in the browser (403 in production)
     devLogin: (input: DevLoginInput) =>
       request<AuthResponse>(base, "/auth/dev-login", {
         method: "POST",
         body: JSON.stringify(input),
       }),
 
-    // حالت dev — شیر اعتبار آزمایشی (۵٬۰۰۰ KIAN پیش‌فرض؛ سقف ۵۰٬۰۰۰ KIAN)
+    // dev mode — demo credit faucet (5,000 KIAN default; 50,000 KIAN cap)
     claimDemoFaucet: (token: string, amountMicro?: number) =>
       request<WalletMoveResponse>(base, "/wallet/faucet", {
         method: "POST",
@@ -353,10 +353,10 @@ export function createKianClient(options: KianClientOptions = {}) {
         body: JSON.stringify({ address }),
       }),
 
-    // عمومی — اقتصاد ملی
+    // public — national economy
     economy: () => request<EconomySummary>(base, "/economy", {}),
 
-    // M3+ — بازار، پیش‌نمایش، رفرال، تحویل HTML و اختلاف خریدار
+    // M3+ — market, preview, referrals, HTML delivery and buyer disputes
     listProducts: () =>
       request<{ items: ProductView[] }>(base, "/market/products", {}),
 
@@ -455,7 +455,7 @@ export function createKianClient(options: KianClientOptions = {}) {
         },
       ),
 
-    // فاز ۴ — استودیوی ساخت محصول HTML با هوش مصنوعی
+    // Phase 4 — the AI HTML product builder studio
     createBuilderSession: (token: string, initialIdea?: string) =>
       request<BuilderSessionView>(base, "/builder/sessions", {
         method: "POST",
@@ -507,7 +507,7 @@ export function createKianClient(options: KianClientOptions = {}) {
         },
       ),
 
-    // M3 — ولت و واریز TON
+    // M3 — wallet and TON deposits
     createDeposit: (
       token: string,
       input: { txHash: string; walletAddress: string; amountTon: string },
@@ -523,7 +523,7 @@ export function createKianClient(options: KianClientOptions = {}) {
         token,
       }),
 
-    // فاز ۶ — درخواست برداشت کریپتویی (TON / USDT)
+    // Phase 6 — crypto withdrawal requests (TON / USDT)
     createWithdrawal: (token: string, input: CreateWithdrawalInput) =>
       request<WithdrawalRequestView>(base, "/wallet/withdrawals", {
         method: "POST",
@@ -538,10 +538,10 @@ export function createKianClient(options: KianClientOptions = {}) {
   };
 }
 
-/** کلاینت پیش‌فرض — همان مسیر env که وب استفاده می‌کند. */
+/** Default client — the same env path the web app uses. */
 export const api = createKianClient();
 
-// ── تلگرام — استخراج initData (دو مسیر رسمی) ────────────────────────────────
+// ── Telegram — extracting initData (two official paths) ────────────────────────────────
 
 type TelegramWebApp = {
   initData?: string;
@@ -561,7 +561,7 @@ declare global {
   }
 }
 
-/** آماده‌سازی WebApp داخل تلگرام — ready + expand + تم سلطنتی (بی‌ضرر در مرورگر). */
+/** Prepare the Telegram WebApp — ready + expand + royal theme (harmless in a browser). */
 export function setupTelegramWebApp(): void {
   if (typeof window === "undefined") return;
   const app = window.Telegram?.WebApp;
@@ -572,17 +572,17 @@ export function setupTelegramWebApp(): void {
     app.setHeaderColor?.("#0b0a12");
     app.setBackgroundColor?.("#0b0a12");
   } catch {
-    /* نسخه‌های قدیمی تلگرام — بی‌اهمیت */
+    /* Older Telegram versions — irrelevant */
   }
 }
 
-/** رشتهٔ خام initData از هر مسیر رسمی — `null` یعنی خارج از تلگرام. */
+/** Raw initData string from either official path — `null` means outside Telegram. */
 export function extractInitData(): string | null {
   if (typeof window === "undefined") return null;
   const fromApp = window.Telegram?.WebApp?.initData;
   if (fromApp && fromApp.trim().length > 0) return fromApp;
 
-  // مسیر مرورگر: `#tgWebAppData=user%3D...%26hash%3D...`
+  // browser path: `#tgWebAppData=user%3D...%26hash%3D...`
   const fragment = window.location.hash.replace(/^#/, "");
   const match = /(?:^|&)tgWebAppData=([^&]+)/.exec(fragment);
   if (match) {
@@ -596,13 +596,13 @@ export function extractInitData(): string | null {
   return null;
 }
 
-/** فقط برای نمایشِ دوستانه — هویت واقعی فقط از تأیید HMAC کرنل می‌آید. */
+/** For friendly display only — real identity comes solely from kernel HMAC verification. */
 export function peekTelegramName(): string | null {
   if (typeof window === "undefined") return null;
   return window.Telegram?.WebApp?.initDataUnsafe?.user?.username ?? null;
 }
 
-// ── نشست — ذخیرهٔ bearer (localStorage) ──────────────────────────────────────
+// ── Session — bearer storage (localStorage) ──────────────────────────────────────
 
 export const SESSION_KEY = "kian.session";
 
@@ -618,7 +618,7 @@ export function saveToken(token: string): void {
   try {
     window.localStorage.setItem(SESSION_KEY, token);
   } catch {
-    /* حالت incognito — نشست فقط در حافظه */
+    /* Incognito mode — session kept in memory only */
   }
 }
 
@@ -626,6 +626,6 @@ export function clearToken(): void {
   try {
     window.localStorage.removeItem(SESSION_KEY);
   } catch {
-    /* بی‌اهمیت */
+    /* Irrelevant */
   }
 }

@@ -6,35 +6,35 @@ purpose: "forensic harvesting"
 language: "fa-IR + en-US"
 ---
 
-# 08 — LINK_Extractor: پروتکل استخراج گنجینه‌ها
+# 08 — LINK_Extractor: The Vault Extraction Protocol
 
-## 1. ورودی → خروجی
+## 1. Input → Output
 
-| ورودی | خروجی | مقصد |
+| Input | Output | Destination |
 |---|---|---|
-| `upload/*-gems.zip` | پوشه‌های شماره‌دار منحنی | `/tmp/stepN_gems/<vault>/` |
-| ریپوی مرجع باز | الگوریتم خالص (نه boilerplate) | کرنل Rust + تست |
-| مدل فرانتیر (Arena) | ژنوم ۹فایلی | `OMNI-MODEL-GENOME/models/<id>/` |
-| هر کاوش | ردیف دانش | `"KbEntry"` (idempotent) |
+| `upload/*-gems.zip` | numbered step folders | `/tmp/stepN_gems/<vault>/` |
+| open reference repo | pure algorithm (no boilerplate) | Rust kernel + tests |
+| frontier model (Arena) | 9-file genome | `OMNI-MODEL-GENOME/models/<id>/` |
+| every exploration | knowledge row | `"KbEntry"` (idempotent) |
 
-## 2. قانون گزینش (harvest bar)
+## 2. The Selection Rule (harvest bar)
 
-1. فقط فایل‌های **الگوریتم‌محور**: موتور رتبه‌بندی، ادیتور پچ، گارد امنیتی،
-   آبشار فال‌بک — لاگ‌های زباله و UI نمونه استخراج نمی‌شود.
-2. سقف مونت: **<100KB/فایل** — فایل بزرگ‌تر باید بریده یا خلاصه شود.
-3. هر مونت باید مسیر پورت کرنل خود را در بدنه ذکر کند.
+1. Only **algorithm-centric** files: ranking engines, patch editors, security guards,
+   fallback cascades — junk logs and sample UIs are not extracted.
+2. Mount cap: **<100KB/file** — a larger file must be trimmed or summarized.
+3. Every mount must state its kernel port path in its body.
 
-## 3. پروتکل کالبدشکافی مدل (Arena → 9 files)
+## 3. The Model Autopsy Protocol (Arena → 9 files)
 
-- فایل‌های `01..09` با همان نام‌های canonical در `omni_genome_router.rs`.
-- frontmatter YAML اجباری: `file_id`, `schema_version: "1.0.0"`,
+- The `01..09` files use the same canonical names as in `omni_genome_router.rs`.
+- Mandatory YAML frontmatter: `file_id`, `schema_version: "1.0.0"`,
   `model_self_reported_id`, `calibration_status`.
-- عدد بدون شاهد ممنوع — حدس‌ها با برچسب `unverified_hypothesis` می‌آیند.
-- پرچم‌های روتِ Rust که از ژنوم خوانده می‌شوند:
+- No number without evidence — guesses carry the `unverified_hypothesis` label.
+- Rust route flags read from the genome:
   `think_mode_active`, `requires_external_state_trace`, `suppress_web_canvas_hijack`,
   `max_simultaneous_rules_per_phase`.
 
-## 4. ضدعفونی اجباری پایان استخراج
+## 4. Mandatory End-of-Extraction Sanitization
 
-هر مسیر استخراج با اسکنر راز (`sanitize_step4_vaults.py` الگو) تمام می‌شود؛
-موجودی غیر از `Bearer public` یعنی شکست — قبل از commit پاک می‌شود.
+Every extraction path ends with the secret scanner (the `sanitize_step4_vaults.py` pattern);
+anything other than `Bearer public` means failure — it is cleaned before commit.

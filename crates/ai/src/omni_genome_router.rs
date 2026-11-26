@@ -1,22 +1,22 @@
-//! `omni_genome_router` — موتور ژنوم چندمدلی کیان (Wave 2 — Step 4/6).
+//! `omni_genome_router` — the Kian multi-model genome engine (Wave 2 — Step 4/6).
 //!
-//! پورت `OMNI-MODEL-GENOME/` به کرنل Rust:
-//! - هر مدل فرانتیر یک پوشهٔ ۹فایلی `01..09` دارد (`models/<model_id>/`).
-//! - [`load_model_genome_from_dir`] اعتبارسنجی می‌کند که هر ۹ لایه موجودند،
-//!   frontmatter YAML را می‌خواند و اسکورکارد ۲۰تسکی کارت ۰۹ را پارس می‌کند.
-//! - [`builtin_gpt6_standard_profile`] و [`builtin_ecosystem_profiles`] همان
-//!   قرارداد را بدون IO فراهم می‌کنند (تست‌های صفر-IO و رانتایم بدون دیسک).
-//! - [`compile_prompt_for_model`] کامپایلر پرامپت هر مدل است: برای پروفایل‌های
-//!   «بدون Think» (مثل `gpt-6-standard-free`) جدول پیش‌محاسبهٔ
-//!   `<pre_computation_state_trace>` را قبل از هر کد تزریق می‌کند
-//!   («ترتیب توکن = ترتیب فکر»)، گارد ضد-Canvas/ضد-وب‌سرچ می‌گذارد و
-//!   invariant ها را در گیت‌های فازی ≤N قاعده می‌چیند + قرارداد ضد-elision.
-//! - [`HandoffPacket`] پاکت تحویل قطعی بین‌مدلی — هم‌اسکیما با
+//! Port of `OMNI-MODEL-GENOME/` to the Rust kernel:
+//! - Every frontier model has a 9-file `01..09` folder (`models/<model_id>/`).
+//! - [`load_model_genome_from_dir`] validates that all 9 layers exist,
+//!   reads the YAML frontmatter, and parses card 09's 20-task scorecard.
+//! - [`builtin_gpt6_standard_profile`] and [`builtin_ecosystem_profiles`] provide the
+//!   same contract without IO (zero-IO tests and a diskless runtime).
+//! - [`compile_prompt_for_model`] is each model's prompt compiler: for the
+//!   'no-Think' profiles (e.g. `gpt-6-standard-free`) it injects the pre-computed
+//!   `<pre_computation_state_trace>` table before any code
+//!   ('token order = thought order'), adds the anti-Canvas/anti-web-search guard, and
+//!   stacks the invariants into fuzzy gates ≤N + the anti-elision contract.
+//! - [`HandoffPacket`] the deterministic cross-model handoff packet — schema-aligned with
 //!   `KIA-BRAIN-OS/07_LINK_Protocol.md`.
 //!
-//! اصل اکتشافی: امتیاز/متریک نامعلوم هرگز از خودسازی مقدار نمی‌گیرد —
-//! پروفایل‌های بدون کارت ۰۹ نقشهٔ امتیاز خالی می‌گیرند و مسیریابی به
-//! فال‌بک (رجیستری صفر-کارت) می‌افتد.
+//! Discovery principle: an unknown score/metric never receives a fabricated value —
+//! profiles without card 09 get an empty score map and routing falls
+//! back to the fallback (the zero-card registry).
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -24,9 +24,9 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-// ─────────────────────────── لایه‌های ژنوم ───────────────────────────
+// ─────────────────────────── Genome layers ───────────────────────────
 
-/// لایه‌های canonical ژنوم ۹فایلی — نام فایل‌ها قرارداد سخت است.
+/// Canonical layers of the 9-file genome — the file names are a hard contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum GenomeLayerId {
     TopologyAndHarness = 1,
@@ -41,7 +41,7 @@ pub enum GenomeLayerId {
 }
 
 impl GenomeLayerId {
-    /// همهٔ لایه‌ها به ترتیب canonical.
+    /// All layers in canonical order.
     pub const ALL: [GenomeLayerId; 9] = [
         Self::TopologyAndHarness,
         Self::ReasoningAndLogicDna,
@@ -54,7 +54,7 @@ impl GenomeLayerId {
         Self::RoutingAndHandoffCard,
     ];
 
-    /// نام فایل canonical (`01_TOPOLOGY_AND_HARNESS.md` .. `09_...`).
+    /// Canonical file name (`01_TOPOLOGY_AND_HARNESS.md` .. `09_...`).
     #[must_use]
     pub const fn filename(self) -> &'static str {
         match self {
@@ -70,9 +70,9 @@ impl GenomeLayerId {
         }
     }
 
-    /// نامِ فایلِ canonicalِ نسخهٔ v4 ماتریسِ حاکم — هم‌ارزِ هر لایه
+    /// The canonical v4 file name of the sovereign matrix — the equivalent of each layer;
     /// (`01_IDENTITY_AND_PERSONA_GENOME.md` .. `09_DISTILLED_CLONE_SYSTEM_PROMPT.md`).
-    /// لودرِ دیسکی هر دو نام را می‌پذیرد (Commit #27).
+    /// the disk loader accepts both names (Commit #27).
     #[must_use]
     pub const fn canonical_v4_filename(self) -> &'static str {
         match self {
@@ -89,7 +89,7 @@ impl GenomeLayerId {
     }
 }
 
-/// پنج پوشهٔ canonical مدل‌هایِ حاکم — ترتیبِ ماتریس (Commit #27، ۴۵ فایل).
+/// The five canonical sovereign-model folders — matrix order (Commit #27, 45 files).
 pub const SOVEREIGN_MODEL_DIRS: [&str; 5] = [
     "01-gpt-6-web",
     "02-gemini-4-aragon-high",
@@ -98,12 +98,12 @@ pub const SOVEREIGN_MODEL_DIRS: [&str; 5] = [
     "05-glm-5.3-flash-max",
 ];
 
-/// حلِ alias مدلِ حاکم — exact یا هر alias به پوشهٔ canonical.
-/// (`Cluade-sonnet-5.5-extra` و `Claude-sonnet-5.5-extra` هر دو → `04-...`؛
+/// Resolves a sovereign-model alias — exact or any alias to the canonical folder.
+/// (`Cluade-sonnet-5.5-extra` and `Claude-sonnet-5.5-extra` both → `04-...`;
 /// `GLM 5.3 flash MAX` / `glm-5.3-flash-max` / `GLM-5.3-Flash-Max` → `05-...`.)
 #[must_use]
 pub fn resolve_sovereign_model_alias(id: &str) -> Option<&'static str> {
-    /// جدولِ alias — پوشهٔ canonical + همهٔ هجی‌هایِ پذیرفته‌شده.
+    /// The alias table — canonical folder + all accepted spellings.
     const TABLE: &[(&str, &[&str])] = &[
         ("01-gpt-6-web", &["GPT 6-Web", "gpt-6-web", "GPT-6", "gpt-6-standard-free"]),
         ("02-gemini-4-aragon-high", &["GEMINI 4 ARAGON HIGH", "gemini-4-aragon-high", "ARAGON HIGH"]),
@@ -126,9 +126,9 @@ pub fn resolve_sovereign_model_alias(id: &str) -> Option<&'static str> {
     })
 }
 
-// ─────────────────────────── ۲۰ تسک مهندسی ───────────────────────────
+// ─────────────────────────── 20 engineering tasks ───────────────────────────
 
-/// بیست تسک مهندسی استاندارد اکوسیستم — ترتیب همان جدول کارت ۰۹.
+/// The ecosystem's 20 standard engineering tasks — the same order as the card 09 table.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum EngineeringWorkload {
     SystemArchitecture,
@@ -154,7 +154,7 @@ pub enum EngineeringWorkload {
 }
 
 impl EngineeringWorkload {
-    /// همهٔ ۲۰ تسک به ترتیب جدول routing.
+    /// All 20 tasks in routing-table order.
     pub const ALL: [EngineeringWorkload; 20] = [
         Self::SystemArchitecture,
         Self::ComplexRustSystems,
@@ -178,7 +178,7 @@ impl EngineeringWorkload {
         Self::LongHorizonAutonomousLoop,
     ];
 
-    /// برچسب خوانا برای گزارش روتینگ.
+    /// A human-readable label for routing reports.
     #[must_use]
     pub const fn label(self) -> &'static str {
         match self {
@@ -206,45 +206,45 @@ impl EngineeringWorkload {
     }
 }
 
-// ─────────────────────────── پروفایل ژنوم ───────────────────────────
+// ─────────────────────────── Genome profile ───────────────────────────
 
-/// پروفایل مهندسی معکوس یک مدل — پورت فایل‌های `01..09` به ساختار ماشینی.
-/// پرچم‌های بولیِ زیاد ذاتِ دامنه‌اند: هر پرچم یک قرارداد مستقل از کارت ۰۹ است
-/// (Think، ضد-filler، صفر-کپی، backtick، ضد-Canvas) و ترکیب‌شان معنا را می‌سازد.
+/// A model's reverse-engineered engineering profile — the `01..09` files ported into a machine-readable structure.
+/// The many boolean flags are the domain's nature: each flag is an independent card 09 contract
+/// (`Think`, anti-filler, zero-copy, backtick, anti-Canvas) and their combination forms the meaning.
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelGenomeProfile {
-    /// شناسهٔ مدل = نام پوشه (`gpt-6-standard-free`).
+    /// Model ID = folder name (`gpt-6-standard-free`).
     pub model_id: String,
-    /// نام نمایشی رسمی (`GEMINI 4 Aragon HIGH`) — پیش‌فرض همان `model_id`.
+    /// Official display name (`GEMINI 4 Aragon HIGH`) — defaults to the `model_id`.
     pub display_name: String,
-    /// پارادایم استدلال از frontmatter فایل ۰۱.
+    /// Reasoning paradigm from file 01's frontmatter.
     pub reasoning_paradigm: String,
-    /// آیا حالت Think زنده است؟ (`gpt-6-standard-free`: false)
+    /// Is Think mode live? (`gpt-6-standard-free`: false)
     pub think_mode_active: bool,
-    /// اگر Think خاموش است — جدول `<pre_computation_state_trace>` الزامی.
+    /// When Think is off — the `<pre_computation_state_trace>` table is mandatory.
     pub requires_external_state_trace: bool,
-    /// سطح تلاش اعلام‌شده (`EFFORT LEVEL`) — `None` = نامشخص (هرگز خودسازی نمی‌شود).
+    /// Declared effort level (`EFFORT LEVEL`) — `None` = unknown (never fabricated).
     pub effort_level: Option<f32>,
-    /// ممنوعیت پرگویی (`Sure!`، `I hope this helps` و …).
+    /// Chatty-filler ban (`Sure!`, `I hope this helps`, etc.).
     pub forbids_chatty_filler: bool,
-    /// ترجیح سنتز Rust صفر-کپی (borrow به‌جای clone).
+    /// Preference for zero-copy Rust synthesis (borrow over clone).
     pub supports_zero_copy_rust_synthesis: bool,
-    /// قرارداد backtick های `clippy-1.100` در doc comments.
+    /// The `clippy-1.100` backtick contract in doc comments.
     pub enforce_clippy_1_100_backticks: bool,
-    /// گارد ضد-Canvas / ضد-وب‌سرچ برای هارنس وب.
+    /// Anti-Canvas / anti-web-search guard for the web harness.
     pub suppress_web_canvas_hijack: bool,
-    /// سقف قواعد هر گیت فازی (پیش‌فرض ۶).
+    /// Rule cap per fuzzy gate (default 6).
     pub max_simultaneous_rules_per_phase: usize,
-    /// اسکورکارد ۲۰تسکی کارت ۰۹ — امتیاز نامعلوم هرگز ساخته نمی‌شود.
+    /// Card 09's 20-task scorecard — unknown scores are never invented.
     pub workload_scores: BTreeMap<EngineeringWorkload, f32>,
-    /// کالیبراسیون کارت ۰۹ (برای گزارش صادقانه).
+    /// Card 09 calibration (for honest reporting).
     pub calibration_status: String,
 }
 
 impl ModelGenomeProfile {
-    /// بهترین مدلِ موجود برای یک تسک از میان پروفایل‌ها — قطعی:
-    /// بالاترین امتیاز؛ تساوی → ترتیب الفبایی `model_id`؛ بدون امتیاز → رد.
+    /// The best available model for a task among the profiles — deterministic:
+    /// highest score; ties → alphabetical `model_id` order; no score → excluded.
     #[must_use]
     pub fn best_for_workload<'a>(
         profiles: impl IntoIterator<Item = &'a ModelGenomeProfile>,
@@ -262,14 +262,14 @@ impl ModelGenomeProfile {
     }
 }
 
-/// خطاهای بارگذاری ژنوم از دیسک.
+/// Genome load-from-disk errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GenomeError {
-    /// پوشهٔ مدل وجود ندارد یا خوانا نیست.
+    /// The model folder is missing or unreadable.
     UnreadableDirectory { path: String },
-    /// یکی از ۹ لایهٔ canonical غایب است.
+    /// One of the 9 canonical layers is missing.
     MissingLayer { path: String, layer: &'static str },
-    /// فایل موجود است اما frontmatter YAML ندارد.
+    /// The file exists but has no YAML frontmatter.
     MissingFrontmatter { path: String },
 }
 
@@ -285,7 +285,7 @@ impl std::fmt::Display for GenomeError {
 
 impl std::error::Error for GenomeError {}
 
-/// frontmatter سادهٔ `key: value` را می‌کشد (بدون وابستگی YAML).
+/// Scrapes simple `key: value` frontmatter (no YAML dependency).
 fn parse_frontmatter(text: &str) -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
     let Some(rest) = text.strip_prefix("---\n") else {
@@ -302,11 +302,11 @@ fn parse_frontmatter(text: &str) -> BTreeMap<String, String> {
     out
 }
 
-/// اسکورکارد ۲۰تسکی کارت ۰۹ را پارس می‌کند — سطرهای `| n | ... | 0.xx |`؛
-/// تزئین‌های Markdown (`**bold**` و `` `code` ``) پیش از پارس کنده می‌شوند تا
-/// کارت‌های `**01**` / `` **`0.99`** `` هم پارس شوند. سطرهای کمتر از ۲۰ یعنی
-/// امتیاز ناقص → فقط سطرهای معتبر ثبت می‌شوند؛ این تابع هرگز عدد از خودسازی
-/// نمی‌سازد.
+/// Parses card 09's 20-task scorecard — rows of `| n | ... | 0.xx |`;
+/// Markdown decorations (`**bold**` and `` `code` ``) are stripped before parsing so
+/// cards like `**01**` / `` **`0.99`** `` also parse. Fewer than 20 rows means
+/// a partial score → only valid rows are recorded; this function never
+/// fabricates a number.
 fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f32> {
     let mut out = BTreeMap::new();
     for line in routing_card.lines() {
@@ -318,7 +318,7 @@ fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f3
             .split('|')
             .map(|c| c.trim().trim_matches(['*', '`']).trim().to_string())
             .collect();
-        // cells[0] خالی (جداکنندهٔ ابتدای سطر)؛ cells[1] شمارهٔ ردیف است.
+        // cells[0] is empty (the row-leading separator); cells[1] is the row number.
         let Some(row_no) = cells.get(1).and_then(|c| c.parse::<usize>().ok()) else {
             continue;
         };
@@ -340,8 +340,8 @@ fn parse_workload_scores(routing_card: &str) -> BTreeMap<EngineeringWorkload, f3
     out
 }
 
-/// هر لایه با legacy شروع می‌شود؛ canonical v4 جایگزینِ فایلِ غایب است —
-/// لودرِ دومُدِ نام‌ها (Commit #27).
+/// Every layer starts with the legacy name; canonical v4 substitutes for a missing file —
+/// the dual-naming loader (Commit #27).
 fn resolve_layer_path(dir: &Path, layer: GenomeLayerId) -> Option<std::path::PathBuf> {
     let legacy = dir.join(layer.filename());
     if legacy.is_file() {
@@ -354,14 +354,14 @@ fn resolve_layer_path(dir: &Path, layer: GenomeLayerId) -> Option<std::path::Pat
     None
 }
 
-/// بارگذاری ژنوم یک مدل از پوشهٔ `models/<model_id>/` روی دیسک:
-/// هر ۹ لایه باید موجود باشند — با **هر دو نام‌گذاری** (Commit #27):
-/// نامِ legacy (`01_TOPOLOGY_AND_HARNESS.md`..`09_ROUTING_AND_HANDOFF_CARD.md`)
-/// یا نامِ canonical v4 ماتریسِ حاکم
+/// Loads one model's genome from disk under `models/<model_id>/`:
+/// all 9 layers must exist — under **both namings** (Commit #27):
+/// the legacy names (`01_TOPOLOGY_AND_HARNESS.md`..`09_ROUTING_AND_HANDOFF_CARD.md`)
+/// or the canonical v4 names of the sovereign matrix
 /// (`01_IDENTITY_AND_PERSONA_GENOME.md`..`09_DISTILLED_CLONE_SYSTEM_PROMPT.md`)
-/// — legacy اولویت دارد و canonical جایگزینِ فایلِ غایب می‌شود.
-/// frontmatter فایل ۰۱ خوانده می‌شود و کارت ۰۹ به نقشهٔ امتیاز ۲۰تسکی
-/// تبدیل می‌گردد.
+/// — legacy takes priority and canonical substitutes for a missing file.
+/// File 01's frontmatter is read and card 09 becomes the 20-task score
+/// map.
 ///
 /// # Errors
 /// `UnreadableDirectory`/`MissingLayer`/`MissingFrontmatter`.
@@ -419,7 +419,7 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
         Some("true") => true,
         Some("false") => false,
         _ => {
-            // استنتاج محافظه‌کارانه: پارادایم «hidden reasoning» یعنی CoT مرئی نیست.
+            // Conservative inference: the 'hidden reasoning' paradigm means the CoT is not visible.
             let p = reasoning_paradigm.to_ascii_lowercase();
             if p.contains("hidden") {
                 false
@@ -460,17 +460,17 @@ pub fn load_model_genome_from_dir(dir: &Path) -> Result<ModelGenomeProfile, Geno
     })
 }
 
-// ─────────────────────────── پروفایل‌های داخلی ───────────────────────────
+// ─────────────────────────── Builtin profiles ───────────────────────────
 
-/// امتیازهای اسکورکارد `gpt-6-standard-free` — کپیِ کارت ۰۹ مونت‌شده
-/// (کالیبراسیون: برآورد کیفی، نه تلمتری اندازه‌گیری‌شده).
+/// `gpt-6-standard-free` scorecard scores — a mounted copy of card 09
+/// (calibration: a qualitative estimate, not measured telemetry).
 const GPT6_STANDARD_SCORES: [f32; 20] = [
     0.87, 0.68, 0.73, 0.70, 0.55, 0.83, 0.88, 0.70, 0.82, 0.86, 0.52, 0.67, 0.84, 0.85, 0.91,
     0.67, 0.72, 0.43, 0.56, 0.39,
 ];
 
-/// پروفایل داخلی هدف #01 — `gpt-6-standard-free` (وب رسمی، Think Mode OFF):
-/// جدول `<pre_computation_state_trace>` اجباری + گارد ضد-Canvas.
+/// Builtin target #01 profile — `gpt-6-standard-free` (official web, Think Mode OFF):
+/// a mandatory `<pre_computation_state_trace>` table + the anti-Canvas guard.
 #[must_use]
 pub fn builtin_gpt6_standard_profile() -> ModelGenomeProfile {
     scores_to_profile(
@@ -482,19 +482,19 @@ pub fn builtin_gpt6_standard_profile() -> ModelGenomeProfile {
     )
 }
 
-/// شناسهٔ canonical هدف #02 رجیستری دو-مدلی v2.
+/// The canonical ID of the v2 dual-model registry's target #02.
 pub const GEMINI_ARAGON_MODEL_ID: &str = "gemini-4-aragon-high";
 
-/// امتیازهای اسکورکارد `gemini-4-aragon-high` — کپی کارت ۰۹ مونت‌شده
-/// (کالیبراسیون: برآورد کیفی کاربر، بدون نشست زنده و بدون بنچمارک).
+/// `gemini-4-aragon-high` scorecard scores — a mounted copy of card 09
+/// (calibration: a qualitative user estimate, no live session, no benchmark).
 const GEMINI_ARAGON_SCORES: [f32; 20] = [
     0.99, 0.97, 0.96, 0.96, 0.96, 0.99, 0.99, 0.98, 0.98, 0.99, 0.99, 0.92, 0.98, 0.97, 1.00,
     0.99, 0.98, 0.97, 0.65, 0.99,
 ];
 
-/// پروفایل داخلی هدف #02 — `gemini-4-aragon-high` (`GEMINI 4 Aragon HIGH`،
-/// Think Mode ON با `EFFORT LEVEL` 1.00، ضد-پرگویی، سنتز صفر-کپی Rust و
-/// قرارداد backtick های `clippy-1.100`).
+/// Builtin target #02 profile — `gemini-4-aragon-high` (`GEMINI 4 Aragon HIGH`,
+/// Think Mode ON with `EFFORT LEVEL` 1.00, anti-filler, zero-copy Rust synthesis, and
+/// the `clippy-1.100` backtick contract).
 #[must_use]
 pub fn builtin_gemini_aragon_high_profile() -> ModelGenomeProfile {
     let mut p = scores_to_profile(
@@ -512,8 +512,8 @@ pub fn builtin_gemini_aragon_high_profile() -> ModelGenomeProfile {
     p
 }
 
-/// امتیازهای provision al ۱۱ اسلات plug-and-play آیندهٔ `00_ECOSYSTEM_INDEX.md`.
-/// برآورد کیفی آرکتایپی — تا وقتی کارت ۰۹ واقعی مونت نشود provisional هستند.
+/// Provisional scores of the 11 future plug-and-play slots from `00_ECOSYSTEM_INDEX.md`.
+/// Archetypal qualitative estimates — provisional until a real card 09 is mounted.
 const ECOSYSTEM_SLOT_SCORES: &[(&str, bool, [f32; 20])] = &[
     ("gpt-6-thinking", true, [0.88, 0.82, 0.78, 0.74, 0.66, 0.85, 0.90, 0.78, 0.84, 0.88, 0.62, 0.74, 0.86, 0.87, 0.92, 0.70, 0.78, 0.55, 0.62, 0.58]),
     ("claude-opus-thinking", true, [0.87, 0.83, 0.82, 0.90, 0.70, 0.80, 0.84, 0.76, 0.82, 0.90, 0.58, 0.76, 0.84, 0.86, 0.90, 0.74, 0.74, 0.50, 0.55, 0.60]),
@@ -528,8 +528,8 @@ const ECOSYSTEM_SLOT_SCORES: &[(&str, bool, [f32; 20])] = &[
     ("opencode-zen-flagship", false, [0.78, 0.72, 0.74, 0.70, 0.54, 0.72, 0.80, 0.68, 0.72, 0.76, 0.56, 0.76, 0.76, 0.78, 0.80, 0.62, 0.66, 0.44, 0.58, 0.46]),
 ];
 
-/// کل اکوسیستم: هدف #01 + هدف #02 + ۱۱ اسلات plug-and-play — همهٔ پروفایل‌ها
-/// قابل‌گسترش از دیسک (`models/<id>/`) بدون تغییر کرنل.
+/// The whole ecosystem: target #01 + target #02 + 11 plug-and-play slots — every profile
+/// is extendable from disk (`models/<id>/`) without kernel changes.
 #[must_use]
 pub fn builtin_ecosystem_profiles() -> Vec<ModelGenomeProfile> {
     let mut out = vec![builtin_gpt6_standard_profile(), builtin_gemini_aragon_high_profile()];
@@ -545,31 +545,31 @@ pub fn builtin_ecosystem_profiles() -> Vec<ModelGenomeProfile> {
     out
 }
 
-// ── رجیستریِ پنتامدلیِ حاکم (Commit #27) ─────────────────────────────────
+// ── The sovereign pentamodel registry (Commit #27) ─────────────────────────────────
 
-/// امتیازهای اسکورکارد مدلِ #03 — `DeepSeek-3.2-WEB-Think-mode` (برآوردِ کیفی
-/// از کارت ۰۹؛ quantitative math و proof در سقف، UI/وب در کف).
+/// Model #03 scorecard scores — `DeepSeek-3.2-WEB-Think-mode` (a qualitative estimate
+/// from card 09; quantitative math and proof at the ceiling, UI/web at the floor).
 const DEEPSEEK_32_THINK_SCORES: [f32; 20] = [
     0.80, 0.72, 0.68, 0.58, 0.50, 0.78, 0.93, 0.75, 0.72, 0.80, 0.62, 0.66, 0.88, 0.88, 0.86,
     0.60, 0.66, 0.52, 0.58, 0.52,
 ];
 
-/// امتیازهای اسکورکارد مدلِ #04 — `Cluade-sonnet-5.5-extra` (کپیِ کارت ۰۰
-/// مونت‌شده؛ surgical refactor، JSON extraction و agentic tooling در سقف).
+/// Model #04 scorecard scores — `Cluade-sonnet-5.5-extra` (a mounted copy of card 00;
+/// surgical refactor, JSON extraction, and agentic tooling at the ceiling).
 const CLAUDE_SONNET_55_EXTRA_SCORES: [f32; 20] = [
     0.85, 0.70, 0.80, 0.75, 0.65, 0.82, 0.70, 0.55, 0.75, 0.75, 0.65, 0.85, 0.88, 0.82, 0.85,
     0.75, 0.65, 0.40, 0.40, 0.65,
 ];
 
-/// امتیازهای اسکورکارد مدلِ #05 — `GLM 5.3 flash MAX` (کپیِ کارت ۰۹ِ canonical
-/// به ترتیبِ استانداردِ ۲۰تسک؛ flash agentic routing در سقف، 1M repo
-/// archaeology در کف).
+/// Model #05 scorecard scores — `GLM 5.3 flash MAX` (the canonical card 09 copy
+/// in standard 20-task order; flash agentic routing at the ceiling, 1M repo
+/// archaeology at the floor).
 const GLM_53_FLASH_MAX_SCORES: [f32; 20] = [
     0.90, 0.88, 0.88, 0.85, 0.75, 0.88, 0.62, 0.55, 0.70, 0.85, 0.45, 0.93, 0.90, 0.83, 0.85,
     0.85, 0.82, 0.78, 0.92, 0.65,
 ];
 
-/// پروفایل داخلی مدلِ حاکم #03 — `03-deepseek-3.2-web-think-mode`.
+/// Sovereign model #03 builtin profile — `03-deepseek-3.2-web-think-mode`.
 #[must_use]
 pub fn builtin_deepseek_32_think_profile() -> ModelGenomeProfile {
     let mut p = scores_to_profile(
@@ -583,8 +583,8 @@ pub fn builtin_deepseek_32_think_profile() -> ModelGenomeProfile {
     p
 }
 
-/// پروفایل داخلی مدلِ حاکم #04 — `04-claude-sonnet-5.5-extra`
-/// (هر دو شناسهٔ `Cluade-...` و `Claude-...` در alias resolver حل می‌شوند).
+/// Sovereign model #04 builtin profile — `04-claude-sonnet-5.5-extra`
+/// (both the `Cluade-...` and `Claude-...` IDs resolve in the alias resolver).
 #[must_use]
 pub fn builtin_claude_sonnet_55_extra_profile() -> ModelGenomeProfile {
     let mut p = scores_to_profile(
@@ -598,7 +598,7 @@ pub fn builtin_claude_sonnet_55_extra_profile() -> ModelGenomeProfile {
     p
 }
 
-/// پروفایل داخلی مدلِ حاکم #05 — `05-glm-5.3-flash-max`
+/// Sovereign model #05 builtin profile — `05-glm-5.3-flash-max`
 /// (aliases: `GLM 5.3 flash MAX`, `glm-5.3-flash-max`, `GLM-5.3-Flash-Max`).
 #[must_use]
 pub fn builtin_glm_53_flash_max_profile() -> ModelGenomeProfile {
@@ -613,9 +613,9 @@ pub fn builtin_glm_53_flash_max_profile() -> ModelGenomeProfile {
     p
 }
 
-/// هر ۵ مدلِ حاکم به ترتیبِ ماتریس — پروفایل‌هایِ builtin (بدون IO؛ برای
-/// رانتایمِ بدون دیسک). شناسه‌ها همان پوشه‌هایِ canonical‌اند تا رجیستریِ
-/// دیسکی و builtin هم‌نام باشند. رجیستریِ دیسکی: [`load_sovereign_penta_registry`].
+/// All 5 sovereign models in matrix order — builtin profiles (no IO; for the
+/// diskless runtime). The IDs equal the canonical folder names so the disk
+/// registry and the builtin one share names. Disk registry: [`load_sovereign_penta_registry`].
 #[must_use]
 pub fn builtin_sovereign_penta_profiles() -> Vec<ModelGenomeProfile> {
     let mut gpt = builtin_gpt6_standard_profile();
@@ -633,12 +633,12 @@ pub fn builtin_sovereign_penta_profiles() -> Vec<ModelGenomeProfile> {
     ]
 }
 
-/// رجیستریِ دیسکیِ پنتامدلی — هر ۵ پوشهٔ [`SOVEREIGN_MODEL_DIRS`] زیرِ
-/// `<genome_root>/models/` بارگذاری می‌شود (لودرِ دومُدِ نام‌ها؛ ۴۵ فایل).
+/// The disk-backed pentamodel registry — loads all 5 [`SOVEREIGN_MODEL_DIRS`] folders
+/// under `<genome_root>/models/` (the dual-naming loader; 45 files).
 ///
 /// # Errors
-/// [`GenomeError`] برای پوشهٔ ناخوانا / لایهٔ غایب / frontmatterِ غایب —
-/// fail-closed؛ هیچ مدلِ ناقصی در رجیستری نمی‌نشیند.
+/// [`GenomeError`] for an unreadable folder / a missing layer / missing frontmatter —
+/// fail-closed; no incomplete model enters the registry.
 pub fn load_sovereign_penta_registry(genome_root: &Path) -> Result<Vec<ModelGenomeProfile>, GenomeError> {
     let models_root = genome_root.join("models");
     SOVEREIGN_MODEL_DIRS
@@ -647,30 +647,30 @@ pub fn load_sovereign_penta_registry(genome_root: &Path) -> Result<Vec<ModelGeno
         .collect()
 }
 
-// ── انتخابِ دومُدِ قطعی — ManualOverride / AgentAutoDecision (Commit #28) ──
+// ── Deterministic dual-mode selection — ManualOverride / AgentAutoDecision (Commit #28) ──
 
-/// حالتِ انتخابِ مدل روی ماتریسِ پنتامدلی — هر دو نمادِ دقیقِ وایر:
-/// `ManualOverride { model }` (کاربر صراحتاً یکی از ۵ مدل را قفل می‌کند؛
-/// alias ها حل می‌شوند؛ ناشناخته fail-closed) و `AgentAutoDecision`
-/// (روتر تلمتریِ تسک را تحلیل و خودِ آن مدلِ بهینه را برمی‌گزیند).
+/// The model-selection mode over the pentamodel matrix — both exact wire symbols:
+/// `ManualOverride { model }` (the user explicitly locks one of the 5 models;
+/// aliases resolve; unknown fails closed) and `AgentAutoDecision`
+/// (the router analyzes the task's telemetry and picks the optimal model itself).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelSelectionMode {
-    /// آوریِ دستی — مدلِ exact یا alias (`GLM 5.3 flash MAX`, `gpt-6-web`, …).
+    /// Manual override — an exact model or alias (`GLM 5.3 flash MAX`, `gpt-6-web`, …).
     ManualOverride {
-        /// شناسهٔ مدلِ انتخابیِ کاربر.
+        /// The user's selected model ID.
         model: String,
     },
-    /// تصمیمِ خودِ ایجنت — تحلیلِ تلمتریِ پرامپت و انتخابِ خودکار.
+    /// The agent's own decision — prompt-telemetry analysis and automatic selection.
     AgentAutoDecision,
 }
 
-/// خطایِ انتخابِ مدل — تنها شکستِ ممکن: alias/شناسهٔ ناشناخته.
+/// The model-selection error — the only possible failure: an unknown alias/ID.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RouterModeError {
-    /// هیچ مدلِ حاکمی با این شناسه/alias هم‌خوان نیست — هیچ حدسی زده نمی‌شود.
+    /// No sovereign model matches this ID/alias — no guessing.
     UnknownModelAlias {
-        /// شناسهٔ ردشده.
+        /// The rejected ID.
         model: String,
     },
 }
@@ -687,26 +687,26 @@ impl std::fmt::Display for RouterModeError {
 
 impl std::error::Error for RouterModeError {}
 
-/// تصمیمِ انتخابِ دومُد — خروجیِ قطعیِ [`manual_override`] و
+/// The dual-mode selection decision — the deterministic output of [`manual_override`] and
 /// [`agent_auto_decision`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DualModeDecision {
-    /// پوشهٔ canonical مدلِ انتخاب‌شده (`05-glm-5.3-flash-max`, …).
+    /// canonical folder of the selected model (`05-glm-5.3-flash-max`, …).
     pub selected_dir: &'static str,
-    /// نامِ نمایشیِ مدل (`GLM 5.3 flash MAX`, …).
+    /// Model display name (`GLM 5.3 flash MAX`, …).
     pub selected_model: String,
-    /// حالتِ انتخاب — `manual_override` | `agent_auto_decision`.
+    /// Selection mode — `manual_override` | `agent_auto_decision`.
     pub selection_mode: &'static str,
-    /// اطمینان — آوریِ دستی همیشه `1.0`؛ خودکار `0.55..=0.95`.
+    /// Confidence — a manual override is always `1.0`; automatic is `0.55..=0.95`.
     pub confidence_score: f32,
-    /// توضیحِ قابلِ ممیزیِ تصمیم.
+    /// Auditable decision rationale.
     pub decision_rationale: String,
-    /// aliasِ تطبیق‌یافته — فقط در آوریِ دستیِ غیر-exact معنا دارد.
+    /// Matched alias — meaningful only for a non-exact manual override.
     pub matched_alias: Option<String>,
 }
 
-/// سیگنال‌هایِ تلمتریِ روترِ خودکار — `(signal, keywords, champion_dir)`.
-/// ترتیبِ جدول = ترتیبِ شکستِ تساوی (اولینِ ماتریس می‌برد).
+/// The automatic router's telemetry signals — `(signal, keywords, champion_dir)`.
+/// Table order = tie-break order (the first matrix entry wins).
 const ROUTER_TELEMETRY_SIGNALS: &[(&str, &[&str], &str)] = &[
     (
         "flash_agentic_tool_density",
@@ -735,11 +735,11 @@ const ROUTER_TELEMETRY_SIGNALS: &[(&str, &[&str], &str)] = &[
     ),
 ];
 
-/// **`manual_override`** — آوریِ دستیِ کاربر روی ۵ مدلِ حاکم: alias حل می‌شود،
-/// مدلِ ناشناخته fail-closed رد می‌شود، اطمینان همیشه `1.0`.
+/// **`manual_override`** — the user's manual override over the 5 sovereign models: aliases resolve,
+/// unknown models fail closed, confidence is always `1.0`.
 ///
 /// # Errors
-/// [`RouterModeError::UnknownModelAlias`] برایِ شناسه/aliasِ ناشناخته.
+/// [`RouterModeError::UnknownModelAlias`] for an unknown ID/alias.
 pub fn manual_override(model: &str) -> Result<DualModeDecision, RouterModeError> {
     let Some(dir) = resolve_sovereign_model_alias(model) else {
         return Err(RouterModeError::UnknownModelAlias {
@@ -761,12 +761,12 @@ pub fn manual_override(model: &str) -> Result<DualModeDecision, RouterModeError>
     })
 }
 
-/// **`agent_auto_decision`** — روترِ خودکار: تلمتریِ پرامپت (کلیدواژه‌ها،
-/// چگالیِ ابزار، عمقِ ریاضی/کوانت، نیازِ UI/وب، پیچیدگیِ Rust/Solidity) تحلیل
-/// و مدلِ قهرمانِ سیگنالِ غالب انتخاب می‌شود؛ تساوی → ترتیبِ ماتریس؛
-/// بدونِ سیگنال → قهرمانِ عمومیِ وب/UI (`01-gpt-6-web`) با rationale صادقانه.
+/// **`agent_auto_decision`** — the automatic router: prompt telemetry (keywords,
+/// tool density, math/quant depth, UI/web need, Rust/Solidity complexity) is analyzed
+/// and the dominant signal's champion model is selected; ties → matrix order;
+/// no signal → the general web/UI champion (`01-gpt-6-web`) with an honest rationale.
 #[must_use]
-#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)] // امتیاز کوچکِ کران‌شده
+#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)] // a small bounded score
 pub fn agent_auto_decision(task_prompt: &str) -> DualModeDecision {
     let needle = task_prompt.to_ascii_lowercase();
     let mut scores: [i64; 5] = [0; 5];
@@ -821,10 +821,10 @@ pub fn agent_auto_decision(task_prompt: &str) -> DualModeDecision {
     }
 }
 
-/// اجرایِ [`ModelSelectionMode`] — تنها نقطهٔ ورودِ رویِ وایر (`route-model`).
+/// Executes [`ModelSelectionMode`] — the only on-wire entry point (`route-model`).
 ///
 /// # Errors
-/// [`RouterModeError::UnknownModelAlias`] فقط در آوریِ دستیِ ناشناخته.
+/// [`RouterModeError::UnknownModelAlias`] only for an unknown manual override.
 pub fn route_with_selection_mode(
     mode: &ModelSelectionMode,
     task_prompt: &str,
@@ -835,7 +835,7 @@ pub fn route_with_selection_mode(
     }
 }
 
-/// نامِ نمایشیِ پوشهٔ canonical — هم‌خوان با رجیستریِ builtin.
+/// The canonical folder's display name — consistent with the builtin registry.
 fn display_name_for_dir(dir: &str) -> &'static str {
     match dir {
         "01-gpt-6-web" => "GPT 6-Web",
@@ -847,7 +847,7 @@ fn display_name_for_dir(dir: &str) -> &'static str {
     }
 }
 
-#[allow(clippy::cast_precision_loss)] // امتیازهای ثابت 0..=1 — دقت f32 کافی
+#[allow(clippy::cast_precision_loss)] // fixed 0..=1 scores — `f32` precision suffices
 fn scores_to_profile(
     model_id: &str,
     paradigm: &str,
@@ -876,11 +876,11 @@ fn scores_to_profile(
     }
 }
 
-// ─────────────────────────── کامپایلر پرامپت ───────────────────────────
+// ─────────────────────────── Prompt compiler ───────────────────────────
 
-/// کامپایل پرامپت اختصاصی مدل: برای پروفایل‌های بدون Think جدول
-/// `<pre_computation_state_trace>` قبل از کد اجباری می‌شود، گارد ضد-Canvas
-/// می‌آید، invariant ها گیت‌فازی ≤N می‌شوند و قرارداد ضد-elision می‌بندد.
+/// Model-specific prompt compilation: for no-Think profiles the
+/// `<pre_computation_state_trace>` table becomes mandatory before code, the anti-Canvas guard
+/// follows, invariants become fuzzy gates ≤N, and the anti-elision contract closes it out.
 #[must_use]
 pub fn compile_prompt_for_model(
     profile: &ModelGenomeProfile,
@@ -930,11 +930,11 @@ pub fn compile_prompt_for_model(
     out
 }
 
-// ─────────────────────────── هدف #02: کامپایلر و پاک‌ساز `gemini-4-aragon-high` ───────────────────────────
+// ─────────────────────────── Target #02: the `gemini-4-aragon-high` compiler and scrubber ───────────────────────────
 
-/// کامپایلر پرامپت هدف #02 — `EFFORT LEVEL` 1.00 با Think زنده (بدون جدول
-/// پیش‌محاسبه)، لنگر `SYSTEM DNA` کیان، ممنوعیت پرگویی و قرارداد
-/// backtick های `clippy-1.100` وقتی `strict_rust_clippy` روشن است.
+/// The target #02 prompt compiler — `EFFORT LEVEL` 1.00 with live Think (no pre-computation
+/// table), the Kian `SYSTEM DNA` anchor, the chatty-filler ban, and the
+/// `clippy-1.100` backtick contract when `strict_rust_clippy` is on.
 #[must_use]
 pub fn compile_prompt_for_gemini_aragon_high(
     system_dna: &str,
@@ -969,12 +969,12 @@ pub fn compile_prompt_for_gemini_aragon_high(
     out
 }
 
-/// نشانه‌های متا که از پرامپت به خروجی «نشت» کرده‌اند — خط حاوی‌شان کنده می‌شود.
+/// Meta markers that 'leaked' from the prompt into the output — their line is stripped.
 const GEMINI_LEAKED_MARKERS: &[&str] =
     &["SPECIAL INSTRUCTION: think silently", "EFFORT LEVEL:"];
 
-/// فیلِرهای محاوره‌ای که پروفایل `forbids_chatty_filler` آن‌ها را ممنوع می‌کند —
-/// خطِ آغازین/پایانیِ حاوی‌شان کنده می‌شود (محتوای فنس کد دست نمی‌خورد).
+/// Conversational fillers forbidden by the profile's `forbids_chatty_filler` — their
+/// leading/trailing line is stripped (fenced code content is untouched).
 const GEMINI_CHATTY_FILLERS: &[&str] = &[
     "sure!",
     "certainly!",
@@ -986,13 +986,13 @@ const GEMINI_CHATTY_FILLERS: &[&str] = &[
     "here is what i came up with",
 ];
 
-/// پاک‌ساز خروجی `gemini-4-aragon-high`: نشانه‌های متا نشت‌کرده
-/// (`SPECIAL INSTRUCTION: think silently`، `EFFORT LEVEL:`)، بلوک‌های
-/// `<thought>`/`<think>` پنهان و فیلِر محاوره‌ای را کنده می‌کند — محتوای
-/// فنس‌های ```rust``` و کد معتبر دست‌نخورده می‌ماند.
+/// The `gemini-4-aragon-high` output scrubber: strips leaked meta markers
+/// (`SPECIAL INSTRUCTION: think silently`, `EFFORT LEVEL:`), hidden
+/// `<thought>`/`<think>` blocks, and conversational filler —
+/// ```rust``` fence content and valid code stay untouched.
 #[must_use]
 pub fn sanitize_gemini_aragon_output(raw: &str) -> String {
-    // ۱) بلوک‌های فکر پنهان — چندخطی، غیرحریص
+    // 1) hidden think blocks — multi-line, non-greedy
     let mut out = String::with_capacity(raw.len());
     let mut rest = raw;
     while let Some(open) = rest.find("<thought>").or_else(|| rest.find("<think>")) {
@@ -1002,14 +1002,14 @@ pub fn sanitize_gemini_aragon_output(raw: &str) -> String {
         let close_tag = if tag_len == 9 { "</thought>" } else { "</think>" };
         rest = match after_open.find(close_tag) {
             Some(close) => &after_open[close + close_tag.len()..],
-            None => "", // باز بدون بسته — تا انتها کنده می‌شود
+            None => "", // open without a close — stripped to the end
         };
     }
     out.push_str(rest);
     let scrubbed = out;
 
-    // ۲) خط‌های متا نشت‌کرده حذف کامل می‌شوند؛ فیلِر محاوره‌ای فقط به‌عنوان
-    // پیشوندِ خط کنده می‌شود تا دنبالهٔ معنادار همان خط (پاسخ واقعی) بماند.
+    // 2) leaked meta lines are removed entirely; conversational filler is stripped only as
+    // a line prefix so the meaningful remainder of the line (the real answer) stays.
     let mut lines: Vec<String> = Vec::new();
     for line in scrubbed.lines() {
         let lower = line.trim_start().to_ascii_lowercase();
@@ -1043,22 +1043,22 @@ pub fn sanitize_gemini_aragon_output(raw: &str) -> String {
     joined.trim().to_string()
 }
 
-/// شدت مود فشرده‌سازی `caveman` (گنجینهٔ `mattpocock/skills`) — خروجی
-/// تله‌گرافیک با حفظ ۱۰۰٪ صحت فنی/کد.
+/// The `caveman` compression-mode intensity (the `mattpocock/skills` vault) —
+/// telegraphic output with 100% technical/code fidelity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CavemanIntensity {
-    /// خاموش — نثر کامل مجاز.
+    /// Off — full prose allowed.
     Off,
-    /// سبک — بدون تعارف و بازگوییِ تسک؛ بولت به‌جای پاراگراف.
+    /// Light — no pleasantries or task restatement; bullets over paragraphs.
     Lite,
-    /// کامل — قطعه‌نوشت تله‌گرافیک؛ بدون صفت/مقاله؛ ~۷۵٪ کاهش توکن خروجی.
+    /// Full — telegraphic fragments; no adjectives/articles; ~75% output-token reduction.
     Full,
-    /// فراحساس — تکه‌کلمه؛ فقط کد و invariant؛ حداکثر فشرده‌سازی.
+    /// Ultra — word fragments; code and invariants only; maximum compression.
     Ultra,
 }
 
-/// دستورِ سیستم برای هر شدت `caveman` — برای تزریق در کامپایلر پرامپت.
-/// نرخ هدف: `Full`/`Ultra` ≈ ~۷۵٪ کاهش توکن خروجی با حفظ ۱۰۰٪ صحت فنی.
+/// The system directive per `caveman` intensity — for injection into the prompt compiler.
+/// Target rate: `Full`/`Ultra` ≈ ~75% output-token reduction with 100% technical fidelity.
 #[must_use]
 pub fn build_caveman_directive(intensity: CavemanIntensity) -> &'static str {
     match intensity {
@@ -1081,10 +1081,10 @@ pub fn build_caveman_directive(intensity: CavemanIntensity) -> &'static str {
     }
 }
 
-// ─────────────────────────── پاکت تحویل ───────────────────────────
+// ─────────────────────────── Handoff packet ───────────────────────────
 
-/// پاکت تحویل بین‌مدلی — هم‌اسکیما با `KIA-BRAIN-OS/07_LINK_Protocol.md`.
-/// تحویل بدون `base_sha` یا با ادعای بی‌اثبات، در سطح سازنده رد می‌شود.
+/// The cross-model handoff packet — schema-aligned with `KIA-BRAIN-OS/07_LINK_Protocol.md`.
+/// A delivery without `base_sha` or with unverified claims is rejected at the builder level.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HandoffPacket {
     pub handoff_id: String,
@@ -1100,7 +1100,7 @@ pub struct HandoffPacket {
 }
 
 impl HandoffPacket {
-    /// پاکت کیان‌کیان برای گام جاری — الگوی آمادهٔ سازنده.
+    /// The Kian-to-Kian packet for the current step — the builder-ready template.
     #[must_use]
     pub fn kian_step4_template(base_sha: &str) -> Self {
         Self {
@@ -1121,25 +1121,25 @@ impl HandoffPacket {
         }
     }
 
-    /// سریال‌سازی JSON قطعی (برای A2A و لاگ شاهد).
+    /// Deterministic JSON serialization (for A2A and the witness log).
     ///
     /// # Errors
-    /// در عمل غیرممکن (ساختار فقط String/Vec<String>)؛ برای امضای صادقانهٔ
-    /// فیلد، خطا تایپ‌شده برمی‌گردد.
+    /// Impossible in practice (the structure is only `String`/`Vec<String>`); for an honest
+    /// field signature, a typed error is returned.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 
-    /// رمزگشایی JSON قطعی.
+    /// Deterministic JSON decoding.
     ///
     /// # Errors
-    /// `serde_json::Error` روی ساختار نامشروع.
+    /// `serde_json::Error` on a malformed structure.
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
 }
 
-// ─────────────────────────── تست‌ها ───────────────────────────
+// ─────────────────────────── Tests ───────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -1164,9 +1164,9 @@ mod tests {
         }
     }
 
-    // ── رجیستریِ پنتامدلی + لودرِ دومُدِ نام‌ها (Commit #27) ─────────────
+    // ── The pentamodel registry + dual-naming loader (Commit #27) ─────────────
 
-    /// نام‌هایِ canonical v4 با لایه‌ها هم‌ترازند و از `01..09` پیروی می‌کنند.
+    /// The canonical v4 names align with the layers and follow `01..09`.
     #[test]
     fn canonical_v4_filenames_mirror_layers() {
         assert_eq!(
@@ -1183,8 +1183,8 @@ mod tests {
         }
     }
 
-    /// alias resolver همهٔ ۵ مدل — شامل هر دو هجیِ #04 و هر سه هجیِ #05 —
-    /// را به پوشهٔ canonical حل می‌کند؛ ناشناخته `None` (هیچ حدسی زده نمی‌شود).
+    /// The alias resolver covers all 5 models — both #04 spellings and all three #05 spellings —
+    /// and maps them to the canonical folder; unknown → `None` (no guessing).
     #[test]
     fn sovereign_alias_resolver_covers_all_five_models() {
         assert_eq!(SOVEREIGN_MODEL_DIRS.len(), 5);
@@ -1206,7 +1206,7 @@ mod tests {
         assert_eq!(resolve_sovereign_model_alias(""), None);
     }
 
-    /// پروفایل‌هایِ builtin پنتامدلی — ۵ مدل با اسکورکاردِ کاملِ ۲۰تسکی.
+    /// The builtin pentamodel profiles — 5 models with full 20-task scorecards.
     #[test]
     fn builtin_sovereign_penta_profiles_cover_five_models() {
         let profiles = builtin_sovereign_penta_profiles();
@@ -1219,15 +1219,15 @@ mod tests {
         assert_eq!(glm.display_name, "GLM 5.3 flash MAX");
         assert_eq!(glm.workload_scores[&EngineeringWorkload::FastAgenticToolCalling], 0.93);
         assert_eq!(glm.workload_scores[&EngineeringWorkload::MassiveRepoArchaeology], 0.45);
-        // روتینگِ فلشِ زیر-ثانیه: مدلِ حاکمِ #05 (0.92) اسلاتِ قدیمیِ
-        // `llama4-cerebras-fast` (0.80) و ARAGON (0.65) را کنار می‌زند.
+        // sub-second flash routing: sovereign model #05 (0.92) displaces the legacy
+        // `llama4-cerebras-fast` (0.80) slot and ARAGON (0.65)
         let best_fast = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::SubSecondIntentRouting)
             .expect("fast candidate");
         assert_eq!(best_fast.model_id, "05-glm-5.3-flash-max", "0.92 beats ARAGON 0.65");
     }
 
-    /// رجیستریِ دیسکیِ پنتامدلی — هر ۵ پوشه با نام‌هایِ canonical v4 لود
-    /// می‌شود (لودرِ دومُد؛ فایلِ legacy ناموجود است و canonical جانشین می‌شود).
+    /// The disk-backed pentamodel registry — all 5 folders load under canonical v4 names
+    /// (the dual-naming loader; the legacy file is absent and canonical substitutes).
     #[test]
     fn sovereign_penta_registry_loads_from_disk_via_canonical_names() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../OMNI-MODEL-GENOME");
@@ -1253,8 +1253,8 @@ mod tests {
         );
     }
 
-    /// لودرِ دومُد: پوشهٔ legacy (نام‌های `01_TOPOLOGY..09_ROUTING`) همچنان
-    /// بدون تغییر لود می‌شود — رفتارِ قدیمی هیچ رگرسیونی نمی‌بیند.
+    /// the dual-naming loader: a legacy folder (`01_TOPOLOGY..09_ROUTING` names) still
+    /// loads unchanged — old behavior sees no regression
     #[test]
     fn legacy_layer_names_still_load_through_dual_name_loader() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../")
@@ -1329,7 +1329,7 @@ mod tests {
         let profile = builtin_gpt6_standard_profile();
         let prompt = compile_prompt_for_model(
             &profile,
-            "کد ماژول دفتر دوبل را بنویس",
+            "\u{6a9}\u{62f} \u{645}\u{627}\u{698}\u{648}\u{644} \u{62f}\u{641}\u{62a}\u{631} \u{62f}\u{648}\u{628}\u{644} \u{631}\u{627} \u{628}\u{646}\u{648}\u{6cc}\u{633}",
             &["SUM(Posting.amount) = 0", "466 citizens untouched", "20 active products"],
         );
         assert!(prompt.contains("<pre_computation_state_trace>"), "state trace gate: {prompt}");
@@ -1337,7 +1337,7 @@ mod tests {
         assert!(prompt.contains("Do NOT invoke Canvas / canmore"), "anti-canvas guard: {prompt}");
         assert!(prompt.contains("Anti-Elision") || prompt.contains("ANTI-ELISION"));
         assert!(prompt.contains("SUM(Posting.amount) = 0"));
-        // ترتیب: جدول پیش‌محاسبه قبل از گیت‌های فازی می‌آید
+        // order: the pre-computation table comes before the fuzzy gates
         let trace_pos = prompt.find("MANDATORY PRE-COMPUTATION").expect("trace section");
         let gates_pos = prompt.find("PHASE GATES").expect("gates section");
         assert!(trace_pos < gates_pos, "state trace MUST precede phase gates");
@@ -1385,7 +1385,7 @@ mod tests {
         let best_fast = ModelGenomeProfile::best_for_workload(&profiles, EngineeringWorkload::SubSecondIntentRouting)
             .expect("fast candidate");
         assert_eq!(best_fast.model_id, "llama4-cerebras-fast");
-        // هدف #01 هرگز برای حلقهٔ بی‌پایان روت می‌شود (0.39 = Do Not Route)
+        // target #01 is never routed an infinite loop (0.39 = Do Not Route)
         let horizon = builtin_gpt6_standard_profile()
             .workload_scores
             .get(&EngineeringWorkload::LongHorizonAutonomousLoop)
@@ -1406,7 +1406,7 @@ mod tests {
 
     #[test]
     fn ecosystem_profiles_never_invent_unknown_scores() {
-        // پروفایل از پوشه‌ای با کارت ۰۹ بی‌جدول → نقشهٔ امتیاز خالی، نه عدد ساختگی
+        // a profile from a folder with a tableless card 09 → an empty score map, not a fabricated number
         let tmp = std::env::temp_dir().join("kian_genome_no_scorecard_test");
         std::fs::create_dir_all(&tmp).expect("tmp dir");
         for layer in GenomeLayerId::ALL {
@@ -1423,8 +1423,8 @@ mod tests {
         std::fs::remove_dir_all(&tmp).ok();
     }
 
-    /// پروفایل داخلی هدف #02 — قراردادهای `EFFORT LEVEL` 1.00 و ضد-filler و
-    /// سنتز صفر-کپی و backtick های `clippy-1.100`.
+    /// The builtin target #02 profile — the `EFFORT LEVEL` 1.00, anti-filler,
+    /// zero-copy synthesis, and `clippy-1.100` backtick contracts.
     #[test]
     fn builtin_gemini_aragon_high_profile_matches_mounted_scorecard() {
         let p = builtin_gemini_aragon_high_profile();
@@ -1444,8 +1444,8 @@ mod tests {
         assert_eq!(p.workload_scores[&EngineeringWorkload::LongHorizonAutonomousLoop], 0.99);
     }
 
-    /// ژنوم مونت‌شدهٔ `gemini-4-aragon-high` از دیسک با کارت ۰۹ تزئین‌دار
-    /// (`**01**` / `` **`0.99`** ``) کامل پارس می‌شود.
+    /// The disk-mounted `gemini-4-aragon-high` genome parses fully with the decorated
+    /// card 09 (`**01**` / `` **`0.99`** ``).
     #[test]
     fn mounted_gemini_genome_loads_from_disk_with_full_scorecard() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../")
@@ -1464,9 +1464,9 @@ mod tests {
         );
     }
 
-    /// مسیریابی هدف #02: استدلال رسمی `UNSAT`/`CAS` و بافتِ >128k و رِیو
-    /// spec-compliance → `gemini-4-aragon-high`؛ روتینگ زیر-ثانیه همان‌طور
-    /// به `llama4-cerebras-fast` می‌رود.
+    /// Target #02 routing: formal `UNSAT`/`CAS` reasoning, >128k context, and spec-compliance
+    /// review → `gemini-4-aragon-high`; sub-second routing still goes
+    /// to `llama4-cerebras-fast`.
     #[test]
     fn gemini_aragon_routes_for_formal_verification_and_massive_context() {
         let profiles = builtin_ecosystem_profiles();
@@ -1489,8 +1489,8 @@ mod tests {
         assert_eq!(fast.model_id, "llama4-cerebras-fast", "0.80 beats gemini 0.65");
     }
 
-    /// کامپایلر پرامپت هدف #02: DNA لنگر عیناً، `EFFORT LEVEL` 1.00، ضد-filler،
-    /// قرارداد `clippy-1.100` فقط وقتی strict خواسته شده و بدون جدول state-trace.
+    /// The target #02 prompt compiler: the DNA anchor verbatim, `EFFORT LEVEL` 1.00, anti-filler,
+    /// the `clippy-1.100` contract only when strict is requested, and no state-trace table.
     #[test]
     fn compile_gemini_prompt_includes_dna_effort_and_clippy_contract() {
         let dna = "sovereignty: zero-card zero-KYC; ux_priority_tier=1";
@@ -1505,8 +1505,8 @@ mod tests {
         assert!(!loose.contains("clippy 1.100"), "non-strict: no rust contract");
     }
 
-    /// پاک‌ساز: نشت متا (`SPECIAL INSTRUCTION`/`EFFORT LEVEL`)، بلوک‌های
-    /// `<thought>` و فیلِر حذف می‌شود — فنس ```rust``` و کد دست‌نخورده می‌ماند.
+    /// The scrubber: leaked meta (`SPECIAL INSTRUCTION`/`EFFORT LEVEL`),
+    /// `<thought>` blocks, and filler are removed — ```rust``` fences and code stay untouched.
     #[test]
     fn sanitize_strips_leaked_markers_thought_blocks_and_filler_preserving_code() {
         let raw = "Sure! Here is my answer.\n\
@@ -1528,13 +1528,13 @@ mod tests {
         assert!(!clean.contains("Sure!"), "chatty filler stripped");
         assert!(!clean.contains("I hope this helps"));
         assert!(!clean.contains("Let me know if"));
-        // بلوک فکرِ بازِ بدون بسته — تا انتها کنده می‌شود
+        // an open think block without a close — stripped to the end
         let open = sanitize_gemini_aragon_output("ok<think>leak until end");
         assert_eq!(open, "ok");
     }
 
-    /// مود `caveman`: خاموش = رشتهٔ خالی؛ شدت‌ها فارق‌دار؛ `Full`/`Ultra`
-    /// قرارداد ~۷۵٪ کاهش با حفظ ۱۰۰٪ صحت را حمل می‌کنند.
+    /// The `caveman` mode: off = an empty string; intensities are distinct; `Full`/`Ultra`
+    /// carry the ~75%-reduction-with-100%-fidelity contract.
     #[test]
     fn caveman_directives_are_graduated_and_off_is_empty() {
         assert_eq!(build_caveman_directive(CavemanIntensity::Off), "");
@@ -1546,15 +1546,15 @@ mod tests {
         assert!(full.contains("100% verbatim"), "accuracy contract");
         assert!(ultra.contains("CAVEMAN ULTRA") && ultra.contains("~75%+"));
         assert!(ultra.contains("never truncate code"));
-        // شدت‌ها نسبت به هم سخت‌گیرترند — رشتهٔ متمایز هر چهار حالت
+        // the intensities are strictly harsher than each other — a distinct string for all four states
         assert_ne!(lite, full);
         assert_ne!(full, ultra);
     }
 
-    // ── انتخابِ دومُدِ قطعی — ManualOverride / AgentAutoDecision (Commit #28) ─
+    // ── Deterministic dual-mode selection — ManualOverride / AgentAutoDecision (Commit #28) ─
 
-    /// `manual_override` — alias ها همهٔ ۵ مدل حل می‌شوند؛ exact پوشه می‌ماند
-    /// (`matched_alias` = None)؛ ناشناخته fail-closed؛ اطمینان همیشه 1.0.
+    /// `manual_override` — aliases resolve for all 5 models; an exact folder stays
+    /// (`matched_alias` = `None`); unknown fails closed; confidence always 1.0.
     #[test]
     fn manual_override_resolves_all_five_models_and_fails_closed() {
         for (alias, dir) in [
@@ -1576,11 +1576,11 @@ mod tests {
                 assert_eq!(d.matched_alias.as_deref(), Some(alias));
             }
         }
-        // exact مسیرِ پوشه نیز پذیرفته می‌شود
+        // an exact folder path is also accepted
         let exact = manual_override("05-glm-5.3-flash-max").expect("exact dir");
         assert_eq!(exact.selected_dir, "05-glm-5.3-flash-max");
         assert!(exact.matched_alias.is_none());
-        // ناشناخته → fail-closed
+        // unknown → fail-closed
         assert_eq!(
             manual_override("gpt-5-turbo"),
             Err(RouterModeError::UnknownModelAlias {
@@ -1593,8 +1593,8 @@ mod tests {
         ));
     }
 
-    /// `agent_auto_decision` — تلمتریِ پرامپت روی هر ۵ قهرمان قطعی است؛
-    /// تساوی → ترتیبِ ماتریس؛ بدونِ سیگنال → فال‌بکِ صادقانه؛ سقفِ اطمینان ۰.۹۵.
+    /// `agent_auto_decision` — prompt telemetry is deterministic across all 5 champions;
+    /// ties → matrix order; no signal → an honest fallback; the confidence cap is 0.95.
     #[test]
     fn agent_auto_decision_routes_telemetry_deterministically_across_five() {
         let cases = [
@@ -1630,23 +1630,23 @@ mod tests {
                 d.decision_rationale
             );
         }
-        // قطعیت — همان ورودی، همان تصمیم
+        // determinism — same input, same decision
         let a = agent_auto_decision("agentic tool batch");
         let b = agent_auto_decision("agentic tool batch");
         assert_eq!(a, b);
-        // بدونِ سیگنال → فال‌بکِ ماتریس با rationale صادقانه
+        // no signal → the matrix fallback with an honest rationale
         let fallback = agent_auto_decision("hello world");
         assert_eq!(fallback.selected_dir, "01-gpt-6-web");
         assert!(fallback.decision_rationale.contains("no telemetry signals"));
         assert!((fallback.confidence_score - 0.55).abs() < f32::EPSILON);
-        // سقفِ اطمینان — ۰.۹۵
+        // the confidence cap — 0.95
         let saturated =
             agent_auto_decision("fast flash quick agentic tool batch rapid patch multi-tool instant");
         assert!((saturated.confidence_score - 0.95).abs() < 1e-6);
     }
 
-    /// `route_with_selection_mode` — `ManualOverride` بر تلمتری غالب است و
-    /// `AgentAutoDecision` همان روترِ قطعی را اجرا می‌کند؛ وایر `snake_case`.
+    /// `route_with_selection_mode` — `ManualOverride` dominates telemetry and
+    /// `AgentAutoDecision` runs the same deterministic router; the wire is `snake_case`.
     #[test]
     fn route_with_selection_mode_manual_beats_auto_and_serializes() {
         let manual = route_with_selection_mode(
@@ -1665,7 +1665,7 @@ mod tests {
         .expect("auto");
         assert_eq!(auto.selected_dir, "03-deepseek-3.2-web-think-mode");
         assert_eq!(auto.selection_mode, "agent_auto_decision");
-        // خطایِ دستی روی وایر هم fail-closed می‌ماند
+        // the manual-override error also stays fail-closed on the wire
         assert!(matches!(
             route_with_selection_mode(
                 &ModelSelectionMode::ManualOverride { model: "nope".to_owned() },
@@ -1673,7 +1673,7 @@ mod tests {
             ),
             Err(RouterModeError::UnknownModelAlias { .. })
         ));
-        // سریال‌سازیِ snake_case روی وایر
+        // `snake_case` serialization on the wire
         assert_eq!(
             serde_json::to_value(&ModelSelectionMode::AgentAutoDecision).unwrap(),
             serde_json::json!("agent_auto_decision")

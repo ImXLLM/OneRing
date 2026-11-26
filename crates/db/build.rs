@@ -1,11 +1,11 @@
-//! اسکریپت ساخت `kian-db` — ردیابیِ پوشهٔ مهاجرت‌ها برای ماکروی
+//! Build script for `kian-db` — tracks the migrations directory for the
 //! `sqlx::migrate!()`.
 //!
-//! `sqlx::migrate!()` محتوای `migrations/*.sql` را در زمانِ گسترشِ ماکرو
-//! جاسازی می‌کند، اما cargo خودِ پوشهٔ مهاجرت را در گرافِ Incremental
-//! ردیابی نمی‌کند؛ افزودنِ فایل/تغییرِ مهاجرت بدون این خط، از کشِ گسترش
-//! عبور نمی‌کند و اسکیمای کهنه جاسازی می‌شد. این اسکریپت آن حفرهٔ
-//! سازگاری را می‌بندد (fail-closed برای هر مهاجرتِ تازه).
+//! `sqlx::migrate!()` macro: it embeds the contents of `migrations/*.sql` at macro
+//! expansion time, but cargo does not track the migrations directory itself in the incremental
+//! graph; without this line, adding a file or changing a migration slips past the expansion
+//! cache and a stale schema would be embedded. This script closes that compatibility
+//! hole (fail-closed for every fresh migration).
 
 fn main() {
     println!("cargo:rerun-if-changed=migrations");

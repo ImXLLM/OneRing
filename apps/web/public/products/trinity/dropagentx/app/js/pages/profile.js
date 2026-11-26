@@ -21,37 +21,37 @@ DGX.pages.profile = async (view, params) => {
       <img class="avatar-big" id="avImg"
            src="${d.avatar_url ? DGX.esc(d.avatar_url) : '/app/assets/logo.jpg'}">
       <div style="flex:1;padding-bottom:6px">
-        <b style="font-size:17px">${DGX.esc(d.name || 'شهروند')} ✔</b>
-          ${DGX.isAdmin() && isMe ? `<span class="badge-role admin">${DGX.icon('shield','ic-xs')} ادمین</span>` :
-            (isMe && DGX.user?.role === 'hunter' ? `<span class="badge-role hunter">${DGX.icon('target','ic-xs')} هانتر</span>` : '')}
+        <b style="font-size:17px">${DGX.esc(d.name || '\u0634\u0647\u0631\u0648\u0646\u062f')} ✔</b>
+          ${DGX.isAdmin() && isMe ? `<span class="badge-role admin">${DGX.icon('shield','ic-xs')} \u0627\u062f\u0645\u06cc\u0646</span>` :
+            (isMe && DGX.user?.role === 'hunter' ? `<span class="badge-role hunter">${DGX.icon('target','ic-xs')} \u0647\u0627\u0646\u062a\u0631</span>` : '')}
         <div style="color:var(--dim);font-size:11.5px">@${DGX.esc(d.username || 'dropagentx')}
-          ${d.following_me ? '· شما را فالو می‌کند' : ''}</div>
+          ${d.following_me ? '· \u0634\u0645\u0627 \u0631\u0627 \u0641\u0627\u0644\u0648 \u0645\u06cc‌\u06a9\u0646\u062f' : ''}</div>
         ${isMe && !DGX.isAdmin() && DGX.user?.role !== 'hunter' ?
           `<div style="color:var(--dim2);font-size:10.5px;margin-top:2px">${DGX.icon('trophy','ic-xs')} ${DGX.roleFa(DGX.user?.role)}</div>` : ''}
       </div>
       ${!isMe ? `<button class="follow-btn ${d.following_me ? 'on' : ''}" id="folBtn">
-        ${d.following_me ? '✓ فالو شد' : '+ فالو'}</button>` : ''}
-      ${isMe ? `<button class="pill-btn" onclick="DGX.upPhoto('avatar')">${DGX.icon('image','ic-s')} آواتار</button>
-                <button class="pill-btn" onclick="DGX.upPhoto('cover')">${DGX.icon('palette','ic-s')} کاور</button>` : ''}
+        ${d.following_me ? '✓ \u0641\u0627\u0644\u0648 \u0634\u062f' : '+ \u0641\u0627\u0644\u0648'}</button>` : ''}
+      ${isMe ? `<button class="pill-btn" onclick="DGX.upPhoto('avatar')">${DGX.icon('image','ic-s')} \u0622\u0648\u0627\u062a\u0627\u0631</button>
+                <button class="pill-btn" onclick="DGX.upPhoto('cover')">${DGX.icon('palette','ic-s')} \u06a9\u0627\u0648\u0631</button>` : ''}
     </div>
     <input type="file" id="phFile" accept="image/jpeg,image/png" hidden>
 
     <div style="padding:0 var(--pad)">
       <div class="stat3">
-        <div><b>${DGX.kfmt(d.followers)}</b><span>فالوور</span></div>
-        <div><b>${d.products.length}</b><span>محصول</span></div>
-        <div><b>${DGX.kfmt(d.total_sales)}</b><span>فروش</span></div>
-        <div><b class="num">${(d.products.reduce((s, p) => s + (+p.price_credits || 0), 0) / 1000).toFixed(2)}$</b><span>ارزش مغازه</span></div>
+        <div><b>${DGX.kfmt(d.followers)}</b><span>\u0641\u0627\u0644\u0648\u0648\u0631</span></div>
+        <div><b>${d.products.length}</b><span>\u0645\u062d\u0635\u0648\u0644</span></div>
+        <div><b>${DGX.kfmt(d.total_sales)}</b><span>\u0641\u0631\u0648\u0634</span></div>
+        <div><b class="num">${(d.products.reduce((s, p) => s + (+p.price_credits || 0), 0) / 1000).toFixed(2)}$</b><span>\u0627\u0631\u0632\u0634 \u0645\u063a\u0627\u0632\u0647</span></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <a class="btn btn-ghost" href="#/wallet">${DGX.icon('wallet','ic-s')} کیف پول</a>
-        <a class="btn btn-ghost" href="#/activity">${DGX.icon('history','ic-s')} فعالیت</a>
-        ${DGX.isAdmin() ? `<a class="btn btn-gold" href="/admin" target="_blank">${DGX.icon('shield','ic-s')} پنل مدیریت</a>
-        <a class="btn btn-ghost" href="/insights" target="_blank">${DGX.icon('chart','ic-s')} تحلیل</a>` : ''}
-        ${DGX.isHunter() ? `<a class="btn btn-ghost" href="https://t.me/DropAgentXBot?start=hunter">${DGX.icon('target','ic-s')} ابزار هانتر</a>` : ''}
+        <a class="btn btn-ghost" href="#/wallet">${DGX.icon('wallet','ic-s')} \u06a9\u06cc\u0641 \u067e\u0648\u0644</a>
+        <a class="btn btn-ghost" href="#/activity">${DGX.icon('history','ic-s')} \u0641\u0639\u0627\u0644\u06cc\u062a</a>
+        ${DGX.isAdmin() ? `<a class="btn btn-gold" href="/admin" target="_blank">${DGX.icon('shield','ic-s')} \u067e\u0646\u0644 \u0645\u062f\u06cc\u0631\u06cc\u062a</a>
+        <a class="btn btn-ghost" href="/insights" target="_blank">${DGX.icon('chart','ic-s')} \u062a\u062d\u0644\u06cc\u0644</a>` : ''}
+        ${DGX.isHunter() ? `<a class="btn btn-ghost" href="https://t.me/DropAgentXBot?start=hunter">${DGX.icon('target','ic-s')} \u0627\u0628\u0632\u0627\u0631 \u0647\u0627\u0646\u062a\u0631</a>` : ''}
       </div>
       <div style="margin-bottom:4px">${DGX.hubBar()}</div>
-      <h3 style="margin-bottom:10px;display:flex;align-items:center;gap:6px">${DGX.icon('shop','ic-s')} ویترین ${isMe ? 'من' : 'این سازنده'}</h3>
+      <h3 style="margin-bottom:10px;display:flex;align-items:center;gap:6px">${DGX.icon('shop','ic-s')} \u0648\u06cc\u062a\u0631\u06cc\u0646 ${isMe ? '\u0645\u0646' : '\u0627\u06cc\u0646 \u0633\u0627\u0632\u0646\u062f\u0647'}</h3>
       <div class="grid3" id="storeGrid"></div>
       <div style="height:80px"></div>
     </div>`;
@@ -62,9 +62,9 @@ DGX.pages.profile = async (view, params) => {
       ${p.photo_url ? `<img src="${DGX.esc(p.photo_url)}" loading="lazy">` : DGX.icon('box','ic-l ph-g')}
       <span class="g-price">${DGX.fmt(p.price_credits)}</span></a>`).join('')
     : `<div style="grid-column:1/-1;text-align:center;color:var(--dim);padding:26px;line-height:2">
-         ${isMe ? 'هنوز محصولی نساختی<br>' : ''}
+         ${isMe ? '\u0647\u0646\u0648\u0632 \u0645\u062d\u0635\u0648\u0644\u06cc \u0646\u0633\u0627\u062e\u062a\u06cc<br>' : ''}
          <button class="btn btn-primary" onclick="location.hash='#/create'"
-           style="${isMe ? '' : 'display:none'};max-width:220px;margin-top:8px">${DGX.icon('plus','ic-s')} ساخت اولین محصول</button>
+           style="${isMe ? '' : 'display:none'};max-width:220px;margin-top:8px">${DGX.icon('plus','ic-s')} \u0633\u0627\u062e\u062a \u0627\u0648\u0644\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644</button>
        </div>`;
 
   if (!isMe) {
@@ -72,7 +72,7 @@ DGX.pages.profile = async (view, params) => {
       const on = !d.following_me;
       try {
         await DGX.api('/api/app/follow', { body: { target: uid, on } });
-        DGX.toast(on ? `فالو کردی ✅` : 'آنفالو شد');
+        DGX.toast(on ? `\u0641\u0627\u0644\u0648 \u06a9\u0631\u062f\u06cc ✅` : '\u0622\u0646\u0641\u0627\u0644\u0648 \u0634\u062f');
         DGX.pages.profile(view, params);
       } catch (e) { DGX.toast(e.msg || '', true); }
     };
@@ -93,10 +93,10 @@ DGX.upPhoto = kind => {
                                    Authorization: 'Bearer ' + DGX.token },
         body: fd });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw d.detail || 'آپلود ناموفق';
-      DGX.toast(kind === 'avatar' ? 'آواتار ۱:۱ ست شد ✨' : 'کاور ۱۶:۹ ست شد ✨');
+      if (!r.ok) throw d.detail || '\u0622\u067e\u0644\u0648\u062f \u0646\u0627\u0645\u0648\u0641\u0642';
+      DGX.toast(kind === 'avatar' ? '\u0622\u0648\u0627\u062a\u0627\u0631 \u06f1:\u06f1 \u0633\u062a \u0634\u062f ✨' : '\u06a9\u0627\u0648\u0631 \u06f1\u06f6:\u06f9 \u0633\u062a \u0634\u062f ✨');
       location.reload();
-    } catch (e) { DGX.toast(typeof e === 'string' ? e : 'آپلود ناموفق', true); }
+    } catch (e) { DGX.toast(typeof e === 'string' ? e : '\u0622\u067e\u0644\u0648\u062f \u0646\u0627\u0645\u0648\u0641\u0642', true); }
   };
   inp.click();
 };

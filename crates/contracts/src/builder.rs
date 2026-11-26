@@ -1,9 +1,9 @@
-//! قراردادهای وایر استودیوی ساخت محصول HTML با هوش مصنوعی (فاز ۴).
+//! Wire contracts for the AI HTML product builder studio (Phase 4).
 //!
-//! همهٔ مسیرهای این ماژول با نشست Bearer شهروند کار می‌کنند:
-//! `POST /api/v1/builder/sessions`، `GET /api/v1/builder/sessions`،
-//! `GET /api/v1/builder/sessions/{id}`، `POST /api/v1/builder/sessions/{id}/chat`
-//! و `POST /api/v1/builder/sessions/{id}/publish`.
+//! All routes in this module work with a citizen Bearer session:
+//! `POST /api/v1/builder/sessions`, `GET /api/v1/builder/sessions`,
+//! `GET /api/v1/builder/sessions/{id}`, `POST /api/v1/builder/sessions/{id}/chat`
+//! and `POST /api/v1/builder/sessions/{id}/publish`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -11,154 +11,154 @@ use utoipa::ToSchema;
 use crate::common::Din;
 use crate::market::ProductView;
 
-/// یک پیام در تاریخچهٔ گفتگوی سازندهٔ محصول.
+/// One message in the product builder conversation history.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderMessageView {
-    /// شناسهٔ افزایشی پیام
+    /// Incremental message ID
     pub id: i64,
-    /// نقش (`user` / `assistant`)
+    /// Role (`user` / `assistant`)
     pub role: String,
-    /// متن پیام
+    /// Message text
     pub content: String,
-    /// زمان ثبت (Unix epoch ثانیه)
+    /// Recorded time (Unix epoch seconds)
     pub created_at: i64,
 }
 
-/// خلاصهٔ یک جلسه برای فهرست جلسات کاربر.
+/// Summary of a session for the user's session list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderSessionSummary {
-    /// شناسهٔ جلسه (`bldr:{uuid}`)
+    /// Session ID (`bldr:{uuid}`)
     pub id: String,
-    /// مرحله (`discovery` / `ready` / `published`)
+    /// Stage (`discovery` / `ready` / `published`)
     pub stage: String,
-    /// عنوان پیشنهادی
+    /// Proposed title
     pub title: String,
-    /// توضیح فروش پیشنهادی
+    /// Proposed sales copy
     pub description: String,
-    /// قیمت پیشنهادی به دیین
+    /// Proposed price in Din
     pub suggested_price: i64,
-    /// نرخ پورسانت معرف (`0..=5000`)
+    /// Referral commission rate (`0..=5000`)
     pub affiliate_bps: u16,
-    /// آیا کد HTML تولید شده است؟
+    /// Has the HTML code been generated?
     pub has_html: bool,
-    /// شناسهٔ محصول منتشرشده (در صورت انتشار)
+    /// Published product ID (if published)
     pub published_product_id: Option<String>,
-    /// زمان ایجاد (Unix epoch ثانیه)
+    /// Creation time (Unix epoch seconds)
     pub created_at: i64,
-    /// زمان آخرین تغییر (Unix epoch ثانیه)
+    /// Last modified time (Unix epoch seconds)
     pub updated_at: i64,
 }
 
-/// نمای کامل یک جلسهٔ سازنده (همراه تاریخچهٔ پیام‌ها، کد HTML و پیش‌نمایش).
+/// Full view of a builder session (with message history, HTML code and preview).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderSessionView {
-    /// شناسهٔ جلسه (`bldr:{uuid}`)
+    /// Session ID (`bldr:{uuid}`)
     pub id: String,
-    /// مرحله (`discovery` / `ready` / `published`)
+    /// Stage (`discovery` / `ready` / `published`)
     pub stage: String,
-    /// عنوان پیشنهادی محصول
+    /// The proposed product title
     pub title: String,
-    /// توضیح فروش (فرمول CAST)
+    /// Sales copy (CAST formula)
     pub description: String,
-    /// قیمت پیشنهادی به دیین
+    /// Proposed price in Din
     pub suggested_price: i64,
-    /// نرخ پورسانت معرف (`0..=5000`)
+    /// Referral commission rate (`0..=5000`)
     pub affiliate_bps: u16,
-    /// کد کامل HTML تک‌صفحه‌ای تولیدشده
+    /// Generated full single-page HTML code
     pub generated_html: String,
-    /// نسخهٔ پیش‌نمایش امن HTML (≤ ۵۰ KB)
+    /// Safe HTML preview version (≤ 50 KB)
     pub preview_html: String,
-    /// شناسهٔ محصول منتشرشده در بازار (در صورت انتشار)
+    /// Product ID published to the market (if published)
     pub published_product_id: Option<String>,
-    /// تاریخچهٔ پیام‌های گفتگو به ترتیب زمانی
+    /// Conversation message history in chronological order
     pub messages: Vec<BuilderMessageView>,
-    /// زمان ایجاد (Unix epoch ثانیه)
+    /// Creation time (Unix epoch seconds)
     pub created_at: i64,
-    /// زمان آخرین تغییر (Unix epoch ثانیه)
+    /// Last modified time (Unix epoch seconds)
     pub updated_at: i64,
 }
 
-/// فهرست جلسات سازندهٔ کاربر.
+/// List of the user's builder sessions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderSessionListResponse {
-    /// جلسات کاربر — جدیدترین اول
+    /// The user's sessions — newest first
     pub items: Vec<BuilderSessionSummary>,
 }
 
-/// درخواست ساخت جلسهٔ جدید استودیو (بدنهٔ خالی `{}` نیز مجاز است).
+/// Request to create a new studio session (an empty `{}` body is also allowed).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateBuilderSessionRequest {
-    /// عنوان یا ایدهٔ اولیهٔ اختیاری
+    /// Optional initial title or idea
     #[serde(skip_serializing_if = "Option::is_none")]
     pub initial_idea: Option<String>,
 }
 
-/// درخواست ارسال پیام جدید در جلسهٔ سازنده.
+/// Request to send a new message in a builder session.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderChatRequest {
-    /// پیام کاربر (۱..=۴۰۰۰ کاراکتر)
+    /// User message (1..=4000 characters)
     pub message: String,
-    /// اجبار به تولید فوری کد HTML بدون پرسیدن سوال اضافه
+    /// Force immediate HTML code generation without extra questions
     #[serde(skip_serializing_if = "Option::is_none")]
     pub force_generate: Option<bool>,
 }
 
-/// پاسخ یک نوبت چت با استودیوی ساخت محصول.
+/// Response of one chat turn with the product builder studio.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BuilderChatResponse {
-    /// پاسخ متنی دستیار AI
+    /// AI assistant text reply
     pub reply: String,
-    /// وضعیت به‌روزرسانی‌شدهٔ جلسه (شامل پیام‌ها و کد HTML جدید)
+    /// Updated session state (including new messages and HTML code)
     pub session: BuilderSessionView,
-    /// آیا مولد تعاملی جایگزین داخلی اجرا شده است؟
+    /// Was the internal fallback interactive generator run?
     pub used_fallback: bool,
-    /// نام اسلات ارائه‌دهنده (در صورت استفاده از LLM خارجی)
+    /// Provider slot name (when using an external LLM)
     pub provider: Option<String>,
-    /// مجموع توکن مصرف‌شده در این نوبت
+    /// Total tokens consumed in this turn
     pub total_tokens: i64,
 }
 
-/// درخواست انتشار یک‌کلیکهٔ محصول ساخته‌شده در بازار کیان.
+/// One-click publish request for a built product to the Kian market.
 ///
-/// همهٔ فیلدها اختیاری‌اند؛ اگر ارسال نشوند از مقادیر پیشنهادی AI روی جلسه استفاده می‌شود.
+/// All fields are optional; when omitted, the AI-proposed values stored on the session are used.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishBuilderRequest {
-    /// ویرایش اختیاری عنوان محصول
+    /// Optional edit of the product title
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    /// ویرایش اختیاری توضیح فروش
+    /// Optional edit of the sales copy
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    /// ویرایش اختیاری قیمت به دیین
+    /// Optional edit of the price in Din
     #[serde(skip_serializing_if = "Option::is_none")]
     pub price_din: Option<Din>,
-    /// ویرایش اختیاری نرخ پورسانت معرف (`0..=5000`)
+    /// Optional edit of the referral commission rate (`0..=5000`)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub affiliate_bps: Option<u16>,
-    /// دستهٔ اختیاری محصول
+    /// Optional product category
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
 }
 
-/// پاسخ انتشار یک‌کلیکه — شامل محصول منتشرشده و پارامتر لینک رفرال تلگرام.
+/// One-click publish response — includes the published product and the Telegram referral link parameter.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishBuilderResponse {
-    /// محصول ثبت‌شده در بازار
+    /// Product registered on the market
     pub product: ProductView,
-    /// شناسهٔ جلسهٔ سازنده
+    /// Builder session ID
     pub session_id: String,
-    /// پارامتر آمادهٔ لینک وایرال و رفرال مینی‌اپ (`p_{product_id}_r_{tg_id}`)
+    /// Ready-made parameter for mini-app viral and referral links (`p_{product_id}_r_{tg_id}`)
     pub share_start_param: String,
-    /// اگر جلسه قبلاً منتشر شده بود، `true` و همان محصول بازگردانده می‌شود
+    /// If the session was already published, `true` and the same product are returned
     pub already_published: bool,
 }
 
@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn builder_chat_and_publish_dtos_round_trip() {
         let req: BuilderChatRequest =
-            from_str(r#"{"message":"یک ماشین‌حساب بساز","forceGenerate":true}"#).unwrap();
+            from_str(r#"{"message":"Build a calculator","forceGenerate":true}"#).unwrap();
         assert_eq!(req.force_generate, Some(true));
         let pub_req: PublishBuilderRequest = from_str("{}").unwrap();
         assert_eq!(pub_req, PublishBuilderRequest::default());
@@ -178,8 +178,8 @@ mod tests {
         let summary = BuilderSessionSummary {
             id: "bldr:1".into(),
             stage: "ready".into(),
-            title: "ماشین‌حساب".into(),
-            description: "توضیح".into(),
+            title: "\u{645}\u{627}\u{634}\u{6cc}\u{646}‌\u{62d}\u{633}\u{627}\u{628}".into(),
+            description: "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}".into(),
             suggested_price: 250,
             affiliate_bps: 1_500,
             has_html: true,

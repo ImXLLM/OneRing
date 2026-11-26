@@ -1,5 +1,5 @@
-//! تست‌های یکپارچگی فاز ۲ — سفر کامل پول روی SQLite واقعی + مهاجرت لگاسی
-//! با اعداد روز-اول (۴۶۶ کاربر · Σ ۱۸۷٬۶۷۲.۸ Đ · ۱٬۵۵۴ تراکنش · ۳۰ محصول).
+//! Phase-2 integration tests — the full money journey on real SQLite + the legacy
+//! migration with day-one numbers (466 users · Σ 187,672.8 Đ · 1,554 transactions · 30 products).
 
 use crate::migrate::migrate_legacy;
 use crate::store::{ApplyOptions, CommandOutcome, V3Store};
@@ -16,7 +16,7 @@ use sqlx::{
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 
-/// زمان ثابت دترمینیستیک برای تست‌ها.
+/// Fixed deterministic time for tests.
 const AT: &str = "2026-11-11T10:00:00.000Z";
 
 fn temp_path(tag: &str) -> PathBuf {
@@ -43,12 +43,12 @@ async fn count(store: &V3Store, sql: &str) -> i64 {
     sqlx::query(crate::sqlsafe::audited(sql.to_owned())).fetch_one(store.pool_ref()).await.unwrap().get::<i64, _>("c")
 }
 
-// ── اعمال پایه: ضرب، تراز مشتق‌شده، outbox و audit ──────────────────────────
+// ── Base postings: mint, derived balance, outbox, and audit ──────────────────────────
 
 #[tokio::test]
 async fn mint_via_apply_derives_balance_and_writes_outbox_audit() {
     let store = fresh_store().await;
-    store.create_account_if_missing("user:kia", AccountKind::User, Some("کیا")).await.unwrap();
+    store.create_account_if_missing("user:kia", AccountKind::User, Some("\u{6a9}\u{6cc}\u{627}")).await.unwrap();
 
     let opts = ApplyOptions {
         actor: "test".into(),
@@ -68,7 +68,7 @@ async fn mint_via_apply_derives_balance_and_writes_outbox_audit() {
                         Posting::new(MINT_ACCOUNT_ID, -1_000),
                         Posting::new("user:kia", 1_000),
                     ],
-                    memo: Some("تولید ۱۰۰۰ دینار".into()),
+                    memo: Some("\u{62a}\u{648}\u{644}\u{6cc}\u{62f} \u{6f1}\u{6f0}\u{6f0}\u{6f0} \u{62f}\u{6cc}\u{646}\u{627}\u{631}".into()),
                     at: Some(AT.into()),
                 },
             )?;
@@ -84,7 +84,7 @@ async fn mint_via_apply_derives_balance_and_writes_outbox_audit() {
     assert!(!res.replayed);
     assert_eq!(res.tx.as_ref().unwrap().postings.len(), 2);
 
-    // ترازها مشتق‌اند — هیچ ستون ترازی وجود ندارد
+    // Balances are derived — no balance column exists
     assert_eq!(store.balance_of("user:kia").await.unwrap(), Some(1_000));
     assert_eq!(store.balance_of(MINT_ACCOUNT_ID).await.unwrap(), Some(-1_000));
     let eco = store.economy_summary().await.unwrap();
@@ -95,7 +95,7 @@ async fn mint_via_apply_derives_balance_and_writes_outbox_audit() {
     assert_eq!(eco.mint_balance, -1_000);
     assert_eq!(eco.minted_this_year, 1_000);
 
-    // outbox + audit داخل همان تراکنش نوشته شدند
+    // outbox + audit were written inside the same transaction
     let outbox = store.pending_outbox(10).await.unwrap();
     assert_eq!(outbox.len(), 1);
     assert_eq!(outbox[0].kind, "TransactionPosted");
@@ -104,7 +104,7 @@ async fn mint_via_apply_derives_balance_and_writes_outbox_audit() {
     let hist = store.recent_postings_for("user:kia", 5).await.unwrap();
     assert_eq!(hist.len(), 1);
     assert_eq!(hist[0].amount, 1_000);
-    assert_eq!(hist[0].memo.as_deref(), Some("تولید ۱۰۰۰ دینار"));
+    assert_eq!(hist[0].memo.as_deref(), Some("\u{62a}\u{648}\u{644}\u{6cc}\u{62f} \u{6f1}\u{6f0}\u{6f0}\u{6f0} \u{62f}\u{6cc}\u{646}\u{627}\u{631}"));
 }
 
 #[tokio::test]
@@ -144,7 +144,7 @@ async fn idempotent_replay_does_not_double_spend() {
     assert!(replay.replayed);
     assert_eq!(replay.tx.as_ref().unwrap().id, first.tx.as_ref().unwrap().id);
 
-    // هیچ چیز دوبرابر نشده — نه ردیف، نه event، نه audit
+    // Nothing was doubled — no row, no event, no audit
     assert_eq!(store.balance_of("user:kia").await.unwrap(), Some(100));
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Posting""#).await, 2);
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Tx""#).await, 1);
@@ -152,17 +152,17 @@ async fn idempotent_replay_does_not_double_spend() {
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "AuditLog""#).await, 1);
 }
 
-// ── سفر کامل اسکرو روی فروشگاه ───────────────────────────────────────────────
+// ── Full escrow journey on the store ───────────────────────────────────────────────
 
 #[tokio::test]
-#[allow(clippy::too_many_lines)] // سفر کامل — خوانایی یک‌جا مهم‌تر از کوتاهی
+#[allow(clippy::too_many_lines)] // The full journey — in-place readability matters more than brevity
 async fn escrow_full_journey_persists_everything() {
     let store = fresh_store().await;
-    for (id, label) in [("user:buyer", Some("خریدار")), ("user:seller", Some("فروشنده"))]
+    for (id, label) in [("user:buyer", Some("\u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631}")), ("user:seller", Some("\u{641}\u{631}\u{648}\u{634}\u{646}\u{62f}\u{647}"))]
     {
         store.create_account_if_missing(id, AccountKind::User, label).await.unwrap();
     }
-    // کیف خریدار: ۱۰۰۰ Đ
+    // Buyer wallet: 1000 Đ
     store
         .apply(
             ApplyOptions {
@@ -205,7 +205,7 @@ async fn escrow_full_journey_persists_everything() {
         idempotency_key: idem.map(str::to_owned),
     };
 
-    // create — بدون جابه‌جایی پول
+    // create — no money movement
     let r = store
         .apply(step("escrow.create", Some("create:e1"), Some("e1")), |ledger, reg| {
             let o = create_escrow(
@@ -233,7 +233,7 @@ async fn escrow_full_journey_persists_everything() {
     assert!(!r.replayed);
     assert!(r.tx.is_none());
 
-    // fund — خریدار → اسکرو
+    // fund — buyer → escrow
     store
         .apply(step("escrow.fund", Some("fund:e1"), Some("e1")), |ledger, reg| {
             let o = fund_escrow(
@@ -255,7 +255,7 @@ async fn escrow_full_journey_persists_everything() {
         .await
         .unwrap();
 
-    // deliver — بدون پول
+    // deliver — no money
     store
         .apply(step("escrow.deliver", None, Some("e1")), |ledger, reg| {
             let o = deliver_escrow(
@@ -278,7 +278,7 @@ async fn escrow_full_journey_persists_everything() {
         .await
         .unwrap();
 
-    // release — اسکرو → فروشنده + مالیات خزانه
+    // release — escrow → seller + treasury tax
     store
         .apply(step("escrow.release", Some("settle:e1"), Some("e1")), |ledger, reg| {
             let o = release_escrow(
@@ -301,7 +301,7 @@ async fn escrow_full_journey_persists_everything() {
         .await
         .unwrap();
 
-    // وضعیت نهایی اسکرو در DB
+    // The final escrow state in the DB
     let escrow = store.get_escrow("e1").await.unwrap().unwrap();
     assert_eq!(escrow.status.as_str(), "RELEASED");
     assert_eq!(escrow.funded_tx_id.as_deref(), Some("tx_2"));
@@ -309,13 +309,13 @@ async fn escrow_full_journey_persists_everything() {
     assert_eq!(escrow.delivery_ref.as_deref(), Some("https://dl.example/1"));
     assert_eq!(store.list_escrows(None).await.unwrap().len(), 1);
 
-    // پول: خریدار ۶۰۰ · فروشنده ۳۶۰ · خزانه ۴۰ · اسکرو صفر
+    // Money: buyer 600 · seller 360 · treasury 40 · escrow zero
     assert_eq!(store.balance_of("user:buyer").await.unwrap(), Some(600));
     assert_eq!(store.balance_of("user:seller").await.unwrap(), Some(360));
     assert_eq!(store.balance_of(TREASURY_ACCOUNT_ID).await.unwrap(), Some(40));
     assert_eq!(store.balance_of("escrow:e1").await.unwrap(), Some(0));
 
-    // outbox — رویداد ضرب + دقیقاً ۴ رویداد اسکرو به ترتیب تولید
+    // outbox — the mint event + exactly 4 escrow events in production order
     let kinds: Vec<String> =
         store.pending_outbox(10).await.unwrap().into_iter().map(|r| r.kind).collect();
     assert_eq!(
@@ -329,7 +329,7 @@ async fn escrow_full_journey_persists_everything() {
         ]
     );
 
-    // audit — یکی به‌ازای هر فرمان (ضرب + ۴ گذار اسکرو)
+    // audit — one per command (mint + 4 escrow transitions)
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "AuditLog""#).await, 5);
     let eco = store.economy_summary().await.unwrap();
     assert!(eco.balanced);
@@ -337,14 +337,14 @@ async fn escrow_full_journey_persists_everything() {
     assert_eq!(eco.treasury_balance, 40);
     assert_eq!(eco.open_escrows, 0);
 
-    // دیسپچ outbox
+    // outbox dispatch
     let pending = store.pending_outbox(10).await.unwrap();
     let first_id = pending[0].id.clone();
     let n = store.mark_outbox_published(&[first_id]).await.unwrap();
     assert_eq!(n, 1);
     assert_eq!(store.pending_outbox(10).await.unwrap().len(), 4);
 
-    // تاریخچهٔ کیف خریدار — fund قبل از mint (نزولی)
+    // Buyer wallet history — fund before mint (descending)
     let hist = store.recent_postings_for("user:buyer", 10).await.unwrap();
     assert_eq!(hist.len(), 2);
     assert_eq!(hist[0].amount, -400);
@@ -388,22 +388,22 @@ async fn duplicate_escrow_is_domain_error_and_rolls_back() {
     };
 
     store.apply(opts("create:e1"), create).await.unwrap();
-    let second = store.apply(opts("create:e1-TWO"), create).await; // کلید متفاوت → دامنه رد می‌کند
+    let second = store.apply(opts("create:e1-TWO"), create).await; // A different key → the domain rejects
     let err = second.unwrap_err();
     assert!(
         matches!(err, crate::DbError::Domain(e) if e.code == DomainErrorCode::EscrowAlreadyExists)
     );
 
-    // rollback کامل — هیچ ردیف ناقصی نمانده
+    // Full rollback — no partial rows remain
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Escrow""#).await, 1);
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "OutboxEvent""#).await, 1);
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "AuditLog""#).await, 1);
 }
 
-// ── مهاجرت لگاسی + ممیزی خارجی ───────────────────────────────────────────────
+// ── Legacy migration + external audit ───────────────────────────────────────────────
 
-/// ساخت دیتابیس لگاسی سینتتیک با «دقیقاً» اعداد روز-اول.
-#[allow(clippy::too_many_lines)] // فیکسچر سنتتیک — ترتیب درج‌ها مهم است
+/// Build a synthetic legacy database with "exactly" the day-one numbers.
+#[allow(clippy::too_many_lines)] // Synthetic fixture — insert order matters
 async fn build_legacy_fixture(
     path: &std::path::Path,
     users_n: usize,
@@ -423,13 +423,13 @@ async fn build_legacy_fixture(
         .execute(&mut *tx)
         .await
         .unwrap();
-    // ۴۶۵ × 403.0 + ۱ × 277.8 = ۱۸۷٬۶۷۲.۸ → Σ floor = ۱۸۷٬۶۷۲
+    // 465 × 403.0 + 1 × 277.8 = 187,672.8 → Σ floor = 187,672
     for i in 0..users_n {
         let credits = if i + 1 == users_n { 277.8 } else { 403.0 };
         sqlx::query("INSERT INTO users VALUES (?, ?, ?, ?, ?)")
             .bind(i64::try_from(i).map_or(501_070_000, |v| 501_070_000 + v))
             .bind(format!("user{i:03}"))
-            .bind(format!("شهروند {i}"))
+            .bind(format!("\u{634}\u{647}\u{631}\u{648}\u{646}\u{62f} {i}"))
             .bind(credits)
             .bind(i32::from(i % 100 == 0))
             .execute(&mut *tx)
@@ -437,12 +437,12 @@ async fn build_legacy_fixture(
             .unwrap();
     }
     for i in 0..products_n {
-        let title = format!("عنوان محصول {i} — {}", "ز".repeat(150)); // بیش از ۱۲۰ کاراکتر
+        let title = format!("\u{639}\u{646}\u{648}\u{627}\u{646} \u{645}\u{62d}\u{635}\u{648}\u{644} {i} — {}", "\u{632}".repeat(150)); // More than 120 characters
         sqlx::query("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
             .bind(i64::try_from(i).map_or(1, |v| v + 1))
             .bind(501_070_000i64 + i64::try_from(i % users_n).unwrap_or(0))
             .bind(title)
-            .bind(format!("توضیح محصول {i}"))
+            .bind(format!("\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{645}\u{62d}\u{635}\u{648}\u{644} {i}"))
             .bind(if i % 2 == 0 { 49.9 } else { 120.0 })
             .bind(format!("cat-{}", i % 5))
             .bind(if i % 3 == 0 { format!("https://dl.example/{i}") } else { String::new() })
@@ -463,13 +463,13 @@ async fn build_legacy_fixture(
 }
 
 #[tokio::test]
-#[allow(clippy::too_many_lines)] // مهاجرت + ممیزی + replay — چرخهٔ کامل
+#[allow(clippy::too_many_lines)] // Migration + audit + replay — the full cycle
 async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
     let legacy_path = temp_path("legacy");
     let target_path = temp_path("target");
     build_legacy_fixture(&legacy_path, 466, 30, 1_554).await;
 
-    // خواندن لگاسی — فقط‌خواندنی
+    // Legacy-ledger read — read-only
     let snap = read_legacy(legacy_path.to_str().unwrap()).await.unwrap();
     assert_eq!(snap.users.len(), 466);
     assert_eq!(snap.products.len(), 30);
@@ -477,11 +477,11 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
     let sum: f64 = snap.users.iter().map(|u| u.credits).sum();
     assert!((sum - 187_672.8).abs() < 1e-6);
 
-    // فروشگاه هدف + اسکیمای نسخه‌دار
+    // Target store + versioned schema
     let store = V3Store::connect(target_path.to_str().unwrap()).await.unwrap();
     store.migrate().await.unwrap();
 
-    // dry-run — هیچ نوشتنی
+    // Dry run — nothing written
     let dry = migrate_legacy(
         &store,
         &snap.users,
@@ -496,7 +496,7 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Tx""#).await, 0);
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Product""#).await, 0);
 
-    // اجرای واقعی
+    // Real execution
     let report = migrate_legacy(
         &store,
         &snap.users,
@@ -512,26 +512,26 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
         println!("{line}");
     }
 
-    // حساب‌ها: ۴۶۶ کاربر + ۳ سیستمی = ۴۶۹
+    // Accounts: 466 users + 3 system = 469
     assert!(report.lines.iter().any(|l| l.contains("Σ user wallets        = 187672 Đ")));
     let accounts = store.list_accounts_with_balances().await.unwrap();
     assert_eq!(accounts.len(), 469);
     assert_eq!(accounts.iter().filter(|a| a.kind == "user").count(), 466);
 
-    // genesis — یک تراکنش با کلید قطعی
+    // genesis — one transaction with a deterministic key
     assert_eq!(count(&store, r#"SELECT COUNT(*) AS c FROM "Tx""#).await, 1);
     let eco = store.economy_summary().await.unwrap();
     assert_eq!(eco.users_sum, 187_672);
     assert_eq!(eco.mint_balance, -187_672);
     assert!(eco.balanced);
 
-    // حساب ban‌شده هم پولش را دارد — i=0 بن شده و 403 Đ دارد
+    // The banned account keeps its money — i=0 is banned and holds 403 Đ
     assert_eq!(store.balance_of("user:tg:501070000").await.unwrap(), Some(403));
-    // برچسب از username
+    // Label from username
     let kia = accounts.iter().find(|a| a.id == "user:tg:501070000").unwrap();
     assert_eq!(kia.label.as_deref(), Some("user000"));
 
-    // محصولات: برش عنوان، floor قیمت، لینک خالی → NULL
+    // Products: truncated title, floored price, empty link → NULL
     let n_adjust =
         count(&store, r#"SELECT COUNT(*) AS c FROM "AuditLog" WHERE "action"='legacy.adjustment'"#)
             .await;
@@ -547,20 +547,20 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
         .await
         .unwrap()
         .get("priceDin");
-    assert_eq!(price, 49); // floor(49.9) — legacy-1 = محصول i=0 (زوج)
+    assert_eq!(price, 49); // floor(49.9) — legacy-1 = product i=0 (even)
     let price1: i64 = sqlx::query(r#"SELECT "priceDin" FROM "Product" WHERE "id"='legacy-2'"#)
         .fetch_one(store.pool_ref())
         .await
         .unwrap()
         .get("priceDin");
-    assert_eq!(price1, 120); // floor(120.0) — legacy-2 = محصول i=1 (فرد)
+    assert_eq!(price1, 120); // floor(120.0) — legacy-2 = product i=1 (odd)
     let delivery: Option<String> =
         sqlx::query(r#"SELECT "deliveryPayload" FROM "Product" WHERE "id"='legacy-2'"#)
             .fetch_one(store.pool_ref())
             .await
             .unwrap()
             .get("deliveryPayload");
-    assert!(delivery.is_none()); // لینک خالی → NULL
+    assert!(delivery.is_none()); // Empty link → NULL
     let active0: bool = sqlx::query(r#"SELECT "active" FROM "Product" WHERE "id"='legacy-1'"#)
         .fetch_one(store.pool_ref())
         .await
@@ -568,13 +568,13 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
         .get("active");
     assert!(active0); // i=0 → 1
 
-    // ممیزی خارجی — SQL خام، فقط‌خواندنی، باید سبز باشد
+    // External audit — raw SQL, read-only, must be green
     let proof = genesis_proof(target_path.to_str().unwrap()).await.unwrap();
     assert!(proof.ok, "problems: {:?}", proof.problems);
     assert!(proof.lines.iter().any(|l| l.contains("Σ user wallets           : 187672 Đ")));
     assert!(proof.lines.iter().any(|l| l.contains("PROOF OK")));
 
-    // اجرای دوم — replay-safe: نه ضرب دوباره، نه audit دوباره
+    // Second run — replay-safe: no double mint, no double audit
     let again = migrate_legacy(
         &store,
         &snap.users,
@@ -603,7 +603,7 @@ async fn migrate_synthetic_legacy_then_proof_ok_and_replay_safe() {
 async fn proof_fails_on_unbalanced_corruption() {
     let target_path = temp_path("corrupt");
     let legacy_path = temp_path("legacy-corrupt");
-    // فیکسچر کامل ۴۶۶ کاربری — تا قبل از خرابکاری، انتظار ۱۸۷٬۶۷۲ Đ برقرار باشد
+    // The full 466-user fixture — before tampering, the 187,672 Đ expectation must hold
     build_legacy_fixture(&legacy_path, 466, 0, 0).await;
     let store = V3Store::connect(target_path.to_str().unwrap()).await.unwrap();
     store.migrate().await.unwrap();
@@ -614,7 +614,7 @@ async fn proof_fails_on_unbalanced_corruption() {
     let before = genesis_proof(target_path.to_str().unwrap()).await.unwrap();
     assert!(before.ok);
 
-    // خرابکاری آگاهانه: ردیف اضافه که تقدس دوارطرفه را می‌شکند
+    // Deliberate tampering: an extra row that breaks double-entry sanctity
     sqlx::query(r#"INSERT INTO "Posting" ("txId", "accountId", "amount") VALUES ('tx_legacy_genesis', 'user:tg:501070000', 777)"#)
         .execute(store.pool_ref())
         .await
@@ -644,7 +644,7 @@ async fn corrupt_account_kind_is_reported_not_panicked() {
 async fn read_only_connection_refuses_writes() {
     let store = fresh_store().await;
     store.create_account_if_missing("user:x", AccountKind::User, None).await.unwrap();
-    // یک فروشگاه فقط‌خواندنی روی همان مفهوم فایل — با مسیر موقت
+    // A read-only store over the same file concept — with a temp path
     let path = temp_path("ro");
     let rw = V3Store::connect(path.to_str().unwrap()).await.unwrap();
     rw.migrate().await.unwrap();

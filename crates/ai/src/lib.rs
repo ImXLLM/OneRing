@@ -1,19 +1,19 @@
-//! `kian-ai` — گیت‌وی AI کیان — مغز M4.
+//! `kian-ai` — the Kian AI gateway — the M4 brain.
 //!
-//! سه لایهٔ مستقل و تست‌پذیر:
-//! ۱. **redaction** — اسکن قطعی ورودی: کلید خصوصی هگز، توکن بات، PEM، JWT،
-//!    عبارت حافظه (mnemonic)، هگز بلند — هیچ رازی به ارائه‌دهندهٔ بیرونی
-//!    نمی‌رسد؛ فقط دستهٔ یافته گزارش می‌شود، نه خودِ راز.
-//! ۲. **budget** — پاکت سخت بودجه: مصرف امروز + برآورد مهارت ≤ سقف روزانه،
-//!    وگرنه ۴۲۹. عدد صحیح، بدون float، بدون سمتِ «حدس».
-//! ۳. **استخر فال‌بک** — لِین‌های مدل به ترتیب (پورت `brain.py` هرمس): اسلات‌ها و
-//!    تامین‌کننده‌ها با ضرب دکارتیِ «هر مدل × هر کلید» در استخر تخت باز می‌شوند،
-//!    برندهٔ آخر (`last_good`) دفعهٔ بعد اول امتحان می‌شود، گیت کیفیت پاسخ
-//!    خراب/اشتباه‌زبان را رد می‌کند و کم‌ضررترینِ موجود در همه‌جا-شکست نجات می‌یابد.
-//!    پاسخ پاکتِ خراب = شکست لِین.
+//! Three independent, testable layers:
+//! 1. **redaction** — deterministic input scan: hex private keys, bot tokens, PEM, JWT,
+//!    mnemonics, long hex — no secret ever reaches the external provider;
+//!    only the finding category is reported, never the secret itself.
+//! 2. **budget** — a hard budget envelope: today’s spend + the skill estimate ≤ the daily cap,
+//!    otherwise 429. Integers, no floats, no "guess" side.
+//! 3. **fallback pool** — model lanes in order (port of the Hermes `brain.py`): slots and
+//!    providers open into a flat pool with the Cartesian product "every model × every key",
+//!    the last winner (`last_good`) is tried first next time, the response-quality gate
+//!    rejects broken/wrong-language answers, and on total failure the least-harmful available one is rescued.
+//!    A broken envelope answer = lane failure.
 //!
-//! این کرِیت هیچ چیز از دیتابیس و HTTP سرور نمی‌داند — بودجه‌ای که خوانده
-//! می‌شود عددی است که سرور از دفتر می‌آورد؛ گیت‌وی فقط ریاضی می‌کند.
+//! This crate knows nothing about the database or the server’s HTTP — the budget it reads
+//! is a number the server brings from the ledger; the gateway only does math.
 #![forbid(unsafe_code)]
 
 pub mod budget;
@@ -27,10 +27,10 @@ pub mod opencode_zen;
 pub mod redaction;
 pub mod tool_parser;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate id — for smoke tests and logs.
 pub const NAME: &str = "kian-ai";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use budget::{BudgetDecision, BudgetEnvelope};
@@ -87,8 +87,8 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    /// میان‌برهای تک‌گیت‌وی: `BASE_URL`/`API_KEY`/`MODEL` + `FALLBACK_MODEL` باید
-    /// اسلات primary و secondary را روی همان گیت‌وی بسازند و tertiary خاموش بماند.
+    /// Single-gateway shortcuts: `BASE_URL`/`API_KEY`/`MODEL` + `FALLBACK_MODEL` must
+    /// build the primary and secondary slots on the same gateway and keep tertiary off.
     #[test]
     fn single_gateway_aliases_configure_primary_and_secondary() {
         let mut env: HashMap<&str, String> = HashMap::new();
@@ -107,7 +107,7 @@ mod tests {
 
         let s = &cfg.slots[1];
         assert_eq!(s.name, "secondary");
-        // کلید و URL از میان‌برهای اصلی به ارث می‌رسد — مدل جایگزین از FALLBACK_MODEL
+        // the key and URL are inherited from the main shortcut — the fallback model from FALLBACK_MODEL
         assert_eq!(s.url, "https://router.example/v1");
         assert_eq!(s.key, "test-key");
         assert_eq!(s.model, "oc/deepseek-v4.1-flash-free");
@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(cfg.slots.iter().filter(|s| s.enabled()).count(), 2);
     }
 
-    /// متغیر اختصاصیِ اسلات بر میان‌بر تک‌گیت‌وی مقدم است (اولویت قراردادی).
+    /// A slot’s dedicated variable takes precedence over the single-gateway shortcut (contractual precedence).
     #[test]
     fn explicit_slot_vars_override_single_gateway_aliases() {
         let mut env: HashMap<&str, String> = HashMap::new();
@@ -137,7 +137,7 @@ mod tests {
         assert!(!cfg.slots[1].enabled(), "no FALLBACK_MODEL → secondary stays off");
     }
 
-    /// بدون هیچ متغیری — fail-closed: هر سه اسلات خاموش و سقف پیش‌فرض.
+    /// With no variables at all — fail-closed: all three slots off and the default cap.
     #[test]
     fn empty_env_stays_fail_closed() {
         let cfg = AiConfig::from_env_reader(|_| None);
@@ -145,15 +145,15 @@ mod tests {
         assert_eq!(cfg.daily_cap_tokens, 50_000);
     }
 
-    /// ترکیب سه لایه: راز redact می‌شود، بودجه سخت است، فال‌بک ترتیبی است —
-    /// کل قرارداد گیت‌وی در یک سناریوی سرتاسری.
+    /// Combining the three layers: a secret gets redacted, the budget is hard, fallback is ordered —
+    /// the whole gateway contract in one end-to-end scenario.
     #[tokio::test]
     async fn gateway_end_to_end_redacts_then_falls_back() {
-        // اسلات اول خراب، اسلات دوم سالم — متن حاوی کلید خصوصی
+        // first slot broken, second slot healthy — the text contains a private key
         let scripted = client::ScriptedClient::new(vec![
-            Err("slot1 is down".into()), // تلاش ۱ → شکست اسلات primary
+            Err("slot1 is down".into()), // attempt 1 → primary slot failure
             Ok(CompletionPacket {
-                content: "پاسخ مغز کیان".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{645}\u{63a}\u{632} \u{6a9}\u{6cc}\u{627}\u{646}".into(),
                 prompt_tokens: 10,
                 completion_tokens: 20,
             }),
@@ -176,9 +176,9 @@ mod tests {
             daily_cap_tokens: 1_000,
         };
         let gw = AiGateway::new(cfg, std::sync::Arc::new(scripted));
-        // متن خام (حاوی کلید خصوصی) مستقیم به گیت‌وی می‌رود — redaction کار خودِ
-        // گیت‌وی است و یافته‌ها در پاسخ گزارش می‌شوند، نه راز.
-        let raw = "کلید من 0xaaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaabbbbccccdddd است";
+        // the raw text (containing a private key) goes straight to the gateway — redaction is the
+        // gateway’s own job and the findings are reported in the response, not the secret.
+        let raw = "\u{6a9}\u{644}\u{6cc}\u{62f} \u{645}\u{646} 0xaaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaabbbbccccdddd \u{627}\u{633}\u{62a}";
         let standalone = redact(raw);
         assert_eq!(standalone.findings.len(), 1, "private key hex must be found");
         assert_eq!(standalone.findings[0].kind, "private_key_hex");
@@ -219,7 +219,7 @@ mod tests {
             },
             PacketMessage {
                 role: "user".into(),
-                content: "رنگ دکمه را سبز کن و این توکن 123456789:AAHdqTcvbCHB1WUqptGffZfjHlXgMbGfRcE را نگذار".into(),
+                content: "\u{631}\u{646}\u{6af} \u{62f}\u{6a9}\u{645}\u{647} \u{631}\u{627} \u{633}\u{628}\u{632} \u{6a9}\u{646} \u{648} \u{627}\u{6cc}\u{646} \u{62a}\u{648}\u{6a9}\u{646} 123456789:AAHdqTcvbCHB1WUqptGffZfjHlXgMbGfRcE \u{631}\u{627} \u{646}\u{6af}\u{630}\u{627}\u{631}".into(),
             },
         ];
         let res = gw

@@ -1,6 +1,6 @@
 [package]
 name = "dropagentx-tooling"
-description = "ابزار — مهاجرت لگاسی، genesis_proof، dual_run، audit_ledger، parity، loadtest (فاز ۲/۸)"
+description = "\u0627\u0628\u0632\u0627\u0631 — \u0645\u0647\u0627\u062c\u0631\u062a \u0644\u06af\u0627\u0633\u06cc\u060c genesis_proof\u060c dual_run\u060c audit_ledger\u060c parity\u060c loadtest (\u0641\u0627\u0632 \u06f2/\u06f8)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,13 +11,13 @@ publish = false
 workspace = true
 
 [dependencies]
-# مدل خطا: anyhow فقط در باینری‌ها (قاعدهٔ workspace)
+# Error model: anyhow only in binaries (workspace rule)
 dropagentx-db = { workspace = true }
 dropagentx-server = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 sqlx = { workspace = true }
-# فاز ۸ — dual-run پراکسی + parity harness + loadtest
+# Phase 8 — dual-run proxy + parity harness + loadtest
 axum = { workspace = true }
 tower = { workspace = true }
 http-body-util = { workspace = true }

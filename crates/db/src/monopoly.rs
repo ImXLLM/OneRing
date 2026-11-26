@@ -1,47 +1,47 @@
-//! خزانهٔ حاکم — ماندگاریِ تقسیم‌هایِ اتمیِ روزِ اول روی جدولِ
+//! Sovereign treasury — persistence of day-one atomic splits on the table
 //! `sovereign_treasury_splits` (Wave 7 — Step 4/4).
 //!
-//! سه عملیاتِ قطعی روی مهاجرتِ `0011`: درجِ ردیفِ تقسیمِ صفرجمع، خوانشِ
-//! فهرست و شمارشِ کل — با ردیابیِ audit روی هر درج. هیچ جدولِ دفتریِ
-//! دوطرفه لمس نمی‌شود؛ این جدول «لایحهٔ» تقسیم است نه خودِ پول.
-//! ردیفِ نامتوازن (`zero_sum_verified == false`) هرگز درج نمی‌شود.
+//! Three deterministic operations on migration `0011`: insert a zero-sum split row, read the
+//! list and count the total — with audit tracking on every insert. No double-entry
+//! ledger table is touched; this table is the split "bill", not the money itself.
+//! An unbalanced row (`zero_sum_verified == false`) is never inserted.
 
 use sqlx::Row;
 
 use crate::error::{DbError, DbResult};
 use crate::store::V3Store;
 
-/// ردیفِ تقسیمِ خزانهٔ حاکم — همان ستون‌هایِ `sovereign_treasury_splits`.
+/// Sovereign treasury split row — the same columns as `sovereign_treasury_splits`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SovereignTreasurySplitRow {
-    /// شناسهٔ ردیف (`split:<hash>`).
+    /// Row id (`split:<hash>`).
     pub id: String,
-    /// شناسهٔ خریدار.
+    /// Buyer id.
     pub buyer_user_id: String,
-    /// شناسهٔ سازنده.
+    /// Builder id.
     pub creator_user_id: String,
-    /// شناسهٔ معرف — `None` یعنی فروشِ مستقیمِ بی‌معرف (قانونِ ۲۰۰۰ bps).
+    /// Referrer id — `None` means a direct referral-free sale (the 2000 bps rule).
     pub referrer_user_id: Option<String>,
-    /// داراییِ تسویه (`base-native-usdc`, …).
+    /// Settlement asset (`base-native-usdc`, ...).
     pub settlement_asset: String,
-    /// مبلغِ ناخالصِ میکرویی.
+    /// Gross amount in micro units.
     pub gross_amount_micros: i64,
-    /// میکروهایِ خزانهٔ حاکم.
+    /// Sovereign treasury micros.
     pub kia_treasury_micros: i64,
-    /// میکروهایِ معرف.
+    /// Referrer micros.
     pub referrer_micros: i64,
-    /// خالصِ سازنده.
+    /// Builder net.
     pub creator_net_micros: i64,
-    /// سهمِ مؤثرِ پلتفرم بر حسب bps.
+    /// Effective platform share in bps.
     pub effective_platform_bps: i64,
-    /// اثباتِ صفرجمع — درجِ `false` ممنوع است.
+    /// Zero-sum proof — inserting `false` is forbidden.
     pub zero_sum_verified: bool,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
 impl SovereignTreasurySplitRow {
-    /// بازچکِ صفرجمعِ ساختاری — گیتِ قبل از درج.
+    /// Structural zero-sum recheck — the gate before insert.
     #[must_use]
     pub fn is_balanced(&self) -> bool {
         self.kia_treasury_micros + self.referrer_micros + self.creator_net_micros
@@ -76,11 +76,11 @@ fn split_row_from(r: &sqlx::sqlite::SqliteRow) -> SovereignTreasurySplitRow {
 }
 
 impl V3Store {
-    /// درجِ ردیفِ تقسیم — فقط ردیفِ صفرجمع؛ قطعی و ایدمپوتنت روی `id`.
+    /// Insert a split row — zero-sum rows only; deterministic and idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL یا خطای audit پس از درج؛ ردیفِ نامتوازن با
-    /// [`DbError::Corrupt`] رد می‌شود.
+    /// SQL error or an audit error after the insert; an unbalanced row is rejected with
+    /// [`DbError::Corrupt`].
     pub async fn create_sovereign_split(&self, row: &SovereignTreasurySplitRow) -> DbResult<()> {
         if !row.is_balanced() || !row.zero_sum_verified {
             return Err(DbError::Corrupt(
@@ -113,10 +113,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ تقسیم‌هایِ ماندگار — نوترینِ اول، سقفِ `limit`.
+    /// Persisted split list — newest first, capped at `limit`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_sovereign_splits(&self, limit: u32) -> DbResult<Vec<SovereignTreasurySplitRow>> {
         let cap = i64::from(limit.clamp(1, 200));
         let sql = format!(
@@ -130,10 +130,10 @@ impl V3Store {
         Ok(rows.iter().map(split_row_from).collect())
     }
 
-    /// شمارشِ کلِ تقسیم‌ها — گیتِ آزمونِ هندلر.
+    /// Total split count — the handler test gate.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_sovereign_splits(&self) -> DbResult<i64> {
         let row = sqlx::query(crate::sqlsafe::audited(
             r#"SELECT COUNT(*) AS "c" FROM "sovereign_treasury_splits""#.to_owned(),
@@ -156,7 +156,7 @@ mod tests {
     }
 
     fn sample_row(id: &str, referred: bool) -> SovereignTreasurySplitRow {
-        // فروشِ 100.00 USDC: معرف‌دار 10/10/80، بی‌معرف 20/0/80.
+        // Sale of 100.00 USDC: with referrer 10/10/80, without 20/0/80.
         let (treasury_leg, affiliate_leg, platform_bps) = if referred {
             (10_000_000i64, 10_000_000i64, 2_000i64)
         } else {
@@ -187,8 +187,8 @@ mod tests {
         assert_eq!(store.count_sovereign_splits().await.unwrap(), 2);
         let listed = store.list_sovereign_splits(10).await.unwrap();
         assert_eq!(listed.len(), 2);
-        assert_eq!(listed[0].id, "split:b", "نوترین اول");
-        // قانونِ فروشِ مستقیمِ بی‌معرف: خزانه ۲۰٪، معرف صفر، سازنده ۸۰٪.
+        assert_eq!(listed[0].id, "split:b", "\u{646}\u{648}\u{62a}\u{631}\u{6cc}\u{646} \u{627}\u{648}\u{644}");
+        // Direct referral-free sale rule: treasury 20%, referrer zero, builder 80%.
         let direct = &listed[0];
         assert!(direct.referrer_user_id.is_none());
         assert_eq!(direct.kia_treasury_micros, 20_000_000);
@@ -209,7 +209,7 @@ mod tests {
     async fn unbalanced_split_is_rejected() {
         let store = fresh_store().await;
         let mut bad = sample_row("split:bad", true);
-        bad.creator_net_micros = 70_000_000; // جمع = 90M != 100M
+        bad.creator_net_micros = 70_000_000; // sum = 90M != 100M
         let err = store.create_sovereign_split(&bad).await.unwrap_err();
         assert!(err.to_string().contains("zero-sum"), "{err}");
         assert_eq!(store.count_sovereign_splits().await.unwrap(), 0);

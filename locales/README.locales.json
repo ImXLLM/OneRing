@@ -1,0 +1,21 @@
+{
+  "$schema": "https://mairon.dev/schemas/locales.json",
+  "platform": "MAIRON",
+  "canonicalLocale": "en",
+  "policy": "English is the single canonical documentation and source language. Additional locales are pluggable patches (PATCH_READY_SLOT) that never modify canonical files.",
+  "slots": [
+    {
+      "locale": "fa",
+      "name": "Persian (Farsi)",
+      "dir": "rtl",
+      "status": "PATCH_READY_SLOT",
+      "patchFile": "locales/fa.patch.json",
+      "dayOneBps": 10000
+    }
+  ],
+  "removedDevelopmentalEditions": [
+    "README.fa.md",
+    "README.es.md",
+    "README.zh-CN.md"
+  ]
+}

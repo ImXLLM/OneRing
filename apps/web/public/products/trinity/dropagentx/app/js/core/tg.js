@@ -18,7 +18,7 @@ window.DGX = { user: null, ready: false, isLoggedIn: false };
   DGX.tgVersion = VER;
 
   DGX.boot = async () => {
-    DGX.renderNav(); DGX.renderTopbar('خانه');
+    DGX.renderNav(); DGX.renderTopbar('\u062e\u0627\u0646\u0647');
 
     // Step 1: Try Telegram auto-auth
     const init = tg?.initData || '';

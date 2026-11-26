@@ -1,44 +1,44 @@
-//! budget — پاکت سخت بودجهٔ روزانهٔ AI (فاز ۶ لگاسی).
+//! budget — the hard envelope of the daily AI budget (legacy phase 6).
 //!
-//! ریاضی صحیح و خالص: `used_today + estimate ≤ cap` وگرنه رد. این کرِیت
-//! دیتابیس ندارد — سرور مصرف امروز را از دفتر می‌آورد و فقط عدد می‌دهد.
-//! سقف ۰ یعنی «همه‌چیز رد» — fail-closed؛ سقف منفی هرگز ساخته نمی‌شود.
+//! Pure, correct math: `used_today + estimate ≤ cap` or rejected. This crate
+//! has no database — the server brings today's usage from the ledger and only supplies the number.
+//! A cap of 0 means "everything rejected" — fail-closed; a negative cap is never constructed.
 
-/// پاکت بودجه — سقف روزانهٔ توکن هر کاربر.
+/// Budget envelope — each user's daily token cap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BudgetEnvelope {
-    /// سقف روزانهٔ توکن (UTC روز)
+    /// Daily token cap (UTC day)
     pub daily_cap_tokens: i64,
 }
 
-/// تصمیم گیت بودجه.
+/// Budget gate decision.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BudgetDecision {
-    /// مجاز — باقی‌مانده پس از کسر مصرف امروز + برآورد این فراخوانی
+    /// Allowed — the remainder after subtracting today's usage + this call's estimate
     Allowed {
-        /// `cap − used − estimate` (≥ ۰)
+        /// `cap − used − estimate` (≥ 0)
         remaining_after: i64,
     },
-    /// تمام‌شده — جزئیات برای ۴۲۹ `AI_CAP_EXCEEDED`
+    /// Exhausted — details for the 429 `AI_CAP_EXCEEDED`
     Exhausted {
-        /// مصرف امروز
+        /// Today's usage
         used: i64,
-        /// سقف
+        /// Cap
         cap: i64,
     },
 }
 
 impl BudgetEnvelope {
-    /// سازنده — سقف منفی نامعتبر است (`None`) تا fail-closed حفظ شود.
+    /// Constructor — a negative cap is invalid (`None`) to preserve fail-closed.
     #[must_use]
     pub fn new(daily_cap_tokens: i64) -> Option<Self> {
         (daily_cap_tokens >= 0).then_some(Self { daily_cap_tokens })
     }
 
-    /// گیت قبل از فراخوانی — سخت: مصرف + برآورد باید داخل پاکت جا شود و
-    /// مصرف امروز هرگز نباید به سقف رسیده باشد (سقف صفر = همه‌چیز رد).
+    /// Gate before the call — hard: usage + estimate must fit inside the envelope and
+    /// Today's usage must never have reached the cap (a zero cap rejects everything).
     ///
-    /// ورودی منفی (خرابی دادهٔ بالا) به صفر سیر می‌شود — گیت هرگز باز نمی‌شود.
+    /// Negative input (upstream data corruption) saturates to zero — the gate never opens.
     #[must_use]
     pub fn precheck(&self, used_today: i64, estimate: i64) -> BudgetDecision {
         let used = used_today.max(0);
@@ -53,7 +53,7 @@ impl BudgetEnvelope {
         }
     }
 
-    /// باقی‌ماندهٔ پاکت پس از یک فراخوانی — برای پاسخ سیم.
+    /// Envelope remainder after one call — for the wire response.
     #[must_use]
     pub fn remaining(&self, used_today: i64) -> i64 {
         (self.daily_cap_tokens - used_today.max(0)).max(0)
@@ -64,23 +64,23 @@ impl BudgetEnvelope {
 mod tests {
     use super::*;
 
-    /// پاکت سخت: برآورد بزرگ‌تر از باقی‌مانده → رد با جزئیات دقیق ۴۲۹.
+    /// Hard envelope: estimate larger than the remainder → rejected with exact 429 details.
     #[test]
     fn hard_envelope_refuses_when_estimate_exceeds_room() {
         let env = BudgetEnvelope::new(1_000).expect("positive cap");
         assert_eq!(env.precheck(900, 200), BudgetDecision::Exhausted { used: 900, cap: 1_000 });
     }
 
-    /// داخل پاکت → مجاز با باقی‌ماندهٔ دقیق؛ مصرفِ مساویِ سقف → تمام‌شده.
+    /// Inside the envelope → allowed with the exact remainder; usage equal to the cap → exhausted.
     #[test]
     fn inside_envelope_is_allowed_with_exact_remaining() {
         let env = BudgetEnvelope::new(1_000).expect("positive cap");
         assert_eq!(env.precheck(300, 200), BudgetDecision::Allowed { remaining_after: 500 });
-        // used == cap → گیت بسته (همان قانون سقف صفر — مصرف امروز تمام است)
+        // used == cap → gate closed (same rule as a zero cap — today's usage is spent)
         assert_eq!(env.precheck(1_000, 0), BudgetDecision::Exhausted { used: 1_000, cap: 1_000 });
     }
 
-    /// سقف صفر = همه‌چیز رد — fail-closed.
+    /// A zero cap rejects everything — fail-closed.
     #[test]
     fn zero_cap_refuses_everything() {
         let env = BudgetEnvelope::new(0).expect("zero is valid");
@@ -88,7 +88,7 @@ mod tests {
         assert!(matches!(env.precheck(0, 0), BudgetDecision::Exhausted { .. }));
     }
 
-    /// سقف منفی هرگز ساخته نمی‌شود؛ مصرف منفی به صفر سیر می‌شود.
+    /// A negative cap is never created; negative consumption clamps to zero.
     #[test]
     fn negative_inputs_fail_closed() {
         assert!(BudgetEnvelope::new(-1).is_none());

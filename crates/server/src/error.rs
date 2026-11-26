@@ -1,27 +1,27 @@
-//! پاکت خطای HTTP — پل بین خطاهای لایه‌ها و بدنهٔ وایر `{error:{code,message,meta?}}`.
+//! HTTP error envelope — the bridge between layer errors and the wire body `{error:{code,message,meta?}}`.
 //!
-//! نگاشت honest (پورت `errors.ts` + کدهای صریح `api.ts`/`guards.ts`):
-//! * [`HttpFailure`] (فاز ۳) — وضعیت و کد صریح دارد.
-//! * [`DomainFailure`] — کد دامنه → 404/422/500 با `status_for_domain_code`.
-//! * [`DbError`] — SQL/corrupt → 500 `INTERNAL`؛ ماندگاریِ ناتمام هرگز وضعیت را
-//!   خراب نمی‌کند و کلاینت پیام صادقانه می‌گیرد.
+//! Honest mapping (port of `errors.ts` + the explicit codes of `api.ts`/`guards.ts`):
+//! * [`HttpFailure`] (phase 3) — carries an explicit status and code.
+//! * [`DomainFailure`] — domain code → 404/422/500 via `status_for_domain_code`.
+//! * [`DbError`] — SQL/corrupt → 500 `INTERNAL`; a half-finished persistence never corrupts
+//!   state and the client gets an honest message.
 //!
-//! پاسخ 404 مسیرهای ناشناخته هم پاکت است (additive-only) — SPA و بات هرگز
-//! بدنهٔ بی‌شکل نمی‌گیرند.
+//! The 404 response for unknown paths is enveloped too (additive-only) — the SPA and bot never
+//! receive a shapeless body.
 
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use kian_contracts::{DomainFailure, ErrorEnvelope, HttpFailure};
 use kian_db::DbError;
 
-/// خطای آمادهٔ HTTP — هر variant بدنهٔ وایر دقیق می‌دهد.
+/// Ready-made HTTP error — each variant yields the exact wire body.
 #[derive(Debug)]
 pub enum ApiFailure {
-    /// خطای صریح سرور (`HttpFailure` فاز ۳).
+    /// Explicit server error (`HttpFailure` phase 3).
     Http(HttpFailure),
-    /// خطای دامنهٔ خالص — نگاشت ۴۰۴/۴۲۲/۵۰۰ در لایهٔ قرارداد.
+    /// Pure domain error — mapped to 404/422/500 in the contract layer.
     Domain(DomainFailure),
-    /// خطای زیرساخت ماندگاری.
+    /// Persistence infrastructure error.
     Db(DbError),
 }
 
@@ -46,7 +46,7 @@ impl From<kian_domain::DomainError> for ApiFailure {
 impl From<DbError> for ApiFailure {
     fn from(e: DbError) -> Self {
         match e {
-            // خطای دامنهٔ خالص از داخل تراکنش — نگاشت صادقانهٔ ۴۰۴/۴۲۲ حفظ می‌شود
+            // a pure domain error from inside the transaction — the honest 404/422 mapping is preserved
             DbError::Domain(domain_error) => Self::Domain(DomainFailure::new(domain_error)),
             other => Self::Db(other),
         }
@@ -54,7 +54,7 @@ impl From<DbError> for ApiFailure {
 }
 
 impl ApiFailure {
-    /// وضعیت صادقانه.
+    /// Honest status.
     #[must_use]
     pub fn status(&self) -> u16 {
         match self {
@@ -64,7 +64,7 @@ impl ApiFailure {
         }
     }
 
-    /// بدنهٔ وایر — عین شکل `{error:{…}}`.
+    /// Wire body — exactly the `{error:{…}}` shape.
     #[must_use]
     pub fn envelope(&self) -> ErrorEnvelope {
         match self {
@@ -92,7 +92,7 @@ impl IntoResponse for ApiFailure {
         let status =
             StatusCode::from_u16(self.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
         let body = self.envelope();
-        // لاگ ساختاریافته — ردیف audit دیتابیس مسئول تاریخچه است؛ اینجا فقط trace
+        // structured log — the database audit row owns history; here only a trace
         let (code, message) = (&body.error.code, &body.error.message);
         tracing::warn!(status = self.status(), code = %code, message = %message, "api failure");
         (
@@ -104,7 +104,7 @@ impl IntoResponse for ApiFailure {
     }
 }
 
-/// Result استاندارد هندلرها.
+/// The handlers' standard Result.
 pub type ApiResult<T> = Result<T, ApiFailure>;
 
 #[cfg(test)]

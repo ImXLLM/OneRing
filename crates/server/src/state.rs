@@ -1,10 +1,10 @@
-//! وضعیت مشترک سرور — یک `Arc<AppState>` بین همهٔ هندلرها.
+//! Shared server state — one `Arc<AppState>` shared by all handlers.
 //!
-//! دیتابیس ([`V3Store`]) نقطهٔ تنها اتصال دامنه به SQLite است؛ limiter نرخ
-//! درون‌حافظه‌ای همان پنجرهٔ لغزان قراردادی را با Mutex پخش می‌کند؛ گیت‌وی AI
-//! (M4) یک‌بار در بوت از پیکربندی ساخته می‌شود — کلیدهای اسلات هرگز اینجا لاگ
-//! نمی‌شوند؛ ران‌تایم بات (M6) فقط وقتی `KIAN_BOT_TOKEN` و
-//! `KIAN_BOT_WEBHOOK_SECRET` هر دو تنظیم شده باشند بالا می‌آید (fail-closed).
+//! Database ([`V3Store`]) — the domain's single SQLite connection point; the rate
+//! limiter in memory enforces the same contractual sliding window via a Mutex; the AI
+//! gateway (M4) is built once from configuration at boot — slot keys are never logged
+//! here; the bot runtime (M6) starts only when `KIAN_BOT_TOKEN` and
+//! `KIAN_BOT_WEBHOOK_SECRET` are both set (fail-closed).
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -17,27 +17,27 @@ use kian_db::V3Store;
 use crate::config::ServerConfig;
 use crate::handlers::bot::BotRuntime;
 
-/// وضعیت مشترک همهٔ هندلرها.
+/// Shared state for all handlers.
 pub struct AppState {
-    /// فروشگاه v3 — نقطهٔ تنها اتصال دامنه به SQLite.
+    /// v3 store — the domain's single SQLite connection point.
     pub store: V3Store,
-    /// پیکربندی بوت (تغییرناپذیر).
+    /// Boot configuration (immutable).
     pub config: ServerConfig,
-    /// limiter نرخ پنجرهٔ لغزان شاردشده — یکی به ازای سرور؛ قفل‌ها per-shard
-    /// (اصلاح تست بار ۲۰۲۵-۱۱: Mutex سراسری در RPS بالا نقطهٔ داغ بود).
+    /// Sharded sliding-window rate limiter — one per server; locks are per-shard
+    /// (2025-11 load-test fix: the global Mutex was a hot spot at high RPS).
     pub limiter: ShardedLimiter,
-    /// لحظهٔ شروع — uptime در health.
+    /// Start instant — uptime in health.
     pub started_at: Instant,
-    /// گیت‌وی AI (M4) — فال‌بک سه‌اسلات؛ بدون اسلات کانفیگ، صادقانه `Disabled`.
+    /// AI gateway (M4) — three-slot fallback; with no configured slot, honestly `Disabled`.
     pub ai: Arc<AiGateway>,
-    /// ران‌تایم بات (M6) — `None` یعنی وبهوک صادقانه غیرفعال.
+    /// Bot runtime (M6) — `None` means the webhook is honestly disabled.
     pub bot: Option<BotRuntime>,
 }
 
 impl std::fmt::Debug for AppState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // گیت‌وی AI با Debug امن خودش چاپ می‌شود (کلیدها هرگز)؛ ران‌تایم بات
-        // توکن دارد — غیرشامل می‌شود.
+        // The AI gateway prints via its own safe Debug (keys never); the bot runtime
+        // holds a token — excluded from serialization.
         f.debug_struct("AppState")
             .field("config", &self.config)
             .field("ai", &self.ai)
@@ -46,8 +46,8 @@ impl std::fmt::Debug for AppState {
 }
 
 impl AppState {
-    /// ساخت با کلاینت AI تزریقی و ران‌تایم بات تزریقی — مسیر تولیدی `new`
-    /// است؛ تست‌ها `ScriptedClient` و `RecordingSender` تزریق می‌کنند.
+    /// Build with an injected AI client and injected bot runtime — the production path is `new`
+    /// ; tests inject `ScriptedClient` and `RecordingSender`.
     #[must_use]
     pub fn with_parts(
         store: V3Store,
@@ -65,7 +65,7 @@ impl AppState {
         }
     }
 
-    /// ران‌تایم بات تولیدی — فقط با هر دو راز (توکن + راز وبهوک ≥ ۱۶ کاراکتر).
+    /// Production bot runtime — only with both secrets (token + webhook secret ≥ 16 chars).
     fn build_bot(store: &V3Store, config: &ServerConfig) -> Option<BotRuntime> {
         let (Some(token), Some(secret)) = (&config.bot_token, &config.bot_webhook_secret) else {
             return None;
@@ -83,7 +83,7 @@ impl AppState {
         }
     }
 
-    /// ساخت وضعیت با کلاینت AI تزریقی — ران‌تایم بات از پیکربندی ساخته می‌شود.
+    /// Build state with an injected AI client — the bot runtime is built from configuration.
     #[must_use]
     pub fn with_gateway(
         store: V3Store,
@@ -94,10 +94,10 @@ impl AppState {
         Self::with_parts(store, config, client, bot)
     }
 
-    /// ساخت وضعیت — `started_at` همین‌جا قفل می‌شود؛ کلاینت HTTP تولیدی با
-    /// تایم‌اوت ۹۰ ثانیه (سنتز کامل HTML روی لِین‌های رایگان ۲۲ تا ۷۷ ثانیه
-    /// طول می‌کشد — تایم‌اوت ۳۰ ثانیه هر نوبت سازنده را می‌کُشت).
-    /// شکست ساخت کلاینت → کلاینت همیشه-رد (گیت‌وی `Disabled`).
+    /// Build state — `started_at` is locked here; the production HTTP client uses
+    /// a 90-second timeout (full HTML synthesis on free lanes takes 22–77 seconds,
+    /// — a 30-second timeout killed every generation run).
+    /// Client construction failure → always-rejecting client (gateway `Disabled`).
     #[must_use]
     pub fn new(store: V3Store, config: ServerConfig) -> Self {
         let client: Arc<dyn ModelClient> = match HttpModelClient::new(std::time::Duration::from_secs(90)) {
@@ -107,7 +107,7 @@ impl AppState {
         Self::with_gateway(store, config, client)
     }
 
-    /// وضعیت اشتراکی — `Arc` برای کلون‌شدن داخل هر هندلر.
+    /// Shared state — `Arc` so it clones into every handler.
     #[must_use]
     pub fn shared(self) -> Arc<Self> {
         Arc::new(self)

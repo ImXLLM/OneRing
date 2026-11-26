@@ -1,105 +1,105 @@
-//! قراردادهای وایر پارلمان M5 — لایحه، رأی، بستن و اجرا (حاکمیت HITL).
+//! M5 parliament wire contracts — bill, vote, close and execute (HITL governance).
 //!
-//! شکل سیمی camelCase با null صریح؛ شناسه‌ها همان الگوی اسکرو (`bill:…`).
-//! منطق گذارها در `kian-nation` — اینجا فقط DTO با deriveهای utoipa.
+//! camelCase wire shape with explicit nulls; ids follow the escrow pattern (`bill:…`).
+//! Transition logic lives in `kian-nation` — only DTOs with utoipa derives here.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::Din;
 
-/// نوع لایحه روی سیم — `escrowRelease` / `treasuryMove`.
+/// Bill type on the wire — `escrowRelease` / `treasuryMove`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum BillKind {
-    /// حل اختلاف اسکرو — اجرا یعنی release/refund با `approvedByAdmin: true`.
+    /// Escrow dispute resolution — execution means release/refund with `approvedByAdmin: true`.
     EscrowRelease,
-    /// جابه‌جایی خزانه — اجرا یعنی posting دوطرفهٔ خزانه → مقصد.
+    /// Treasury move — execution means a two-sided posting treasury → destination.
     TreasuryMove,
 }
 
-/// نتیجهٔ پیشنهادی لایحهٔ حل اختلاف — `release` / `refund`.
+/// Proposed outcome of a dispute bill — `release` / `refund`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum EscrowResolution {
-    /// تسویهٔ ۹۰/۱۰ به نفع فروشنده (مادهٔ ۲).
+    /// 90/10 settlement in the seller’s favor (Article 2).
     Release,
-    /// بازگشت کامل به خریدار، بدون مالیات.
+    /// Full refund to the buyer, tax-free.
     Refund,
 }
 
-/// درخواست باز کردن لایحه — `createBillRequest`.
+/// Bill-opening request — `createBillRequest`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateBillRequest {
-    /// نوع لایحه
+    /// bill type
     pub kind: BillKind,
-    /// موضوع: شناسهٔ اسکرو یا حساب مقصد (۱..=۱۲۸)
+    /// subject: escrow id or destination account (1..=128)
     #[schema(max_length = 128)]
     pub subject: String,
-    /// مبلغ به دیین — برای `EscrowRelease` اجباری؛ برای `TreasuryMove` اجباری و > ۰
+    /// amount in Din — required for `EscrowRelease`; required and > 0 for `TreasuryMove`
     #[serde(default)]
     #[schema(nullable = false)]
     pub amount_din: Option<Din>,
-    /// نتیجهٔ پیشنهادی — فقط برای `EscrowRelease` اجباری
+    /// proposed outcome — required only for `EscrowRelease`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolution: Option<EscrowResolution>,
-    /// عنوان لایحه (۱..=۲۰۰)
+    /// bill title (1..=200)
     #[schema(max_length = 200)]
     pub title: String,
 }
 
-/// درخواست رأی — رأی‌دهنده از نشست bearer می‌آید (هویت هرگز از بدنه).
+/// Vote request — the voter comes from the bearer session (identity never from the body).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CastVoteRequest {
-    /// موافق؟
+    /// in favor?
     pub approve: bool,
 }
 
-/// نمای لایحه روی سیم — `billView`؛ شمارش‌ها شفاف (مادهٔ ۶).
+/// Bill view on the wire — `billView`; counts are transparent (Article 6).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BillView {
-    /// شناسه لایحه (`bill:…`)
+    /// bill id (`bill:…`)
     pub id: String,
-    /// نوع لایحه
+    /// bill type
     pub kind: BillKind,
-    /// موضوع (اسکرو/حساب)
+    /// subject (escrow/account)
     pub subject: String,
-    /// مبلغ دیین (۰ اگر بی‌مبلغ)
+    /// amount in Din (0 if amountless)
     pub amount_din: i64,
-    /// نتیجهٔ پیشنهادی — فقط حل اختلاف
+    /// proposed outcome — dispute resolution only
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolution: Option<EscrowResolution>,
-    /// عنوان
+    /// title
     pub title: String,
-    /// وضعیت: `OPEN` / `PASSED` / `REJECTED` / `EXECUTED`
+    /// status: `OPEN` / `PASSED` / `REJECTED` / `EXECUTED`
     pub status: String,
-    /// دلیل قطعی پس از بستن: `passed` / `quorum_not_met` / `majority_no` / `human_approval_missing`
+    /// deterministic reason after closing: `passed` / `quorum_not_met` / `majority_no` / `human_approval_missing`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decision_reason: Option<String>,
-    /// زمان باز شدن
+    /// opened at
     pub opened_at: String,
-    /// زمان بستن — تا قبل از تکلیف null صریح
+    /// closed at — explicit null until adjudication
     pub closed_at: Option<String>,
-    /// زمان اجرا — تا قبل از اجرا null صریح
+    /// executed at — explicit null until execution
     pub executed_at: Option<String>,
-    /// رأی موافق
+    /// votes in favor
     pub votes_yes: i64,
-    /// رأی مخالف
+    /// votes against
     pub votes_no: i64,
-    /// رأی انسانی موافق (گیت مادهٔ ۷)
+    /// human votes in favor (Article 7 gate)
     pub human_votes_yes: i64,
-    /// آیا مادهٔ ۷ این لایحه را انسانی می‌خواهد؟ (مبلغ ≥ ۵۰,۰۰۰ Đ)
+    /// does Article 7 make this bill human-required? (amount ≥ 50,000 Đ)
     pub hitl_required: bool,
 }
 
-/// پاسخ فهرست لایحه‌ها — `billListResponse`.
+/// Bill list response — `billListResponse`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BillListResponse {
-    /// لایحه‌ها به ترتیب زمانی (جدیدترین اول)
+    /// bills in chronological order (newest first)
     pub items: Vec<BillView>,
 }
 
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn bill_wire_shape_is_camel_case() {
-        let json = r#"{"kind":"escrowRelease","subject":"esc:1","amountDin":60000,"resolution":"release","title":"حل اختلاف"}"#;
+        let json = r#"{"kind":"escrowRelease","subject":"esc:1","amountDin":60000,"resolution":"release","title":"Dispute resolution"}"#;
         let req: CreateBillRequest = from_str(json).unwrap();
         assert_eq!(req.kind, BillKind::EscrowRelease);
         assert_eq!(req.resolution, Some(EscrowResolution::Release));
@@ -126,7 +126,7 @@ mod tests {
             subject: "citizen:7".into(),
             amount_din: 10_000,
             resolution: None,
-            title: "جابه‌جایی خزانه".into(),
+            title: "\u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647}".into(),
             status: "OPEN".into(),
             decision_reason: None,
             opened_at: "2026-11-21T00:00:00.000Z".into(),

@@ -1,10 +1,10 @@
 /**
- * ردیابی لینک‌های وایرال تلگرام و ذخیرهٔ شناسهٔ معرف (فاز ۵).
+ * Tracking Telegram viral links and storing the referrer id (Phase 5).
  *
- * فرمت استاندارد لینک فروش و رفرال:
- * - `p_<productId>_r_<refTgId>` (هم‌تراز با `shareStartParam` در کرنل Rust)
- * - `p_<productId>` (لینک مستقیم محصول بدون معرف)
- * - `?startapp=...` یا `?tgWebAppStartParam=...` یا `?ref=<refTgId>`
+ * Standard sale and referral link format:
+ * - `p_<productId>_r_<refTgId>` (aligned with `shareStartParam` in the Rust kernel)
+ * - `p_<productId>` (direct product link without a referrer)
+ * - `?startapp=...` or `?tgWebAppStartParam=...` or `?ref=<refTgId>`
  */
 
 import { buildViralShareLink } from "@/lib/kian-tma-bridge";
@@ -17,7 +17,7 @@ export type ParsedViralParam = {
   referrer: string | null;
 };
 
-/** استخراج شناسهٔ محصول و شناسهٔ عددی معرف از پارامتر `start_param` / `startapp`. */
+/** Extract the product id and numeric referrer id from the `start_param` / `startapp` parameter. */
 export function parseViralStartParam(
   raw: string | null | undefined,
 ): ParsedViralParam {
@@ -26,23 +26,23 @@ export function parseViralStartParam(
   try {
     decoded = decodeURIComponent(decoded).trim();
   } catch {
-    /* رشتهٔ خام حفظ می‌شود */
+    /* The raw string is preserved */
   }
   if (!decoded) return { productId: null, referrer: null };
 
-  // الگوی اصلی: p_<productId>_r_<refTgId>
+  // primary pattern: p_<productId>_r_<refTgId>
   const fullMatch = /^p_(.+)_r_([0-9]+)$/.exec(decoded);
   if (fullMatch) {
     return { productId: fullMatch[1], referrer: fullMatch[2] };
   }
 
-  // الگوی مستقیم محصول: p_<productId>
+  // direct product pattern: p_<productId>
   const prodOnly = /^p_(.+)$/.exec(decoded);
   if (prodOnly) {
     return { productId: prodOnly[1], referrer: null };
   }
 
-  // الگوی صرفاً معرف: r_<refTgId> یا ref_<refTgId>
+  // referrer-only pattern: r_<refTgId> or ref_<refTgId>
   const refOnly = /^(?:r|ref)_([0-9]+)$/.exec(decoded);
   if (refOnly) {
     return { productId: null, referrer: refOnly[1] };
@@ -51,7 +51,7 @@ export function parseViralStartParam(
   return { productId: null, referrer: null };
 }
 
-/** نرمال‌سازی شناسهٔ عددی معرف (فقط ارقام یا `citizen:<digits>`). */
+/** Normalize the numeric referrer id (digits only or `citizen:<digits>`). */
 export function normalizeReferrerId(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const trimmed = raw.trim();
@@ -61,7 +61,7 @@ export function normalizeReferrerId(raw: string | null | undefined): string | nu
   return null;
 }
 
-/** ذخیرهٔ معرف فعال در sessionStorage و localStorage برای ارسال خودکار هنگام خرید. */
+/** Store the active referrer in sessionStorage and localStorage for automatic submission at purchase. */
 export function saveActiveReferrer(ref: string | null): void {
   if (typeof window === "undefined") return;
   const clean = normalizeReferrerId(ref);
@@ -69,23 +69,23 @@ export function saveActiveReferrer(ref: string | null): void {
   try {
     window.sessionStorage.setItem(ACTIVE_REFERRER_KEY, clean);
   } catch {
-    /* حالت محدود مرورگر */
+    /* Browser-restricted mode */
   }
   try {
     window.localStorage.setItem(ACTIVE_REFERRER_KEY, clean);
   } catch {
-    /* حالت incognito */
+    /* Incognito mode */
   }
 }
 
-/** خواندن معرف فعال (اولویت با sessionStorage، سپس localStorage). */
+/** Read the active referrer (sessionStorage first, then localStorage). */
 export function getActiveReferrer(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const s = normalizeReferrerId(window.sessionStorage.getItem(ACTIVE_REFERRER_KEY));
     if (s) return s;
   } catch {
-    /* نادیده */
+    /* Ignored */
   }
   try {
     return normalizeReferrerId(window.localStorage.getItem(ACTIVE_REFERRER_KEY));
@@ -95,8 +95,8 @@ export function getActiveReferrer(): string | null {
 }
 
 /**
- * خواندن پارامتر ورود از تلگرام (`initDataUnsafe.start_param`) یا URL
- * (`?startapp=`، `?tgWebAppStartParam=`، `?ref=`، `?product=`) و ذخیرهٔ معرف.
+ * Read the entry parameter from Telegram (`initDataUnsafe.start_param`) or the URL
+ * (`?startapp=`, `?tgWebAppStartParam=`, `?ref=`, `?product=`) and store the referrer.
  */
 export function captureInboundViralLink(): ParsedViralParam {
   if (typeof window === "undefined") {
@@ -126,7 +126,7 @@ export function captureInboundViralLink(): ParsedViralParam {
   return { productId, referrer };
 }
 
-/** جلوگیری از ریدایرکت تکراری برای یک محصول در همان نشست مرورگر. */
+/** Prevent a duplicate redirect for one product within the same browser session. */
 export function consumePendingProductRedirect(productId: string | null): string | null {
   if (typeof window === "undefined" || !productId) return null;
   try {
@@ -139,7 +139,7 @@ export function consumePendingProductRedirect(productId: string | null): string 
   }
 }
 
-/** ساخت لینک آمادهٔ وایرال و رفرال تلگرام برای هر محصول. */
+/** Build ready-made viral and referral Telegram links for any product. */
 export function buildTelegramViralLink(
   productId: string,
   referrerTgId: string,
@@ -157,20 +157,20 @@ export function buildTelegramViralLink(
   return { startParam, telegramUrl, webUrl };
 }
 
-/** نمایش فارسی درصد پورسانت از نقاط پایه (مثلاً `1000` → `۱۰٪`). */
+/** Persian display of the commission percent from basis points (e.g. `1000` → `10%`). */
 export function formatAffiliatePercent(bps: number): string {
   const pct = bps / 100;
-  return `${pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}٪`;
+  return `${pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}\u066a`;
 }
 
 /**
- * لینک‌های وایرال یک‌کلیکی محصول — هم‌تراز با آداپتور `kian-tma-bridge.ts`
- * و فرمت استاندارد کرنل Rust: `p_<productId>_r_<refTgId>`.
+ * One-click product viral links — aligned with the `kian-tma-bridge.ts` adapter
+ * and the standard Rust kernel format: `p_<productId>_r_<refTgId>`.
  *
- * * `startParam` — پارامتر خام برای `shareStartParam` کرنل
- * * `telegramUrl` — لینک مستقیم `t.me/<bot>?startapp=…` (ورود خودکار با payload)
- * * `webUrl` — لینک وب مینی‌اپ با همان payload
- * * `shareUrl` — شیت اشتراک تلگرام (`t.me/share/url?…`) با متن پیشنهادی
+ * * `startParam` — raw parameter for the kernel’s `shareStartParam`
+ * * `telegramUrl` — direct `t.me/<bot>?startapp=…` link (automatic login with the payload)
+ * * `webUrl` — mini-app web link with the same payload
+ * * `shareUrl` — Telegram share sheet (`t.me/share/url?…`) with suggested text
  */
 export function buildViralShareLinks(
   productId: string,
@@ -190,7 +190,7 @@ export function buildViralShareLinks(
   ).replace(/^@/, "");
   const text =
     shareText ??
-    `این ابزار را در بازار کیان ساختم — یک کلیک بازش کن و با هر خرید، پاداش معرفگری می‌گیری.`;
+    `\u0627\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631 \u0631\u0627 \u062f\u0631 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646 \u0633\u0627\u062e\u062a\u0645 — \u06cc\u06a9 \u06a9\u0644\u06cc\u06a9 \u0628\u0627\u0632\u0634 \u06a9\u0646 \u0648 \u0628\u0627 \u0647\u0631 \u062e\u0631\u06cc\u062f\u060c \u067e\u0627\u062f\u0627\u0634 \u0645\u0639\u0631\u0641\u06af\u0631\u06cc \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.`;
   const shareUrl = buildViralShareLink(botUsername, productId, referrerTgId, text);
   return { startParam: base.startParam, telegramUrl: base.telegramUrl, webUrl: base.webUrl, shareUrl };
 }

@@ -1,29 +1,29 @@
-//! مدل خطای لایهٔ ماندگاری — thiserror در کتابخانه، `anyhow` فقط در باینری‌ها.
+//! Persistence-layer error model — thiserror in the library, `anyhow` only in binaries.
 
 use kian_domain::DomainError;
 
-/// خطای آداپتور persistence — همیشه با زمینهٔ کافی برای دیباگ.
+/// Persistence adapter error — always carries enough context to debug.
 #[derive(Debug, thiserror::Error)]
 pub enum DbError {
-    /// خطای sqlx (اتصال، کوئری، قید UNIQUE و…)
+    /// sqlx error (connection, query, UNIQUE constraint, etc.)
     #[error("sqlx: {0}")]
     Sql(#[from] sqlx::Error),
-    /// خطای اجرای مهاجرت‌های نسخه‌دار اسکیما
+    /// Error running the versioned schema migrations
     #[error("migrate: {0}")]
     Migrate(#[from] sqlx::migrate::MigrateError),
-    /// خطای دامنهٔ خالص (از اجرای closure داخل تراکنش)
+    /// Pure domain error (from running a closure inside a transaction)
     #[error("domain: {0}")]
     Domain(#[from] DomainError),
-    /// پیکربندی نامعتبر (URL دیتابیس، مسیر لگاسی و…)
+    /// Invalid configuration (database URL, legacy path, etc.)
     #[error("config: {0}")]
     Config(String),
-    /// دادهٔ خراب در فروشگاه (مثلاً `kind` حساب ناشناخته)
+    /// Corrupt store data (e.g. an unknown account `kind`)
     #[error("corrupt store: {0}")]
     Corrupt(String),
-    /// مهاجرت لگاسی به‌دلیل نقض ثبات رد شد (fail-closed)
+    /// Legacy migration rejected for violating an invariant (fail-closed)
     #[error("migration blocked: {0}")]
     Migration(String),
 }
 
-/// Result استاندارد لایهٔ db.
+/// The standard Result of the db layer.
 pub type DbResult<T> = Result<T, DbError>;

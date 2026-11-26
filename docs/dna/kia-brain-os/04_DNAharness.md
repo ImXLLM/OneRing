@@ -6,39 +6,39 @@ runtime: "Z.ai + Arena + Railway"
 language: "fa-IR + en-US"
 ---
 
-# 04 — DNAharness: فیزیک محیط اجرا
+# 04 — DNAharness: The Physics of the Execution Environment
 
-## 1. نقشهٔ محیط‌ها
+## 1. Environment Map
 
-| محیط | نقش | قواعد |
+| Environment | Role | Rules |
 |---|---|---|
-| **Command Center** (Local) | فرماندهی، پذیرش گنجینه‌ها، تصمیم معماری | مالک: Kia؛ کلیدها فقط همین‌جا |
-| **Z.ai** (Sandbox) | سازندهٔ Rust/DB — کد، تست، تزریق دیتابیس | `CARGO_TARGET_DIR=/tmp/my-project/target`، `CARGO_BUILD_JOBS=2` |
-| **Arena** | هاروستر جنایی مدل‌ها — کالبدشکافی رفتار مدل‌های فرانتیر | خروجی → `OMNI-MODEL-GENOME/models/<id>/` |
-| **Railway** | رانتایم تولید kian-server + 9router | متغیرهای محیطی، هیچ رازی در گیت |
+| **Command Center** (Local) | Command, vault acceptance, architecture decisions | Owner: Kia; keys live here only |
+| **Z.ai** (Sandbox) | Rust/DB builder — code, tests, database injection | `CARGO_TARGET_DIR=/tmp/my-project/target`, `CARGO_BUILD_JOBS=2` |
+| **Arena** | Forensic harvester of models — autopsy of frontier model behavior | Output → `OMNI-MODEL-GENOME/models/<id>/` |
+| **Railway** | Production runtime of kian-server + 9router | Environment variables; zero secrets in git |
 
-## 2. قوانین سخت Z.ai
+## 2. Hard Rules of Z.ai
 
-- فایل‌های تحویلی فقط زیر `/home/z/my-project/download/` دیده می‌شوند.
-- آپلودها در `/home/z/my-project/upload/` — فقط ورودی، هرگز in-place تغییر نمی‌کنند.
-- اسکریپت‌های بلند در `/home/z/my-project/scripts/` ذخیره و از فایل اجرا می‌شوند.
-- پروژهٔ کیان: `/home/z/my-project/kian-launch/kian/` — گیت اصلی.
+- Deliverable files are only visible under `/home/z/my-project/download/`.
+- Uploads land in `/home/z/my-project/upload/` — input only, never modified in place.
+- Long scripts are stored in `/home/z/my-project/scripts/` and executed from file.
+- The Kian project: `/home/z/my-project/kian-launch/kian/` — the primary git repository.
 
-## 3. گیت راز (Zero-Secret Git Gate)
+## 3. The Zero-Secret Git Gate
 
-پیش از هر commit:
-1. `git diff --cached` اسکن می‌شود: `sk-`, `ghp_`, `eyJ`, `AKIA`, `xox`,
-   توکن بات (`\d+:[A-Za-z0-9_-]{30,}`)، `Bearer <non-public>` → صفر مجاز؛
-2. تنها توکن مجاز در مستندات: `Bearer public` (sentinel ناشناس OpenCode Zen);
-3. متن جایگزین همیشه `DUMMY-TEST-FIXTURE` است.
+Before every commit:
+1. `git diff --cached` is scanned: `sk-`, `ghp_`, `eyJ`, `AKIA`, `xox`,
+   bot tokens (`\d+:[A-Za-z0-9_-]{30,}`), `Bearer <non-public>` → zero allowed;
+2. the only token permitted in documentation: `Bearer public` (the anonymous OpenCode Zen sentinel);
+3. the replacement text is always `DUMMY-TEST-FIXTURE`.
 
-## 4. چرخهٔ گنجینه (Vault Cycle)
+## 4. The Vault Cycle
 
-`upload/*.zip` → بازگشایی در `/tmp/stepN_gems/` → گزینش (<100KB/فایل) →
-مونت در `docs/vault/<name>/` → ضدعفونی → کرنل Rust/SQLite → commit.
+`upload/*.zip` → unpacked into `/tmp/stepN_gems/` → curation (<100KB/file) →
+mounted under `docs/vault/<name>/` → sanitized → Rust/SQLite kernel → commit.
 
-## 5. رفتار در خرابی
+## 5. Failure Behavior
 
-- دو شکست متوالی ابزار → توقف و گزارش صادقانه، نه دور زدن سیاست.
-- timeout طولانی cargo → بازهم با همان env؛ هرگز بدون
-  `CARGO_TARGET_DIR` اجرا نمی‌شود (خزانگی جوی‌ایزوله).
+- Two consecutive tool failures → halt and report honestly; never bypass policy.
+- Long cargo timeouts → still run with the same env; never execute without
+  `CARGO_TARGET_DIR` (job-isolated frugality).

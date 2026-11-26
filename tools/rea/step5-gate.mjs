@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * KIAN REA gate — گام ۵ (M5: حاکمیت + کیف پول چهارزنجیره) — گیت نهایی ۱۰/۱۰
+ * KIAN REA gate — step 5 (M5: governance + four-chain wallet) — final gate 10/10
  *
- * ستون‌های این گام:
- *  ۱) حاکمیت — پارلمان HITL گره‌خورده با مادهٔ ۷ منشور (آستانه از kian-domain،
- *     رأی انسانی اجباری برای مبالغ ≥ ۵۰,۰۰۰ Đ)؛ اجرا فقط از مسیر دامنهٔ خالص.
- *  ۲) کیف پول چهارزنجیره — اعتبارسنجی آدرس با چک‌سام‌های رسمی هر زنجیره
- *     (Base58Check / 32B / CRC16-XMODEM / EIP-55) + قراردادهای کانونیک USDT.
- *  ۳) سلام کل workspace — cargo test همه سبز.
- *  ۴) clippy -D warnings صفر خطا.
- *  ۵) بدون credential در سورس.
- *  ۶) audit-release-exposure روی سه آرتیفکت (kernel/admin/web) با fail_on low.
+ * Pillars of this step:
+ *  1) Governance — the HITL parliament tied to charter article 7 (threshold from kian-domain,
+ *     mandatory human vote for amounts ≥ 50,000 Đ); execution only through the pure domain path.
+ *  2) Four-chain wallet — address validation with each chain's official checksum
+ *     (Base58Check / 32B / CRC16-XMODEM / EIP-55) + canonical USDT contracts.
+ *  3) Whole-workspace health — cargo test all green.
+ *  4) clippy -D warnings zero errors.
+ *  5) No credentials in source.
+ *  6) audit-release-exposure on three artifacts (kernel/admin/web) with fail_on low.
  *
- * خروج: 0 = پاس (۱۰/۱۰)، 3 = شکست. گزارش: docs/rea/step5-m5-final-gate-report.txt
+ * Exit: 0 = pass (10/10), 3 = failure. Report: docs/rea/step5-m5-final-gate-report.txt
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -26,7 +26,7 @@ const AUDIT = path.join(ROOT, "tools/rea/release-exposure.mjs");
 let failures = 0;
 const lines = [];
 const say = (s = "") => { lines.push(s); console.log(s); };
-// cargo ممکن است در ~/.cargo/bin باشد — PATH صریح برای spawnSync بدون shell
+// cargo may live in ~/.cargo/bin — explicit PATH for spawnSync without a shell
 const ENV = {
   ...process.env,
   PATH: `${process.env.HOME ?? ""}/.cargo/bin:${process.env.PATH ?? ""}`,
@@ -55,7 +55,7 @@ say("# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on 
 say("# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low");
 say("");
 
-/* ── ۱) حاکمیت — پارلمان HITL گره‌خورده با منشور ───────────────────────── */
+/* ── 1) Governance — the HITL parliament tied to the charter ───────────────────────── */
 say("════ 1) governance — parliament HITL bound to the charter ════");
 {
   const nationRs = readFileSync(path.join(ROOT, "crates/nation/src/lib.rs"), "utf8");
@@ -93,7 +93,7 @@ say("════ 1) governance — parliament HITL bound to the charter ══�
 }
 say("");
 
-/* ── ۲) کیف پول چهارزنجیره — چک‌سام‌های رسمی ────────────────────────────── */
+/* ── 2) Four-chain wallet — official checksums ────────────────────────────── */
 say("════ 2) four-chain wallet — official checksums per chain ════");
 {
   const walletRs = readFileSync(path.join(ROOT, "crates/wallet/src/lib.rs"), "utf8");
@@ -137,7 +137,7 @@ say("════ 2) four-chain wallet — official checksums per chain ══�
 }
 say("");
 
-/* ── ۳) سلام کل workspace — همهٔ تست‌ها ─────────────────────────────────── */
+/* ── 3) Whole-workspace health — all tests ─────────────────────────────────── */
 say("════ 3) whole-workspace tests green ════");
 {
   const t = run("cargo", ["test", "--workspace"], { timeout: 900_000 });
@@ -149,7 +149,7 @@ say("════ 3) whole-workspace tests green ════");
 }
 say("");
 
-/* ── ۴) clippy -D warnings صفر ─────────────────────────────────────────── */
+/* ── 4) clippy -D warnings zero ─────────────────────────────────────────── */
 say("════ 4) clippy -D warnings = 0 errors ════");
 {
   const t = run("cargo", ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"], { timeout: 900_000 });
@@ -158,7 +158,7 @@ say("════ 4) clippy -D warnings = 0 errors ════");
 }
 say("");
 
-/* ── ۵) بدون credential در سورس ────────────────────────────────────────── */
+/* ── 5) No credentials in source ────────────────────────────────────────── */
 say("════ 5) no credential markers in source ════");
 {
   let hits = 0;
@@ -183,7 +183,7 @@ say("════ 5) no credential markers in source ════");
 }
 say("");
 
-/* ── ۶) audit-release-exposure روی سه آرتیفکت ──────────────────────────── */
+/* ── 6) audit-release-exposure on three artifacts ──────────────────────────── */
 say("════ 6) audit-release-exposure (fail_on low) ════");
 mkdirSync(path.join(ROOT, "docs/rea"), { recursive: true });
 {
@@ -210,7 +210,7 @@ mkdirSync(path.join(ROOT, "docs/rea"), { recursive: true });
 }
 say("");
 
-/* ── جمع‌بندی ──────────────────────────────────────────────────────────── */
+/* ── Summary ──────────────────────────────────────────────────────────── */
 say(`════ verdict: ${failures === 0 ? "PASS — FINAL gate 10/10 green (exit 0)" : `FAIL — ${failures} failing check(s) (exit 3)`} ════`);
 writeFileSync(REPORT, `${lines.join("\n")}\n`);
 console.log(`\nreport: ${REPORT}`);

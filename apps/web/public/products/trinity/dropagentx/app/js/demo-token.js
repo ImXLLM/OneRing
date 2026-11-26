@@ -1,10 +1,10 @@
 /* ────────────────────────────────────────────────────────────────────────
-   MOCK-ONLY SHIM  (فقط برای دموی آفلاینِ این زیپ)
-   serve.py یک API تقلبی دارد که هر توکن Bearer را قبول می‌کند؛ این خط باعث
-   می‌شود مینی‌اپ از ابتدا «لاگین‌شده» بالا بیاید تا صفحات کیف پول/داشبورد/
-   کتابخانه هم پر باشند.
-   روی بک‌اند واقعی بی‌اثر است: توکن نامعتبر با ۴۰۱ رد و پاک می‌شود.
-   اگر این فایل را حذف کنی، هیچ چیز دیگری تغییر نمی‌کند.
+   MOCK-ONLY SHIM  (offline demo of this zip only)
+   serve.py has a mock API that accepts any Bearer token; this line makes
+   the mini-app boot up already «logged in» so the wallet/dashboard/
+   library pages are populated too.
+   No effect against the real backend: an invalid token is rejected with 401 and cleared.
+   Remove this file and nothing else changes.
    ──────────────────────────────────────────────────────────────────────── */
 try {
   if (!localStorage.getItem('dgx_token')) localStorage.setItem('dgx_token', 'mock-token');

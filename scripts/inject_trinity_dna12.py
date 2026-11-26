@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""inject_trinity_dna12.py — تزریق DNA #12 مغز خالق (Wave 3 — Trinity Studio Pipeline).
+"""inject_trinity_dna12.py — \u062a\u0632\u0631\u06cc\u0642 DNA #12 \u0645\u063a\u0632 \u062e\u0627\u0644\u0642 (Wave 3 — Trinity Studio Pipeline).
 
 Sections:
   1. Idempotent upsert of 1 curated flagship "KbEntry" record into
@@ -31,42 +31,42 @@ DOWNLOAD_DB = Path("/home/z/my-project/download/kian-production.db")
 CREATED_AT = "2026-11-25T00:00:00.000Z"
 
 DNA12_TITLE = (
-    "DNA دوازدهم مغز خالق: خط لولهٔ سه‌کالبدی حاکم (Trinity Studio Pipeline) — "
-    "آلفا → اتاق فرمان ۳×۹ → مایرون ۱۵۰/۱۴۵"
+    "DNA \u062f\u0648\u0627\u0632\u062f\u0647\u0645 \u0645\u063a\u0632 \u062e\u0627\u0644\u0642: \u062e\u0637 \u0644\u0648\u0644\u0647\u0654 \u0633\u0647‌\u06a9\u0627\u0644\u0628\u062f\u06cc \u062d\u0627\u06a9\u0645 (Trinity Studio Pipeline) — "
+    "\u0622\u0644\u0641\u0627 → \u0627\u062a\u0627\u0642 \u0641\u0631\u0645\u0627\u0646 \u06f3×\u06f9 → \u0645\u0627\u06cc\u0631\u0648\u0646 \u06f1\u06f5\u06f0/\u06f1\u06f4\u06f5"
 )
 
 DNA12_BODY = (
-    "دوازدهمین پروندهٔ مغز خالق (KIA-BRAIN-OS/12_TRINITY_AVATAR_ENGINE.md، Wave 3 کرنل 0xKIA): "
-    "معماریِ امضادارِ استودیوی حاکم — سه کالبد کیا در یک آهنگریِ محصول: "
-    "(۱) کالبد ۱ آلفا — شکارچی ایده و کامپایلر مستر پرامپت و استراکچر پروژه با کالیبراسیون قفل‌شده "
-    "IQ=136 / EQ=122 / ترمزِ توقف 0.04 / دمای آنتروپی 0.88؛ استخراج قطعی پنج اسلات کشف "
-    "(هدفِ هسته، مخاطب و UX در ۳۹۰ پیکسل، قابلیت‌های تعاملی فریمِ اول، داده و APIهای بدون احراز از "
-    "۱۲۰ API عمومی، درآمدزایی با KIAN/Stars (XTR) و سهم معرف) و قفلِ مستر پرامپت (SHA-256) و "
-    "استراکچر پروژه در آمادگیِ ≥ 80٪. "
-    "(۲) کالبد ۲ اتاق فرمان منطقی — ارکستراتور قضایی با IQ=139 / EQ=129 / ترمز 0.62 / سختیِ قضایی "
-    "0.96 و کارخانهٔ ساب‌ایجنت‌های OpenBot با الگوی ۳×۹: سه لایهٔ پرامپت کش-امن "
-    "(هستهٔ ثابت قوانین حاکم + زمینهٔ نشست با hash مستر پرامپت + محولهٔ پویا با بذر آلل‌ها، جداشده با "
-    "__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__) × ژنوم نه‌لایه‌ای (f01 توپولوژی و هارنس با قلاب توقف "
-    "450s/1200s، f02 قیدهای سخت forbid(unsafe_code)/صفر سرریز ۳۹۰/گارد SSRF، f03 اقتصاد توکن "
-    "Caveman، f04 آلل‌های تصادفی قطعی از session_seed+subagent_index با SplitMix64: "
-    "surgical_density، ux_craft، edge_case_paranoia، execution_velocity، f05 قرارداد خودترمیمی "
-    "۳-تلاشی، f06 بلوک XML <openbot_subagent_dna>، f07 گیت پاک‌ساز صفر todo/راز/اسلوپ، "
-    "f08 پروب‌های تجربی، f09 کارت تحویل). "
-    "(۳) کالبد ۳ مایرون-۱۵۰ — داور اورکلاک‌شده با IQ=150 / EQ=145 / افق نگاه ۸ / نظریهٔ ذهن "
-    "مرتبهٔ ۳ / جاه‌طلبی 0.99 قفل‌شده در crates/domain/src/mairon_rea_and_reviews.rs و "
-    "crates/hermes/src/trinity_pipeline.rs (منبع واحد حقیقت): داوری ۴×۲۵=۱۰۰ ستون REA از "
-    "ویژگی‌های قابل‌سنجش آرتیفکت، مشاورهٔ استراتژیک هشت‌گامی و قلاب روان‌شناختی ToM-3 با قیمت "
-    "Stars، حلقهٔ خودترمیمی execute_command_center_with_mairon_loop تا عبور از گیت REA ≥ 85 "
-    "(بیشینهٔ ۳ فرمان ترمیم به ساب‌ایجنت مقصر)، دروازهٔ دو-کلیدی انتشار "
-    "(confirm_and_publish_product) با نشان ⚒️ Mairon REA Certified: {score}/100 (Forge-Grade) و "
-    "موتور ستارهٔ ۵گانهٔ بیزی (پیشین C=5.0 و m=4.20، وزن خرید تاییدشده 1.0 در برابر 0.25، "
+    "\u062f\u0648\u0627\u0632\u062f\u0647\u0645\u06cc\u0646 \u067e\u0631\u0648\u0646\u062f\u0647\u0654 \u0645\u063a\u0632 \u062e\u0627\u0644\u0642 (KIA-BRAIN-OS/12_TRINITY_AVATAR_ENGINE.md\u060c Wave 3 \u06a9\u0631\u0646\u0644 0xKIA): "
+    "\u0645\u0639\u0645\u0627\u0631\u06cc\u0650 \u0627\u0645\u0636\u0627\u062f\u0627\u0631\u0650 \u0627\u0633\u062a\u0648\u062f\u06cc\u0648\u06cc \u062d\u0627\u06a9\u0645 — \u0633\u0647 \u06a9\u0627\u0644\u0628\u062f \u06a9\u06cc\u0627 \u062f\u0631 \u06cc\u06a9 \u0622\u0647\u0646\u06af\u0631\u06cc\u0650 \u0645\u062d\u0635\u0648\u0644: "
+    "(\u06f1) \u06a9\u0627\u0644\u0628\u062f \u06f1 \u0622\u0644\u0641\u0627 — \u0634\u06a9\u0627\u0631\u0686\u06cc \u0627\u06cc\u062f\u0647 \u0648 \u06a9\u0627\u0645\u067e\u0627\u06cc\u0644\u0631 \u0645\u0633\u062a\u0631 \u067e\u0631\u0627\u0645\u067e\u062a \u0648 \u0627\u0633\u062a\u0631\u0627\u06a9\u0686\u0631 \u067e\u0631\u0648\u0698\u0647 \u0628\u0627 \u06a9\u0627\u0644\u06cc\u0628\u0631\u0627\u0633\u06cc\u0648\u0646 \u0642\u0641\u0644‌\u0634\u062f\u0647 "
+    "IQ=136 / EQ=122 / \u062a\u0631\u0645\u0632\u0650 \u062a\u0648\u0642\u0641 0.04 / \u062f\u0645\u0627\u06cc \u0622\u0646\u062a\u0631\u0648\u067e\u06cc 0.88\u061b \u0627\u0633\u062a\u062e\u0631\u0627\u062c \u0642\u0637\u0639\u06cc \u067e\u0646\u062c \u0627\u0633\u0644\u0627\u062a \u06a9\u0634\u0641 "
+    "(\u0647\u062f\u0641\u0650 \u0647\u0633\u062a\u0647\u060c \u0645\u062e\u0627\u0637\u0628 \u0648 UX \u062f\u0631 \u06f3\u06f9\u06f0 \u067e\u06cc\u06a9\u0633\u0644\u060c \u0642\u0627\u0628\u0644\u06cc\u062a‌\u0647\u0627\u06cc \u062a\u0639\u0627\u0645\u0644\u06cc \u0641\u0631\u06cc\u0645\u0650 \u0627\u0648\u0644\u060c \u062f\u0627\u062f\u0647 \u0648 API\u0647\u0627\u06cc \u0628\u062f\u0648\u0646 \u0627\u062d\u0631\u0627\u0632 \u0627\u0632 "
+    "\u06f1\u06f2\u06f0 API \u0639\u0645\u0648\u0645\u06cc\u060c \u062f\u0631\u0622\u0645\u062f\u0632\u0627\u06cc\u06cc \u0628\u0627 KIAN/Stars (XTR) \u0648 \u0633\u0647\u0645 \u0645\u0639\u0631\u0641) \u0648 \u0642\u0641\u0644\u0650 \u0645\u0633\u062a\u0631 \u067e\u0631\u0627\u0645\u067e\u062a (SHA-256) \u0648 "
+    "\u0627\u0633\u062a\u0631\u0627\u06a9\u0686\u0631 \u067e\u0631\u0648\u0698\u0647 \u062f\u0631 \u0622\u0645\u0627\u062f\u06af\u06cc\u0650 ≥ 80\u066a. "
+    "(\u06f2) \u06a9\u0627\u0644\u0628\u062f \u06f2 \u0627\u062a\u0627\u0642 \u0641\u0631\u0645\u0627\u0646 \u0645\u0646\u0637\u0642\u06cc — \u0627\u0631\u06a9\u0633\u062a\u0631\u0627\u062a\u0648\u0631 \u0642\u0636\u0627\u06cc\u06cc \u0628\u0627 IQ=139 / EQ=129 / \u062a\u0631\u0645\u0632 0.62 / \u0633\u062e\u062a\u06cc\u0650 \u0642\u0636\u0627\u06cc\u06cc "
+    "0.96 \u0648 \u06a9\u0627\u0631\u062e\u0627\u0646\u0647\u0654 \u0633\u0627\u0628‌\u0627\u06cc\u062c\u0646\u062a‌\u0647\u0627\u06cc OpenBot \u0628\u0627 \u0627\u0644\u06af\u0648\u06cc \u06f3×\u06f9: \u0633\u0647 \u0644\u0627\u06cc\u0647\u0654 \u067e\u0631\u0627\u0645\u067e\u062a \u06a9\u0634-\u0627\u0645\u0646 "
+    "(\u0647\u0633\u062a\u0647\u0654 \u062b\u0627\u0628\u062a \u0642\u0648\u0627\u0646\u06cc\u0646 \u062d\u0627\u06a9\u0645 + \u0632\u0645\u06cc\u0646\u0647\u0654 \u0646\u0634\u0633\u062a \u0628\u0627 hash \u0645\u0633\u062a\u0631 \u067e\u0631\u0627\u0645\u067e\u062a + \u0645\u062d\u0648\u0644\u0647\u0654 \u067e\u0648\u06cc\u0627 \u0628\u0627 \u0628\u0630\u0631 \u0622\u0644\u0644‌\u0647\u0627\u060c \u062c\u062f\u0627\u0634\u062f\u0647 \u0628\u0627 "
+    "__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__) × \u0698\u0646\u0648\u0645 \u0646\u0647‌\u0644\u0627\u06cc\u0647‌\u0627\u06cc (f01 \u062a\u0648\u067e\u0648\u0644\u0648\u0698\u06cc \u0648 \u0647\u0627\u0631\u0646\u0633 \u0628\u0627 \u0642\u0644\u0627\u0628 \u062a\u0648\u0642\u0641 "
+    "450s/1200s\u060c f02 \u0642\u06cc\u062f\u0647\u0627\u06cc \u0633\u062e\u062a forbid(unsafe_code)/\u0635\u0641\u0631 \u0633\u0631\u0631\u06cc\u0632 \u06f3\u06f9\u06f0/\u06af\u0627\u0631\u062f SSRF\u060c f03 \u0627\u0642\u062a\u0635\u0627\u062f \u062a\u0648\u06a9\u0646 "
+    "Caveman\u060c f04 \u0622\u0644\u0644‌\u0647\u0627\u06cc \u062a\u0635\u0627\u062f\u0641\u06cc \u0642\u0637\u0639\u06cc \u0627\u0632 session_seed+subagent_index \u0628\u0627 SplitMix64: "
+    "surgical_density\u060c ux_craft\u060c edge_case_paranoia\u060c execution_velocity\u060c f05 \u0642\u0631\u0627\u0631\u062f\u0627\u062f \u062e\u0648\u062f\u062a\u0631\u0645\u06cc\u0645\u06cc "
+    "\u06f3-\u062a\u0644\u0627\u0634\u06cc\u060c f06 \u0628\u0644\u0648\u06a9 XML <openbot_subagent_dna>\u060c f07 \u06af\u06cc\u062a \u067e\u0627\u06a9‌\u0633\u0627\u0632 \u0635\u0641\u0631 todo/\u0631\u0627\u0632/\u0627\u0633\u0644\u0648\u067e\u060c "
+    "f08 \u067e\u0631\u0648\u0628‌\u0647\u0627\u06cc \u062a\u062c\u0631\u0628\u06cc\u060c f09 \u06a9\u0627\u0631\u062a \u062a\u062d\u0648\u06cc\u0644). "
+    "(\u06f3) \u06a9\u0627\u0644\u0628\u062f \u06f3 \u0645\u0627\u06cc\u0631\u0648\u0646-\u06f1\u06f5\u06f0 — \u062f\u0627\u0648\u0631 \u0627\u0648\u0631\u06a9\u0644\u0627\u06a9‌\u0634\u062f\u0647 \u0628\u0627 IQ=150 / EQ=145 / \u0627\u0641\u0642 \u0646\u06af\u0627\u0647 \u06f8 / \u0646\u0638\u0631\u06cc\u0647\u0654 \u0630\u0647\u0646 "
+    "\u0645\u0631\u062a\u0628\u0647\u0654 \u06f3 / \u062c\u0627\u0647‌\u0637\u0644\u0628\u06cc 0.99 \u0642\u0641\u0644‌\u0634\u062f\u0647 \u062f\u0631 crates/domain/src/mairon_rea_and_reviews.rs \u0648 "
+    "crates/hermes/src/trinity_pipeline.rs (\u0645\u0646\u0628\u0639 \u0648\u0627\u062d\u062f \u062d\u0642\u06cc\u0642\u062a): \u062f\u0627\u0648\u0631\u06cc \u06f4×\u06f2\u06f5=\u06f1\u06f0\u06f0 \u0633\u062a\u0648\u0646 REA \u0627\u0632 "
+    "\u0648\u06cc\u0698\u06af\u06cc‌\u0647\u0627\u06cc \u0642\u0627\u0628\u0644‌\u0633\u0646\u062c\u0634 \u0622\u0631\u062a\u06cc\u0641\u06a9\u062a\u060c \u0645\u0634\u0627\u0648\u0631\u0647\u0654 \u0627\u0633\u062a\u0631\u0627\u062a\u0698\u06cc\u06a9 \u0647\u0634\u062a‌\u06af\u0627\u0645\u06cc \u0648 \u0642\u0644\u0627\u0628 \u0631\u0648\u0627\u0646‌\u0634\u0646\u0627\u062e\u062a\u06cc ToM-3 \u0628\u0627 \u0642\u06cc\u0645\u062a "
+    "Stars\u060c \u062d\u0644\u0642\u0647\u0654 \u062e\u0648\u062f\u062a\u0631\u0645\u06cc\u0645\u06cc execute_command_center_with_mairon_loop \u062a\u0627 \u0639\u0628\u0648\u0631 \u0627\u0632 \u06af\u06cc\u062a REA ≥ 85 "
+    "(\u0628\u06cc\u0634\u06cc\u0646\u0647\u0654 \u06f3 \u0641\u0631\u0645\u0627\u0646 \u062a\u0631\u0645\u06cc\u0645 \u0628\u0647 \u0633\u0627\u0628‌\u0627\u06cc\u062c\u0646\u062a \u0645\u0642\u0635\u0631)\u060c \u062f\u0631\u0648\u0627\u0632\u0647\u0654 \u062f\u0648-\u06a9\u0644\u06cc\u062f\u06cc \u0627\u0646\u062a\u0634\u0627\u0631 "
+    "(confirm_and_publish_product) \u0628\u0627 \u0646\u0634\u0627\u0646 ⚒️ Mairon REA Certified: {score}/100 (Forge-Grade) \u0648 "
+    "\u0645\u0648\u062a\u0648\u0631 \u0633\u062a\u0627\u0631\u0647\u0654 \u06f5\u06af\u0627\u0646\u0647\u0654 \u0628\u06cc\u0632\u06cc (\u067e\u06cc\u0634\u06cc\u0646 C=5.0 \u0648 m=4.20\u060c \u0648\u0632\u0646 \u062e\u0631\u06cc\u062f \u062a\u0627\u06cc\u06cc\u062f\u0634\u062f\u0647 1.0 \u062f\u0631 \u0628\u0631\u0627\u0628\u0631 0.25\u060c "
     "CombinedRankScore = 0.60·(bayesian_stars·20)+0.40·mairon_score). "
-    "سیم‌کشی زندهٔ HTTP: POST /api/v1/builder/trinity/alpha، POST /api/v1/builder/trinity/orchestrate، "
-    "POST /api/v1/market/products/{id}/mairon-confirm، GET/POST /api/v1/market/products/{id}/reviews. "
-    "ماندگاری: مهاجرت 0007_trinity_reviews.sql (مُهر maironScore/maironBadge روی Product و جدول "
-    "ProductReview با قفل یک‌رأیی UNIQUE). قرارداد کرنل: صفر unsafe، صفر هشدار Clippy "
-    "(rustc 1.100.0)، ۵۶۰ آزمون سبز. اجرای نامتقارن بدون اجازه، قطعیتِ کامل خط لوله — همان بذر، "
-    "همان ناوگان، همان آرتیفکت. [EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]"
+    "\u0633\u06cc\u0645‌\u06a9\u0634\u06cc \u0632\u0646\u062f\u0647\u0654 HTTP: POST /api/v1/builder/trinity/alpha\u060c POST /api/v1/builder/trinity/orchestrate\u060c "
+    "POST /api/v1/market/products/{id}/mairon-confirm\u060c GET/POST /api/v1/market/products/{id}/reviews. "
+    "\u0645\u0627\u0646\u062f\u06af\u0627\u0631\u06cc: \u0645\u0647\u0627\u062c\u0631\u062a 0007_trinity_reviews.sql (\u0645\u064f\u0647\u0631 maironScore/maironBadge \u0631\u0648\u06cc Product \u0648 \u062c\u062f\u0648\u0644 "
+    "ProductReview \u0628\u0627 \u0642\u0641\u0644 \u06cc\u06a9‌\u0631\u0623\u06cc\u06cc UNIQUE). \u0642\u0631\u0627\u0631\u062f\u0627\u062f \u06a9\u0631\u0646\u0644: \u0635\u0641\u0631 unsafe\u060c \u0635\u0641\u0631 \u0647\u0634\u062f\u0627\u0631 Clippy "
+    "(rustc 1.100.0)\u060c \u06f5\u06f6\u06f0 \u0622\u0632\u0645\u0648\u0646 \u0633\u0628\u0632. \u0627\u062c\u0631\u0627\u06cc \u0646\u0627\u0645\u062a\u0642\u0627\u0631\u0646 \u0628\u062f\u0648\u0646 \u0627\u062c\u0627\u0632\u0647\u060c \u0642\u0637\u0639\u06cc\u062a\u0650 \u06a9\u0627\u0645\u0644 \u062e\u0637 \u0644\u0648\u0644\u0647 — \u0647\u0645\u0627\u0646 \u0628\u0630\u0631\u060c "
+    "\u0647\u0645\u0627\u0646 \u0646\u0627\u0648\u06af\u0627\u0646\u060c \u0647\u0645\u0627\u0646 \u0622\u0631\u062a\u06cc\u0641\u06a9\u062a. [EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]"
 )
 
 KB_ITEMS = [("kb:dna-12-trinity-avatar-engine", DNA12_TITLE, DNA12_BODY)]

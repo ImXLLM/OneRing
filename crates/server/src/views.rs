@@ -1,14 +1,14 @@
-//! تبدیل‌گرهای دامنه → وایر — تنها جایی که شکل DTOها ساخته می‌شود (زیرمجموعهٔ M2).
+//! Domain → wire converters — the single place where DTO shapes are built (M2 subset).
 //!
-//! قاعدهٔ فاز ۳ سر جایش است: فیلدهای `.nullable()` همیشه صریح روی سیم می‌مانند
-//! (`null`)، فیلدهای `.optional()` غایب؛ وضعیت اسکرو `SCREAMING_SNAKE_CASE`.
-//! هیچ هندلری مستقیم JSON نمی‌سازد.
+//! The phase 3 rule stands: `.nullable()` fields always stay explicit on the wire
+//! (`null`), `.optional()` fields absent; escrow status in `SCREAMING_SNAKE_CASE`.
+//! No handler builds JSON directly.
 
 use kian_contracts::{AccountView, Din, EscrowStatus, EscrowView};
 use kian_db::AccountBalance;
 use kian_domain::Escrow;
 
-/// وضعیت امانت دامنه → وضعیت وایر (همان رشته‌ها).
+/// Domain escrow status → wire status (same strings).
 #[must_use]
 pub fn escrow_status_wire(status: kian_domain::EscrowStatus) -> EscrowStatus {
     match status {
@@ -23,8 +23,8 @@ pub fn escrow_status_wire(status: kian_domain::EscrowStatus) -> EscrowStatus {
     }
 }
 
-/// i64 دامنه → `Din` وایر — دامنهٔ خالص بازهٔ `[0, 2^53−1]` را تضمین می‌کند؛
-/// شاخهٔ دوم عملاً غیرقابل‌دسترس است و فقط برای کلن‌بودن تایپ لازم می‌شود.
+/// Domain i64 → wire `Din` — the pure domain guarantees the `[0, 2^53−1]` range;
+/// the second branch is effectively unreachable and only needed for type totality.
 #[must_use]
 pub fn wire_din(raw: i64) -> Din {
     match Din::new(raw) {
@@ -36,7 +36,7 @@ pub fn wire_din(raw: i64) -> Din {
     }
 }
 
-/// نمای امانت وایر — فیلدهای nullable صریح.
+/// Wire escrow view — explicit nullable fields.
 #[must_use]
 pub fn escrow_view(e: &Escrow) -> EscrowView {
     EscrowView {
@@ -55,7 +55,7 @@ pub fn escrow_view(e: &Escrow) -> EscrowView {
     }
 }
 
-/// نمای حساب وایر — تراز مشتق‌شده (ADR-003).
+/// Wire account view — derived balance (ADR-003).
 #[must_use]
 pub fn account_view(a: &AccountBalance) -> AccountView {
     AccountView {

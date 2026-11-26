@@ -77,7 +77,7 @@ with httpx.Client(timeout=60) as c:
     chat = c.post(
         f"{api}/builder/sessions/{sid}/chat",
         headers=hdr,
-        json={"message": "می‌خوام برای بازار کیان یک ماشین‌حساب ریسک ترید بسازم: موجودی، درصد ریسک، حد ضرر و حجم پوزیشن", "forceGenerate": True},
+        json={"message": "I want to build a trade risk calculator for the KIAN market: balance, risk percentage, stop-loss, and position size", "forceGenerate": True},
     )
     chat.raise_for_status()
     out["chat_ms"] = int((time.perf_counter() - t0) * 1000)

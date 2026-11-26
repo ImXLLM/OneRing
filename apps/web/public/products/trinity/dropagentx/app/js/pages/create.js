@@ -2,7 +2,7 @@
 DGX.pages = DGX.pages || {};
 
 DGX.pages.create = async (view) => {
-  if (!DGX.requireAuth('ساخت محصول')) { location.hash = '#/home'; return; }
+  if (!DGX.requireAuth('\u0633\u0627\u062e\u062a \u0645\u062d\u0635\u0648\u0644')) { location.hash = '#/home'; return; }
   let step = 1;
   const data = { title: '', description: '', category: 'other', price_credits: 0 };
   const images = { main: null, feed: null, story: null };   // File objects
@@ -13,9 +13,9 @@ DGX.pages.create = async (view) => {
   view.innerHTML = `<div id="wiz"></div>`;
 
   const IMG_SPECS = {
-    main:  { ratio: '۱:۱',  w: 1080, h: 1080, hint: 'عکس اصلی محصول در صفحهٔ جزئیات', icon: 'image' },
-    feed:  { ratio: '۱۶:۹', w: 1920, h: 1080, hint: 'نمایش در فید خانه — مثل تامبنیل یوتیوب، جذاب‌تر بهتر', icon: 'film' },
-    story: { ratio: '۹:۱۶', w: 1080, h: 1920, hint: 'نمایش در اکسپلور — معرفی کوتاه محصول', icon: 'camera' },
+    main:  { ratio: '\u06f1:\u06f1',  w: 1080, h: 1080, hint: '\u0639\u06a9\u0633 \u0627\u0635\u0644\u06cc \u0645\u062d\u0635\u0648\u0644 \u062f\u0631 \u0635\u0641\u062d\u0647\u0654 \u062c\u0632\u0626\u06cc\u0627\u062a', icon: 'image' },
+    feed:  { ratio: '\u06f1\u06f6:\u06f9', w: 1920, h: 1080, hint: '\u0646\u0645\u0627\u06cc\u0634 \u062f\u0631 \u0641\u06cc\u062f \u062e\u0627\u0646\u0647 — \u0645\u062b\u0644 \u062a\u0627\u0645\u0628\u0646\u06cc\u0644 \u06cc\u0648\u062a\u06cc\u0648\u0628\u060c \u062c\u0630\u0627\u0628‌\u062a\u0631 \u0628\u0647\u062a\u0631', icon: 'film' },
+    story: { ratio: '\u06f9:\u06f1\u06f6', w: 1080, h: 1920, hint: '\u0646\u0645\u0627\u06cc\u0634 \u062f\u0631 \u0627\u06a9\u0633\u067e\u0644\u0648\u0631 — \u0645\u0639\u0631\u0641\u06cc \u06a9\u0648\u062a\u0627\u0647 \u0645\u062d\u0635\u0648\u0644', icon: 'camera' },
   };
 
   function render() {
@@ -23,38 +23,38 @@ DGX.pages.create = async (view) => {
     if (step === 1) {
       w.innerHTML = `
         <div class="step-dots"><i class="on"></i><i></i><i></i><i></i></div>
-        <h2 style="margin-bottom:4px;display:flex;align-items:center;gap:7px">${DGX.icon('box')} محصولت را معرفی کن</h2>
-        <p style="color:var(--dim);font-size:12.5px;margin-bottom:6px">اول چی می‌فروشی؟</p>
-        <div class="field"><label>عنوان</label>
+        <h2 style="margin-bottom:4px;display:flex;align-items:center;gap:7px">${DGX.icon('box')} \u0645\u062d\u0635\u0648\u0644\u062a \u0631\u0627 \u0645\u0639\u0631\u0641\u06cc \u06a9\u0646</h2>
+        <p style="color:var(--dim);font-size:12.5px;margin-bottom:6px">\u0627\u0648\u0644 \u0686\u06cc \u0645\u06cc‌\u0641\u0631\u0648\u0634\u06cc\u061f</p>
+        <div class="field"><label>\u0639\u0646\u0648\u0627\u0646</label>
           <input id="wTitle" maxlength="120" value="${DGX.esc(data.title)}"
-                 placeholder="مثلاً: پکیج ۵۰ پرامپت سینمایی AI"></div>
-        <div class="field"><label>توضیحات</label>
+                 placeholder="\u0645\u062b\u0644\u0627\u064b: \u067e\u06a9\u06cc\u062c \u06f5\u06f0 \u067e\u0631\u0627\u0645\u067e\u062a \u0633\u06cc\u0646\u0645\u0627\u06cc\u06cc AI"></div>
+        <div class="field"><label>\u062a\u0648\u0636\u06cc\u062d\u0627\u062a</label>
           <textarea id="wDesc" rows="5" maxlength="1000"
-            placeholder="ویژگی‌ها، دستاوردها، برای کی مناسب است…">${DGX.esc(data.description)}</textarea></div>
-        <button class="btn btn-primary" id="wNext">بعدی ←</button>`;
+            placeholder="\u0648\u06cc\u0698\u06af\u06cc‌\u0647\u0627\u060c \u062f\u0633\u062a\u0627\u0648\u0631\u062f\u0647\u0627\u060c \u0628\u0631\u0627\u06cc \u06a9\u06cc \u0645\u0646\u0627\u0633\u0628 \u0627\u0633\u062a…">${DGX.esc(data.description)}</textarea></div>
+        <button class="btn btn-primary" id="wNext">\u0628\u0639\u062f\u06cc ←</button>`;
       w.querySelector('#wNext').onclick = () => {
         data.title = w.querySelector('#wTitle').value.trim();
         data.description = w.querySelector('#wDesc').value.trim();
-        if (data.title.length < 3) return DGX.toast('عنوان حداقل ۳ حرف', true);
+        if (data.title.length < 3) return DGX.toast('\u0639\u0646\u0648\u0627\u0646 \u062d\u062f\u0627\u0642\u0644 \u06f3 \u062d\u0631\u0641', true);
         step = 2; render(); DGX.haptic('light');
       };
     } else if (step === 2) {
       w.innerHTML = `
         <div class="step-dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
-        <h2 style="margin-bottom:10px;display:flex;align-items:center;gap:7px">${DGX.icon('puzzle')} دسته و قیمت</h2>
-        <div class="field"><label>دسته‌بندی</label>
+        <h2 style="margin-bottom:10px;display:flex;align-items:center;gap:7px">${DGX.icon('puzzle')} \u062f\u0633\u062a\u0647 \u0648 \u0642\u06cc\u0645\u062a</h2>
+        <div class="field"><label>\u062f\u0633\u062a\u0647‌\u0628\u0646\u062f\u06cc</label>
           <select id="wCat">${cats.map(c =>
             `<option value="${c.key}" ${data.category === c.key ? 'selected' : ''}>
                ${c.icon} ${c.fa}</option>`).join('')}</select></div>
-        <div class="field"><label>قیمت (کردیت) — ۱۰۰۰ کردیت ≈ ۱$</label>
+        <div class="field"><label>\u0642\u06cc\u0645\u062a (\u06a9\u0631\u062f\u06cc\u062a) — \u06f1\u06f0\u06f0\u06f0 \u06a9\u0631\u062f\u06cc\u062a ≈ \u06f1$</label>
           <input id="wPrice" type="number" min="5" max="200000"
-            value="${data.price_credits || ''}" placeholder="مثلاً ۲۵۰۰">
+            value="${data.price_credits || ''}" placeholder="\u0645\u062b\u0644\u0627\u064b \u06f2\u06f5\u06f0\u06f0">
           <div style="color:var(--dim);font-size:11px;margin-top:6px">
-            معادل: ≈<span id="usdLive">${data.price_credits ? (data.price_credits / 1000).toFixed(2) : '0.00'}</span>$
-            · کمیسیون پلتفرم بعد از فروش کسر می‌شود</div></div>
+            \u0645\u0639\u0627\u062f\u0644: ≈<span id="usdLive">${data.price_credits ? (data.price_credits / 1000).toFixed(2) : '0.00'}</span>$
+            · \u06a9\u0645\u06cc\u0633\u06cc\u0648\u0646 \u067e\u0644\u062a\u0641\u0631\u0645 \u0628\u0639\u062f \u0627\u0632 \u0641\u0631\u0648\u0634 \u06a9\u0633\u0631 \u0645\u06cc‌\u0634\u0648\u062f</div></div>
         <div style="display:flex;gap:9px">
-          <button class="btn btn-ghost" onclick="DGX.pages.create._go(1)">→ قبل</button>
-          <button class="btn btn-primary" id="wNext" style="flex:1">بعدی ← عکس‌ها ${DGX.icon('image','ic-s')}</button></div>`;
+          <button class="btn btn-ghost" onclick="DGX.pages.create._go(1)">→ \u0642\u0628\u0644</button>
+          <button class="btn btn-primary" id="wNext" style="flex:1">\u0628\u0639\u062f\u06cc ← \u0639\u06a9\u0633‌\u0647\u0627 ${DGX.icon('image','ic-s')}</button></div>`;
       const pr = w.querySelector('#wPrice');
       pr.oninput = () => {
         const v = +pr.value || 0;
@@ -64,17 +64,17 @@ DGX.pages.create = async (view) => {
         data.category = w.querySelector('#wCat').value;
         data.price_credits = Math.round(+pr.value || 0);
         if (data.price_credits < 5 || data.price_credits > 200000)
-          return DGX.toast('قیمت بین ۵ تا ۲۰۰٬۰۰۰ کردیت', true);
+          return DGX.toast('\u0642\u06cc\u0645\u062a \u0628\u06cc\u0646 \u06f5 \u062a\u0627 \u06f2\u06f0\u06f0\u066c\u06f0\u06f0\u06f0 \u06a9\u0631\u062f\u06cc\u062a', true);
         step = 3; render(); DGX.haptic('light');
       };
     } else if (step === 3) {
       // ── IMAGE UPLOAD STEP ──
       w.innerHTML = `
         <div class="step-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
-        <h2 style="margin-bottom:4px;display:flex;align-items:center;gap:7px">${DGX.icon('image')} سه عکس لازم است</h2>
+        <h2 style="margin-bottom:4px;display:flex;align-items:center;gap:7px">${DGX.icon('image')} \u0633\u0647 \u0639\u06a9\u0633 \u0644\u0627\u0632\u0645 \u0627\u0633\u062a</h2>
         <p style="color:var(--dim);font-size:11.5px;margin-bottom:14px;line-height:2">
-          سیستم خودکار برش می‌زند و به اندازهٔ درست تبدیل می‌کند.<br>
-          کیفیت بالاتر = نمایش بهتر = فروش بیشتر ✨</p>
+          \u0633\u06cc\u0633\u062a\u0645 \u062e\u0648\u062f\u06a9\u0627\u0631 \u0628\u0631\u0634 \u0645\u06cc‌\u0632\u0646\u062f \u0648 \u0628\u0647 \u0627\u0646\u062f\u0627\u0632\u0647\u0654 \u062f\u0631\u0633\u062a \u062a\u0628\u062f\u06cc\u0644 \u0645\u06cc‌\u06a9\u0646\u062f.<br>
+          \u06a9\u06cc\u0641\u06cc\u062a \u0628\u0627\u0644\u0627\u062a\u0631 = \u0646\u0645\u0627\u06cc\u0634 \u0628\u0647\u062a\u0631 = \u0641\u0631\u0648\u0634 \u0628\u06cc\u0634\u062a\u0631 ✨</p>
         ${Object.entries(IMG_SPECS).map(([key, spec]) => `
           <div class="field">
             <label style="display:flex;align-items:center;gap:6px">${DGX.icon(spec.icon,'ic-s')} ${key.toUpperCase()} (${spec.ratio}) — ${spec.hint}</label>
@@ -88,7 +88,7 @@ DGX.pages.create = async (view) => {
               </label>
               <div style="flex:1;font-size:11px;color:var(--dim)">
                 ${spec.ratio} · ${spec.w}×${spec.h}px<br>
-                <span id="sz_${key}">${images[key] ? '✓ انتخاب شد (' + Math.round(images[key].size/1024) + 'KB)' : 'انتخاب نشده'}</span>
+                <span id="sz_${key}">${images[key] ? '✓ \u0627\u0646\u062a\u062e\u0627\u0628 \u0634\u062f (' + Math.round(images[key].size/1024) + 'KB)' : '\u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0634\u062f\u0647'}</span>
               </div>
             </div>
             <input type="file" id="file_${key}" accept="image/jpeg,image/png,image/webp" hidden
@@ -96,11 +96,11 @@ DGX.pages.create = async (view) => {
           </div>`).join('')}
         <div style="background:#fff3;color:var(--gold);border-radius:10px;padding:9px 14px;
              font-size:11px;margin:12px 0;line-height:1.9">
-          ⚠️ هر ۳ عکس اجباری هستند — بدون عکس محصول ذخیره نمی‌شود.
-          سیستم خودکار برش می‌زند و resize می‌کند.</div>
+          ⚠️ \u0647\u0631 \u06f3 \u0639\u06a9\u0633 \u0627\u062c\u0628\u0627\u0631\u06cc \u0647\u0633\u062a\u0646\u062f — \u0628\u062f\u0648\u0646 \u0639\u06a9\u0633 \u0645\u062d\u0635\u0648\u0644 \u0630\u062e\u06cc\u0631\u0647 \u0646\u0645\u06cc‌\u0634\u0648\u062f.
+          \u0633\u06cc\u0633\u062a\u0645 \u062e\u0648\u062f\u06a9\u0627\u0631 \u0628\u0631\u0634 \u0645\u06cc‌\u0632\u0646\u062f \u0648 resize \u0645\u06cc‌\u06a9\u0646\u062f.</div>
         <div style="display:flex;gap:9px">
-          <button class="btn btn-ghost" onclick="DGX.pages.create._go(2)">→ قبل</button>
-          <button class="btn btn-primary" id="wNext" style="flex:1">بعدی ← چک نهایی</button></div>`;
+          <button class="btn btn-ghost" onclick="DGX.pages.create._go(2)">→ \u0642\u0628\u0644</button>
+          <button class="btn btn-primary" id="wNext" style="flex:1">\u0628\u0639\u062f\u06cc ← \u0686\u06a9 \u0646\u0647\u0627\u06cc\u06cc</button></div>`;
 
       // wire file inputs
       Object.keys(IMG_SPECS).forEach(key => {
@@ -120,7 +120,7 @@ DGX.pages.create = async (view) => {
 
       w.querySelector('#wNext').onclick = () => {
         const missing = Object.keys(images).filter(k => !images[k]);
-        if (missing.length) return DGX.toast(`${missing.length} عکس انتخاب نشده!`, true);
+        if (missing.length) return DGX.toast(`${missing.length} \u0639\u06a9\u0633 \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0634\u062f\u0647!`, true);
         step = 4; render(); DGX.haptic('light');
       };
     } else {
@@ -131,13 +131,13 @@ DGX.pages.create = async (view) => {
 
       w.innerHTML = `
         <div class="step-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
-        <h2 style="margin-bottom:12px">✅ پیش‌نمایش نهایی</h2>
+        <h2 style="margin-bottom:12px">✅ \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0646\u0647\u0627\u06cc\u06cc</h2>
 
         <!-- feed preview -->
         <div class="post">
           <div class="post-head"><img class="avatar" src="/app/assets/logo.jpg">
-            <div><div class="p-name">${DGX.esc(DGX.user?.name || 'تو')} ✔</div>
-              <div class="p-sub">@${DGX.esc(DGX.user?.username || 'dropagentx')} · الان</div></div></div>
+            <div><div class="p-name">${DGX.esc(DGX.user?.name || '\u062a\u0648')} ✔</div>
+              <div class="p-sub">@${DGX.esc(DGX.user?.username || 'dropagentx')} · \u0627\u0644\u0627\u0646</div></div></div>
           <div class="post-media">${heroSrc.startsWith('data:')
             ? `<img src="${heroSrc}" style="width:100%">`
             : `<img src="${heroSrc}" style="width:100%;aspect-ratio:16/9;object-fit:cover">`}</div>
@@ -145,7 +145,7 @@ DGX.pages.create = async (view) => {
             <div class="post-title">${DGX.esc(data.title)}</div>
             <div class="post-desc">${DGX.esc(data.description)}</div>
             <div class="price-row"><span class="price num">
-              ${DGX.fmt(data.price_credits)} <small>کردیت</small></span>
+              ${DGX.fmt(data.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span>
               <span class="usd num">≈${(data.price_credits / 1000).toFixed(2)}$</span></div>
           </div></div>
 
@@ -161,15 +161,15 @@ DGX.pages.create = async (view) => {
 
         <div style="background:#fff3;color:var(--gold);border-radius:12px;padding:10px 14px;
              font-size:11.5px;line-height:1.9;margin-bottom:12px">
-          ⏳ پس از انتشار، ادمین بررسی می‌کند و در مارکت منتشر می‌شود.</div>
+          ⏳ \u067e\u0633 \u0627\u0632 \u0627\u0646\u062a\u0634\u0627\u0631\u060c \u0627\u062f\u0645\u06cc\u0646 \u0628\u0631\u0631\u0633\u06cc \u0645\u06cc‌\u06a9\u0646\u062f \u0648 \u062f\u0631 \u0645\u0627\u0631\u06a9\u062a \u0645\u0646\u062a\u0634\u0631 \u0645\u06cc‌\u0634\u0648\u062f.</div>
         <div style="display:flex;gap:9px">
-          <button class="btn btn-ghost" onclick="DGX.pages.create._go(3)">→ قبل</button>
-          <button class="btn btn-primary" id="wPub" style="flex:1">${DGX.icon('rocket','ic-s')} انتشار محصول</button></div>
+          <button class="btn btn-ghost" onclick="DGX.pages.create._go(3)">→ \u0642\u0628\u0644</button>
+          <button class="btn btn-primary" id="wPub" style="flex:1">${DGX.icon('rocket','ic-s')} \u0627\u0646\u062a\u0634\u0627\u0631 \u0645\u062d\u0635\u0648\u0644</button></div>
         <div style="height:80px"></div>`;
 
       w.querySelector('#wPub').onclick = async () => {
         const b = w.querySelector('#wPub');
-        b.disabled = true; b.textContent = '⏳ در حال انتشار…';
+        b.disabled = true; b.textContent = '⏳ \u062f\u0631 \u062d\u0627\u0644 \u0627\u0646\u062a\u0634\u0627\u0631…';
         try {
           // Step A: create product (JSON)
           const r = await DGX.api('/api/app/create-product', { body: data });
@@ -187,22 +187,22 @@ DGX.pages.create = async (view) => {
           });
           if (!upRes.ok) {
             const ed = await upRes.json().catch(() => ({}));
-            throw new Error(ed.detail || 'آپلود عکس ناموفق');
+            throw new Error(ed.detail || '\u0622\u067e\u0644\u0648\u062f \u0639\u06a9\u0633 \u0646\u0627\u0645\u0648\u0641\u0642');
           }
 
-          b.textContent = '🎉 منتشر شد!';
+          b.textContent = '🎉 \u0645\u0646\u062a\u0634\u0631 \u0634\u062f!';
           DGX.haptic('heavy');
           view.innerHTML = `
             <div class="empty" style="padding-top:90px">
               <div class="burst success-ring" style="width:74px;height:74px;border-radius:99px;
                 background:var(--em);color:#03130a;display:inline-flex;align-items:center;
                 justify-content:center;margin-bottom:14px">${DGX.icon('rocket','ic-xl')}</div>
-              <b style="font-size:17px">محصولت با ۳ عکس ثبت شد!</b><br>
-              شماره: #${newPid}<br>${r.note}<br><br>
-              <button class="btn btn-primary" onclick="location.hash='#/home'">برگشت به فید</button>
+              <b style="font-size:17px">\u0645\u062d\u0635\u0648\u0644\u062a \u0628\u0627 \u06f3 \u0639\u06a9\u0633 \u062b\u0628\u062a \u0634\u062f!</b><br>
+              \u0634\u0645\u0627\u0631\u0647: #${newPid}<br>${r.note}<br><br>
+              <button class="btn btn-primary" onclick="location.hash='#/home'">\u0628\u0631\u06af\u0634\u062a \u0628\u0647 \u0641\u06cc\u062f</button>
             </div>`;
         } catch (e) {
-          b.disabled = false; b.textContent = 'انتشار محصول';
+          b.disabled = false; b.textContent = '\u0627\u0646\u062a\u0634\u0627\u0631 \u0645\u062d\u0635\u0648\u0644';
           DGX.toast(e.msg || e.message || '', true);
         }
       };

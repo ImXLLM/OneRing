@@ -1,15 +1,15 @@
--- مهاجرت 0013 — Wave 9 (Commit #29): استودیوی HUD عصبی + آزمایشگاهِ
--- ۱۰-DNA + موتورِ UXِ Grok + ماتریسِ i18nِ روزِ اول
+-- Migration 0013 — Wave 9 (Commit #29): the neural HUD studio + the
+-- 10-DNA lab + the Grok UX engine + the Day-1 i18n matrix
 --
--- سه جدولِ additive:
--- - `UserLabTelemetryLog`: لاگِ تلمتریِ ۲۴ساعتهٔ ۱۰ کوهورتِ DNA — منبعِ
---   حقیقتِ داشبوردِ ادمین و صادراتِ RLHF/SFT/DPO؛
--- - `LocalePatchRegistry`: وضعیتِ ۲۰ لوکالِ اکوسیستمِ `Arda` — دو فعالِ
---   روزِ اول (`fa`/`en` در ۱۰۰۰۰ bps) + ۱۸ اسلاتِ آمادهٔ پچِ داغ؛
--- - `NeuralHudRenderJob`: ران‌هایِ رندرِ ویدئویِ HUD عصبی (پیش‌تن،
---   نسبت/رزولوشن/فریم‌ریت، وضعیت).
+-- three additive tables:
+-- - `UserLabTelemetryLog`: the 24-hour telemetry log of 10 DNA cohorts — the
+--   source of truth for the admin dashboard and the RLHF/SFT/DPO export;
+-- - `LocalePatchRegistry`: the state of the 20 `Arda` ecosystem locales — the two
+--   Day-1 active ones (`fa`/`en` at 10000 bps) + 18 hot-patch-ready slots;
+-- - `NeuralHudRenderJob`: neural HUD video render runs (preset,
+--   aspect ratio/resolution/frame rate, status).
 --
--- هیچ جدولِ دفتریِ دوطرفه‌ای لمس نمی‌شود — صفرجمعِ `Posting` دست‌نخورده می‌ماند.
+-- no double-entry ledger table is touched — the `Posting` zero-sum stays untouched.
 
 CREATE TABLE IF NOT EXISTS "UserLabTelemetryLog" (
     "id" TEXT PRIMARY KEY,

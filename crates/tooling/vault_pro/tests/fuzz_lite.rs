@@ -1,14 +1,14 @@
-//! fuzz-lite فاز ۸ — «cargo-fuzz روی پارسرهای ورودی (حداقل: قراردادهای AI و
-//! validatorها)» (ADR-009 §۷ فاز ۸) در حالت قطعی درون‌CI.
+//! Phase 8 fuzz-lite — "cargo-fuzz on the input parsers (at minimum: the AI contracts and
+//! the validators)" (ADR-009 §7 phase 8) in deterministic in-CI form.
 //!
-//! موتور موتاسیون seed-دار (xorshift — بدون وابستگی) ورودی‌های معتبر را با
-//! هزاران جهش خراب می‌کند؛ پارسرهای مرزی باید **همیشه** fail-closed پاسخ
-//! دهند (خطای تایپ‌دار یا 400/422) — هر panic یک یافتهٔ واقعی fuzz است.
+//! The seeded mutation engine (xorshift — dependency-free) corrupts valid inputs with
+//! thousands of mutations; boundary parsers must **always** answer fail-closed
+//! (a typed error or 400/422) — every panic is a real fuzz finding.
 //!
-//! اسکلت cargo-fuzz (libfuzzer روی nightly) در `fuzz/` کنار همین کرِیت است
-//! و در CI با `cargo +nightly fuzz build` ساخته می‌شود — همان هدف‌ها.
+//! The cargo-fuzz skeleton (libfuzzer on nightly) lives in `fuzz/` next to this crate
+//! and is built in CI with `cargo +nightly fuzz build` — the same targets.
 
-// fuzz — unwrap/expect در تست مجاز
+// fuzz — unwrap/expect allowed in tests
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use axum::body::Body;
@@ -21,9 +21,9 @@ use tower::ServiceExt;
 
 const SECRET: &str = "fuzz-webhook-secret-012345";
 
-// ── موتور موتاسیون seed-دار ──────────────────────────────────────────────────
+// ── Seeded mutation engine ──────────────────────────────────────────────────
 
-/// xorshift64 — قطعی و بدون وابستگی.
+/// xorshift64 — deterministic and dependency-free.
 struct Rng(u64);
 
 impl Rng {
@@ -36,7 +36,7 @@ impl Rng {
         x
     }
 
-    /// جهش یک بایت‌آرایه — حذف/درج/جایگزینی بایت + برش.
+    /// Mutate a byte array — byte delete/insert/replace + truncation.
     fn mutate(bytes: &mut Vec<u8>, rng: &mut Rng) {
         if bytes.is_empty() {
             bytes.push(b'x');
@@ -63,7 +63,7 @@ impl Rng {
     }
 }
 
-/// اجرای N جهش روی seed و اطمینان از fail-closed پارسر — هرگز panic.
+/// Run N mutations on the seed and ensure the parser is fail-closed — never panics.
 fn fuzz_parse<T, E>(seed: u64, iterations: usize, parse: impl Fn(&[u8]) -> Result<T, E>)
 where
     T: std::fmt::Debug,
@@ -73,7 +73,7 @@ where
     let mut corpus: Vec<u8> = seed_body(seed).into_bytes();
     for _ in 0..iterations {
         Rng::mutate(&mut corpus, &mut rng);
-        // قرارداد: هر ورودی یا parse می‌شود یا خطای تایپ‌دار — panic ممنوع
+        // contract: every input either parses or yields a typed error — panics forbidden
         let _ = parse(&corpus);
     }
 }
@@ -82,12 +82,12 @@ fn seed_body(seed: u64) -> String {
     match seed % 4 {
         0 => r#"{"accountId":"user:tg:1","amount":100}"#.into(),
         1 => r#"{"buyerId":"user:tg:1","sellerId":"user:tg:2","amount":100}"#.into(),
-        2 => r#"{"userId":"user:tg:1","text":"سلام","role":"user"}"#.into(),
+        2 => r#"{"userId":"user:tg:1","text":"Hello","role":"user"}"#.into(),
         _ => r#"{"id":"user:tg:1","label":"Ali"}"#.into(),
     }
 }
 
-// ── پارسرهای هدف — همان مرزهای قرارداد ──────────────────────────────────────
+// ── Target parsers — the same contract boundaries ──────────────────────────────────────
 
 fn parse_mint(bytes: &[u8]) -> Result<MintRequest, String> {
     serde_json::from_slice::<MintRequest>(bytes).map_err(|e| format!("mint: {e}"))
@@ -122,7 +122,7 @@ fn fuzz_ai_chat_parser_never_panics() {
     }
 }
 
-/// fuzz لبهٔ HTTP — بدنه‌های خراب روی webhook بات هرگز 5xx نمی‌دهند.
+/// HTTP edge fuzz — corrupt webhook bodies never yield 5xx from the bot.
 #[tokio::test]
 async fn fuzz_bot_webhook_body_never_5xx() {
     let mut rng = Rng(0x5eed_0001);
@@ -163,7 +163,7 @@ async fn boot() -> (Router, V3Store) {
     (build_router(state), store)
 }
 
-/// پارسرهای مرزی روی ورودی خراب همیشه Result می‌دهند — نه panic (چک نمونه)
+/// Boundary parsers always return Result on corrupt input — never panic (sample check)
 #[test]
 fn parsers_return_typed_errors_on_garbage() {
     assert!(parse_mint(b"not json").is_err());

@@ -1,16 +1,16 @@
-//! طبقه‌بندی خطای HTTP — پورت `server/src/errors.ts` + کدهای صریح `api.ts`/`guards.ts`.
+//! HTTP error classification — port of `server/src/errors.ts` + the explicit codes from `api.ts`/`guards.ts`.
 //!
-//! قاعده: کدهای دامنه به وضعیت‌های «صادقانه» نگاشت می‌شوند — ۴۰۴ (یافت‌نشده)،
-//! ۴۲۲ (قاعدهٔ دامنه/اعتبارسنجی بدنه)، ۴۰۰ (اعتبارسنجی درخواست)، ۴۰۱ (احراز)،
-//! ۴۲۹ (نرخ)، ۵۰۱/۵۰۲/۵۰۳ (زیرساخت). بدنهٔ همیشگی: `{ error: { code, message, meta? } }`.
-//! کدها additive-only هستند — کلاینت‌های قدیمی نمی‌شکنند.
+//! Rule: domain codes map to «honest» statuses — 404 (not found),
+//! 422 (domain rule/body validation), 400 (request validation), 401 (authentication),
+//! 429 (rate), 501/502/503 (infrastructure). Constant body: `{ error: { code, message, meta? } }`.
+//! Codes are additive-only — old clients never break.
 
 use crate::common::{ApiError, ErrorEnvelope, Meta, MetaValue};
 use kian_domain::{DomainError, DomainErrorCode};
 
-// ── مجموعه‌های نگاشت — یک‌به‌یک با errors.ts ────────────────────────────────
+// ── mapping sets — one-to-one with errors.ts ────────────────────────────────
 
-/// کدهای ۴۰۴ — `NOT_FOUND_CODES`.
+/// 404 codes — `NOT_FOUND_CODES`.
 const NOT_FOUND_CODES: &[DomainErrorCode] = &[
     DomainErrorCode::EscrowNotFound,
     DomainErrorCode::UnknownAccount,
@@ -18,7 +18,7 @@ const NOT_FOUND_CODES: &[DomainErrorCode] = &[
     DomainErrorCode::ProductNotFound,
 ];
 
-/// کدهای ۴۲۲ — `UNPROCESSABLE_CODES` (نقض قاعدهٔ دامنه، نه خطای سیستم).
+/// 422 codes — `UNPROCESSABLE_CODES` (domain-rule violations, not system errors).
 const UNPROCESSABLE_CODES: &[DomainErrorCode] = &[
     DomainErrorCode::InvalidTransition,
     DomainErrorCode::RequiresHumanApproval,
@@ -38,7 +38,7 @@ const UNPROCESSABLE_CODES: &[DomainErrorCode] = &[
     DomainErrorCode::HitlExpired,
 ];
 
-/// وضعیت HTTP برای کد دامنه — همان منطق `toHttpError`.
+/// HTTP status for a domain code — the `toHttpError` logic.
 #[must_use]
 pub fn status_for_domain_code(code: DomainErrorCode) -> u16 {
     if NOT_FOUND_CODES.contains(&code) {
@@ -50,52 +50,52 @@ pub fn status_for_domain_code(code: DomainErrorCode) -> u16 {
     }
 }
 
-/// خطای برنامه‌نویسی/زیرساخت با وضعیت صریح — معادل `HttpFailure` TS.
-/// سازنده‌های named برای «همهٔ» کدهای صریح سرور فعلی تعریف شده‌اند تا کد وایر
-/// دقیق بماند و جایی رشتهٔ آزاد نوشته نشود.
+/// Programmer/infrastructure error with an explicit status — the TS `HttpFailure` equivalent.
+/// Named constructors exist for «all» current explicit server codes so the wire code
+/// stays exact and no free-form string is written anywhere.
 #[derive(Debug, Clone, PartialEq)]
 pub struct HttpFailure {
-    /// وضعیت HTTP
+    /// HTTP status
     pub status: u16,
-    /// کد وایر
+    /// Wire code
     pub code: String,
-    /// پیام
+    /// Message
     pub message: String,
-    /// متادیتای اختیاری
+    /// Optional metadata
     pub meta: Option<Meta>,
 }
 
 impl HttpFailure {
-    /// سازندهٔ عمومی (داخل crate).
+    /// The general constructor (crate-internal).
     pub(crate) fn new(status: u16, code: &str, message: impl Into<String>) -> Self {
         Self { status, code: code.into(), message: message.into(), meta: None }
     }
 
-    /// خطای دامنه ناقص — `Command completed without escrow state.`
+    /// Incomplete domain error — `Command completed without escrow state.`
     #[must_use]
     pub fn internal_no_escrow() -> Self {
         Self::new(500, "INTERNAL", "Command completed without escrow state.")
     }
 
-    /// خطای دامنه ناقص — `Command completed without a transaction.`
+    /// Incomplete domain error — `Command completed without a transaction.`
     #[must_use]
     pub fn internal_no_tx() -> Self {
         Self::new(500, "INTERNAL", "Command completed without a transaction.")
     }
 
-    /// تصمیم REJECTED نباید تسویه اجرا کند.
+    /// A REJECTED decision must not run settlement.
     #[must_use]
     pub fn internal_rejected_settlement() -> Self {
         Self::new(500, "INTERNAL", "REJECTED decision must not execute a settlement.")
     }
 
-    /// بکاپ VACUUM INTO شکست خورد.
+    /// The VACUUM INTO backup failed.
     #[must_use]
     pub fn backup_failed(detail: impl std::fmt::Display) -> Self {
         Self::new(500, "BACKUP_FAILED", format!("VACUUM INTO failed — {detail}"))
     }
 
-    /// پیشوند رزرو‌شدهٔ سیستم.
+    /// The reserved system prefix.
     #[must_use]
     pub fn reserved_id() -> Self {
         Self::new(
@@ -105,37 +105,37 @@ impl HttpFailure {
         )
     }
 
-    /// حساب تکراری (نقض UNIQUE).
+    /// Duplicate account (UNIQUE violation).
     #[must_use]
     pub fn duplicate_account(id: &str) -> Self {
         Self::new(422, "DUPLICATE_ACCOUNT", format!("Account {id} already exists."))
     }
 
-    /// DB در دسترس نیست.
+    /// DB unavailable.
     #[must_use]
     pub fn db_down() -> Self {
         Self::new(503, "DB_DOWN", "The server cannot reach its database.")
     }
 
-    /// خطای داخلی با جزئیات صادقانه (فاز ۶ — شکست backend مهارت‌های AI).
+    /// Internal error with honest details (Phase 6 — AI-skills backend failure).
     #[must_use]
     pub fn internal(detail: impl std::fmt::Display) -> Self {
         Self::new(500, "INTERNAL", format!("Internal error — {detail}"))
     }
 
-    /// بات غیرفعال — بدون `BOT_WEBHOOK_SECRET` (fail-closed فاز ۵، مثل admin).
+    /// Bot disabled — no `BOT_WEBHOOK_SECRET` (fail-closed Phase 5, like admin).
     #[must_use]
     pub fn bot_disabled() -> Self {
         Self::new(503, "BOT_DISABLED", "Bot webhook is disabled — set BOT_WEBHOOK_SECRET.")
     }
 
-    /// توکن مخفی وب‌هوک بات اشتباه است (`X-Telegram-Bot-Api-Secret-Token`).
+    /// The bot webhook secret token is wrong (`X-Telegram-Bot-Api-Secret-Token`).
     #[must_use]
     pub fn bot_unauthorized() -> Self {
         Self::new(401, "BOT_UNAUTHORIZED", "Invalid X-Telegram-Bot-Api-Secret-Token.")
     }
 
-    /// سرور بدون `KIAN_BOT_TOKEN` — هویت تلگرام fail-closed، هرگز open (M3).
+    /// Server without `KIAN_BOT_TOKEN` — Telegram identity is fail-closed, never open (M3).
     #[must_use]
     pub fn identity_disabled() -> Self {
         Self::new(
@@ -145,7 +145,7 @@ impl HttpFailure {
         )
     }
 
-    /// امضای `initData` معتبر نیست — هرگونه دست‌کاری یا توکن ناهمسان.
+    /// The `initData` signature is invalid — any tampering or token mismatch.
     #[must_use]
     pub fn invalid_init_data() -> Self {
         Self::new(
@@ -155,7 +155,7 @@ impl HttpFailure {
         )
     }
 
-    /// هدر Authorization غایب یا بدشکل — مسیرهای نشست‌دار (M3).
+    /// Missing or malformed Authorization header — session-gated routes (M3).
     #[must_use]
     pub fn session_required() -> Self {
         Self::new(
@@ -165,7 +165,7 @@ impl HttpFailure {
         )
     }
 
-    /// آدرس ولت TON بدشکل — ۴۲۲ (M3 ثبت آدرس TON Connect).
+    /// Malformed TON wallet address — 422 (M3 TON Connect address registration).
     #[must_use]
     pub fn invalid_ton_address() -> Self {
         Self::new(
@@ -175,13 +175,13 @@ impl HttpFailure {
         )
     }
 
-    /// توکن نشست منقضی یا ناشناخته — دوباره از `/auth/telegram` احراز کن.
+    /// Session token expired or unknown — re-authenticate via `/auth/telegram`.
     #[must_use]
     pub fn session_expired() -> Self {
         Self::new(401, "SESSION_EXPIRED", "Session token is unknown or expired — re-authenticate.")
     }
 
-    /// کنش اسکرو فقط از سمت مجاز — فروشنده تحویل می‌دهد، خریدار آزاد می‌کند.
+    /// Escrow action only from the allowed side — the seller delivers, the buyer releases.
     #[must_use]
     pub fn forbidden_escrow_role() -> Self {
         Self::new(
@@ -191,7 +191,7 @@ impl HttpFailure {
         )
     }
 
-    /// اندپوینت‌های دمو/توسعه (`dev-login`، `faucet`) خارج از حالت dev — ۴۰۳.
+    /// Demo/dev endpoints (`dev-login`, `faucet`) outside dev mode — 403.
     #[must_use]
     pub fn dev_mode_disabled() -> Self {
         Self::new(
@@ -201,7 +201,7 @@ impl HttpFailure {
         )
     }
 
-    /// لایحهٔ پارلمان ناشناخته — M5 حاکمیت.
+    /// Unknown parliament bill — M5 governance.
     #[must_use]
     pub fn bill_not_found(id: impl std::fmt::Display) -> Self {
         Self::new(
@@ -211,7 +211,7 @@ impl HttpFailure {
         )
     }
 
-    /// عمل روی لایحهٔ بسته‌شده — رأی/بستن فقط روی OPEN.
+    /// Acting on a closed bill — voting/closing only while OPEN.
     #[must_use]
     pub fn bill_not_open(id: impl std::fmt::Display) -> Self {
         Self::new(
@@ -221,7 +221,7 @@ impl HttpFailure {
         )
     }
 
-    /// رأی تکراری — هر رأی‌دهنده یک‌بار به ازای هر لایحه.
+    /// Duplicate vote — one vote per voter per bill.
     #[must_use]
     pub fn already_voted(voter: impl std::fmt::Display) -> Self {
         Self::new(
@@ -231,7 +231,7 @@ impl HttpFailure {
         )
     }
 
-    /// آدرس ولت با قواعد زنجیره نمی‌خواند — جزئیات در meta.chain.
+    /// Wallet address fails chain rules — details in meta.chain.
     #[must_use]
     pub fn invalid_address(chain: impl Into<String>, detail: impl Into<String>) -> Self {
         let chain = chain.into();
@@ -246,7 +246,7 @@ impl HttpFailure {
         }
     }
 
-    /// نقض حراست خزانه — جابه‌جایی بدون لایحهٔ پارلمان.
+    /// Treasury guard violation — a transfer without a parliament bill.
     #[must_use]
     pub fn custody_violation(detail: impl Into<String>) -> Self {
         Self::new(
@@ -256,7 +256,7 @@ impl HttpFailure {
         )
     }
 
-    /// قواعد لایحهٔ پارلمان نقض شده — جزئیات از `kian-nation`.
+    /// Parliament bill rules violated — details from `kian-nation`.
     #[must_use]
     pub fn invalid_bill(detail: impl Into<String>) -> Self {
         Self::new(
@@ -266,7 +266,7 @@ impl HttpFailure {
         )
     }
 
-    /// اجرای لایحه‌ای که PASSED نیست — گذار یک‌طرفه.
+    /// Executing a bill that is not PASSED — a one-way transition.
     #[must_use]
     pub fn bill_not_passed(id: impl std::fmt::Display) -> Self {
         Self::new(
@@ -276,13 +276,13 @@ impl HttpFailure {
         )
     }
 
-    /// بکاپ فقط برای SQLite فایل‌محور.
+    /// Backup only for file-backed SQLite.
     #[must_use]
     pub fn backup_unsupported() -> Self {
         Self::new(503, "BACKUP_UNSUPPORTED", "Backups apply to file: (SQLite) databases only.")
     }
 
-    /// تنظیمات هنوز پیاده نشده — ردِ صادقانه بهتر از no-op خاموش.
+    /// Settings not implemented yet — an honest rejection beats a silent no-op.
     #[must_use]
     pub fn not_implemented() -> Self {
         Self::new(
@@ -292,13 +292,13 @@ impl HttpFailure {
         )
     }
 
-    /// نقش staff بدون کلید معتبر.
+    /// Staff role without a valid key.
     #[must_use]
     pub fn unauthorized_staff() -> Self {
         Self::new(401, "UNAUTHORIZED", "Staff role requires a valid X-KIAN-Key.")
     }
 
-    /// تماس‌گیرندهٔ عمومی AI بدون initData.
+    /// Public AI caller without initData.
     #[must_use]
     pub fn ai_identity_required() -> Self {
         Self::new(
@@ -308,7 +308,7 @@ impl HttpFailure {
         )
     }
 
-    /// سرور نمی‌تواند هویت عمومی AI را تأیید کند (توکن بات تنظیم نشده).
+    /// The server cannot verify the public AI identity (bot token not configured).
     #[must_use]
     pub fn ai_identity_disabled() -> Self {
         Self::new(
@@ -318,7 +318,7 @@ impl HttpFailure {
         )
     }
 
-    /// سیکل AI کانفیگ نشده.
+    /// The AI loop is not configured.
     #[must_use]
     pub fn ai_disabled() -> Self {
         Self::new(
@@ -328,13 +328,13 @@ impl HttpFailure {
         )
     }
 
-    /// آپ‌استریم LLM شکست خورد — کد آپ‌استریم عیناً پاس می‌شود.
+    /// The LLM upstream failed — the upstream code is passed through verbatim.
     #[must_use]
     pub fn ai_upstream(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self { status: 502, code: code.into(), message: message.into(), meta: None }
     }
 
-    /// سقف روزانهٔ توکن AI تمام شده (فاز ۶) — گیت قبل از هر فراخوانی.
+    /// The AI daily token cap is exhausted (Phase 6) — gated before every call.
     #[must_use]
     pub fn ai_cap_exceeded(used: i64, cap: i64) -> Self {
         let mut meta = Meta::new();
@@ -348,7 +348,7 @@ impl HttpFailure {
         }
     }
 
-    /// LLM دو پاکت خراب پیاپی داد — شکست تایپ‌شده؛ متن خام هرگز عبور نمی‌کند.
+    /// The LLM returned two consecutive malformed envelopes — a typed failure; raw text never passes through.
     #[must_use]
     pub fn ai_malformed_packet() -> Self {
         Self::new(
@@ -358,7 +358,7 @@ impl HttpFailure {
         )
     }
 
-    /// محدودیت نرخ — meta حتماً `limit` دارد.
+    /// Rate limited — meta always carries `limit`.
     #[must_use]
     pub fn rate_limited(limit: i64) -> Self {
         let mut meta = Meta::new();
@@ -371,7 +371,7 @@ impl HttpFailure {
         }
     }
 
-    /// محصول بازار ناشناخته — مسیرهای ادمین/بازار.
+    /// Unknown market product — admin/market routes.
     #[must_use]
     pub fn product_not_found(id: impl std::fmt::Display) -> Self {
         Self::new(
@@ -381,7 +381,7 @@ impl HttpFailure {
         )
     }
 
-    /// جلسهٔ سازندهٔ محصول ناشناخته یا متعلق به کاربر دیگر — ۴۰۴.
+    /// Product-builder session unknown or owned by another user — 404.
     #[must_use]
     pub fn builder_session_not_found(id: impl std::fmt::Display) -> Self {
         Self::new(
@@ -391,7 +391,7 @@ impl HttpFailure {
         )
     }
 
-    /// تلاش برای انتشار جلسه پیش از تولید کد HTML — ۴۲۲.
+    /// Attempt to publish a session before the HTML code exists — 422.
     #[must_use]
     pub fn builder_artifact_empty() -> Self {
         Self::new(
@@ -401,7 +401,7 @@ impl HttpFailure {
         )
     }
 
-    /// مهارت هرمس ناشناخته — شناسه باید از فهرست ۱۶ مهارت باشد.
+    /// Unknown Hermes skill — the id must be one of the 16 skills.
     #[must_use]
     pub fn skill_not_found(skill: impl std::fmt::Display) -> Self {
         Self::new(
@@ -411,7 +411,7 @@ impl HttpFailure {
         )
     }
 
-    /// سپر دفاعی ورودی را مسدود کرد — دلیل در meta.reason.
+    /// The input shield blocked the input — reason in meta.reason.
     #[must_use]
     pub fn hermes_blocked(reason: impl Into<String>) -> Self {
         let reason = reason.into();
@@ -425,7 +425,7 @@ impl HttpFailure {
         }
     }
 
-    /// ایجنت ناشناخته در ناوگان — فرستنده/گیرنده A2A باید ثبت‌شده باشند.
+    /// Unknown agent in the fleet — the A2A sender/receiver must be registered.
     #[must_use]
     pub fn agent_not_found(agent: impl std::fmt::Display) -> Self {
         Self::new(
@@ -435,7 +435,7 @@ impl HttpFailure {
         )
     }
 
-    /// ابزار MCP خارج از allowlist — ابزار ناشناخته هرگز invoke نمی‌شود.
+    /// MCP tool outside the allowlist — an unknown tool is never invoked.
     #[must_use]
     pub fn mcp_tool_not_found(tool: impl std::fmt::Display) -> Self {
         Self::new(
@@ -445,7 +445,7 @@ impl HttpFailure {
         )
     }
 
-    /// آرگومان‌های ابزار MCP نامعتبر — نام ابزار در meta.tool.
+    /// Invalid MCP tool arguments — the tool name in meta.tool.
     #[must_use]
     pub fn mcp_invalid_args(tool: impl Into<String>, detail: impl std::fmt::Display) -> Self {
         let tool = tool.into();
@@ -459,7 +459,7 @@ impl HttpFailure {
         }
     }
 
-    /// کلید ادمین سرور تنظیم نشده — fail-closed، هرگز open.
+    /// Server admin key not configured — fail-closed, never open.
     #[must_use]
     pub fn admin_disabled() -> Self {
         Self::new(
@@ -469,19 +469,19 @@ impl HttpFailure {
         )
     }
 
-    /// هدر X-KIAN-Key غایب.
+    /// Missing X-KIAN-Key header.
     #[must_use]
     pub fn admin_key_required() -> Self {
         Self::new(401, "ADMIN_KEY_REQUIRED", "Send the admin key in the X-KIAN-Key header.")
     }
 
-    /// هدر X-KIAN-Key نادرست.
+    /// Wrong X-KIAN-Key header.
     #[must_use]
     pub fn invalid_admin_key() -> Self {
         Self::new(401, "INVALID_ADMIN_KEY", "Invalid admin key.")
     }
 
-    /// اعتبارسنجی درخواست — `ValidationFailure` TS → 400 `INVALID_REQUEST`.
+    /// Request validation — TS `ValidationFailure` → 400 `INVALID_REQUEST`.
     #[must_use]
     pub fn invalid_request(issues: usize) -> Self {
         let mut meta = Meta::new();
@@ -494,13 +494,13 @@ impl HttpFailure {
         }
     }
 
-    /// تبدیل به بدنهٔ وایر.
+    /// Convert to the wire body.
     #[must_use]
     pub fn to_envelope(&self) -> ErrorEnvelope {
         ErrorEnvelope { error: self.to_api_error() }
     }
 
-    /// تبدیل به `ApiError`.
+    /// Convert to `ApiError`.
     #[must_use]
     pub fn to_api_error(&self) -> ApiError {
         match &self.meta {
@@ -512,33 +512,33 @@ impl HttpFailure {
     }
 }
 
-/// خطای HTTP برآمده از دامنه — معادل `DomainFailure` TS.
+/// HTTP error derived from the domain — the TS `DomainFailure` equivalent.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomainFailure {
-    /// خطای دامنهٔ اصلی
+    /// The source domain error
     pub error: DomainError,
 }
 
 impl DomainFailure {
-    /// بسته‌بندی خطای دامنه.
+    /// Wrap a domain error.
     #[must_use]
     pub fn new(error: DomainError) -> Self {
         Self { error }
     }
 
-    /// وضعیت صادقانه برای این کد.
+    /// The honest status for this code.
     #[must_use]
     pub fn status(&self) -> u16 {
         status_for_domain_code(self.error.code)
     }
 
-    /// بدنهٔ وایر — meta دامنه عیناً پاس می‌شود.
+    /// The wire body — domain meta passes through verbatim.
     #[must_use]
     pub fn to_envelope(&self) -> ErrorEnvelope {
         let mut meta: Meta = Meta::new();
         for (k, v) in &self.error.meta {
-            // MetaValue دامنه → MetaValue وایر (هر دو مقدار string | number؛
-            // Int از دامنه از مسیر Display به string می‌رود — همان خروجی JSON.stringify)
+            // domain MetaValue → wire MetaValue (both hold string | number values;
+            // domain Int goes via Display to string — the same output as JSON.stringify)
             let wire_value = match v {
                 kian_domain::MetaValue::Int(i) => MetaValue::Int(*i),
                 kian_domain::MetaValue::Text(t) => MetaValue::Text(t.clone()),
@@ -571,14 +571,14 @@ mod tests {
         assert_eq!(status_for_domain_code(Code::InvalidTransition), 422);
         assert_eq!(status_for_domain_code(Code::MintCapExceeded), 422);
         assert_eq!(status_for_domain_code(Code::HitlExpired), 422);
-        // بقیه = 500 (خطای برنامه‌نویس)
+        // everything else = 500 (programmer error)
         assert_eq!(status_for_domain_code(Code::BpsOutOfRange), 422);
         assert_eq!(status_for_domain_code(Code::TooFewPostings), 422);
     }
 
     #[test]
     fn full_taxonomy_covers_every_domain_code() {
-        // هر ۲۰ کد دامنه باید یکی از سه وضعیت 404/422/500 بگیرد — هیچ کدی نگاشت‌نیافته نمی‌ماند
+        // all 20 domain codes must get one of the three statuses 404/422/500 — no code stays unmapped
         for code in [
             Code::NonIntegerAmount,
             Code::NegativeAmount,

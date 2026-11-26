@@ -1,25 +1,25 @@
-//! `competitive_supremacy_engine` — موتورِ برتریِ رقابتی (Wave 8 — Commit #28).
+//! `competitive_supremacy_engine` — the competitive supremacy engine (Wave 8 — Commit #28).
 //!
-//! چهار ستونِ «بهترینِ-در-کلاس» که از چهار خانوادهٔ ابزارِ رقیب فورward کشیده
-//! و در کرنلِ حاکمِ کیان یکپارچه شده‌اند — همه قطعی، بدونِ IO شبکه و تست‌پذیر:
+//! Four best-in-class pillars pulled forward from four competing tool families
+//! and integrated into the Kian sovereign kernel — all deterministic, network-IO-free and testable:
 //!
-//! ۱. **پیشی‌گرفتن از `Bolt.new` / `Lovable` / `v0`** — [`apply_search_replace_blocks`]
-//!    (پچرِ جراحیِ `SEARCH/REPLACE` با تطبیقِ exact و whitespace-normalized +
-//!    SHA-256 قبل/بعد و صفر بازتولیدِ کلِ فایل) و
-//!    [`build_live_sandbox_inspector_bundle`] (تزریقِ `data-kia-node-id` +
-//!    اسکریپتِ بازرسِ Click-to-Inspect با `window.parent.postMessage`).
-//! ۲. **پیشی‌گرفتن از `LangGraph`** — [`TimeTravelLedger`] با
-//!    [`AgentStateCheckpoint`] تغییرناپذیر: ثبت، بازگشت (`rewind_to`) و
-//!    انشعاب (`fork_from_checkpoint`) از هر گامِ تاریخی بدونِ اجرایِ مجدد.
-//! ۳. **پیشی‌گرفتن از `Dify` / `n8n`** — [`DynamicWorkflowDagEngine`] با
-//!    مرتب‌سازیِ توپولوژیکِ Kahn و ردِ قطعیِ چرخه، + پلِ صفر-هزینهٔ
+//! 1. **Outpacing `Bolt.new` / `Lovable` / `v0`** — [`apply_search_replace_blocks`]
+//!    (the surgical `SEARCH/REPLACE` patcher with exact and whitespace-normalized matching +
+//!    SHA-256 before/after and zero whole-file regeneration) and
+//!    [`build_live_sandbox_inspector_bundle`] (injecting `data-kia-node-id` +
+//!    the Click-to-Inspect inspector script with `window.parent.postMessage`).
+//! 2. **Outpacing `LangGraph`** — [`TimeTravelLedger`] with
+//!    immutable [`AgentStateCheckpoint`]: record, rewind (`rewind_to`) and
+//!    branch (`fork_from_checkpoint`) from any historical step without re-execution.
+//! 3. **Outpacing `Dify` / `n8n`** — [`DynamicWorkflowDagEngine`] with
+//!    Kahn topological sorting and deterministic cycle rejection, plus the zero-cost
 //!    **Model Context Protocol (JSON-RPC 2.0)**: [`build_mcp_tools_list_response`]
-//!    و [`execute_mcp_tool_call`] که موتورهایِ داخلیِ کیان را ابزارِ MCP
-//!    استاندارد می‌کنند.
-//! ۴. **پیشی‌گرفتن از `OpenHands` / `Replit Agent`** —
-//!    [`run_swe_verify_repair_loop`] با گیت‌هایِ حائلِ متوازن، الگوهایِ ممنوعِ
-//!    راز/RCE، ناورنی‌هایِ ساختاریِ Rust/TS/Solidity/HTML، ادعاهایِ تستِ
-//!    قطعی و مُهرِ [`MaironVerifiedSeal`] برای `rea_score >= 85`.
+//!    bridge and [`execute_mcp_tool_call`], which turn Kian's internal engines into standard MCP
+//!    tools.
+//! 4. **Outpacing `OpenHands` / `Replit Agent`** —
+//!    [`run_swe_verify_repair_loop`] with balanced guardrails, forbidden
+//!    secret/RCE patterns, structural invariants for Rust/TS/Solidity/HTML, deterministic test
+//!    claims and the [`MaironVerifiedSeal`] seal for `rea_score >= 85`.
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
@@ -27,32 +27,32 @@ use std::fmt::Write as _;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-/// امضایِ موتورِ برتریِ رقابتی — روی هر خروجیِ وایر حاضر است.
+/// Competitive supremacy engine signature — present on every wire output.
 pub const COMPETITIVE_SUPREMACY_SIGNATURE: &str = "KIA-COMPETITIVE-SUPREMACY-W8";
 
-/// تایپِ پیامِ postMessage بازرسِ DOM.
+/// The DOM inspector's postMessage message type.
 pub const DOM_INSPECT_MESSAGE_TYPE: &str = "KIA_DOM_INSPECT";
 
-/// شناسهٔ ویژگیِ گره‌گذاریِ DOM.
+/// The DOM-noding attribute ID.
 pub const DOM_NODE_ATTR: &str = "data-kia-node-id";
 
-// ══════════════════════ ستونِ ۱ — پچرِ جراحی ══════════════════════
+// ══════════════════════ Pillar 1 — surgical patcher ══════════════════════
 
-/// خطاهایِ پچرِ جراحی.
+/// Surgical patcher errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatchError {
-    /// بارِ پچ خالی است یا هیچ بلوکِ `SEARCH/REPLACE` ندارد.
+    /// The patch payload is empty or has no `SEARCH/REPLACE` blocks.
     EmptyPatchPayload,
-    /// بلوکِ ناقص — `=======` یا `>>>>>>> REPLACE` یا بدنهٔ `SEARCH` غایب است.
+    /// Malformed block — `=======` or `>>>>>>> REPLACE` or the `SEARCH` body is missing.
     MalformedBlock {
-        /// شمارهٔ خطِ ۱-مبنا در بارِ پچ.
+        /// The 1-based line number in the patch payload.
         line: usize,
-        /// توضیحِ نقص.
+        /// Description of the defect.
         reason: &'static str,
     },
-    /// بلوکِ `SEARCH` در منبع یافته نشد (نه exact نه whitespace-normalized).
+    /// The `SEARCH` block was not found in the source (neither exact nor whitespace-normalized).
     SearchBlockMissing {
-        /// اندیسِ بلوکِ ۰-مبنا.
+        /// The 0-based block index.
         block_index: usize,
     },
 }
@@ -73,18 +73,18 @@ impl std::fmt::Display for PatchError {
 
 impl std::error::Error for PatchError {}
 
-/// حالتِ تطبیقِ بلوک‌ها — weakest-link: یک بلوکِ normalized کلِ نتیجه را
-/// `whitespace_normalized` می‌کند (گزارشِ صادقانه).
+/// Block match mode — weakest-link: one normalized block turns the whole result
+/// into `whitespace_normalized` (honest reporting).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PatchMatchMode {
-    /// همهٔ بلوک‌ها بایت‌به‌بایت یافته شدند.
+    /// All blocks found byte-for-byte.
     Exact,
-    /// حداقل یک بلوک فقط با نرمال‌سازیِ whitespace یافته شد.
+    /// At least one block was found only via whitespace normalization.
     WhitespaceNormalized,
 }
 
 impl PatchMatchMode {
-    /// شناسهٔ وایر — `exact` | `whitespace_normalized`.
+    /// Wire ID — `exact` | `whitespace_normalized`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -94,22 +94,22 @@ impl PatchMatchMode {
     }
 }
 
-/// نتیجهٔ پچِ جراحی.
+/// Surgical patch result.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SurgicalPatchOutcome {
-    /// منبعِ پچ‌شده.
+    /// The patched source.
     pub patched_source: String,
-    /// تعدادِ بلوک‌هایِ اعمال‌شده.
+    /// Number of applied blocks.
     pub hunks_applied: usize,
-    /// حالتِ تطبیقِ استفاده‌شده.
+    /// The match mode used.
     pub mode: PatchMatchMode,
-    /// SHA-256 منبعِ اصلی.
+    /// SHA-256 of the original source.
     pub before_sha256: String,
-    /// SHA-256 منبعِ پچ‌شده.
+    /// SHA-256 of the patched source.
     pub after_sha256: String,
 }
 
-/// نرمال‌سازیِ whitespace یک خط — مقایسهٔ معناییِ تورفتگی.
+/// Whitespace normalization of one line — semantic indentation comparison.
 fn normalize_ws(line: &str) -> String {
     line.split_whitespace().collect::<Vec<_>>().join(" ")
 }
@@ -123,24 +123,24 @@ fn sha256_hex(input: &str) -> String {
     hex
 }
 
-/// پچرِ جراحیِ `SEARCH/REPLACE` — استانداردِ Bolt/Lovable برایِ ویرایشِ زنده.
+/// The surgical `SEARCH/REPLACE` patcher — Bolt/Lovable's standard for live editing.
 ///
-/// بلوک‌ها:
+/// Blocks:
 /// ```text
 /// <<<<<<< SEARCH
-/// خطوطِ فعلی
+/// Current lines
 /// =======
-/// خطوطِ جایگزین
+/// Replacement lines
 /// >>>>>>> REPLACE
 /// ```
-/// هر بلوک اول با تطبیقِ **exact** (بایت‌به‌بایت) و در صورت شکست با
-/// **whitespace-normalized** یافته و **فقط همان بازه** جایگزین می‌شود —
-/// هیچ بازتولیدِ کلِ فایلی در کار نیست. بلوک‌هایِ بعدی روی خروجیِ بلوک‌هایِ
-/// قبلی اعمال می‌شوند.
+/// Each block is matched first **exactly** (byte-for-byte) and, on failure, via
+/// **whitespace-normalized** matching, and **only that span** is replaced —
+/// no whole-file regeneration is involved. Subsequent blocks are applied on top of the previous
+/// blocks' output.
 ///
 /// # Errors
-/// [`PatchError::EmptyPatchPayload`] برایِ بارِ خالی، [`PatchError::MalformedBlock`]
-/// برایِ بلوکِ ناقص و [`PatchError::SearchBlockMissing`] برایِ بلوکِ یافت‌نشدنی.
+/// [`PatchError::EmptyPatchPayload`] for an empty payload, [`PatchError::MalformedBlock`]
+/// for a malformed block and [`PatchError::SearchBlockMissing`] for an unmatchable block.
 pub fn apply_search_replace_blocks(
     original: &str,
     patch_payload: &str,
@@ -187,10 +187,10 @@ pub fn apply_search_replace_blocks(
     })
 }
 
-/// بلوک‌هایِ تجزیه‌شدهٔ پچ — جفتِ `(search_lines, replace_lines)`.
+/// The patch's parsed blocks — pairs of `(search_lines, replace_lines)`.
 type PatchBlocks = Vec<(Vec<String>, Vec<String>)>;
 
-/// تجزیهٔ بارِ پچ به بلوک‌هایِ `(search_lines, replace_lines)`.
+/// Parse the patch payload into `(search_lines, replace_lines)` blocks.
 fn parse_patch_blocks(payload: &str) -> Result<PatchBlocks, PatchError> {
     let mut blocks = Vec::new();
     let mut in_search = false;
@@ -229,7 +229,7 @@ fn parse_patch_blocks(payload: &str) -> Result<PatchBlocks, PatchError> {
         } else if in_replace {
             replace.push(raw.to_owned());
         }
-        // خطوطِ بیرونِ بلوک (مثل متنِ توضیحی) نادیده گرفته می‌شوند.
+        // lines outside blocks (such as explanatory text) are ignored.
     }
     if in_search || in_replace {
         return Err(PatchError::MalformedBlock {
@@ -240,8 +240,8 @@ fn parse_patch_blocks(payload: &str) -> Result<PatchBlocks, PatchError> {
     Ok(blocks)
 }
 
-/// یافتنِ اولین تطبیقِ کاملِ `needle` از `start` به بعد.
-/// `normalized = true` → مقایسه با نرمال‌سازیِ whitespace.
+/// Find the first full match of `needle` from `start` onward.
+/// `normalized = true` → compare with whitespace normalization.
 fn find_block(
     haystack: &[String],
     needle: &[String],
@@ -277,24 +277,24 @@ fn find_block(
     None
 }
 
-// ══════════════════════ ستونِ ۱b — بازرسِ DOM زنده ══════════════════════
+// ══════════════════════ Pillar 1b — live DOM inspector ══════════════════════
 
-/// بستهٔ سندباکس زنده — HTML ابزارشده + اسکریپتِ بازرس.
+/// Live sandbox bundle — instrumented HTML + the inspector script.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LiveSandboxBundle {
-    /// لوکالِ بسته.
+    /// Bundle locale.
     pub locale: String,
-    /// HTML با `data-kia-node-id` روی هر تگِ باز.
+    /// HTML with `data-kia-node-id` on every open tag.
     pub instrumented_html: String,
-    /// تعدادِ گره‌هایِ ابزارشده.
+    /// Number of instrumented nodes.
     pub node_count: usize,
-    /// تایپِ پیامِ بازرس — همیشه [`DOM_INSPECT_MESSAGE_TYPE`].
+    /// Inspector message type — always [`DOM_INSPECT_MESSAGE_TYPE`].
     pub message_type: String,
-    /// بایت‌هایِ اسکریپتِ بازرس.
+    /// The inspector script's bytes.
     pub inspector_script_bytes: usize,
 }
 
-/// اسکریپتِ بازرسِ صفر-وابستگی — Click-to-Inspect با postMessage به والد.
+/// The zero-dependency inspector script — Click-to-Inspect with postMessage to the parent.
 const INSPECTOR_JS_TEMPLATE: &str = r#"<script data-kia-inspector="1">
 (function () {
   'use strict';
@@ -323,12 +323,12 @@ const INSPECTOR_JS_TEMPLATE: &str = r#"<script data-kia-inspector="1">
 })();
 </script>"#;
 
-/// ساختِ بستهٔ بازرسِ سندباکس زنده — پیشی‌گرفتن از `Bolt.new`/`Lovable`/`v0`.
+/// Build the live sandbox inspector bundle — outpacing `Bolt.new`/`Lovable`/`v0`.
 ///
-/// هر تگِ بازِ HTML یک `data-kia-node-id="kia-node-N"` ترتیبی می‌گیرد
-/// (تگ‌هایِ بسته‌کننده، کامنت‌ها و `<!` 선ادیده می‌شوند؛ ویژگیِ حاضرِ
-/// `data-kia-node-id` دست نمی‌خورد) و اسکریپتِ بازرس پیش از `</body>`
-/// (یا در انتهایِ سند) تزریق می‌شود — صفر وابستگی خارجی.
+/// Every HTML open tag gets an ordinal `data-kia-node-id="kia-node-N"`
+/// (closing tags, comments and `<!` are skipped; an existing
+/// `data-kia-node-id` attribute is left untouched) and the inspector script is injected before `</body>`
+/// (or at the end of the document) — zero external dependencies.
 #[must_use]
 pub fn build_live_sandbox_inspector_bundle(app_html: &str, locale: &str) -> LiveSandboxBundle {
     let mut out = String::with_capacity(app_html.len() + 4096);
@@ -341,7 +341,7 @@ pub fn build_live_sandbox_inspector_bundle(app_html: &str, locale: &str) -> Live
             i += 1;
             continue;
         }
-        // کامنت / doctype / تگِ بسته‌کننده → دست‌نخورده
+        // comment / doctype / closing tag → untouched
         let rest: String = bytes[i..(i + 4).min(bytes.len())].iter().collect();
         if rest.starts_with("<!--") {
             while i < bytes.len() {
@@ -368,7 +368,7 @@ pub fn build_live_sandbox_inspector_bundle(app_html: &str, locale: &str) -> Live
             }
             continue;
         }
-        // تگِ باز — نامِ تگ و انتهایِ آن را با احترام به نقل‌قول‌ها بیاب
+        // open tag — find the tag name and its end while respecting quotes
         let mut j = i + 1;
         let mut name = String::new();
         while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == '-') {
@@ -390,7 +390,7 @@ pub fn build_live_sandbox_inspector_bundle(app_html: &str, locale: &str) -> Live
             j += 1;
         }
         if name.is_ascii_alphabetic_first() && j < bytes.len() && bytes[j] == '>' {
-            // تگِ معتبرِ HTML — ابزارسازی (ایدمپوتنت: ویژگیِ حاضر را دوباره نمی‌گذارد)
+            // valid HTML tag — instrument (idempotent: does not re-add an existing attribute)
             let tag_text: String = bytes[i..=j].iter().collect();
             node_count += 1;
             out.push('<');
@@ -402,11 +402,11 @@ pub fn build_live_sandbox_inspector_bundle(app_html: &str, locale: &str) -> Live
             out.push('>');
             i = j + 1;
         } else if j >= bytes.len() {
-            // تگِ بدونِ بستن تا انتهایِ سند — دست‌نخورده و پایان
+            // unclosed tag until the end of the document — untouched, stop
             out.extend(bytes[i..].iter());
             i = bytes.len();
         } else {
-            // `<` تنها — دست‌نخورده
+            // a lone `<` — untouched
             out.push('<');
             i += 1;
         }
@@ -443,40 +443,40 @@ impl AsciiAlphaFirst for str {
     }
 }
 
-// ══════════════════════ ستونِ ۲ — سفرِ زمانیِ LangGraph ══════════════════════
+// ══════════════════════ Pillar 2 — LangGraph time travel ══════════════════════
 
-/// چک‌پوینتِ تغییرناپذیرِ وضعیتِ ایجنت — راسِ DAG وضعیت.
+/// Immutable agent-state checkpoint — a vertex of the state DAG.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgentStateCheckpoint {
-    /// شناسهٔ قطعی — `ckpt:<workflow>:<step>:<sha16>`.
+    /// Deterministic ID — `ckpt:<workflow>:<step>:<sha16>`.
     pub checkpoint_id: String,
-    /// والد — `None` برای ریشه.
+    /// Parent — `None` for the root.
     pub parent_checkpoint_id: Option<String>,
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub workflow_id: String,
-    /// شمارهٔ گام.
+    /// Step number.
     pub step_index: u32,
-    /// نقشِ ایجنت (`Alpha` | `Logic-Prime` | `Mairon` | …).
+    /// Agent role (`Alpha` | `Logic-Prime` | `Mairon` | …).
     pub agent_role: String,
-    /// وضعیتِ JSON.
+    /// JSON state.
     pub state_json: String,
-    /// SHA-256 وضعیت — درجِ ناسازگار غیرممکن است.
+    /// SHA-256 of the state — inconsistent insertion is impossible.
     pub state_sha256: String,
-    /// مُهرِ زمانِ Unix ms.
+    /// Unix ms timestamp.
     pub created_at_ms: i64,
 }
 
-/// خطاهایِ دفترِ سفرِ زمانی.
+/// Time-travel ledger errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TimeTravelError {
-    /// چک‌پوینتِ مبدأ در دفتر نیست.
+    /// The origin checkpoint is not in the ledger.
     UnknownCheckpoint {
-        /// شناسهٔ غایب.
+        /// The missing ID.
         checkpoint_id: String,
     },
-    /// وضعیت یا وصلهٔ JSON معتبر نیست.
+    /// Invalid state or patch JSON.
     InvalidStateJson {
-        /// توضیح.
+        /// Description.
         reason: String,
     },
 }
@@ -494,42 +494,42 @@ impl std::fmt::Display for TimeTravelError {
 
 impl std::error::Error for TimeTravelError {}
 
-/// دفترِ سفرِ زمانی — DAG تغییرناپذیرِ چک‌پوینت‌ها با انشعابِ گامِ دلخواه.
+/// Time-travel ledger — an immutable DAG of checkpoints with branching from any step.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TimeTravelLedger {
     checkpoints: Vec<AgentStateCheckpoint>,
 }
 
 impl TimeTravelLedger {
-    /// دفترِ نو.
+    /// A new ledger.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// تعدادِ چک‌پوینت‌ها.
+    /// Number of checkpoints.
     #[must_use]
     pub fn len(&self) -> usize {
         self.checkpoints.len()
     }
 
-    /// خالی بودنِ دفتر.
+    /// Whether the ledger is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.checkpoints.is_empty()
     }
 
-    /// نمایِ فقط‌خواندنیِ چک‌پوینت‌ها.
+    /// A read-only view of the checkpoints.
     #[must_use]
     pub fn checkpoints(&self) -> &[AgentStateCheckpoint] {
         &self.checkpoints
     }
 
-    /// ثبتِ چک‌پوینتِ نو — SHA-256 وضعیت درونِ شناسه قفل می‌شود.
+    /// Record a new checkpoint — the state's SHA-256 is locked inside the ID.
     ///
     /// # Errors
-    /// [`TimeTravelError::UnknownCheckpoint`] اگر `parent` داده شود ولی در
-    /// دفتر نباشد؛ [`TimeTravelError::InvalidStateJson`] اگر وضعیت JSON نباشد.
+    /// [`TimeTravelError::UnknownCheckpoint`] if `parent` is given but is not
+    /// in the ledger; [`TimeTravelError::InvalidStateJson`] if the state is not JSON.
     pub fn record_checkpoint(
         &mut self,
         workflow_id: &str,
@@ -568,13 +568,13 @@ impl TimeTravelLedger {
         Ok(ckpt)
     }
 
-    /// درجِ چک‌پوینتِ آماده (مانندِ ردیفِ دیتابیس) — شناسهٔ بیرونی حفظ
-    /// می‌شود و سازگاریِ SHA-256 وضعیت قطعاً اعتبارسنجی می‌گردد (دست‌برد
-    /// در وضعیتِ ماندگار fail-closed رد می‌شود).
+    /// Insert a prebuilt checkpoint (like a database row) — the external ID is preserved
+    /// and the state's SHA-256 consistency is definitely validated (tampering
+    /// with persisted state is fail-closed rejected).
     ///
     /// # Errors
-    /// [`TimeTravelError::InvalidStateJson`] برایِ JSON نامعتبر یا ناهم‌خوانیِ
-    /// SHA-256؛ [`TimeTravelError::UnknownCheckpoint`] برایِ والدِ غایب.
+    /// [`TimeTravelError::InvalidStateJson`] for invalid JSON or a SHA-256 mismatch;
+    /// [`TimeTravelError::UnknownCheckpoint`] for a missing parent.
     pub fn ingest_checkpoint(&mut self, checkpoint: AgentStateCheckpoint) -> Result<(), TimeTravelError> {
         if serde_json::from_str::<serde_json::Value>(&checkpoint.state_json).is_err() {
             return Err(TimeTravelError::InvalidStateJson {
@@ -597,7 +597,7 @@ impl TimeTravelLedger {
         Ok(())
     }
 
-    /// بازگشتِ زمانی — چک‌پوینتِ تاریخی را بدونِ اجرایِ مجدد برمی‌گرداند.
+    /// Time travel — returns a historical checkpoint without re-execution.
     ///
     /// # Errors
     /// [`TimeTravelError::UnknownCheckpoint`].
@@ -611,8 +611,8 @@ impl TimeTravelLedger {
             })
     }
 
-    /// انشعاب از چک‌پوینتِ تاریخی — وضعیتِ مبدأ + merge وصله، بدونِ اجرایِ
-    /// مجددِ گام‌هایِ پیشین (همان قراردادِ `time-travel` فورکِ `LangGraph`).
+    /// Branch from a historical checkpoint — origin state + patch merge, without re-running
+    /// earlier steps (the same `time-travel` contract of the `LangGraph` fork).
     ///
     /// # Errors
     /// [`TimeTravelError::UnknownCheckpoint`] / [`TimeTravelError::InvalidStateJson`].
@@ -651,29 +651,29 @@ impl TimeTravelLedger {
     }
 }
 
-// ══════════════════════ ستونِ ۳ — DAG پویا (Dify/n8n) ══════════════════════
+// ══════════════════════ Pillar 3 — dynamic DAG (Dify/n8n) ══════════════════════
 
-/// انواعِ گرهٔ DAG — موتورهایِ داخلیِ کیان به‌عنوانِ گره‌هایِ اجرایی.
+/// DAG node kinds — Kian's internal engines as executable nodes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum WorkflowNodeKind {
-    /// تریگرِ cron/webhook.
+    /// Cron/webhook trigger.
     TriggerCronWebhook,
-    /// اجرایِ LLM از رجیستریِ ژنومِ پنتامدلی.
+    /// LLM execution from the pentamodel genome registry.
     OmniGenomeLlm,
-    /// داوریِ مایرون (گیتِ REA).
+    /// Mairon adjudication (the REA gate).
     TrinityJudge,
-    /// استراتژیِ کوانتِ علّیِ Vibe-Trading.
+    /// The Vibe-Trading causal quant strategy.
     QuantVibeStrategy,
-    /// بومی‌سازیِ سیاره‌ایِ ۲۰-لوکالِ ARDA.
+    /// ARDA's 20-locale planetary localization.
     ArdaLocalize20,
-    /// تسویهٔ خزانهٔ Base (چهارجریانی، صفرجمع).
+    /// Base treasury settlement (four-stream, zero-sum).
     BaseTreasurySettle,
-    /// ابزارِ بیرونی از طریقِ پلِ MCP.
+    /// External tools via the MCP bridge.
     McpExternalTool,
 }
 
 impl WorkflowNodeKind {
-    /// همهٔ انواع — برایِ تست و فهرستِ وایر.
+    /// All kinds — for tests and the wire listing.
     pub const ALL: [WorkflowNodeKind; 7] = [
         Self::TriggerCronWebhook,
         Self::OmniGenomeLlm,
@@ -684,7 +684,7 @@ impl WorkflowNodeKind {
         Self::McpExternalTool,
     ];
 
-    /// شناسهٔ وایر — `trigger_cron_webhook` | … .
+    /// Wire ID — `trigger_cron_webhook` | … .
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -698,41 +698,41 @@ impl WorkflowNodeKind {
         }
     }
 
-    /// تجزیه از شناسهٔ وایر — ناشناخته → `None`.
+    /// Parse from the wire ID — unknown → `None`.
     #[must_use]
     pub fn from_wire(wire: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|k| k.wire_id() == wire)
     }
 }
 
-/// خطاهایِ DAG.
+/// DAG errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DagError {
-    /// شناسهٔ تکراریِ گره.
+    /// Duplicate node ID.
     DuplicateNodeId {
-        /// شناسهٔ تکراری.
+        /// The duplicate ID.
         node_id: String,
     },
-    /// وابستگی به گرهٔ غایب.
+    /// Dependency on a missing node.
     UnknownDependency {
-        /// گره.
+        /// The node.
         node_id: String,
-        /// وابستگیِ غایب.
+        /// The missing dependency.
         dependency: String,
     },
-    /// چرخه — مرتب‌سازیِ توپولوژیکِ Kahn تمام نشد.
+    /// Cycle — Kahn's topological sort did not finish.
     CycleDetected {
-        /// گره‌هایِ چسبیده به چرخه — مرتب‌شده.
+        /// Nodes stuck in the cycle — sorted.
         cycle_nodes: Vec<String>,
     },
-    /// نوعِ گرهٔ ناشناخته.
+    /// Unknown node kind.
     UnknownNodeKind {
-        /// شناسهٔ گره.
+        /// The node ID.
         node_id: String,
-        /// نوعِ وایرِ ناشناخته.
+        /// Unknown wire kind.
         kind: String,
     },
-    /// DAG خالی.
+    /// Empty DAG.
     EmptyDag,
 }
 
@@ -756,76 +756,76 @@ impl std::fmt::Display for DagError {
 
 impl std::error::Error for DagError {}
 
-/// گرهٔ مشخصِ DAG.
+/// A specific DAG node.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WorkflowNode {
-    /// شناسهٔ یکتا.
+    /// Unique ID.
     pub id: String,
-    /// نوعِ گره.
+    /// Node kind.
     pub kind: WorkflowNodeKind,
-    /// وابستگی‌ها.
+    /// Dependencies.
     pub depends_on: Vec<String>,
-    /// بارِ JSON.
+    /// JSON payload.
     pub payload_json: String,
 }
 
-/// مشخصِ DAG گردش‌کار.
+/// The workflow's DAG spec.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WorkflowDagSpec {
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub workflow_id: String,
-    /// گره‌ها.
+    /// Nodes.
     pub nodes: Vec<WorkflowNode>,
 }
 
-/// نتیجهٔ اجرای یک گره.
+/// The result of running one node.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DagNodeResult {
-    /// شناسهٔ گره.
+    /// The node ID.
     pub node_id: String,
-    /// نوعِ وایر.
+    /// Wire kind.
     pub kind: String,
-    /// وضعیت — `executed`.
+    /// Status — `executed`.
     pub status: String,
-    /// SHA-256 خروجیِ قطعی.
+    /// SHA-256 of the deterministic output.
     pub output_sha256: String,
-    /// یادداشتِ اجرا.
+    /// Execution note.
     pub note: String,
 }
 
-/// نتیجهٔ رانِ DAG.
+/// The DAG run's result.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DagRunOutcome {
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub dag_id: String,
-    /// ترتیبِ توپولوژیک.
+    /// Topological order.
     pub topo_order: Vec<String>,
-    /// وضعیت — `completed`.
+    /// Status — `completed`.
     pub status: String,
-    /// گره‌هایِ اجراشده.
+    /// Executed nodes.
     pub executed_nodes: usize,
-    /// امتیاز REA — `92` برایِ رانِ کامل (گیتِ مایرون).
+    /// REA score — `92` for a full run (the Mairon gate).
     pub rea_score: u8,
-    /// نتایجِ گره‌ها.
+    /// Node results.
     pub node_results: Vec<DagNodeResult>,
 }
 
-/// موتورِ DAG پویا — اجرایِ قطعی با مرتب‌سازیِ توپولوژیکِ Kahn.
+/// The dynamic DAG engine — deterministic execution with Kahn topological sorting.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct DynamicWorkflowDagEngine;
 
 impl DynamicWorkflowDagEngine {
-    /// مرتب‌سازیِ توپولوژیکِ قطعی — Kahn با صفِ مرتبِ نگه‌داشته
-    /// (هم‌رتبه‌ها به ترتیبِ الفباییِ شناسه).
+    /// Deterministic topological sort — Kahn with a sorted queue held
+    /// (ties broken by alphabetical ID order).
     ///
     /// # Errors
     /// [`DagError::EmptyDag`], [`DagError::DuplicateNodeId`],
-    /// [`DagError::UnknownDependency`], [`DagError::UnknownNodeKind`] و
+    /// [`DagError::UnknownDependency`], [`DagError::UnknownNodeKind`] and
     /// [`DagError::CycleDetected`].
     ///
     /// # Panics
-    /// تنها روی نقضِ ناورنِ داخلی — شمارندهٔ درجهٔ هر گرهٔ شناخته‌شده در نقشه
-    /// حاضر است؛ برای هر ورودیِ معتبرِ [`WorkflowDagSpec`] غیرممکن است.
+    /// Only on an internal-invariant violation — the degree counter of every known node is present in the
+    /// map; impossible for any valid [`WorkflowDagSpec`] input.
     pub fn topo_sort(spec: &WorkflowDagSpec) -> Result<Vec<String>, DagError> {
         if spec.nodes.is_empty() {
             return Err(DagError::EmptyDag);
@@ -887,15 +887,15 @@ impl DynamicWorkflowDagEngine {
         Ok(order)
     }
 
-    /// اجرایِ کاملِ DAG — توپولوژیک، قطعی، هر گره خروجیِ هش‌شدهٔ خودش را دارد.
+    /// Run the full DAG — topological, deterministic, each node gets its own hashed output.
     ///
     /// # Errors
-    /// همان خطاهایِ [`DynamicWorkflowDagEngine::topo_sort`].
+    /// The same errors as [`DynamicWorkflowDagEngine::topo_sort`].
     ///
     /// # Panics
-    /// تنها روی نقضِ ناورنِ داخلی — [`DynamicWorkflowDagEngine::topo_sort`]
-    /// تضمین می‌کند هر شناسه و هر وابستگی در نقشه‌هایِ اجرا حاضرند؛ برای هر
-    /// ورودیِ معتبر غیرممکن است.
+    /// Only on an internal-invariant violation — [`DynamicWorkflowDagEngine::topo_sort`]
+    /// guarantees every ID and every dependency is present in the execution maps; impossible for any
+    /// valid input.
     pub fn execute(spec: &WorkflowDagSpec) -> Result<DagRunOutcome, DagError> {
         let order = Self::topo_sort(spec)?;
         let by_id: std::collections::BTreeMap<&str, &WorkflowNode> =
@@ -943,7 +943,7 @@ impl DynamicWorkflowDagEngine {
     }
 }
 
-/// یادداشتِ اجرایِ هر نوعِ گره — قطعی و فارسی.
+/// Each node kind's execution note — deterministic and Persian.
 fn node_execution_note(kind: WorkflowNodeKind, node_id: &str) -> String {
     match kind {
         WorkflowNodeKind::TriggerCronWebhook => {
@@ -968,57 +968,57 @@ fn node_execution_note(kind: WorkflowNodeKind, node_id: &str) -> String {
     }
 }
 
-// ══════════════════════ ستونِ ۳b — پلِ MCP ══════════════════════
+// ══════════════════════ Pillar 3b — MCP bridge ══════════════════════
 
-/// توصیف‌گرِ ابزارِ MCP — نام + توضیح + اسکیمایِ ورودی.
+/// MCP tool descriptor — name + description + input schema.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct McpToolDescriptor {
-    /// نامِ ابزار (`trinity`, `arda`, …).
+    /// Tool name (`trinity`, `arda`, …).
     pub name: String,
-    /// توضیحِ انسانی.
+    /// Human description.
     pub description: String,
-    /// JSON Schema ورودی.
+    /// Input JSON Schema.
     pub input_schema: serde_json::Value,
 }
 
-/// درخواستِ JSON-RPC 2.0 پلِ MCP.
+/// The MCP bridge's JSON-RPC 2.0 request.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct McpJsonRpcRequest {
-    /// نسخه — `"2.0"`.
+    /// Version — `"2.0"`.
     pub jsonrpc: String,
-    /// شناسهٔ درخواست.
+    /// Request ID.
     #[serde(default)]
     pub id: Option<serde_json::Value>,
-    /// متد.
+    /// Method.
     pub method: String,
-    /// پارامترها.
+    /// Params.
     #[serde(default)]
     pub params: Option<serde_json::Value>,
 }
 
-/// پاسخِ JSON-RPC 2.0 پلِ MCP.
+/// The MCP bridge's JSON-RPC 2.0 response.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct McpJsonRpcResponse {
-    /// نسخه — `"2.0"`.
+    /// Version — `"2.0"`.
     pub jsonrpc: String,
-    /// شناسهٔ درخواست (echo).
+    /// Request ID (echo).
     pub id: Option<serde_json::Value>,
-    /// نتیجه — برایِ موفقیت.
+    /// Result — on success.
     pub result: Option<serde_json::Value>,
-    /// خطا — برایِ شکست.
+    /// Error — on failure.
     pub error: Option<McpRpcError>,
 }
 
-/// خطایِ JSON-RPC.
+/// JSON-RPC error.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct McpRpcError {
-    /// کد (`-32601` | `-32602`).
+    /// Code (`-32601` | `-32602`).
     pub code: i32,
-    /// پیام.
+    /// Message.
     pub message: String,
 }
 
-/// پنج موتورِ داخلیِ کیان به‌عنوانِ ابزارِ MCP استاندارد.
+/// Kian's five internal engines as standard MCP tools.
 #[must_use]
 pub fn mcp_tool_descriptors() -> Vec<McpToolDescriptor> {
     vec![
@@ -1076,7 +1076,7 @@ pub fn mcp_tool_descriptors() -> Vec<McpToolDescriptor> {
     ]
 }
 
-/// پاسخِ `tools/list` استانداردِ MCP.
+/// The MCP-standard `tools/list` response.
 #[must_use]
 pub fn build_mcp_tools_list_response(id: Option<&serde_json::Value>) -> serde_json::Value {
     let tools: Vec<serde_json::Value> = mcp_tool_descriptors()
@@ -1092,7 +1092,7 @@ pub fn build_mcp_tools_list_response(id: Option<&serde_json::Value>) -> serde_js
     serde_json::json!({ "jsonrpc": "2.0", "id": id, "result": { "tools": tools } })
 }
 
-/// متنِ نتیجهٔ قطعیِ هر ابزارِ داخلی.
+/// Each internal tool's deterministic result text.
 fn mcp_tool_result_text(name: &str, args: &serde_json::Value) -> Option<String> {
     match name {
         "trinity" => Some(format!(
@@ -1123,8 +1123,8 @@ fn mcp_tool_result_text(name: &str, args: &serde_json::Value) -> Option<String> 
     }
 }
 
-/// اجرایِ یک فراخوانِ JSON-RPC 2.0 روی پلِ MCP — متدهایِ `initialize`,
-/// `tools/list` و `tools/call`؛ ناشناخته → `-32601`؛ ابزارِ ناشناخته → `-32602`.
+/// Execute one JSON-RPC 2.0 call on the MCP bridge — methods `initialize`,
+/// `tools/list` and `tools/call`; unknown → `-32601`; unknown tool → `-32602`.
 #[must_use]
 pub fn execute_mcp_tool_call(req: &McpJsonRpcRequest) -> McpJsonRpcResponse {
     let id = req.id.clone();
@@ -1189,12 +1189,12 @@ pub fn execute_mcp_tool_call(req: &McpJsonRpcRequest) -> McpJsonRpcResponse {
     }
 }
 
-// ══════════════════════ ستونِ ۴ — حلقهٔ SWE (OpenHands) ══════════════════════
+// ══════════════════════ Pillar 4 — SWE loop (OpenHands) ══════════════════════
 
-/// حدِ عبورِ مُهرِ مایرون — قراردادِ سختِ `rea_score >= 85`.
+/// Mairon seal pass threshold — the hard contract of `rea_score >= 85`.
 pub const MAIRON_SEAL_MIN_REA: u8 = 85;
 
-/// زبان‌هایِ پشتیبانی‌شدهٔ سندباکسِ SWE.
+/// Supported SWE sandbox languages.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SweLanguage {
     /// Rust.
@@ -1203,12 +1203,12 @@ pub enum SweLanguage {
     TypeScript,
     /// Solidity.
     Solidity,
-    /// HTML مستقل.
+    /// Standalone HTML.
     Html,
 }
 
 impl SweLanguage {
-    /// شناسهٔ وایر — `rust` | `typescript` | `solidity` | `html`.
+    /// Wire ID — `rust` | `typescript` | `solidity` | `html`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -1219,7 +1219,7 @@ impl SweLanguage {
         }
     }
 
-    /// تجزیه از شناسهٔ وایر — ناشناخته → `None`.
+    /// Parse from the wire ID — unknown → `None`.
     #[must_use]
     pub fn from_wire(wire: &str) -> Option<Self> {
         match wire.trim().to_ascii_lowercase().as_str() {
@@ -1232,50 +1232,50 @@ impl SweLanguage {
     }
 }
 
-/// گیتِ راستی‌آزماییِ SWE.
+/// SWE verification gate.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SweVerifyCheck {
-    /// نامِ گیت.
+    /// Gate name.
     pub name: String,
-    /// عبور؟
+    /// Passed?
     pub passed: bool,
-    /// جزئیات.
+    /// Details.
     pub detail: String,
 }
 
-/// مُهرِ تأییدِ مایرون.
+/// The Mairon verification seal.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MaironVerifiedSeal {
-    /// شناسهٔ مُهر — `mairon-seal:<sha16>`.
+    /// Seal ID — `mairon-seal:<sha16>`.
     pub seal_id: String,
-    /// امتیاز REA — حداقلِ [`MAIRON_SEAL_MIN_REA`].
+    /// REA score — at least [`MAIRON_SEAL_MIN_REA`].
     pub rea_score: u8,
-    /// SHA-256 آرتیفکتِ مهرشده.
+    /// SHA-256 of the sealed artifact.
     pub artifact_sha256: String,
 }
 
-/// نتیجهٔ حلقهٔ SWE.
+/// The SWE loop result.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SweVerifyOutcome {
-    /// همهٔ گیت‌ها پاس؟
+    /// All gates passed?
     pub verified: bool,
-    /// تلاش‌هایِ مصرف‌شده (۱ = بدونِ ترمیم).
+    /// Attempts consumed (1 = no repair).
     pub attempts_used: u32,
-    /// امتیاز REA نهایی.
+    /// The final REA score.
     pub rea_score: u8,
-    /// گیت‌هایِ آخرین دور.
+    /// The gates of the last round.
     pub checks: Vec<SweVerifyCheck>,
-    /// تشخیص‌هایِ آخرین دورِ ناموفق.
+    /// The findings of the last failed round.
     pub diagnostics: Vec<String>,
-    /// پرامپت‌هایِ خودترمیمیِ صادرشده.
+    /// The issued self-repair prompts.
     pub repair_prompts_issued: u32,
-    /// SHA-256 آرتیفکتِ نهایی.
+    /// SHA-256 of the final artifact.
     pub artifact_sha256: String,
-    /// مُهر — وقتی `verified` و `rea_score >= 85`.
+    /// The seal — when `verified` and `rea_score >= 85`.
     pub seal: Option<MaironVerifiedSeal>,
 }
 
-/// الگوهایِ ممنوع — راز و RCE؛ هر یافتی گیت را می‌شکند.
+/// Forbidden patterns — secrets and RCE; any hit breaks the gate.
 const FORBIDDEN_PATTERNS: &[&str] = &[
     "AKIA",
     "BEGIN RSA PRIVATE KEY",
@@ -1295,12 +1295,12 @@ const FORBIDDEN_PATTERNS: &[&str] = &[
     "eval(",
 ];
 
-/// گیت‌هایِ ساختاری — نتیجهٔ یک دورِ verify.
+/// Structural gates — the result of one verify round.
 fn run_verify_checks(language: SweLanguage, artifact: &str) -> (Vec<SweVerifyCheck>, Vec<String>) {
     let mut checks = Vec::new();
     let mut diagnostics = Vec::new();
 
-    // گیتِ ۱ — حائل‌هایِ متوازن
+    // gate 1 — balanced guardrails
     let (parens, brackets, braces) = delimiter_balance(artifact);
     let balanced = parens == 0 && brackets == 0 && braces == 0;
     checks.push(SweVerifyCheck {
@@ -1314,7 +1314,7 @@ fn run_verify_checks(language: SweLanguage, artifact: &str) -> (Vec<SweVerifyChe
         ));
     }
 
-    // گیتِ ۲ — الگوهایِ ممنوعِ راز/RCE
+    // gate 2 — forbidden secret/RCE patterns
     let mut forbidden_hits = Vec::new();
     for pattern in FORBIDDEN_PATTERNS {
         if artifact.contains(pattern) {
@@ -1334,7 +1334,7 @@ fn run_verify_checks(language: SweLanguage, artifact: &str) -> (Vec<SweVerifyChe
         diagnostics.push(format!("forbidden pattern present: {hit}"));
     }
 
-    // گیتِ ۳ — ناورنی‌هایِ ساختاریِ مخصوصِ زبان
+    // gate 3 — language-specific structural invariants
     let (structural_ok, structural_detail, structural_diags) =
         language_structural_invariants(language, artifact);
     checks.push(SweVerifyCheck {
@@ -1344,7 +1344,7 @@ fn run_verify_checks(language: SweLanguage, artifact: &str) -> (Vec<SweVerifyChe
     });
     diagnostics.extend(structural_diags);
 
-    // گیتِ ۴ — ادعاهایِ تستِ قطعی
+    // gate 4 — deterministic test claims
     let (assert_ok, assert_detail, assert_diag) = deterministic_test_assertions(language, artifact);
     checks.push(SweVerifyCheck {
         name: "deterministic_test_assertions".to_owned(),
@@ -1358,7 +1358,7 @@ fn run_verify_checks(language: SweLanguage, artifact: &str) -> (Vec<SweVerifyChe
     (checks, diagnostics)
 }
 
-/// ترازِ حائل‌ها — مثبتِ بازگشتی یعنی بازِ بی‌بستهٔ اضافه.
+/// Guardrail balance — a positive return means an open without an extra close.
 fn delimiter_balance(artifact: &str) -> (i64, i64, i64) {
     let mut parens = 0i64;
     let mut brackets = 0i64;
@@ -1377,8 +1377,8 @@ fn delimiter_balance(artifact: &str) -> (i64, i64, i64) {
     (parens, brackets, braces)
 }
 
-/// ناورنی‌هایِ ساختاریِ هر زبان — پروکسیِ قطعیِ AST.
-#[allow(clippy::too_many_lines)] // جدولِ گیت‌هایِ ۴ زبان در یک تابعِ خالص
+/// Structural invariants per language — a deterministic AST proxy.
+#[allow(clippy::too_many_lines)] // the four-language gate table in one pure function
 fn language_structural_invariants(
     language: SweLanguage,
     artifact: &str,
@@ -1459,7 +1459,7 @@ fn language_structural_invariants(
     }
 }
 
-/// ادعاهایِ تستِ قطعیِ هر زبان.
+/// Deterministic test claims per language.
 fn deterministic_test_assertions(
     language: SweLanguage,
     artifact: &str,
@@ -1484,15 +1484,15 @@ fn deterministic_test_assertions(
     (ok, detail, diag)
 }
 
-/// امتیازِ REA — ۱۰۰ پایه، ۱۵ به‌ازایِ هر گیتِ ردشده، ۵ به‌ازایِ هر تلاشِ
-/// ترمیمِ فراتر از اول؛ کفِ صفر.
+/// REA score — 100 base, 15 per rejected gate, 5 per repair
+/// attempt beyond the first; floored at zero.
 fn rea_score_for(checks: &[SweVerifyCheck], attempts_used: u32) -> u8 {
     let failed = i64::try_from(checks.iter().filter(|c| !c.passed).count()).unwrap_or(i64::MAX);
     let penalty = failed * 15 + i64::from(attempts_used.saturating_sub(1)) * 5;
     u8::try_from((100 - penalty).clamp(0, 100)).unwrap_or(0)
 }
 
-/// پرامپتِ خودترمیمی — ورودیِ ساختاری برایِ دورِ بعد.
+/// The self-repair prompt — structural input for the next round.
 #[must_use]
 pub fn build_repair_prompt(diagnostics: &[String], attempt: u32) -> String {
     let mut prompt = format!(
@@ -1505,17 +1505,17 @@ pub fn build_repair_prompt(diagnostics: &[String], attempt: u32) -> String {
     prompt
 }
 
-/// هوکِ ترمیم — دورِ `n` (۰-مبنا) و پرامپت → آرتیفکتِ اصلاح‌شده یا `None`
-/// (تسلیمِ قطعی).
+/// Repair hook — round `n` (0-based) and prompt → fixed artifact or `None`
+/// (deterministic surrender).
 pub type RepairHook<'a> = dyn Fn(u32, &str) -> Option<String> + 'a;
 
-/// حلقهٔ `Plan → Approve → Execute → Verify → Self-Heal` — راستی‌آزماییِ قطعیِ
-/// کدِ تولیدشده با ترمیمِ ساخت‌یافته و مُهرِ مایرون.
+/// The `Plan → Approve → Execute → Verify → Self-Heal` loop — deterministic verification of
+/// generated code with structured repair and the Mairon seal.
 ///
-/// گیت‌ها: حائل‌هایِ متوازن، الگوهایِ ممنوعِ راز/RCE، ناورنی‌هایِ ساختاریِ
-/// Rust/TS/Solidity/HTML و ادعاهایِ تستِ قطعی. هر شکست تشخیص‌هایِ ساختاری
-/// می‌سازد که در [`build_repair_prompt`] به هوکِ ترمیم می‌روند؛ مُهرِ
-/// [`MaironVerifiedSeal`] فقط برایِ `rea_score >= 85` صادر می‌شود.
+/// Gates: balanced guardrails, forbidden secret/RCE patterns, structural invariants for
+/// Rust/TS/Solidity/HTML and deterministic test claims. Every failure produces structural
+/// findings that go into the repair hook via [`build_repair_prompt`]; the
+/// [`MaironVerifiedSeal`] seal is issued only for `rea_score >= 85`.
 #[must_use]
 pub fn run_swe_verify_repair_loop(
     _plan_summary: &str,
@@ -1568,13 +1568,13 @@ pub fn run_swe_verify_repair_loop(
 mod tests {
     use super::*;
 
-    // ── ستونِ ۱ — پچرِ جراحی ────────────────────────────────────────────────
+    // ── Pillar 1 — surgical patcher ────────────────────────────────────────────────
 
     const SAMPLE: &str = "fn main() {\n    let a = 1;\n    let b = 2;\n    println!(\"{a}\");\n}\n";
 
     #[test]
     fn surgical_patch_exact_and_whitespace_normalized_modes() {
-        // بلوکِ exact
+        // exact block
         let exact_patch = "<<<<<<< SEARCH\n    let a = 1;\n=======\n    let a = 41;\n>>>>>>> REPLACE\n";
         let out = apply_search_replace_blocks(SAMPLE, exact_patch).expect("exact patch");
         assert_eq!(out.hunks_applied, 1);
@@ -1584,13 +1584,13 @@ mod tests {
         assert_ne!(out.before_sha256, out.after_sha256);
         assert_eq!(out.before_sha256, sha256_hex(SAMPLE));
 
-        // همان بلوک با تورفتگیِ متفاوت → whitespace_normalized
+        // the same block with different indentation → whitespace_normalized
         let ws_patch = "<<<<<<< SEARCH\n  let a = 41;\n=======\n    let a = 7;\n>>>>>>> REPLACE\n";
         let out2 = apply_search_replace_blocks(&out.patched_source, ws_patch).expect("ws patch");
         assert_eq!(out2.mode, PatchMatchMode::WhitespaceNormalized);
         assert!(out2.patched_source.contains("let a = 7;"));
 
-        // دو بلوکِ پشت‌سرهم — دومین بلوک روی خروجیِ اول اعمال می‌شود
+        // two consecutive blocks — the second is applied on top of the first's output
         let two = "<<<<<<< SEARCH\n    let a = 7;\n=======\n    let a = 70;\n>>>>>>> REPLACE\n\
                    <<<<<<< SEARCH\n    let b = 2;\n=======\n    let b = 20;\n>>>>>>> REPLACE\n";
         let out3 = apply_search_replace_blocks(&out2.patched_source, two).expect("two blocks");
@@ -1615,22 +1615,22 @@ mod tests {
             apply_search_replace_blocks(SAMPLE, missing),
             Err(PatchError::SearchBlockMissing { block_index: 0 })
         );
-        // قطعیت: همان ورودی → همان خروجی
+        // determinism: same input → same output
         let p = "<<<<<<< SEARCH\n    let b = 2;\n=======\n    let b = 22;\n>>>>>>> REPLACE\n";
         let a1 = apply_search_replace_blocks(SAMPLE, p).expect("ok");
         let a2 = apply_search_replace_blocks(SAMPLE, p).expect("ok");
         assert_eq!(a1, a2);
     }
 
-    // ── ستونِ ۱b — بازرسِ DOM زنده ──────────────────────────────────────────
+    // ── Pillar 1b — live DOM inspector ──────────────────────────────────────────
 
     #[test]
     fn sandbox_bundle_injects_node_ids_and_inspector_script() {
-        let html = "<!DOCTYPE html><html lang=\"fa\"><body><div class=\"hero\"><button>کلیک</button></div></body></html>";
+        let html = "<!DOCTYPE html><html lang=\"fa\"><body><div class=\"hero\"><button>\u{6a9}\u{644}\u{6cc}\u{6a9}</button></div></body></html>";
         let bundle = build_live_sandbox_inspector_bundle(html, "fa");
         assert_eq!(bundle.locale, "fa");
         assert_eq!(bundle.message_type, "KIA_DOM_INSPECT");
-        // تگ‌هایِ ابزارشده: html + body + div + button = 4 (doctype نه)
+        // instrumented tags: html + body + div + button = 4 (doctype no)
         assert_eq!(bundle.node_count, 4);
         assert!(bundle.instrumented_html.contains("data-kia-node-id=\"kia-node-1\""));
         assert!(bundle.instrumented_html.contains("data-kia-node-id=\"kia-node-4\""));
@@ -1638,7 +1638,7 @@ mod tests {
         assert!(bundle.instrumented_html.contains("KIA_DOM_INSPECT"));
         assert!(bundle.instrumented_html.contains("boundingRect"));
         assert!(bundle.instrumented_html.contains("textPreview"));
-        // اسکریپت پیش از </body> تزریق شده — سند همچنان معتبر
+        // script injected before </body> — the document remains valid
         let lower = bundle.instrumented_html.to_ascii_lowercase();
         let script_pos = lower.find("<script data-kia-inspector").expect("script injected");
         let body_pos = lower.rfind("</body>").expect("body close kept");
@@ -1660,7 +1660,7 @@ mod tests {
         assert!(bundle.instrumented_html.contains("'en'"));
     }
 
-    // ── ستونِ ۲ — سفرِ زمانی ────────────────────────────────────────────────
+    // ── Pillar 2 — time travel ────────────────────────────────────────────────
 
     #[test]
     fn time_travel_records_rewinds_and_forks_without_replay() {
@@ -1682,12 +1682,12 @@ mod tests {
             .record_checkpoint("wf-1", 2, "Mairon", r#"{"step":2,"score":92}"#, 3_000, Some(&c1.checkpoint_id))
             .expect("step 2");
         assert_eq!(ledger.len(), 3);
-        // بازگشتِ زمانی به گامِ ۰ — بدونِ اجرایِ مجدد
+        // time travel back to step 0 — without re-execution
         let rewound = ledger.rewind_to(&c0.checkpoint_id).expect("rewind");
         assert_eq!(rewound.step_index, 0);
         assert!(rewound.parent_checkpoint_id.is_none());
         assert!(rewound.state_json.contains("\"step\":0"));
-        // انشعاب از گامِ ۰ با وصلهٔ وضعیت
+        // branch from step 0 with a state patch
         let fork = ledger
             .fork_from_checkpoint(&c0.checkpoint_id, r#"{"goal":"pivot","branched":true}"#)
             .expect("fork");
@@ -1698,9 +1698,9 @@ mod tests {
         assert_eq!(state["step"], 0, "unmentioned keys stay from base");
         assert_eq!(state["branched"], true);
         assert_eq!(ledger.len(), 4);
-        // زنجیرهٔ والدِ گامِ ۲ دست‌نخورده — DAG تغییرناپذیر
+        // step 2's parent chain untouched — the DAG is immutable
         assert_eq!(ledger.checkpoints()[2].checkpoint_id, c2.checkpoint_id);
-        // SHA-256 وضعیت درونِ شناسه قفل است
+        // the state's SHA-256 is locked inside the ID
         assert!(fork.checkpoint_id.starts_with("ckpt:wf-1:1:"));
         assert_eq!(fork.state_sha256, sha256_hex(&fork.state_json));
     }
@@ -1729,7 +1729,7 @@ mod tests {
         ));
     }
 
-    // ── ستونِ ۳ — DAG پویا ──────────────────────────────────────────────────
+    // ── Pillar 3 — dynamic DAG ──────────────────────────────────────────────────
 
     fn node(id: &str, kind: WorkflowNodeKind, deps: &[&str]) -> WorkflowNode {
         WorkflowNode {
@@ -1764,14 +1764,14 @@ mod tests {
         assert_eq!(outcome.executed_nodes, 5);
         assert_eq!(outcome.rea_score, 92);
         assert_eq!(outcome.topo_order, order);
-        // هر گره خروجیِ هش‌شدهٔ قطعی دارد
+        // every node has a deterministic hashed output
         for r in &outcome.node_results {
             assert_eq!(r.output_sha256.len(), 64);
             assert!(r.output_sha256.chars().all(|c| c.is_ascii_hexdigit()));
         }
         let again = DynamicWorkflowDagEngine::execute(&spec).expect("run 2");
         assert_eq!(outcome, again, "deterministic reruns");
-        // hash وابسته به payload است — تغییرِ payload هشِ گره را می‌شکند
+        // the hash depends on the payload — changing the payload breaks the node's hash
         let mut spec2 = spec.clone();
         spec2.nodes[1].payload_json = r#"{"node":"llm","v":2}"#.to_owned();
         let out2 = DynamicWorkflowDagEngine::execute(&spec2).expect("run 3");
@@ -1782,7 +1782,7 @@ mod tests {
 
     #[test]
     fn dag_rejects_cycles_unknown_deps_duplicates_and_empty() {
-        // چرخهٔ a → b → a
+        // the a → b → a cycle
         let cyclic = WorkflowDagSpec {
             workflow_id: "wf-cyc".to_owned(),
             nodes: vec![
@@ -1796,7 +1796,7 @@ mod tests {
             panic!("expected cycle");
         };
         assert_eq!(cycle_nodes, vec!["a".to_owned(), "b".to_owned()]);
-        // وابستگیِ غایب
+        // missing dependency
         let spec = WorkflowDagSpec {
             workflow_id: "wf-dep".to_owned(),
             nodes: vec![node("a", WorkflowNodeKind::OmniGenomeLlm, &["ghost"])],
@@ -1808,7 +1808,7 @@ mod tests {
                 dependency: "ghost".to_owned()
             })
         );
-        // شناسهٔ تکراری
+        // duplicate ID
         let dup = WorkflowDagSpec {
             workflow_id: "wf-dup".to_owned(),
             nodes: vec![
@@ -1820,7 +1820,7 @@ mod tests {
             DynamicWorkflowDagEngine::topo_sort(&dup),
             Err(DagError::DuplicateNodeId { node_id: "a".to_owned() })
         );
-        // DAG خالی
+        // empty DAG
         let empty = WorkflowDagSpec { workflow_id: "wf-e".to_owned(), nodes: vec![] };
         assert_eq!(
             DynamicWorkflowDagEngine::topo_sort(&empty),
@@ -1835,7 +1835,7 @@ mod tests {
             assert_eq!(WorkflowNodeKind::from_wire(kind.wire_id()), Some(kind));
         }
         assert_eq!(WorkflowNodeKind::from_wire("nope"), None);
-        // DAG هفت‌گرهیِ کامل — همهٔ انواعِ موتورِ کیان
+        // the complete seven-node DAG — all of Kian's engine kinds
         let spec = WorkflowDagSpec {
             workflow_id: "wf-all".to_owned(),
             nodes: vec![
@@ -1852,7 +1852,7 @@ mod tests {
         assert_eq!(out.executed_nodes, 7);
     }
 
-    // ── ستونِ ۳b — پلِ MCP ──────────────────────────────────────────────────
+    // ── Pillar 3b — MCP bridge ──────────────────────────────────────────────────
 
     #[test]
     fn mcp_tools_list_returns_five_internal_engines() {
@@ -1916,7 +1916,7 @@ mod tests {
         assert!(text.contains("4-stream"), "{text}");
         assert!(text.contains("zero-sum"), "{text}");
 
-        // متدِ ناشناخته → -32601
+        // unknown method → -32601
         let bad = McpJsonRpcRequest {
             jsonrpc: "2.0".to_owned(),
             id: None,
@@ -1926,7 +1926,7 @@ mod tests {
         let res = execute_mcp_tool_call(&bad);
         let err = res.error.expect("-32601");
         assert_eq!(err.code, -32601);
-        // ابزارِ ناشناخته → -32602
+        // unknown tool → -32602
         let unknown_tool = McpJsonRpcRequest {
             jsonrpc: "2.0".to_owned(),
             id: None,
@@ -1938,7 +1938,7 @@ mod tests {
         assert_eq!(err.code, -32602);
     }
 
-    // ── ستونِ ۴ — حلقهٔ SWE ─────────────────────────────────────────────────
+    // ── Pillar 4 — SWE loop ─────────────────────────────────────────────────
 
     const CLEAN_RUST: &str = r"//! clean artifact
 fn add(a: i64, b: i64) -> i64 { a + b }
@@ -1964,7 +1964,7 @@ fn adds() { assert_eq!(add(2, 3), 5); }
 
     #[test]
     fn swe_loop_self_heals_with_repair_prompt_feed() {
-        // دورِ ۱ شکست می‌خورد (حائلِ نامتوازن)، دورِ ۲ آرتیفکتِ سالم برمی‌گردد
+        // round 1 fails (unbalanced guardrail), round 2 returns a healthy artifact
         let broken = "fn f() { let x = [1, 2;\n";
         let fixed = CLEAN_RUST;
         let hook = |attempt: u32, prompt: &str| -> Option<String> {
@@ -1985,7 +1985,7 @@ fn adds() { assert_eq!(add(2, 3), 5); }
         assert_eq!(out.repair_prompts_issued, 1);
         assert!(out.rea_score >= MAIRON_SEAL_MIN_REA, "healed artifact seals: {}", out.rea_score);
         assert!(out.seal.is_some());
-        // تشخیص‌هایِ دورِ آخر خالی‌اند (آرتیفکتِ سالم)
+        // the last round's findings are empty (a healthy artifact)
         assert_eq!(out.diagnostics.len(), 0);
     }
 
@@ -2001,20 +2001,20 @@ fn adds() { assert_eq!(add(2, 3), 5); }
         assert!(out.diagnostics.iter().any(|d| d.contains("os.system(")));
         assert!(out.diagnostics.iter().any(|d| d.contains("api_key = \"")));
         assert!(out.seal.is_none());
-        // زبانِ ناهمخوان — solidity بدونِ pragma
+        // mismatched language — solidity without a pragma
         let sol = "contract X { uint256 a; }";
         let out = run_swe_verify_repair_loop("sol gen", SweLanguage::Solidity, sol, 0, None);
         assert!(!out.verified);
         assert!(out.diagnostics.iter().any(|d| d.contains("pragma")));
-        // زبان‌هایِ وایر
+        // wire languages
         for wire in ["rust", "typescript", "solidity", "html"] {
             assert!(SweLanguage::from_wire(wire).is_some(), "{wire}");
         }
         assert!(SweLanguage::from_wire("cobol").is_none());
     }
 
-    /// `ingest_checkpoint` — ردیفِ بیرونی با شناسهٔ خودش می‌نشیند؛ دست‌بردِ
-    /// SHA-256 و والدِ غایب fail-closed رد می‌شوند.
+    /// `ingest_checkpoint` — an external row lands with its own ID; tampering
+    /// with the SHA-256 and a missing parent are fail-closed rejected.
     #[test]
     fn ingest_checkpoint_preserves_external_id_and_rejects_tampering() {
         let mut ledger = TimeTravelLedger::new();
@@ -2034,14 +2034,14 @@ fn adds() { assert_eq!(add(2, 3), 5); }
             ledger.rewind_to("ckpt:wf-db:0:root").expect("by external id").created_at_ms,
             42
         );
-        // دست‌برد در sha → رد
+        // sha tampering → rejected
         let mut tampered = row.clone();
         tampered.state_sha256 = "deadbeef".to_owned();
         assert!(matches!(
             ledger.ingest_checkpoint(tampered),
             Err(TimeTravelError::InvalidStateJson { .. })
         ));
-        // والدِ غایب → رد
+        // missing parent → rejected
         let orphan = AgentStateCheckpoint {
             checkpoint_id: "ckpt:wf-db:1:child".to_owned(),
             parent_checkpoint_id: Some("ckpt:ghost".to_owned()),
@@ -2056,7 +2056,7 @@ fn adds() { assert_eq!(add(2, 3), 5); }
             ledger.ingest_checkpoint(orphan),
             Err(TimeTravelError::UnknownCheckpoint { .. })
         ));
-        // انشعاب از ردیفِ ingested — والدِ بیرونی حفظ می‌شود
+        // branch from an ingested row — the external parent is preserved
         let fork = ledger
             .fork_from_checkpoint("ckpt:wf-db:0:root", r#"{"goal":"pivot"}"#)
             .expect("fork from ingested");

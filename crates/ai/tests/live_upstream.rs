@@ -1,13 +1,13 @@
-//! تست زندهٔ آپ‌استریم — فقط با env اجرا می‌شود و به‌صورت پیش‌فرض `#[ignore]`.
+//! Live upstream test — runs only with env set and is `#[ignore]` by default.
 //!
-//! مصرف:
+//! Usage:
 //! ```sh
 //! KIAN_AI_PRIMARY_URL=... KIAN_AI_PRIMARY_KEY=... KIAN_AI_PRIMARY_MODEL=... \
 //!   cargo test -p kian-ai --test live_upstream -- --ignored --nocapture
 //! ```
 //!
-//! قرارداد: کلید از env می‌آید و هرگز در لاگ/دیتال چاپ نمی‌شود؛ این فایل هیچ
-//! مقدار ثابتی ندارد تا در ریپو رازی جا نماند.
+//! Contract: the key comes from env and is never printed in log/detail; this file contains no
+//! hardcoded value so no secret is ever left in the repository.
 
 use std::time::Duration;
 
@@ -29,13 +29,13 @@ fn slot_from_env(name: &str) -> Option<SlotConfig> {
     }
 }
 
-/// اسلوت واقعی primary — راز از env؛ بدون env تست نادیده گرفته می‌شود.
+/// Real primary slot — secret from env; without env the test is ignored.
 fn live_config() -> Option<AiConfig> {
     let slot = slot_from_env("PRIMARY")?;
     Some(AiConfig { slots: vec![slot], daily_cap_tokens: 50_000 })
 }
 
-/// گفت‌وگوی زندهٔ ساده — پاکت باید کامل باشد (محتوای غیرخالی + توکن نامنفی).
+/// Simple live chat — the packet must be complete (non-empty content + non-negative tokens).
 #[tokio::test]
 #[ignore = "live network — run explicitly with --ignored and env"]
 async fn live_upstream_answers_with_wellformed_packet() {
@@ -48,7 +48,7 @@ async fn live_upstream_answers_with_wellformed_packet() {
     let res = gw
         .chat(vec![PacketMessage {
             role: "user".into(),
-            content: "فقط کلمهٔ «سلام» را بنویس.".into(),
+            content: "\u{641}\u{642}\u{637} \u{6a9}\u{644}\u{645}\u{647}\u{654} «\u{633}\u{644}\u{627}\u{645}» \u{631}\u{627} \u{628}\u{646}\u{648}\u{6cc}\u{633}.".into(),
         }])
         .await
         .expect("live slot must answer");
@@ -64,7 +64,7 @@ async fn live_upstream_answers_with_wellformed_packet() {
     println!("content: {}", res.content);
 }
 
-/// ورودی حاوی کلید خصوصی — راز نباید به آپ‌استریم برسد و یافته باید گزارش شود.
+/// Input containing a private key — the secret must not reach upstream and the finding must be reported.
 #[tokio::test]
 #[ignore = "live network — run explicitly with --ignored and env"]
 async fn live_upstream_redacts_secret_before_send() {
@@ -78,7 +78,7 @@ async fn live_upstream_redacts_secret_before_send() {
     let res = gw
         .chat(vec![PacketMessage {
             role: "user".into(),
-            content: format!("کلید من {secret} است — بگو فقط «دریافت شد»"),
+            content: format!("\u{6a9}\u{644}\u{6cc}\u{62f} \u{645}\u{646} {secret} \u{627}\u{633}\u{62a} — \u{628}\u{6af}\u{648} \u{641}\u{642}\u{637} «\u{62f}\u{631}\u{6cc}\u{627}\u{641}\u{62a} \u{634}\u{62f}»"),
         }])
         .await
         .expect("live slot must answer");

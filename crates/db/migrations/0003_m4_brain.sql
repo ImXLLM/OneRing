@@ -1,21 +1,21 @@
--- 0003_m4_brain — لایهٔ مغز M4 (additive روی اسکیمای v3 — M2/M3 دست نمی‌خورد)
+-- 0003_m4_brain — M4 brain layer (additive on the v3 schema — M2/M3 untouched)
 --
--- قراردادها همان 0002:
---  * نام‌گذاری PascalCase با کوتیشن.
---  * DATETIME رشتهٔ ISO-8601 UTC با پسوند Z.
---  * جدول‌ها IF NOT EXISTS — idempotent روی هر دیتابیسی.
---  * هیچ پولی اینجا زندگی نمی‌کند — تراز فقط از Posting مشتق می‌شود (ADR-003)؛
---    جدول‌های این فایل حافظه/شواهد اجرای مغز هستند نه دفتر.
+-- Conventions are the same as 0002:
+--  * PascalCase naming with quotes.
+--  * DATETIME is an ISO-8601 UTC string with a Z suffix.
+--  * tables are IF NOT EXISTS — idempotent on any database.
+--  * no money lives here — the balance is derived only from Posting (ADR-003);
+--    the tables in this file hold brain memory/execution evidence, not the ledger.
 
--- ۱۶ مهارت هرمس — seed از crates/hermes (منبع حقیقت داده، نه کد)
+-- 16 Hermes skills — seeded from crates/hermes (source-of-truth data, not code)
 CREATE TABLE IF NOT EXISTS "HermesSkill" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "title" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    -- kernel = اجرای قطعی روی کرنل؛ llm = قالب پرامپت + گیت‌وی AI
+    -- kernel = deterministic on-kernel execution; llm = prompt template + AI gateway
     "kind" TEXT NOT NULL,
-    -- برآورد توکن برای پاکت بودجه — مهارت kernel صفر
+    -- token estimate for the budget envelope — kernel skills are zero
     "estimateTokens" INTEGER NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -23,14 +23,14 @@ CREATE TABLE IF NOT EXISTS "HermesSkill" (
 
 CREATE INDEX IF NOT EXISTS "HermesSkill_active_idx" ON "HermesSkill" ("active");
 
--- هر اجرای مهارت یک ردیف شاهد — مبنای امتیاز هویتی و دنبالهٔ ادمین
+-- every skill run gets one evidence row — basis of the identity score and the admin trail
 CREATE TABLE IF NOT EXISTS "HermesRun" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "skillId" TEXT NOT NULL,
-    -- ورودی کاربر پس از سپر (اگر REDACTED، متن پاک‌شده ذخیره می‌شود؛ راز هرگز)
+    -- user input after the shield (if REDACTED, the scrubbed text is stored; never secrets)
     "input" TEXT NOT NULL,
-    -- خروجی مهارت — برای ران مسدودشده رشتهٔ خالی
+    -- skill output — empty string for a blocked run
     "output" TEXT NOT NULL,
     -- ALLOW / REDACTED / BLOCKED
     "shield" TEXT NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "HermesRun" (
 CREATE INDEX IF NOT EXISTS "HermesRun_userId_createdAt_idx" ON "HermesRun" ("userId", "createdAt");
 CREATE INDEX IF NOT EXISTS "HermesRun_outcome_idx" ON "HermesRun" ("outcome");
 
--- حافظهٔ ۷لایهٔ هرمس — هر یادداشت فقط در یک لایه؛ حذف مستقیم ندارد (audit-friendly)
+-- the 7-layer Hermes memory — every note lives in exactly one layer; no direct deletes (audit-friendly)
 CREATE TABLE IF NOT EXISTS "MemoryNote" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "MemoryNote" (
 
 CREATE INDEX IF NOT EXISTS "MemoryNote_userId_layer_idx" ON "MemoryNote" ("userId", "layer");
 
--- ناوگان ۷ نقش — ردیف ایجنت‌ها؛ وضعیت صادقانه (active/registered/disabled)
+-- the 7-role fleet — agent roster; honest status (active/registered/disabled)
 CREATE TABLE IF NOT EXISTS "Agent" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "Agent" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS "Agent_role_key" ON "Agent" ("role");
 
--- پیام‌های A2A — صندوق ورودی هر ایجنت؛ گیت‌وی فقط ادمین
+-- A2A messages — each agent's inbox; the gateway is admin-only
 CREATE TABLE IF NOT EXISTS "A2aMessage" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "fromAgent" TEXT NOT NULL,

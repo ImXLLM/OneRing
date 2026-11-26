@@ -1,46 +1,46 @@
-//! موتور کوانتِ علّی — ماندگاریِ استراتژی‌های `quant_strategies`
+//! Causal quant engine — persistence for `quant_strategies` strategies.
 //! (Wave 6 — Step 3/4).
 //!
-//! سه عملیاتِ قطعی روی مهاجرت `0010`: درجِ استراتژیِ سبزِ گیتِ مایرون،
-//! خوانشِ فهرست و شمارشِ کل — با ردیابیِ audit روی هر درج. هیچ جدولِ
-//! دفتری لمس نمی‌شود.
+//! Three deterministic operations on migration `0010`: insert a Mairon-gate-green strategy,
+//! list reads and a total count — with audit tracking on every insert. No ledger
+//! table is touched.
 
 use sqlx::Row;
 
 use crate::error::DbResult;
 use crate::store::V3Store;
 
-/// ردیفِ استراتژی کوانت — همان ستون‌های `quant_strategies` (مهاجرت 0010).
-/// شناسهٔ استراتژی (`vibe:<hash>`) درونِ `strategy_ast_json` زندگی می‌کند.
+/// Quant strategy row — the same columns as `quant_strategies` (migration 0010).
+/// Strategy id (`vibe:<hash>`) lives inside `strategy_ast_json`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuantStrategyRow {
-    /// شناسهٔ ردیف (`quant:<uuid>`).
+    /// Row id (`quant:<uuid>`).
     pub id: String,
-    /// شناسهٔ حسابِ سازنده.
+    /// Builder account id.
     pub creator_user_id: String,
-    /// نامِ انسانی.
+    /// Human-readable name.
     pub name: String,
-    /// نماد (`BTC-USDT`).
+    /// Symbol (`BTC-USDT`).
     pub symbol: String,
-    /// تایم‌فریم (`1h`).
+    /// Timeframe (`1h`).
     pub timeframe: String,
-    /// پرامپتِ خامِ Vibe.
+    /// Raw Vibe prompt.
     pub vibe_prompt: String,
-    /// AST تایپ‌دار به JSON.
+    /// Typed AST as JSON.
     pub strategy_ast_json: String,
-    /// سنجه‌هایِ نهادی به JSON.
+    /// Institutional metrics as JSON.
     pub metrics_json: String,
-    /// شارپِ سالانه‌شده.
+    /// Annualized Sharpe.
     pub sharpe_ratio: f64,
-    /// بیشینهٔ دراودان (درصد).
+    /// Maximum drawdown (percent).
     pub max_drawdown_pct: f64,
-    /// مُهرِ گیتِ مایرون.
+    /// Mairon gate seal.
     pub mairon_approved: bool,
-    /// هشِ دفترِ ادعاها.
+    /// Claims ledger hash.
     pub claim_verification_hash: String,
-    /// `SKILL.md` فورج‌شده.
+    /// The forged `SKILL.md`.
     pub skill_md: String,
-    /// مُهرِ زمانِ تولید (ISO-8601).
+    /// Generation timestamp (ISO-8601).
     pub created_at: String,
 }
 
@@ -68,11 +68,11 @@ const QUANT_COLS: &str = r#""id","creator_user_id","name","symbol","timeframe",
            "mairon_approved","claim_verification_hash","skill_md","created_at""#;
 
 impl V3Store {
-    /// درجِ استراتژی کوانت — فقط خروجیِ سبزِ گیتِ مایرون؛ قطعی و
-    /// ایدمپوتنت روی `id`.
+    /// Insert a quant strategy — only Mairon-gate-green output; deterministic and
+    /// idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL یا خطای audit پس از درج.
+    /// SQL error or an audit error after the insert.
     pub async fn create_quant_strategy(&self, row: &QuantStrategyRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "quant_strategies"
@@ -102,10 +102,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ استراتژی‌هایِ ماندگار — نوترینِ اول، سقفِ `limit`.
+    /// Persisted strategy list — newest first, capped at `limit`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_quant_strategies(&self, limit: u32) -> DbResult<Vec<QuantStrategyRow>> {
         let cap = i64::from(limit.clamp(1, 200));
         let sql = format!(
@@ -119,10 +119,10 @@ impl V3Store {
         Ok(rows.iter().map(quant_row_from).collect())
     }
 
-    /// خوانشِ تک‌ردیفی — ناشناخته → `None`.
+    /// Single-row read — unknown → `None`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_quant_strategy(&self, id: &str) -> DbResult<Option<QuantStrategyRow>> {
         let row = sqlx::query(crate::sqlsafe::audited(format!(
             r#"SELECT {QUANT_COLS} FROM "quant_strategies" WHERE "id"=?"#
@@ -133,10 +133,10 @@ impl V3Store {
         Ok(row.as_ref().map(quant_row_from))
     }
 
-    /// شمارشِ کلِ استراتژی‌ها — گیتِ آزمونِ هندلر.
+    /// Total strategy count — the handler test gate.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_quant_strategies(&self) -> DbResult<i64> {
         let row = sqlx::query(crate::sqlsafe::audited(
             r#"SELECT COUNT(*) AS "c" FROM "quant_strategies""#.to_owned(),
@@ -162,7 +162,7 @@ mod tests {
         QuantStrategyRow {
             id: id.to_owned(),
             creator_user_id: "citizen:1".to_owned(),
-            name: "روند-پیوِ کانونیک".to_owned(),
+            name: "\u{631}\u{648}\u{646}\u{62f}-\u{67e}\u{6cc}\u{648}\u{650} \u{6a9}\u{627}\u{646}\u{648}\u{646}\u{6cc}\u{6a9}".to_owned(),
             symbol: "BTC-USDT".to_owned(),
             timeframe: "1h".to_owned(),
             vibe_prompt: "Momentum breakout with EMA 12/26 crossover".to_owned(),
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(store.count_quant_strategies().await.unwrap(), 2);
         let listed = store.list_quant_strategies(10).await.unwrap();
         assert_eq!(listed.len(), 2);
-        assert_eq!(listed[0].id, "quant:b", "نوترین اول");
+        assert_eq!(listed[0].id, "quant:b", "\u{646}\u{648}\u{62a}\u{631}\u{6cc}\u{646} \u{627}\u{648}\u{644}");
         let got = store.get_quant_strategy("quant:a").await.unwrap().unwrap();
         assert!(got.mairon_approved);
         assert!((got.sharpe_ratio - 1.4).abs() < 1e-12);

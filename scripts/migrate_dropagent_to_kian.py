@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-migrate_dropagent_to_kian.py — مهاجرت قطعی و idempotent جامعهٔ زندهٔ dropagent به KIAN v2
+migrate_dropagent_to_kian.py — \u0645\u0647\u0627\u062c\u0631\u062a \u0642\u0637\u0639\u06cc \u0648 idempotent \u062c\u0627\u0645\u0639\u0647\u0654 \u0632\u0646\u062f\u0647\u0654 dropagent \u0628\u0647 KIAN v2
 =========================================================================================
 
-ورودی:  پایگاه ۳۰روزهٔ لگاسی (marketplace-20260924-0400.db — فقط‌خواندنی)
-خروجی:  kian-production.db با اسکیمای کامل KIAN v2 آمادهٔ استقرار Railway
+\u0648\u0631\u0648\u062f\u06cc:  \u067e\u0627\u06cc\u06af\u0627\u0647 \u06f3\u06f0\u0631\u0648\u0632\u0647\u0654 \u0644\u06af\u0627\u0633\u06cc (marketplace-20260924-0400.db — \u0641\u0642\u0637‌\u062e\u0648\u0627\u0646\u062f\u0646\u06cc)
+\u062e\u0631\u0648\u062c\u06cc:  kian-production.db \u0628\u0627 \u0627\u0633\u06a9\u06cc\u0645\u0627\u06cc \u06a9\u0627\u0645\u0644 KIAN v2 \u0622\u0645\u0627\u062f\u0647\u0654 \u0627\u0633\u062a\u0642\u0631\u0627\u0631 Railway
 
-تضمین‌های کرنل (crates/db/src/store.rs):
-  * `"Posting"` تنها منبع حقیقت تراز است (ADR-003) — هر تراز با Tx (MINT) و
-    دو پا (`mint:genesis` بدهکار −amount، `citizen:{tg}` بستانکار +amount) پشتیبان می‌شود.
-  * `V3Store::load_ledger_state()` جدول‌های Account/Tx/Posting را می‌خواند و
-    kinds باید lowercase باشد: user/escrow/treasury/mint/burn.
-  * `load_escrow_registry()` همهٔ ردیف‌های Escrow را به وضعیت دامنه می‌خواند —
-    status باید از ثابت‌های EscrowStatus باشد (اینجا: RELEASED).
-  * Σ همهٔ Postingها باید دقیقاً ۰ باشد تا `trial_balance` و همهٔ `apply()`های بعدی سالم بمانند.
+\u062a\u0636\u0645\u06cc\u0646‌\u0647\u0627\u06cc \u06a9\u0631\u0646\u0644 (crates/db/src/store.rs):
+  * `"Posting"` \u062a\u0646\u0647\u0627 \u0645\u0646\u0628\u0639 \u062d\u0642\u06cc\u0642\u062a \u062a\u0631\u0627\u0632 \u0627\u0633\u062a (ADR-003) — \u0647\u0631 \u062a\u0631\u0627\u0632 \u0628\u0627 Tx (MINT) \u0648
+    \u062f\u0648 \u067e\u0627 (`mint:genesis` \u0628\u062f\u0647\u06a9\u0627\u0631 −amount\u060c `citizen:{tg}` \u0628\u0633\u062a\u0627\u0646\u06a9\u0627\u0631 +amount) \u067e\u0634\u062a\u06cc\u0628\u0627\u0646 \u0645\u06cc‌\u0634\u0648\u062f.
+  * `V3Store::load_ledger_state()` \u062c\u062f\u0648\u0644‌\u0647\u0627\u06cc Account/Tx/Posting \u0631\u0627 \u0645\u06cc‌\u062e\u0648\u0627\u0646\u062f \u0648
+    kinds \u0628\u0627\u06cc\u062f lowercase \u0628\u0627\u0634\u062f: user/escrow/treasury/mint/burn.
+  * `load_escrow_registry()` \u0647\u0645\u0647\u0654 \u0631\u062f\u06cc\u0641‌\u0647\u0627\u06cc Escrow \u0631\u0627 \u0628\u0647 \u0648\u0636\u0639\u06cc\u062a \u062f\u0627\u0645\u0646\u0647 \u0645\u06cc‌\u062e\u0648\u0627\u0646\u062f —
+    status \u0628\u0627\u06cc\u062f \u0627\u0632 \u062b\u0627\u0628\u062a‌\u0647\u0627\u06cc EscrowStatus \u0628\u0627\u0634\u062f (\u0627\u06cc\u0646\u062c\u0627: RELEASED).
+  * Σ \u0647\u0645\u0647\u0654 Posting\u0647\u0627 \u0628\u0627\u06cc\u062f \u062f\u0642\u06cc\u0642\u0627\u064b \u06f0 \u0628\u0627\u0634\u062f \u062a\u0627 `trial_balance` \u0648 \u0647\u0645\u0647\u0654 `apply()`\u0647\u0627\u06cc \u0628\u0639\u062f\u06cc \u0633\u0627\u0644\u0645 \u0628\u0645\u0627\u0646\u0646\u062f.
 
-پاک‌سازی مالی (طبق دستور مهاجرت):
-  * هر کاربر عادی: دقیقاً تراز مثبت لگاسی × ۱٬۰۰۰٬۰۰۰ micro، سقف ۱٬۰۰۰ KIAN
-  * @ImXsi  (6398636666): ۱٬۰۰۰ KIAN — اصلاح واریز دوبار Deposit #3 (tx #806/#807)
-  * @ImXforevr (8198598635): ۵٬۰۰۰ KIAN — تراز بنیان‌گذار
-  * Σ کل genesis = ۵۸٬۷۰۰٬۲۰۰٬۰۰۰ micro (۵۸٬۷۰۰.۲ KIAN) — زیر سقف جدید منشور
+\u067e\u0627\u06a9‌\u0633\u0627\u0632\u06cc \u0645\u0627\u0644\u06cc (\u0637\u0628\u0642 \u062f\u0633\u062a\u0648\u0631 \u0645\u0647\u0627\u062c\u0631\u062a):
+  * \u0647\u0631 \u06a9\u0627\u0631\u0628\u0631 \u0639\u0627\u062f\u06cc: \u062f\u0642\u06cc\u0642\u0627\u064b \u062a\u0631\u0627\u0632 \u0645\u062b\u0628\u062a \u0644\u06af\u0627\u0633\u06cc × \u06f1\u066c\u06f0\u06f0\u06f0\u066c\u06f0\u06f0\u06f0 micro\u060c \u0633\u0642\u0641 \u06f1\u066c\u06f0\u06f0\u06f0 KIAN
+  * @ImXsi  (6398636666): \u06f1\u066c\u06f0\u06f0\u06f0 KIAN — \u0627\u0635\u0644\u0627\u062d \u0648\u0627\u0631\u06cc\u0632 \u062f\u0648\u0628\u0627\u0631 Deposit #3 (tx #806/#807)
+  * @ImXforevr (8198598635): \u06f5\u066c\u06f0\u06f0\u06f0 KIAN — \u062a\u0631\u0627\u0632 \u0628\u0646\u06cc\u0627\u0646‌\u06af\u0630\u0627\u0631
+  * Σ \u06a9\u0644 genesis = \u06f5\u06f8\u066c\u06f7\u06f0\u06f0\u066c\u06f2\u06f0\u06f0\u066c\u06f0\u06f0\u06f0 micro (\u06f5\u06f8\u066c\u06f7\u06f0\u06f0.\u06f2 KIAN) — \u0632\u06cc\u0631 \u0633\u0642\u0641 \u062c\u062f\u06cc\u062f \u0645\u0646\u0634\u0648\u0631
 """
 from __future__ import annotations
 
@@ -34,21 +34,21 @@ import sys
 from datetime import datetime, timezone
 
 MICRO = 1_000_000                     # 1 credit = 1 KIAN = 1,000,000 micro
-REGULAR_CAP_MICRO = 1_000_000_000     # سقف کاربر عادی: ۱٬۰۰۰ KIAN
-PRODUCT_MIN_PRICE_MICRO = 10_000_000  # حداقل قیمت محصول: ۱۰ KIAN
-AFFILIATE_BPS = 2_000                 # پورسانت وایرال ۲۰٪
-TAX_BPS = 1_000                       # مادهٔ ۲ منشور: ۱۰٪ مالیات خزانه
+REGULAR_CAP_MICRO = 1_000_000_000     # Regular user cap: 1,000 KIAN
+PRODUCT_MIN_PRICE_MICRO = 10_000_000  # Minimum product price: 10 KIAN
+AFFILIATE_BPS = 2_000                 # Viral commission 20%
+TAX_BPS = 1_000                       # Charter article 2: 10% treasury tax
 PURCHASE_TTL_H = 72
 
 INSIDER_FIXED_MICRO = {
-    "8198598635": 5_000_000_000,  # @ImXforevr — بنیان‌گذار
-    "6398636666": 1_000_000_000,  # @ImXsi — اصلاح دابل‌کردیت
+    "8198598635": 5_000_000_000,  # @ImXforevr — founder
+    "6398636666": 1_000_000_000,  # @ImXsi — double-credit fix
 }
 
 SYSTEM_ACCOUNTS = [
-    ("mint:genesis", "mint", "منبع عرضه (ضرب)"),
-    ("treasury:nation", "treasury", "خزانه ملی"),
-    ("burn:void", "burn", "مقصد سوزاندن"),
+    ("mint:genesis", "mint", "\u0645\u0646\u0628\u0639 \u0639\u0631\u0636\u0647 (\u0636\u0631\u0628)"),
+    ("treasury:nation", "treasury", "\u062e\u0632\u0627\u0646\u0647 \u0645\u0644\u06cc"),
+    ("burn:void", "burn", "\u0645\u0642\u0635\u062f \u0633\u0648\u0632\u0627\u0646\u062f\u0646"),
 ]
 
 MEMORY_LAYER_MAP = {
@@ -61,9 +61,9 @@ MEMORY_LAYER_MAP = {
 REPORT: dict = {}
 
 
-# ── کمکی‌ها ───────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def iso(ts: float | int | None) -> str | None:
-    """Unix epoch (ثانیه، شاید float) → ISO-8601 UTC با millis و پسوند Z (قرارداد EPOCH_ISO کرنل)."""
+    """Unix epoch (\u062b\u0627\u0646\u06cc\u0647\u060c \u0634\u0627\u06cc\u062f float) → ISO-8601 UTC \u0628\u0627 millis \u0648 \u067e\u0633\u0648\u0646\u062f Z (\u0642\u0631\u0627\u0631\u062f\u0627\u062f EPOCH_ISO \u06a9\u0631\u0646\u0644)."""
     if ts is None:
         return None
     dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
@@ -71,7 +71,7 @@ def iso(ts: float | int | None) -> str | None:
 
 
 def s(v) -> str | None:
-    """None/رشتهٔ خالی → None؛ وگرنه رشتهٔ پاک‌شده."""
+    """None/\u0631\u0634\u062a\u0647\u0654 \u062e\u0627\u0644\u06cc → None\u061b \u0648\u06af\u0631\u0646\u0647 \u0631\u0634\u062a\u0647\u0654 \u067e\u0627\u06a9‌\u0634\u062f\u0647."""
     if v is None:
         return None
     t = str(v).strip()
@@ -85,7 +85,7 @@ def sanitize_micro(tg_id: str, credits: float) -> int:
 
 
 def split_statements(sql_text: str) -> list[str]:
-    """حذف کامنت‌های خط کامل و شکست روی ';' — برای اجرای گام‌به‌گام با گارد ALTER."""
+    """\u062d\u0630\u0641 \u06a9\u0627\u0645\u0646\u062a‌\u0647\u0627\u06cc \u062e\u0637 \u06a9\u0627\u0645\u0644 \u0648 \u0634\u06a9\u0633\u062a \u0631\u0648\u06cc ';' — \u0628\u0631\u0627\u06cc \u0627\u062c\u0631\u0627\u06cc \u06af\u0627\u0645‌\u0628\u0647‌\u06af\u0627\u0645 \u0628\u0627 \u06af\u0627\u0631\u062f ALTER."""
     lines = [ln for ln in sql_text.splitlines() if not ln.lstrip().startswith("--")]
     out = []
     for chunk in "\n".join(lines).split(";"):
@@ -101,14 +101,14 @@ def column_exists(con: sqlite3.Connection, table: str, column: str) -> bool:
 
 
 def apply_migration_file(con: sqlite3.Connection, version: int, path: str) -> None:
-    """اجرای یک فایل مهاجرت با گارد ADD COLUMN (idempotent) + ثبت ردیف _sqlx_migrations."""
+    """\u0627\u062c\u0631\u0627\u06cc \u06cc\u06a9 \u0641\u0627\u06cc\u0644 \u0645\u0647\u0627\u062c\u0631\u062a \u0628\u0627 \u06af\u0627\u0631\u062f ADD COLUMN (idempotent) + \u062b\u0628\u062a \u0631\u062f\u06cc\u0641 _sqlx_migrations."""
     raw = open(path, "r", encoding="utf-8").read()
     checksum = hashlib.sha384(raw.encode("utf-8")).digest()
     description = re.sub(r"^\d+_", "", os.path.splitext(os.path.basename(path))[0])
     for stmt in split_statements(raw):
         m = re.search(r'ALTER\s+TABLE\s+"([^"]+)"\s+ADD\s+COLUMN\s+"([^"]+)"', stmt, re.I)
         if m and column_exists(con, m.group(1), m.group(2)):
-            continue  # ستون از قبل هست — رد شو
+            continue  # Column already exists — skip
         con.execute(stmt)
     con.execute(
         'INSERT INTO _sqlx_migrations (version, description, installed_on, success, checksum, execution_time) '
@@ -119,7 +119,7 @@ def apply_migration_file(con: sqlite3.Connection, version: int, path: str) -> No
 
 
 def wipe_migration_rows(con: sqlite3.Connection) -> dict:
-    """حذف ردیف‌های مهاجرت قبلی با پیشوندهای قطعی — اجرای دوم = همان وضعیت (idempotent)."""
+    """\u062d\u0630\u0641 \u0631\u062f\u06cc\u0641‌\u0647\u0627\u06cc \u0645\u0647\u0627\u062c\u0631\u062a \u0642\u0628\u0644\u06cc \u0628\u0627 \u067e\u06cc\u0634\u0648\u0646\u062f\u0647\u0627\u06cc \u0642\u0637\u0639\u06cc — \u0627\u062c\u0631\u0627\u06cc \u062f\u0648\u0645 = \u0647\u0645\u0627\u0646 \u0648\u0636\u0639\u06cc\u062a (idempotent)."""
     wiped = {}
     def d(sql: str, args: tuple = ()) -> None:
         wiped[sql.split("FROM")[1].split("WHERE")[0].strip('" ')] = con.execute(sql, args).rowcount
@@ -137,20 +137,20 @@ def wipe_migration_rows(con: sqlite3.Connection) -> dict:
     return wiped
 
 
-# ── آرتیفکت HTML محصولات ─────────────────────────────────────────────────────
+# ── Product HTML artifacts ─────────────────────────────────────────────────────
 def artifact_html(title: str, seller: str, category: str | None, description: str,
                   price_kian: str, full: bool) -> str:
-    """آرتیفکت HTML تک‌صفحه‌ای، فارسی RTL، خودکفا و تعاملی — بدون وابستگی خارجی."""
+    """\u0622\u0631\u062a\u06cc\u0641\u06a9\u062a HTML \u062a\u06a9‌\u0635\u0641\u062d\u0647‌\u0627\u06cc\u060c \u0641\u0627\u0631\u0633\u06cc RTL\u060c \u062e\u0648\u062f\u06a9\u0641\u0627 \u0648 \u062a\u0639\u0627\u0645\u0644\u06cc — \u0628\u062f\u0648\u0646 \u0648\u0627\u0628\u0633\u062a\u06af\u06cc \u062e\u0627\u0631\u062c\u06cc."""
     cat = category or "tool"
     paras = "".join(
         f"<p>{ln}</p>" for ln in description.splitlines() if ln.strip()
-    ) or "<p>این محصول دیجیتال به‌همراه مهاجرت جامعهٔ dropagent به KIAN v2 منتشر شد.</p>"
-    esc_title = (title or "محصول KIAN").replace("<", "&lt;")
+    ) or "<p>\u0627\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644 \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644 \u0628\u0647‌\u0647\u0645\u0631\u0627\u0647 \u0645\u0647\u0627\u062c\u0631\u062a \u062c\u0627\u0645\u0639\u0647\u0654 dropagent \u0628\u0647 KIAN v2 \u0645\u0646\u062a\u0634\u0631 \u0634\u062f.</p>"
+    esc_title = (title or "\u0645\u062d\u0635\u0648\u0644 KIAN").replace("<", "&lt;")
     esc_seller = (seller or "unknown").replace("<", "&lt;")
     extra = (
-        '<button onclick="dl()">⬇️ دانلود نسخهٔ کامل</button>'
+        '<button onclick="dl()">⬇️ \u062f\u0627\u0646\u0644\u0648\u062f \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644</button>'
         if full
-        else '<button onclick="alert(\'برای دریافت نسخهٔ کامل، از طریق بازار KIAN خرید کنید.\')">🔒 دریافت نسخهٔ کامل</button>'
+        else '<button onclick="alert(\'\u0628\u0631\u0627\u06cc \u062f\u0631\u06cc\u0627\u0641\u062a \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644\u060c \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0628\u0627\u0632\u0627\u0631 KIAN \u062e\u0631\u06cc\u062f \u06a9\u0646\u06cc\u062f.\')">🔒 \u062f\u0631\u06cc\u0627\u0641\u062a \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644</button>'
     )
     return f"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -183,16 +183,16 @@ def artifact_html(title: str, seller: str, category: str | None, description: st
 <div class="wrap">
   <span class="badge">📦 {cat} · KIAN v2 Marketplace</span>
   <h1>{esc_title}</h1>
-  <div class="seller">فروشنده: @{esc_seller}</div>
-  <div class="price"><span>قیمت</span><b>{price_kian} KIAN</b></div>
-  <div class="card"><h2>معرفی محصول</h2>{paras}</div>
-  <div class="card"><h2>دربارهٔ تحویل</h2>
-    <p>این محصول به‌صورت آرتیفکت HTML تعاملی تحویل داده می‌شود — بلافاصله پس از آزادسازی اسکرو،
-       نسخهٔ کامل از مسیر <code>GET /api/v1/market/escrows/&#123;id&#125;/delivery</code> در دسترس خریدار است.</p>
-    <p>پورسانت معرف: <b>{AFFILIATE_BPS // 100}٪</b> از هر خرید از طریق لینک دعوت شما.</p>
+  <div class="seller">\u0641\u0631\u0648\u0634\u0646\u062f\u0647: @{esc_seller}</div>
+  <div class="price"><span>\u0642\u06cc\u0645\u062a</span><b>{price_kian} KIAN</b></div>
+  <div class="card"><h2>\u0645\u0639\u0631\u0641\u06cc \u0645\u062d\u0635\u0648\u0644</h2>{paras}</div>
+  <div class="card"><h2>\u062f\u0631\u0628\u0627\u0631\u0647\u0654 \u062a\u062d\u0648\u06cc\u0644</h2>
+    <p>\u0627\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644 \u0628\u0647‌\u0635\u0648\u0631\u062a \u0622\u0631\u062a\u06cc\u0641\u06a9\u062a HTML \u062a\u0639\u0627\u0645\u0644\u06cc \u062a\u062d\u0648\u06cc\u0644 \u062f\u0627\u062f\u0647 \u0645\u06cc‌\u0634\u0648\u062f — \u0628\u0644\u0627\u0641\u0627\u0635\u0644\u0647 \u067e\u0633 \u0627\u0632 \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0627\u0633\u06a9\u0631\u0648\u060c
+       \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 \u0627\u0632 \u0645\u0633\u06cc\u0631 <code>GET /api/v1/market/escrows/&#123;id&#125;/delivery</code> \u062f\u0631 \u062f\u0633\u062a\u0631\u0633 \u062e\u0631\u06cc\u062f\u0627\u0631 \u0627\u0633\u062a.</p>
+    <p>\u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0645\u0639\u0631\u0641: <b>{AFFILIATE_BPS // 100}\u066a</b> \u0627\u0632 \u0647\u0631 \u062e\u0631\u06cc\u062f \u0627\u0632 \u0637\u0631\u06cc\u0642 \u0644\u06cc\u0646\u06a9 \u062f\u0639\u0648\u062a \u0634\u0645\u0627.</p>
   </div>
   {extra}
-  <div class="foot">KIAN v2 · مهاجرت‌یافته از جامعهٔ ۳۰روزهٔ dropagent · دفتر دوطرفهٔ ممیزی‌پذیر</div>
+  <div class="foot">KIAN v2 · \u0645\u0647\u0627\u062c\u0631\u062a‌\u06cc\u0627\u0641\u062a\u0647 \u0627\u0632 \u062c\u0627\u0645\u0639\u0647\u0654 \u06f3\u06f0\u0631\u0648\u0632\u0647\u0654 dropagent · \u062f\u0641\u062a\u0631 \u062f\u0648\u0637\u0631\u0641\u0647\u0654 \u0645\u0645\u06cc\u0632\u06cc‌\u067e\u0630\u06cc\u0631</div>
 </div>
 <script>
 function dl() {{
@@ -207,17 +207,17 @@ function dl() {{
 </html>"""
 
 
-# ── هستهٔ مهاجرت ──────────────────────────────────────────────────────────────
+# ── Migration core ──────────────────────────────────────────────────────────────
 def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
     mig_dir = os.path.join(repo_root, "crates", "db", "migrations")
     os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
     if os.path.exists(target_path):
-        os.remove(target_path)  # خروجی قطعی — بازسازی کامل
+        os.remove(target_path)  # Deterministic output — full rebuild
     con = sqlite3.connect(target_path)
     con.execute("PRAGMA journal_mode=DELETE")
     con.execute("PRAGMA foreign_keys=OFF")
 
-    # ۱) اسکیمای KIAN v2 — همهٔ مهاجرت‌ها + ثبت checksum برای sqlx::migrate!()
+    # 1) KIAN v2 schema — all migrations + checksum registration for sqlx::migrate!()
     con.execute(
         'CREATE TABLE IF NOT EXISTS _sqlx_migrations ('
         'version INTEGER PRIMARY KEY, description TEXT NOT NULL, '
@@ -232,14 +232,14 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
         apply_migration_file(con, int(f[:4]), os.path.join(mig_dir, f))
     REPORT["migrations_applied"] = mig_files
 
-    # ۲) حساب‌های سیستمی — همان ensure_system_accounts کرنل (مادهٔ ۴ منشور)
+    # 2) System accounts — same as the kernel's ensure_system_accounts (charter article 4)
     for acc_id, kind, label in SYSTEM_ACCOUNTS:
         con.execute(
             'INSERT OR IGNORE INTO "Account" ("id","kind","label","createdAt") VALUES (?,?,?,?)',
             (acc_id, kind, label, iso(datetime.now(timezone.utc).timestamp())),
         )
 
-    # ۳) خواندن لگاسی — فقط‌خواندنی
+    # 3) Legacy read — read-only
     src = sqlite3.connect(f"file:{legacy_path}?mode=ro", uri=True)
     src.row_factory = sqlite3.Row
     users = [dict(r) for r in src.execute(
@@ -252,7 +252,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
     user_ids = {str(u["user_id"]) for u in users}
     username_of = {str(u["user_id"]): s(u["username"]) for u in users}
 
-    # ۴) کاربران + حساب‌های شهروندی + تراز پاک‌سازی‌شده
+    # 4) Users + citizen accounts + sanitized balances
     total_minted = 0
     minted_accounts = 0
     for u in users:
@@ -298,7 +298,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
     REPORT["minted_accounts"] = minted_accounts
     REPORT["genesis_micro"] = total_minted
 
-    # ۵) نسب رفرال — آرشیو کامل ۲۴۷ لینک کمپین
+    # 5) Referral ties — full archive of 247 campaign links
     ref_rows = 0
     for u in users:
         rtg = s(u["referred_by"])
@@ -310,7 +310,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
             ref_rows += 1
     REPORT["referral_links"] = ref_rows
 
-    # ۶) محصولات — ۷ تأییدشده + pending یگانه + بهترین Amingh30
+    # 6) Products — 7 approved + the single pending + Amingh30's best
     def pick(cands: list[dict]) -> dict:
         return sorted(cands, key=lambda p: (-len(p["description"] or ""), p["id"]))[0]
 
@@ -350,7 +350,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
              s(p["category"]), price_micro, html, AFFILIATE_BPS, "HTML_APP", html, 1, iso(p["created_at"])),
         )
 
-    # ۷) خریدهای تاریخی → اسکرو RELEASED (مدل خواندنی — بدون دست‌زدن به ترازها)
+    # 7) Historical purchases → RELEASED escrows (read-only model — balances untouched)
     esc_count = 0
     esc_volume = 0
     for pu in purchases:
@@ -384,7 +384,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
         esc_volume += amount
     REPORT["escrows"] = {"count": esc_count, "volume_micro": esc_volume}
 
-    # ۸) حافظهٔ AI → MemoryNote + گفتگوهای هرمس → BuilderSession/BuilderMessage
+    # 8) AI memory → MemoryNote + Hermes conversations → BuilderSession/BuilderMessage
     mem_count = 0
     for mrow in memories:
         con.execute(
@@ -408,8 +408,8 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
             '"affiliateBps","generatedHtml","publishedProductId","createdAt","updatedAt") '
             'VALUES (?,?,?,?,?,?,?,?,?,?,?)',
             (sid, f"citizen:{tg}", "discovery",
-             "گفتگوی مهاجرت‌یافته از هرمس (dropagent)",
-             ((first_user["content"] or "").strip()[:200] or "گفتگوی تاریخی کاربر با هرمس"),
+             "\u06af\u0641\u062a\u06af\u0648\u06cc \u0645\u0647\u0627\u062c\u0631\u062a‌\u06cc\u0627\u0641\u062a\u0647 \u0627\u0632 \u0647\u0631\u0645\u0633 (dropagent)",
+             ((first_user["content"] or "").strip()[:200] or "\u06af\u0641\u062a\u06af\u0648\u06cc \u062a\u0627\u0631\u06cc\u062e\u06cc \u06a9\u0627\u0631\u0628\u0631 \u0628\u0627 \u0647\u0631\u0645\u0633"),
              50 * MICRO, AFFILIATE_BPS, "", None, int(float(msgs[0]["created_at"])),
              int(float(msgs[-1]["created_at"]))),
         )
@@ -424,7 +424,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
     REPORT["builder_messages"] = msg_count
     src.close()
 
-    # ۹) راستی‌آزمایی دفتر — همان قواعد load_ledger_state/trial_balance کرنل
+    # 9) Ledger verification — same rules as the kernel's load_ledger_state/trial_balance
     trial = con.execute('SELECT COALESCE(SUM("amount"),0) FROM "Posting"').fetchone()[0]
     assert trial == 0, f"trial balance broken: {trial}"
     mint_bal = con.execute(
@@ -439,7 +439,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
         assert con.execute('SELECT 1 FROM "Account" WHERE "id"=?', (row[1],)).fetchone(), row
         assert con.execute('SELECT 1 FROM "Account" WHERE "id"=?', (row[2],)).fetchone(), row
         assert con.execute('SELECT 1 FROM "Product" WHERE "id"=?', (row[3],)).fetchone(), row
-    # هر تراز شهروند باید با sanitize لگاسی برابر باشد
+    # Every citizen balance must equal the legacy sanitize value
     users_check = con.execute(
         'SELECT u."telegramId", COALESCE(SUM(p."amount"),0) FROM "User" u '
         'LEFT JOIN "Posting" p ON p."accountId"=u."accountId" GROUP BY u."telegramId"').fetchall()

@@ -1,16 +1,16 @@
-//! اولیه‌های مشترک وایر (ADR-005) — پورت یک‌به‌یک `common.ts`.
+//! Common wire primitives (ADR-005) — one-to-one port of `common.ts`.
 //!
-//! پول روی سیم عدد صحیحِ تعداد دیین است (ADR-002) — هرگز float، هرگز منفی.
-//! کدهای خطا عمداً `string` شل هستند: دامنه فقط کد «اضافه می‌کند» و کلاینت‌های
-//! قدیمی نمی‌شکنند (قاعدهٔ additive-only).
+//! Money on the wire is an integer count of Din (ADR-002) — never a float, never negative.
+//! Error codes are deliberately loose `string`s: the domain only "adds" codes and never
+//! breaks older clients (the additive-only rule).
 //!
-//! نگاشت zod → Rust:
-//! * `z.number().int().min(0).max(2^53−1)` → [`Din`] (custom serde + schema دستی)
-//! * `idSchema` → [`Id`] (الگو + طول، اعتبارسنجی در Deserialize)
+//! zod → Rust mapping:
+//! * `z.number().int().min(0).max(2^53−1)` → [`Din`] (custom serde + hand-written schema)
+//! * `idSchema` → [`Id`] (pattern + length, validated in Deserialize)
 //! * `idempotencyKeySchema` → [`IdempotencyKey`]
 //! * `z.string().datetime({offset:true})` → [`IsoDateTime`]
-//! * `.nullable()` → `Option<T>` **بدون** `skip_serializing_if` (null صریح روی سیم)
-//! * `.optional()` → `Option<T>` با `skip_serializing_if` (کلید غایب روی سیم)
+//! * `.nullable()` → `Option<T>` **without** `skip_serializing_if` (explicit null on the wire)
+//! * `.optional()` → `Option<T>` with `skip_serializing_if` (key absent on the wire)
 
 use std::collections::BTreeMap;
 
@@ -21,21 +21,21 @@ use utoipa::openapi::schema::{KnownFormat, Object, Schema, SchemaFormat, Type};
 use utoipa::openapi::RefOr;
 use utoipa::{PartialSchema, ToSchema};
 
-/// بیشینهٔ صحیح امن جاوااسکریپت — `Number.MAX_SAFE_INTEGER` (ADR-002).
+/// JavaScript maximum safe integer — `Number.MAX_SAFE_INTEGER` (ADR-002).
 pub const DIN_MAX: i64 = 9_007_199_254_740_991;
 
-/// کمینهٔ صحیح امن علامت‌دار — ردیف‌های دفتر می‌توانند منفی باشند.
+/// Signed safe integer minimum — ledger rows can be negative.
 pub const DIN_MIN_SIGNED: i64 = -9_007_199_254_740_991;
 
-// ── DNX — پول روی سیم ────────────────────────────────────────────────────────
+// ── DNX — money on the wire ────────────────────────────────────────────────────────
 
-/// دیین روی وایر — newtype روی `i64` با همان قیود `DNX` در zod:
-/// صحیح، ≥ 0، ≤ 2^53−1. Deserialize نقض قیود را **رد می‌کند** (fail-closed).
+/// Din on the wire — a newtype over `i64` with the same `DNX` constraints as zod:
+/// integer, ≥ 0, ≤ 2^53−1. Deserialize **rejects** constraint violations (fail-closed).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Din(i64);
 
 impl Din {
-    /// سازندهٔ بررسی‌شده — مقدار خارج `[0, 2^53−1]` را نمی‌پذیرد.
+    /// Checked constructor — refuses values outside `[0, 2^53−1]`.
     #[must_use]
     pub const fn new(raw: i64) -> Option<Self> {
         if raw >= 0 && raw <= DIN_MAX {
@@ -45,7 +45,7 @@ impl Din {
         }
     }
 
-    /// مقدار خام — برای محاسبات دامنه (تبدیل به `domain::Din` در فاز ۴).
+    /// Raw value — for domain computations (converted to `domain::Din` in Phase 4).
     #[must_use]
     pub const fn get(self) -> i64 {
         self.0
@@ -66,7 +66,7 @@ impl Serialize for Din {
 
 impl<'de> Deserialize<'de> for Din {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        // JSON یک عدد صحیح است؛ float دریافتی (مثل 12.5) باید رد شود.
+        // the JSON is an integer; a received float (e.g. 12.5) must be rejected.
         let raw = i64::deserialize(deserializer)?;
         Self::new(raw).ok_or_else(|| {
             DeError::invalid_value(Unexpected::Signed(raw), &"DNX in [0, 9007199254740991]")
@@ -88,22 +88,22 @@ impl PartialSchema for Din {
 
 impl ToSchema for Din {}
 
-/// صحیح علامت‌دار امن — ردیف‌های دفتر (ممکن است منفی باشند) و شمارنده‌های دامنهٔ کامل.
+/// Safe signed integer — ledger rows (can be negative) and full-domain counters.
 pub const SAFE_INT_SCHEMA_MIN: i64 = DIN_MIN_SIGNED;
-/// بیشینهٔ متناظر.
+/// The corresponding maximum.
 pub const SAFE_INT_SCHEMA_MAX: i64 = DIN_MAX;
 
-// ── شناسه‌ها ────────────────────────────────────────────────────────────────
+// ── Identifiers ────────────────────────────────────────────────────────────────
 
-/// الگوی `idSchema` — فقط حروف/رقم/`:`/`_`/`.`/`-`.
+/// The `idSchema` pattern — letters/digits/`:`/`_`/`.`/`-` only.
 pub const ID_PATTERN: &str = "^[A-Za-z0-9:_.-]+$";
 
-/// شناسهٔ حساب/امانت/HITL — ۱ تا ۱۲۸ کاراکتر با الگوی `^[A-Za-z0-9:_.-]+$`.
+/// Account/escrow/HITL ID — 1 to 128 characters matching `^[A-Za-z0-9:_.-]+$`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id(String);
 
 impl Id {
-    /// سازندهٔ بررسی‌شده — همان قواعد zod (طول و الگو).
+    /// Checked constructor — the same zod rules (length and pattern).
     #[must_use]
     pub fn new(raw: impl Into<String>) -> Option<Self> {
         let s = raw.into();
@@ -112,7 +112,7 @@ impl Id {
         ok.then_some(Self(s))
     }
 
-    /// مقدار خام.
+    /// Raw value.
     #[must_use]
     pub fn get(&self) -> &str {
         &self.0
@@ -153,12 +153,12 @@ impl PartialSchema for Id {
 
 impl ToSchema for Id {}
 
-/// کلید یکسان‌سازی — ۸ تا ۱۲۸ کاراکتر؛ تکرار = replay نه پرداخت دوباره.
+/// Idempotency key — 8 to 128 characters; a repeat = replay, not a second payment.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IdempotencyKey(String);
 
 impl IdempotencyKey {
-    /// سازندهٔ بررسی‌شده — طول `[8, 128]`.
+    /// Checked constructor — length `[8, 128]`.
     #[must_use]
     pub fn new(raw: impl Into<String>) -> Option<Self> {
         let s = raw.into();
@@ -166,7 +166,7 @@ impl IdempotencyKey {
         ((8..=128).contains(&len)).then_some(Self(s))
     }
 
-    /// مقدار خام.
+    /// Raw value.
     #[must_use]
     pub fn get(&self) -> &str {
         &self.0
@@ -207,21 +207,21 @@ impl PartialSchema for IdempotencyKey {
 
 impl ToSchema for IdempotencyKey {}
 
-// ── زمان ISO-8601 با آفست اجباری ────────────────────────────────────────────
+// ── ISO-8601 time with a mandatory offset ────────────────────────────────────────────
 
-/// `z.string().datetime({offset:true})` — RFC 3339 با آفست (Z یا ±HH:MM) الزامی.
+/// `z.string().datetime({offset:true})` — RFC 3339 with a mandatory offset (Z or ±HH:MM).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IsoDateTime(String);
 
 impl IsoDateTime {
-    /// سازندهٔ بررسی‌شده — فقط رشتهٔ RFC 3339 دارای آفست.
+    /// Checked constructor — only RFC 3339 strings carrying an offset.
     #[must_use]
     pub fn new(raw: impl Into<String>) -> Option<Self> {
         let s = raw.into();
         chrono::DateTime::parse_from_rfc3339(&s).ok().map(|_| Self(s))
     }
 
-    /// مقدار خام.
+    /// Raw value.
     #[must_use]
     pub fn get(&self) -> &str {
         &self.0
@@ -264,79 +264,79 @@ impl PartialSchema for IsoDateTime {
 
 impl ToSchema for IsoDateTime {}
 
-// ── متادیتا و پاکت خطا ──────────────────────────────────────────────────────
+// ── Metadata and the error envelope ──────────────────────────────────────────────────────
 
-/// مقدار متادیتای خطا روی وایر — `string | number` (یونتگ، مثل TS).
+/// Error metadata value on the wire — `string | number` (a union, like TS).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(untagged)]
 pub enum MetaValue {
-    /// مقدار متنی
+    /// Text value
     Text(String),
-    /// مقدار صحیح
+    /// Integer value
     Int(i64),
 }
 
-/// متادیتای خطا — `Record<string, string | number>`؛ مرتب تا خروجی دترمینیستیک بماند.
+/// Error metadata — `Record<string, string | number>`; sorted so output stays deterministic.
 pub type Meta = BTreeMap<String, MetaValue>;
 
-/// بدنهٔ خطای وایر — `{ error: { code, message, meta? } }` (قابل انتقال بین همهٔ کلاینت‌ها).
+/// Wire error body — `{ error: { code, message, meta? } }` (portable across all clients).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorEnvelope {
-    /// آبجکت خطا
+    /// Error object
     pub error: ApiError,
 }
 
-/// خطای API — کد + پیام + متادیتای اختیاری (`.optional()` → غایب روی سیم).
+/// API error — code + message + optional metadata (`.optional()` → absent on the wire).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiError {
-    /// کد خطای وایر (additive-only)
+    /// Wire error code (additive-only)
     pub code: String,
-    /// پیام انسانی
+    /// Human-readable message
     pub message: String,
-    /// زمینهٔ ساختاریافتهٔ اختیاری
+    /// Optional structured context
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Meta>,
 }
 
 impl ApiError {
-    /// خطای ساده بدون متادیتا.
+    /// Plain error without metadata.
     #[must_use]
     pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self { code: code.into(), message: message.into(), meta: None }
     }
 
-    /// خطا با متادیتا.
+    /// Error with metadata.
     #[must_use]
     pub fn with_meta(code: impl Into<String>, message: impl Into<String>, meta: Meta) -> Self {
         Self { code: code.into(), message: message.into(), meta: Some(meta) }
     }
 }
 
-// ── وضعیت امانت ─────────────────────────────────────────────────────────────
+// ── Escrow status ─────────────────────────────────────────────────────────────
 
-/// ۸ وضعیت ماشین امانت (ADR-004) — دقیقاً همان رشته‌های TS.
+/// The 8 escrow machine states (ADR-004) — exactly the TS strings.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToSchema,
 )]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum EscrowStatus {
-    /// ساخته‌شده — پول جابه‌جا نشده
+    /// Created — no money moved
     Created,
-    /// تأمین‌شده — پول قفل شده
+    /// Funded — money locked
     Funded,
-    /// تحویل‌شده — پول هنوز قفل است
+    /// Delivered — money still locked
     Delivered,
-    /// تسویه‌شده — ۹۰٪ فروشنده + ۱۰٪ خزانه
+    /// Settled — 90% seller + 10% treasury
     Released,
-    /// در اختلاف — قفل تا داوری
+    /// Disputed — locked until arbitration
     Disputed,
-    /// بازپرداخت‌شده — بدون مالیات
+    /// Refunded — tax-free
     Refunded,
-    /// لغو‌شده — هیچ پولی حرکت نکرده
+    /// Cancelled — no money ever moved
     Cancelled,
-    /// منقضی‌شده — sweep خودکار TTL
+    /// Expired — automatic TTL sweep
     Expired,
 }
 
@@ -352,7 +352,7 @@ mod tests {
         assert_eq!(to_string(&Din::new(187_672).unwrap()).unwrap(), "187672");
         assert!(from_str::<Din>("-1").is_err());
         assert!(from_str::<Din>("9007199254740992").is_err());
-        // float روی وایر — هرگز
+        // float on the wire — never
         assert!(from_str::<Din>("12.5").is_err());
     }
 
@@ -376,7 +376,7 @@ mod tests {
     fn iso_datetime_requires_offset() {
         assert!(IsoDateTime::new("2026-02-01T00:00:00Z").is_some());
         assert!(IsoDateTime::new("2026-02-01T00:00:00+03:30").is_some());
-        assert!(IsoDateTime::new("2026-02-01T00:00:00").is_none()); // بدون آفست — مثل zod
+        assert!(IsoDateTime::new("2026-02-01T00:00:00").is_none()); // no offset — like zod
         assert!(IsoDateTime::new("not-a-date").is_none());
     }
 

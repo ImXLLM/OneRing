@@ -10,10 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // سلطنتی: گرادیان بنفش تاجدار با هاله ظریف
+        // Royal: crowned purple gradient with a subtle halo
         default:
           "bg-gradient-to-b from-royal-500 to-royal-600 text-primary-foreground shadow-lg shadow-royal-600/30 hover:shadow-royal-500/40 hover:brightness-110",
-        // طلا: رنگ Din — برای CTAهای اقتصادی
+        // Gold: the Din color — for economic CTAs
         gold: "bg-gold-400 text-zinc-950 font-semibold shadow-lg shadow-gold-400/25 hover:brightness-105",
         secondary: "bg-secondary text-secondary-foreground hover:bg-accent border border-border",
         outline: "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground",
@@ -35,7 +35,7 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  /** رندر فرزند به‌جای <button> (مثل <a>) با حفظ استایل */
+  /** Renders the child element instead of <button> (e.g. <a>) while preserving styling */
   asChild?: boolean;
 }
 

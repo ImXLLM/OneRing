@@ -1,7 +1,7 @@
-//! هندلرهای استودیوی ساخت محصول HTML با هوش مصنوعی (فاز ۴).
+//! AI HTML product builder studio handlers (Phase 4).
 //!
-//! همهٔ مسیرهای این ماژول با نشست Bearer شهروند (`require_session`) احراز هویت
-//! می‌شوند و مالکیت جلسه (`accountId`) در تمام خواندن‌ها و نوشتن‌ها کنترل می‌شود.
+//! All routes in this module are authenticated with a citizen Bearer session (`require_session`)
+//! and session ownership (`accountId`) is checked on every read and write.
 
 use std::sync::Arc;
 
@@ -104,10 +104,10 @@ fn product_view(p: &ProductRow) -> ProductView {
     }
 }
 
-/// `POST /builder/sessions` — ساخت جلسهٔ جدید استودیو همراه با پیام خوش‌آمدگویی اولیه.
+/// `POST /builder/sessions` — create a new studio session along with the initial welcome message.
 ///
 /// # Errors
-/// ۴۰۱ نشست نامعتبر؛ ۴۰۰ بدنهٔ نامعتبر؛ ۵۰۰ خطای SQL.
+/// 401 invalid session; 400 invalid body; 500 SQL error.
 pub async fn create_session(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -154,10 +154,10 @@ pub async fn create_session(
     Ok((StatusCode::CREATED, Json(session_view(&session, &[welcome]))))
 }
 
-/// `GET /builder/sessions` — فهرست جلسات سازندهٔ کاربر (جدیدترین اول).
+/// `GET /builder/sessions` — list the user's builder sessions (newest first).
 ///
 /// # Errors
-/// ۴۰۱ نشست نامعتبر؛ ۵۰۰ خطای SQL.
+/// 401 invalid session; 500 SQL error.
 pub async fn list_sessions(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -172,10 +172,10 @@ pub async fn list_sessions(
     Ok(Json(BuilderSessionListResponse { items }))
 }
 
-/// `GET /builder/sessions/{id}` — جزئیات کامل جلسهٔ متعلق به کاربر + تاریخچهٔ پیام‌ها.
+/// `GET /builder/sessions/{id}` — full details of a session owned by the user + message history.
 ///
 /// # Errors
-/// ۴۰۱ نشست نامعتبر؛ ۴۰۴ جلسه ناشناخته یا متعلق به کاربر دیگر؛ ۵۰۰ خطای SQL.
+/// 401 invalid session; 404 unknown session or owned by another user; 500 SQL error.
 pub async fn get_session(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -196,13 +196,13 @@ pub async fn get_session(
     Ok(Json(session_view(&session, &messages)))
 }
 
-/// `POST /builder/sessions/{id}/chat` — یک نوبت گفتگوی چندمرحله‌ای با استودیوی AI.
+/// `POST /builder/sessions/{id}/chat` — one turn of the multi-step conversation with the AI studio.
 ///
-/// پیام کاربر ثبت می‌شود، گیت بودجه (در صورت فعال بودن LLM خارجی) بررسی می‌شود،
-/// موتور Builder خروجی (یا مولد تعاملی داخلی Fallback) را می‌سازد و جلسه به‌روز می‌گردد.
+/// The user message is recorded, the budget gate is checked (when an external LLM is enabled),
+/// the Builder engine produces the output (or the internal fallback interactive generator) and the session is updated.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ پیام خالی/بلند؛ ۴۰۴ جلسه ناشناخته؛ ۴۲۹ اتمام بودجهٔ روزانهٔ AI؛ ۵۰۰ خطای SQL.
+/// 401 session; 400 empty/too-long message; 404 unknown session; 429 daily AI budget exhausted; 500 SQL error.
 #[allow(clippy::too_many_lines)]
 pub async fn chat(
     State(state): State<Arc<AppState>>,
@@ -225,7 +225,7 @@ pub async fn chat(
         .map_err(ApiFailure::from)?
         .ok_or_else(|| ApiFailure::Http(HttpFailure::builder_session_not_found(&id)))?;
 
-    // کنترل بودجهٔ روزانه فقط وقتی اسلات LLM خارجی فعال است
+    // the daily budget check applies only when the external LLM slot is active
     if state.ai.enabled() {
         let Some(budget) = BudgetEnvelope::new(state.config.ai.daily_cap_tokens) else {
             return Err(HttpFailure::ai_disabled().into());
@@ -278,7 +278,7 @@ pub async fn chat(
         .await
         .map_err(ApiFailure::from)?;
 
-    // ثبت مصرف توکن واقعی در صورت اجرای LLM خارجی
+    // record real token usage when the external LLM ran
     if !outcome.used_fallback && outcome.total_tokens > 0 {
         state
             .store
@@ -325,13 +325,13 @@ pub async fn chat(
     }))
 }
 
-/// `POST /builder/sessions/{id}/publish` — انتشار یک‌کلیکهٔ محصول ساخته‌شده در بازار کیان.
+/// `POST /builder/sessions/{id}/publish` — one-click publish of a built product to the Kian market.
 ///
-/// کاربر می‌تواند مقادیر پیشنهادی AI را تأیید یا در بدنه ویرایش کند. در صورت
-/// انتشار قبلی، همان محصول به‌صورت idempotent همراه با `shareStartParam` برگردانده می‌شود.
+/// The user can accept the AI-proposed values or edit them in the body. If the session was
+/// already published, the same product is returned idempotently along with `shareStartParam`.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ ورودی نامعتبر؛ ۴۰۴ جلسه ناشناخته؛ ۴۲۲ نبود کد HTML یا `BPS_OUT_OF_RANGE`؛ ۵۰۰ خطای SQL.
+/// 401 session; 400 invalid input; 404 unknown session; 422 missing HTML code or `BPS_OUT_OF_RANGE`; 500 SQL error.
 #[allow(clippy::too_many_lines)]
 pub async fn publish(
     State(state): State<Arc<AppState>>,
@@ -349,7 +349,7 @@ pub async fn publish(
         .map_err(ApiFailure::from)?
         .ok_or_else(|| ApiFailure::Http(HttpFailure::builder_session_not_found(&id)))?;
 
-    // اگر قبلاً منتشر شده و محصول در جدول Product موجود است، همان را برگردان (idempotent)
+    // if already published and the product exists in the Product table, return the same one (idempotent)
     if let Some(existing_pid) = &session.published_product_id
         && let Some(existing) = state
             .store
@@ -384,7 +384,7 @@ pub async fn publish(
         .map_or_else(
             || {
                 if session.title.trim().is_empty() {
-                    "محصول تعاملی HTML".to_owned()
+                    "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} HTML".to_owned()
                 } else {
                     session.title.trim().to_owned()
                 }
@@ -399,7 +399,7 @@ pub async fn publish(
         .map_or_else(
             || {
                 if session.description.trim().is_empty() {
-                    format!("وب‌اپلیکیشن تعاملی تک‌صفحه‌ای {title} با تحویل آنی در بازار کیان.")
+                    format!("\u{648}\u{628}‌\u{627}\u{67e}\u{644}\u{6cc}\u{6a9}\u{6cc}\u{634}\u{646} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} {title} \u{628}\u{627} \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{622}\u{646}\u{6cc} \u{62f}\u{631} \u{628}\u{627}\u{632}\u{627}\u{631} \u{6a9}\u{6cc}\u{627}\u{646}.")
                 } else {
                     session.description.trim().to_owned()
                 }
@@ -484,9 +484,9 @@ pub async fn publish(
 }
 
 
-// ── Trinity Studio Pipeline (Wave 3) — کالبد ۱ آلفا + کالبد ۲/۳ اتاق فرمان و مایرون ──
+// ── Trinity Studio Pipeline (Wave 3) — Body 1 Alpha + Bodies 2/3 Command Room and Mairon ──
 
-/// بازگرداندن وضعیت اسلات‌ها از DTO وایر به موتور — نگاشت یک‌به‌یک.
+/// Convert slot state from the wire DTO to the engine — one-to-one mapping.
 fn slots_from_wire(wire: &TrinitySlotsState) -> AlphaDiscoverySlots {
     AlphaDiscoverySlots {
         core_objective: wire.core_objective.clone(),
@@ -497,7 +497,7 @@ fn slots_from_wire(wire: &TrinitySlotsState) -> AlphaDiscoverySlots {
     }
 }
 
-/// بازگرداندن وضعیت اسلات‌ها از موتور به DTO وایر.
+/// Convert slot state from the engine to the wire DTO.
 fn slots_to_wire(slots: &AlphaDiscoverySlots) -> TrinitySlotsState {
     TrinitySlotsState {
         core_objective: slots.core_objective.clone(),
@@ -508,7 +508,7 @@ fn slots_to_wire(slots: &AlphaDiscoverySlots) -> TrinitySlotsState {
     }
 }
 
-/// نگاشت مانیفست DNA موتور به وایر — الگوی `۳×۹` کامل.
+/// Map the engine's DNA manifest to the wire — the full `3×9` pattern.
 fn manifest_to_wire(outcome: &TrinityForgeOutcome) -> Vec<TrinitySubAgentDnaView> {
     outcome
         .manifest
@@ -543,13 +543,13 @@ fn manifest_to_wire(outcome: &TrinityForgeOutcome) -> Vec<TrinitySubAgentDnaView
         .collect()
 }
 
-/// `POST /builder/trinity/alpha` — کالبد ۱: آلفا (`IQ=136/EQ=122/Brake=0.04/Temp=0.88`).
+/// `POST /builder/trinity/alpha` — Body 1: Alpha (`IQ=136/EQ=122/Brake=0.04/Temp=0.88`).
 ///
-/// استخراج قطعی پنج اسلات کشف از پیام کاربر؛ در آمادگیِ `>= 80` مستر پرامپت
-/// و استراکچر پروژه قفل و تحویل می‌شود. ۲۰۰.
+/// Deterministically extract the five discovery slots from the user message; at readiness `>= 80` the master prompt
+/// and project structure are locked and delivered. 200.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر.
+/// 401 missing session; 400 invalid body.
 #[allow(clippy::too_many_lines)]
 pub async fn trinity_alpha(
     State(state): State<Arc<AppState>>,
@@ -647,14 +647,14 @@ pub async fn trinity_alpha(
     Ok(Json(response))
 }
 
-/// `POST /builder/trinity/orchestrate` — کالبد ۲ + کالبد ۳: اتاق فرمان
-/// (`IQ=139/EQ=129/Strictness=0.96`) با کارخانهٔ ساب‌ایجنت‌های `OpenBot` الگوی
-/// `۳×۹` و داوری مایرون (`IQ=150/EQ=145`) با حلقهٔ خودترمیمی تا گیتِ `>= 85`.
+/// `POST /builder/trinity/orchestrate` — Body 2 + Body 3: the command room
+/// (`IQ=139/EQ=129/Strictness=0.96`) with the `OpenBot` subagent factory in the
+/// `3×9` pattern and Mairon arbitration (`IQ=150/EQ=145`) with a self-heal loop up to the `>= 85` gate.
 ///
-/// ورودی: اسلات‌های قفل‌شدهٔ آلفا (آمادگیِ `>= 80` الزامی). ۲۰۰.
+/// Input: Alpha's locked slots (readiness `>= 80` required). 200.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ آمادگی زیر ۸۰ (قفلِ آلفا لازم است).
+/// 401 missing session; 400 invalid body; 422 readiness below 80 (the Alpha lock is required).
 #[allow(clippy::too_many_lines)]
 pub async fn trinity_orchestrate(
     State(state): State<Arc<AppState>>,
@@ -841,7 +841,7 @@ mod builder_tests {
         assert_eq!(res.status(), 200, "mint to {account} must succeed");
     }
 
-    /// جریان کامل سرتاسری بدون کلید LLM خارجی (با Fallback داخلی):
+    /// Full end-to-end flow without an external LLM key (with the internal fallback):
     /// create session → discovery → generate HTML → publish → purchase with referral → delivery → release
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
@@ -852,7 +852,7 @@ mod builder_tests {
         let referrer = auth(&app, "803", "sharer").await;
         mint(&app, "citizen:802", 1_000).await;
 
-        // ۱) ساخت جلسهٔ استودیو با پیام خوش‌آمدگویی
+        // 1) create the studio session with the welcome message
         let res = app
             .clone()
             .oneshot(
@@ -871,7 +871,7 @@ mod builder_tests {
         assert_eq!(created["stage"], "discovery");
         assert_eq!(created["messages"].as_array().unwrap().len(), 1);
 
-        // مالکیت: کاربر دیگر نمی‌تواند جلسه را ببیند → ۴۰۴
+        // ownership: another user cannot see the session → 404
         let res = app
             .clone()
             .oneshot(
@@ -885,7 +885,7 @@ mod builder_tests {
             .unwrap();
         assert_eq!(res.status(), 404);
 
-        // انتشار پیش از تولید HTML → ۴۲۲ BUILDER_ARTIFACT_EMPTY
+        // publish before HTML generation → 422 BUILDER_ARTIFACT_EMPTY
         let res = app
             .clone()
             .oneshot(
@@ -901,7 +901,7 @@ mod builder_tests {
         assert_eq!(res.status(), 422);
         assert_eq!(json_body(res).await["error"]["code"], "BUILDER_ARTIFACT_EMPTY");
 
-        // ۲) نوبت اول چت (Discovery)
+        // 2) first chat turn (Discovery)
         let res = app
             .clone()
             .oneshot(
@@ -909,7 +909,7 @@ mod builder_tests {
                     .method("POST")
                     .uri(format!("/api/v1/builder/sessions/{session_id}/chat"))
                     .header("authorization", format!("Bearer {creator}"))
-                    .body(Body::from(json!({ "message": "سلام ایده دارم" }).to_string()))
+                    .body(Body::from(json!({ "message": "\u{633}\u{644}\u{627}\u{645} \u{627}\u{6cc}\u{62f}\u{647} \u{62f}\u{627}\u{631}\u{645}" }).to_string()))
                     .unwrap(),
             )
             .await
@@ -919,7 +919,7 @@ mod builder_tests {
         assert_eq!(turn1["usedFallback"], true);
         assert_eq!(turn1["session"]["stage"], "discovery");
 
-        // ۳) نوبت دوم چت (ساخت کامل HTML)
+        // 3) second chat turn (full HTML build)
         let res = app
             .clone()
             .oneshot(
@@ -929,7 +929,7 @@ mod builder_tests {
                     .header("authorization", format!("Bearer {creator}"))
                     .body(Body::from(
                         json!({
-                            "message": "یک ماشین حساب سود مرکب ارز دیجیتال با تم تیره بساز",
+                            "message": "\u{6cc}\u{6a9} \u{645}\u{627}\u{634}\u{6cc}\u{646} \u{62d}\u{633}\u{627}\u{628} \u{633}\u{648}\u{62f} \u{645}\u{631}\u{6a9}\u{628} \u{627}\u{631}\u{632} \u{62f}\u{6cc}\u{62c}\u{6cc}\u{62a}\u{627}\u{644} \u{628}\u{627} \u{62a}\u{645} \u{62a}\u{6cc}\u{631}\u{647} \u{628}\u{633}\u{627}\u{632}",
                             "forceGenerate": true
                         })
                         .to_string(),
@@ -946,9 +946,9 @@ mod builder_tests {
         assert!(turn2["session"]["previewHtml"]
             .as_str()
             .unwrap()
-            .contains("نسخهٔ پیش‌نمایش زنده در KIAN Market"));
+            .contains("Live preview on KIAN Market"));
 
-        // ۴) انتشار یک‌کلیکه در بازار با پورسانت ۲۰٪ و قیمت ۴۰۰ Đ
+        // 4) one-click publish to the market with a 20% commission and a 400 Đ price
         let res = app
             .clone()
             .oneshot(
@@ -973,7 +973,7 @@ mod builder_tests {
         assert_eq!(published["alreadyPublished"], false);
         assert_eq!(published["shareStartParam"], format!("p_{product_id}_r_801"));
 
-        // انتشار مجدد idempotent است و همان محصول را برمی‌گرداند
+        // republishing is idempotent and returns the same product
         let res = app
             .clone()
             .oneshot(
@@ -989,7 +989,7 @@ mod builder_tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["alreadyPublished"], true);
 
-        // ۵) خرید با رفرال شهروند ۸۰۳
+        // 5) purchase with citizen 803 as the referrer
         let res = app
             .clone()
             .oneshot(
@@ -1007,7 +1007,7 @@ mod builder_tests {
         assert_eq!(res.status(), 201);
         let escrow_id = json_body(res).await["escrow"]["id"].as_str().unwrap().to_owned();
 
-        // ۶) دریافت کد کامل HTML توسط خریدار
+        // 6) the buyer receives the full HTML code
         let res = app
             .clone()
             .oneshot(
@@ -1022,7 +1022,7 @@ mod builder_tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["deliveryPayload"], generated_html);
 
-        // ۷) آزادسازی و تسویه ۳ ذی‌نفع (۴۰۰ → فروشنده ۲۸۰ + خزانه ۴۰ + معرف ۸۰)
+        // 7) release and settle 3 beneficiaries (400 → seller 280 + treasury 40 + referrer 80)
         let res = app
             .clone()
             .oneshot(
@@ -1063,20 +1063,20 @@ mod builder_tests {
         assert_eq!(json_body(res).await["balance"], 80);
     }
 
-    /// اجرای واقعی با اسلات LLM اسکریپت‌شده: استخراج HTML + JSON CAST و ثبت مصرف توکن.
+    /// Real execution with a scripted LLM slot: HTML + JSON CAST extraction and token usage recording.
     #[tokio::test]
     async fn builder_chat_with_scripted_llm_extracts_artifact_and_records_tokens() {
-        let llm_reply = r#"محصولت آماده شد!
+        let llm_reply = r#"Your product is ready!
 
 ```html
 <!DOCTYPE html>
-<html lang="fa" dir="rtl"><body><main><h1>ابزار تایمر پومودورو</h1></main></body></html>
+<html lang="fa" dir="rtl"><body><main><h1>Pomodoro Timer Tool</h1></main></body></html>
 ```
 
 ```json
 {
-  "title": "تایمر تمرکز پومودورو",
-  "description": "تمرکزت را دو برابر کن با تایمر تک‌صفحه‌ای سبک و آفلاین.",
+  "title": "Pomodoro Focus Timer",
+  "description": "Double your focus with a lightweight, offline single-page timer.",
   "suggested_price": 320,
   "affiliate_bps": 1500
 }
@@ -1111,7 +1111,7 @@ mod builder_tests {
                     .uri(format!("/api/v1/builder/sessions/{session_id}/chat"))
                     .header("authorization", format!("Bearer {maker}"))
                     .body(Body::from(
-                        json!({ "message": "یک تایمر پومودورو بساز", "forceGenerate": true })
+                        json!({ "message": "\u{6cc}\u{6a9} \u{62a}\u{627}\u{6cc}\u{645}\u{631} \u{67e}\u{648}\u{645}\u{648}\u{62f}\u{648}\u{631}\u{648} \u{628}\u{633}\u{627}\u{632}", "forceGenerate": true })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1124,15 +1124,15 @@ mod builder_tests {
         assert_eq!(body["provider"], "primary");
         assert_eq!(body["totalTokens"], 700);
         assert_eq!(body["session"]["stage"], "ready");
-        assert_eq!(body["session"]["title"], "تایمر تمرکز پومودورو");
+        assert_eq!(body["session"]["title"], "Pomodoro Focus Timer");
         assert_eq!(body["session"]["suggestedPrice"], 320);
         assert_eq!(body["session"]["affiliateBps"], 1_500);
         assert!(body["session"]["generatedHtml"]
             .as_str()
             .unwrap()
-            .contains("تایمر پومودورو"));
+            .contains("Pomodoro Timer Tool"));
 
-        // مصرف توکن در /ai/usage ثبت شده است
+        // token usage is recorded in /ai/usage
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -1145,7 +1145,7 @@ mod builder_tests {
             .unwrap();
         assert_eq!(json_body(res).await["totalTokens"], 700);
     }
-    // ── Trinity Studio Pipeline — مسیرهای زندهٔ HTTP (Wave 3) ────────────────
+    // ── Trinity Studio Pipeline — live HTTP routes (Wave 3) ────────────────
 
     async fn trinity_post(app: &axum::Router, token: &str, uri: &str, body: Value) -> Value {
         let res = app
@@ -1165,36 +1165,36 @@ mod builder_tests {
         json_body(res).await
     }
 
-    /// نوبت اول آلفا — کشف؛ سپس تحویل قفل با آمادگیِ کامل.
+    /// First Alpha turn — discovery; then locked delivery at full readiness.
     #[tokio::test]
     async fn trinity_alpha_discovers_then_locks_master_prompt() {
         let app = app_without_llm().await;
         let token = auth(&app, "777", "trinity-maker").await;
 
-        // نوبت ۱ — پیامِ دو-اسلاتی → ادامهٔ کشف با پاسخ فارسی جرقه‌ای
+        // turn 1 — a two-slot message → discovery continues with a sparky Persian reply
         let body = trinity_post(
             &app,
             &token,
             "/api/v1/builder/trinity/alpha",
             json!({
                 "sessionId": "trn:e2e-alpha-1",
-                "userMessage": "می‌خواهم یک محصول بسازم که مخاطبش فریلنسرها هستند و رابط موبایل rtl دارد"
+                "userMessage": "\u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{6cc}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645} \u{6a9}\u{647} \u{645}\u{62e}\u{627}\u{637}\u{628}\u{634} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627} \u{647}\u{633}\u{62a}\u{646}\u{62f} \u{648} \u{631}\u{627}\u{628}\u{637} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644} rtl \u{62f}\u{627}\u{631}\u{62f}"
             }),
         ).await;
         assert_eq!(body["status"], "needs_more_discovery");
-        assert!(body["alphaReplyFa"].as_str().unwrap().contains("آلفا"));
+        assert!(body["alphaReplyFa"].as_str().unwrap().contains("\u{622}\u{644}\u{641}\u{627}"));
         assert_eq!(body["readinessPct"], 40);
         let missing = body["missingSlots"].as_array().unwrap();
         assert_eq!(missing.len(), 3);
 
-        // نوبت ۲ — اسلات‌های قبلی + پیامِ کامل → قفل در ۸۰٪+
+        // turn 2 — previous slots + the full message → lock at 80%+
         let body = trinity_post(
             &app,
             &token,
             "/api/v1/builder/trinity/alpha",
             json!({
                 "sessionId": "trn:e2e-alpha-1",
-                "userMessage": "فرم سفارش تعاملی می‌خواهم و داده‌ها در api عمومی بدون لاگین ذخیره می‌شوند",
+                "userMessage": "\u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{648} \u{62f}\u{627}\u{62f}\u{647}‌\u{647}\u{627} \u{62f}\u{631} api \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646} \u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}",
                 "priorSlots": body["updatedSlots"]
             }),
         ).await;
@@ -1217,7 +1217,7 @@ mod builder_tests {
         );
     }
 
-    /// آلفا بدون نشست → ۴۰۱ fail-closed.
+    /// Alpha without a session → 401 fail-closed.
     #[tokio::test]
     async fn trinity_alpha_requires_session() {
         let app = app_without_llm().await;
@@ -1226,7 +1226,7 @@ mod builder_tests {
                 axum::http::Request::builder()
                     .method("POST")
                     .uri("/api/v1/builder/trinity/alpha")
-                    .body(Body::from(json!({"userMessage": "سلام"}).to_string()))
+                    .body(Body::from(json!({"userMessage": "\u{633}\u{644}\u{627}\u{645}"}).to_string()))
                     .unwrap(),
             )
             .await
@@ -1234,7 +1234,7 @@ mod builder_tests {
         assert_eq!(res.status(), 401);
     }
 
-    /// آهنگری کامل — اتاق فرمان ۳×۹ + حلقهٔ خودترمیمی مایرون تا گیت ۸۵+.
+    /// Full forging — the `3×9` command room + Mairon's self-heal loop up to the 85+ gate.
     #[tokio::test]
     async fn trinity_orchestrate_forges_through_mairon_gate() {
         let app = app_without_llm().await;
@@ -1246,11 +1246,11 @@ mod builder_tests {
             json!({
                 "sessionId": "trn:e2e-forge-1",
                 "slots": {
-                    "coreObjective": "سازندهٔ ابزار بهره‌وری برای فریلنسرهای فارسی‌زبان",
-                    "targetAudienceAndUx": "فریلنسر فارسی‌زبان، موبایل‌فرست ۳۹۰ پیکسل rtl",
-                    "interactiveFeatures": "فرم سفارش تعاملی و جریان پرداخت",
-                    "dataAndZeroAuthApis": "ذخیره در localStorage و api عمومی بدون لاگین",
-                    "monetizationAndViralLoop": "قیمت ۲۰۰ ستاره با پورسانت معرف"
+                    "coreObjective": "\u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{627}\u{628}\u{632}\u{627}\u{631} \u{628}\u{647}\u{631}\u{647}‌\u{648}\u{631}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}",
+                    "targetAudienceAndUx": "\u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}\u{60c} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644}‌\u{641}\u{631}\u{633}\u{62a} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644} rtl",
+                    "interactiveFeatures": "\u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{648} \u{62c}\u{631}\u{6cc}\u{627}\u{646} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}",
+                    "dataAndZeroAuthApis": "\u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{62f}\u{631} localStorage \u{648} api \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646}",
+                    "monetizationAndViralLoop": "\u{642}\u{6cc}\u{645}\u{62a} \u{6f2}\u{6f0}\u{6f0} \u{633}\u{62a}\u{627}\u{631}\u{647} \u{628}\u{627} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{645}\u{639}\u{631}\u{641}"
                 }
             }),
         ).await;
@@ -1277,8 +1277,8 @@ mod builder_tests {
         assert!(advisory["thirdOrderTomMarketHookFa"]
             .as_str()
             .unwrap()
-            .contains("200 ستارهٔ تلگرام (XTR)"));
-        // حلقهٔ خودترمیمی — تاریخچهٔ بهبود نمره ثبت شده است
+            .contains("200 \u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} (XTR)"));
+        // self-heal loop — the score improvement history is recorded
         let history = body["repairHistory"].as_array().unwrap();
         assert!(!history.is_empty(), "base assembly starts below the 85 gate");
         let first = &history[0];
@@ -1286,7 +1286,7 @@ mod builder_tests {
         assert_eq!(body["pillars"]["verificationProof"], 25);
     }
 
-    /// اجرای اتاق فرمان بدون قفلِ آلفا → ۴۲۲ (قرارداد دو-مرحله‌ای حفظ می‌شود).
+    /// Command room execution without the Alpha lock → 422 (the two-step contract is preserved).
     #[tokio::test]
     async fn trinity_orchestrate_rejects_sub_threshold_readiness() {
         let app = app_without_llm().await;

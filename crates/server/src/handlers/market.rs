@@ -1,10 +1,10 @@
-//! هندلرهای بازار M3 — محصول، خرید اتمی روی اسکرو ۸ حالته و کنش‌های دو طرف.
+//! M3 market handlers — products, atomic purchase over the 8-state escrow, and both parties' actions.
 //!
-//! خرید = `create_escrow` + `fund_escrow` در «یک» فرمان اتمی داخل همان `apply`:
-//! یا هر دو رخ می‌دهند یا هیچ‌کدام — پول خریدار فقط با FUNDED قفل می‌شود.
-//! کنش‌های بعدی فقط از سمت مجاز اسکرو: فروشنده تحویل می‌دهد، خریدار آزاد
-//! می‌کند (آستانهٔ HITL مادهٔ ۷ در دامنه محافظت می‌شود).
-//! محتوای تحویل (`deliveryPayload`) هرگز روی وایر عمومی نمی‌آید.
+//! a purchase = `create_escrow` + `fund_escrow` as "one" atomic command inside the same `apply`:
+//! either both happen or neither — buyer funds lock only upon FUNDED.
+//! subsequent actions come only from the escrow's authorized side: the seller delivers, the buyer
+//! releases (the Article 7 HITL threshold is protected in the domain).
+//! the delivery content (`deliveryPayload`) never goes over the public wire.
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -37,13 +37,13 @@ use crate::middleware::require_session;
 use crate::state::AppState;
 use crate::views::{escrow_status_wire, escrow_view};
 
-/// مهلت پیش‌فرض اسکرو خرید بازار — ۷۲ ساعت.
+/// Default buy-market escrow deadline — 72 hours.
 const PURCHASE_TTL_HOURS: i64 = 72;
 
-/// نرمال‌سازی شناسهٔ معرف به فرمت حساب شهروندی (`citizen:{tg_id}`).
+/// Normalize the referrer ID to the citizen account format (`citizen:{tg_id}`).
 ///
-/// ورودی می‌تواند `tg_id` عددی (`"12345"`) یا `"citizen:12345"` باشد؛
-/// ورودی‌های نامعتبر/خالی `None` می‌شوند تا خرید مشتری هرگز متوقف نگردد.
+/// Input may be a numeric `tg_id` (`"12345"`) or `"citizen:12345"`;
+/// invalid/empty inputs become `None` so the customer's purchase never stalls.
 fn normalize_referrer_account(raw: Option<&str>) -> Option<String> {
     let s = raw?.trim();
     if s.is_empty() {
@@ -61,7 +61,7 @@ fn normalize_referrer_account(raw: Option<&str>) -> Option<String> {
     None
 }
 
-/// نمای محصول وایر از ردیف db — بدون `deliveryPayload` (هرگز عمومی نمی‌شود).
+/// Wire product view from the db row — without `deliveryPayload` (never public).
 #[must_use]
 fn product_view(p: &ProductRow) -> ProductView {
     ProductView {
@@ -81,11 +81,11 @@ fn product_view(p: &ProductRow) -> ProductView {
     }
 }
 
-/// `POST /market/products` — ثبت محصول به نام کاربر نشست. ۲۰۱.
+/// `POST /market/products` — register a product on behalf of the session user. 201.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر (طول‌ها/قیمت/حجم HTML)؛ ۴۲۲ `BPS_OUT_OF_RANGE`؛
-/// 500 خطای SQL.
+/// 401 missing session; 400 invalid body (lengths/price/HTML volume); 422 `BPS_OUT_OF_RANGE`;
+/// 500 SQL error.
 pub async fn create_product(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -153,10 +153,10 @@ pub async fn create_product(
     Ok((StatusCode::CREATED, Json(product_view(&row))))
 }
 
-/// `GET /market/products` — محصولات فعال برای همه (شفافیت مادهٔ ۶؛ بدون `deliveryPayload`).
+/// `GET /market/products` — active products for everyone (Article 6 transparency; no `deliveryPayload`).
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn list_products(
     State(state): State<Arc<AppState>>,
 ) -> ApiResult<Json<ProductListResponse>> {
@@ -172,12 +172,12 @@ pub async fn list_products(
     Ok(Json(ProductListResponse { items }))
 }
 
-/// `GET /market/products/{id}` — صفحهٔ عمومی تک‌محصول برای لینک مستقیم و رفرال.
+/// `GET /market/products/{id}` — public single-product page for direct links and referrals.
 ///
-/// `deliveryPayload` هرگز روی این مسیر برگردانده نمی‌شود (فقط `previewHtml`).
+/// `deliveryPayload` is never returned on this route (only `previewHtml`).
 ///
 /// # Errors
-/// 404 محصول ناشناخته؛ 500 خطای SQL.
+/// 404 unknown product; 500 SQL error.
 pub async fn get_product_one(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
@@ -197,11 +197,11 @@ pub async fn get_product_one(
     Ok(Json(product_view(&product)))
 }
 
-/// `POST /market/purchase` — خرید اتمی: ساخت اسکرو (با پشتیبانی رفرال) + قفل Din.
+/// `POST /market/purchase` — atomic purchase: create escrow (with referral support) + lock Din.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 404 محصول ناشناخته؛ ۴۲۲ محصول غیرفعال/خرید از خود/تراز ناکافی؛
-/// 500 خطای SQL.
+/// 401 session; 404 unknown product; 422 inactive product/self-purchase/insufficient balance;
+/// 500 SQL error.
 #[allow(clippy::too_many_lines)]
 pub async fn purchase(
     State(state): State<Arc<AppState>>,
@@ -268,8 +268,8 @@ pub async fn purchase(
                 idempotency_key: key,
             },
             move |ledger, registry| -> DomainResult<CommandOutcome> {
-                // اگر معرف معتبر در دفتر وجود داشت و حساب User بود ثبت می‌شود؛
-                // در غیر این صورت خرید مشتری هرگز متوقف نمی‌شود (خودرفرالی هم در دامنه خنثی می‌گردد).
+                // registered only if a valid referrer exists in the ledger and the account is a User;
+                // otherwise the customer's purchase never stalls (self-referral is neutralized in the domain too).
                 let effective_referrer = referrer_candidate.as_ref().and_then(|r| {
                     ledger
                         .accounts
@@ -279,7 +279,7 @@ pub async fn purchase(
                 });
                 let affiliate_bps =
                     if effective_referrer.is_some() { product_affiliate_bps } else { 0 };
-                // یک فرمان اتمی: CREATED + FUNDED — هر دو یا هیچ‌کدام
+                // one atomic command: CREATED + FUNDED — both or neither
                 let created = create_escrow_with_affiliate(
                     ledger,
                     registry,
@@ -320,10 +320,10 @@ pub async fn purchase(
     ))
 }
 
-/// `GET /market/my` — محصولات من + سفارش‌های من (خریدار یا فروشنده).
+/// `GET /market/my` — my products + my orders (as buyer or seller).
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 500 خطای SQL.
+/// 401 session; 500 SQL error.
 pub async fn my_market(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -354,15 +354,15 @@ pub async fn my_market(
     Ok(Json(MyMarketResponse { products, orders }))
 }
 
-/// سمت مجاز کنش اسکرو — فقط مالک همان سمت حق گذار دارد.
+/// The escrow action's authorized side — only the owner of that side may transition.
 enum EscrowSide {
-    /// تحویل — فقط فروشندهٔ همان اسکرو
+    /// Deliver — only that escrow's seller
     Seller,
-    /// آزادسازی — فقط خریدارِ همان اسکرو
+    /// Release — only that escrow's buyer
     Buyer,
 }
 
-/// کنش اسکرو از سمت بازار — گوار مالکیت + اجرای دامنهٔ خالص در `apply`.
+/// Escrow action from the market side — ownership guard + pure domain execution in `apply`.
 async fn escrow_side_action<F>(
     state: &AppState,
     headers: &HeaderMap,
@@ -420,10 +420,10 @@ where
     }))
 }
 
-/// `POST /market/escrows/{id}/deliver` — فقط فروشندهٔ همان اسکرو.
+/// `POST /market/escrows/{id}/deliver` — only that escrow's seller.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 404 اسکرو ناشناخته؛ ۴۰۳ سمت نادرست؛ ۴۲۲ گذار نامعتبر.
+/// 401 session; 404 unknown escrow; 403 wrong side; 422 invalid transition.
 pub async fn deliver(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -464,15 +464,15 @@ pub async fn deliver(
     .await
 }
 
-/// `GET /market/escrows/{id}/delivery` — دریافت محتوای کامل محصول پولی.
+/// `GET /market/escrows/{id}/delivery` — fetch the full content of a paid product.
 ///
-/// فقط خریدار یا فروشندهٔ همان اسکرو و صرفاً در وضعیت‌های پرداخت‌شده
-/// (`FUNDED` / `DELIVERED` / `RELEASED`) حق دسترسی دارند. برای محصولات
-/// دیجیتال آنی با `deliveryPayload` ازپیش‌ثبت‌شده، خریدار بلافاصله در حالت
-/// `FUNDED` محتوا را می‌بیند و سپس می‌تواند `release` یا `dispute` بزند.
+/// Only that escrow's buyer or seller, and only in the paid states
+/// (`FUNDED` / `DELIVERED` / `RELEASED`) have access. For
+/// instant digital products with a pre-registered `deliveryPayload`, the buyer sees the
+/// content immediately in `FUNDED` state and can then `release` or `dispute`.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 404 اسکرو یا محصول ناشناخته؛ ۴۰۳ سمت غیرمجاز؛ ۴۲۲ وضعیت پرداخت‌نشده.
+/// 401 session; 404 unknown escrow or product; 403 unauthorized side; 422 unpaid state.
 pub async fn delivery(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -533,15 +533,15 @@ pub async fn delivery(
     }))
 }
 
-/// `POST /market/escrows/{id}/release` — فقط خریدار همان اسکرو (آستانهٔ HITL در دامنه).
+/// `POST /market/escrows/{id}/release` — only that escrow's buyer (HITL threshold in the domain).
 ///
-/// اگر محصول مرتبط دارای `deliveryPayload` ازپیش‌ثبت‌شده باشد (محصول دیجیتال آنی)
-/// و اسکرو هنوز در وضعیت `FUNDED` باشد، تحویل آنی + آزادسازی اتمی در همان
-/// تراکنش انجام می‌شود.
+/// If the linked product has a pre-registered `deliveryPayload` (an instant digital product)
+/// and the escrow is still in `FUNDED` state, instant delivery + atomic release happen in the
+/// same transaction.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 404 اسکرو ناشناخته؛ ۴۰۳ سمت نادرست؛ ۴۲۲ گذار نامعتبر یا آستانهٔ
-/// ۵۰٬۰۰۰ Đ بدون تأیید ادمین (`REQUIRES_HUMAN_APPROVAL`).
+/// 401 session; 404 unknown escrow; 403 wrong side; 422 invalid transition or the
+/// 50,000 Đ threshold without admin approval (`REQUIRES_HUMAN_APPROVAL`).
 pub async fn release(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -549,7 +549,7 @@ pub async fn release(
     body: axum::body::Bytes,
 ) -> ApiResult<Json<EscrowActionResponse>> {
     let req: ReleaseEscrowRequest = parse_body(&body)?;
-    // بررسی وجود محتوای تحویل آنی روی محصولِ مرتبط (فقط برای گذار FUNDED→DELIVERED→RELEASED)
+    // check for instant-delivery content on the linked product (only for the FUNDED→DELIVERED→RELEASED transitions)
     let instant_delivery = match state.store.get_escrow(&id).await.map_err(ApiFailure::from)? {
         Some(e) if e.status == EscrowStatus::Funded => match e.product_ref.as_deref() {
             Some(pid) => state
@@ -563,8 +563,8 @@ pub async fn release(
         },
         _ => false,
     };
-    // خریدار نشست‌دار هرگز نمی‌تواند خودش را «تأییدشدهٔ ادمین» اعلام کند —
-    // فلگ ادمین فقط از مسیر `POST /escrows/{id}/release` (گوار X-KIAN-Key) می‌آید.
+    // a sessioned buyer can never self-declare "admin-approved" —
+    // the admin flag arrives only via `POST /escrows/{id}/release` (the X-KIAN-Key guard).
     let key = req.idempotency_key.as_ref().map(|k| k.get().to_owned());
     let escrow_id = id.clone();
     let closure_key = key.clone();
@@ -619,15 +619,15 @@ pub async fn release(
     )
     .await;
 
-    // اگر مبلغ اسکرو از آستانهٔ HITL مادهٔ ۷ گذشت، درخواست تأیید انسانی را در صف HitlRequest ثبت کن
+    // if the escrow amount exceeds the Article 7 HITL threshold, enqueue a human-approval request on HitlRequest
     if let Err(ApiFailure::Domain(ref err)) = result
         && err.error.code == DomainErrorCode::RequiresHumanApproval
             && let Ok(Some(escrow)) = state.store.get_escrow(&id).await {
                 let now_dt = chrono::Utc::now();
                 let exp_dt = now_dt + chrono::Duration::hours(PURCHASE_TTL_HOURS);
                 let hitl = HitlRow {
-                    // D2 — شناسهٔ اسکرو تا ۱۲۸ کاراکتر است؛ «hitl:{id}» خام سقف
-                    // وایر را می‌شکند و ادمین را panic می‌کند — تبدیل امنِ قطعی:
+                    // D2 — the escrow ID is up to 128 characters; the raw "hitl:{id}" would break the
+                    // wire cap and panic the admin — a safe deterministic conversion:
                     id: safe_prefixed_wire_id("hitl", &id),
                     kind: "ESCROW_RELEASE".to_owned(),
                     escrow_id: id.clone(),
@@ -649,13 +649,13 @@ pub async fn release(
     result
 }
 
-/// `POST /market/escrows/{id}/dispute` — ثبت اختلاف توسط خریدار (قفل پول تا داوری).
+/// `POST /market/escrows/{id}/dispute` — buyer-filed dispute (funds locked until arbitration).
 ///
-/// فقط خریدارِ همان اسکرو (با نشست خودش، بدون نیاز به کلید ادمین) روی اسکروهای
-/// `FUNDED` یا `DELIVERED` می‌تواند اختلاف ثبت کند.
+/// Only that escrow's buyer (with their own session, no admin key needed) can dispute
+/// escrows in `FUNDED` or `DELIVERED` state.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ دلیل نامعتبر؛ ۴۰۳ سمت نادرست؛ 404 اسکرو ناشناخته؛ ۴۲۲ گذار نامعتبر.
+/// 401 session; 400 invalid reason; 403 wrong side; 404 unknown escrow; 422 invalid transition.
 pub async fn dispute(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -701,17 +701,17 @@ pub async fn dispute(
 }
 
 
-// ── مُهر مایرون و رأی ۵-ستارهٔ شهروندان (Wave 3 — Trinity marketplace gate) ──
+// ── Mairon seal and the citizens' 5-star vote (Wave 3 — Trinity marketplace gate) ──
 
-/// `POST /market/products/{id}/mairon-confirm` — دروازهٔ دو-کلیدی انتشار.
+/// `POST /market/products/{id}/mairon-confirm` — the two-key publication gate.
 ///
-/// کلید ۱: حکم قطعی مایرون روی آرتیفکت واقعی محصول (`judge_market_product`)؛
-/// کلید ۲: تأیید صریح سازنده از مسیر نشست (همان endpoint). فقط هم‌زمانیِ
-/// هر دو، نمره و نشان `⚒️ Mairon REA Certified` را روی لیستینگ مُهر می‌کند. ۲۰۰.
+/// key 1: Mairon's deterministic verdict on the product's real artifact (`judge_market_product`);
+/// key 2: the creator's explicit confirmation via the session route (same endpoint). Only the
+/// joint presence of both seals the score and the `⚒️ Mairon REA Certified` badge onto the listing. 200.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۳ غیر از سازندهٔ محصول؛ ۴۰۴ محصول ناموجود؛ ۴۲۲ حکم مایرون
-/// پذیرش نیست (خطوط قرمز یا نمرهٔ زیر ۸۵)؛ 500 خطای SQL.
+/// 401 missing session; 403 not the product's creator; 404 product missing; 422 Mairon's verdict
+/// is not an acceptance (red lines or a score below 85); 500 SQL error.
 pub async fn mairon_confirm(
     State(state): State<Arc<AppState>>,
     Path(product_id): Path<String>,
@@ -736,7 +736,7 @@ pub async fn mairon_confirm(
         return Err(kian_contracts::HttpFailure::forbidden_escrow_role().into());
     }
     let verdict = kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html);
-    // کلید ۲ — تأیید سازنده از مسیر نشست: `creator_confirmed = true`
+    // key 2 — creator confirmation via the session route: `creator_confirmed = true`
     let listing = confirm_and_publish_product(&verdict, true).map_err(|msg| {
         DomainError::new(DomainErrorCode::InvalidTransition, msg.to_owned())
     })?;
@@ -754,16 +754,16 @@ pub async fn mairon_confirm(
     }))
 }
 
-/// `GET /market/products/{id}/skill` — بستهٔ مهارتِ مایرون + نوارِ پرچمِ
-/// دایره‌ایِ ARDA (عمومی — شفافیت مادهٔ ۶).
+/// `GET /market/products/{id}/skill` — the Mairon skill bundle + the ARDA circular
+/// flag ribbon (public — Article 6 transparency).
 ///
-/// بستهٔ مُهرشده مستقیم برمی‌گردد؛ در غیابِ مُهر، داوریِ زندهٔ مایرون روی
-/// `preview_html` انجام می‌شود و اگر گیتِ `>= 85` عبور کند، بستهٔ
-/// `SKILL.md` + `skill.json` همان‌جا فورج و مُهر می‌شود
-/// (`forged_on_the_fly = true`). زیرِ گیت → ۴۲۲.
+/// Returns the sealed bundle directly; absent a seal, Mairon's live arbitration runs on
+/// `preview_html`, and if the `>= 85` gate passes, the
+/// `SKILL.md` + `skill.json` bundle is forged and sealed on the spot
+/// (`forged_on_the_fly = true`). Below the gate → 422.
 ///
 /// # Errors
-/// ۴۰۴ محصول ناموجود؛ ۴۲۲ زیرِ گیتِ REA مایرون؛ 500 SQL.
+/// 404 product missing; 422 below Mairon's REA gate; 500 SQL.
 #[allow(clippy::too_many_lines)]
 pub async fn product_skill(
     State(state): State<Arc<AppState>>,
@@ -781,7 +781,7 @@ pub async fn product_skill(
             )
                 .into()
         })?;
-    // زبانِ مبدأ و نوارِ پرچم — مبدأِ مُهرشده یا تشخیصِ قطعیِ اسکریپت.
+    // source language and flag ribbon — the sealed provenance or deterministic script detection.
     let origin = if kian_hermes::arda_fishkal_engine::is_planetary_locale(&product.origin_locale) {
         product.origin_locale.clone()
     } else {
@@ -794,7 +794,7 @@ pub async fn product_skill(
         kian_hermes::arda_fishkal_engine::render_product_flag_strip(&origin, &strip_codes)
             .unwrap_or_default();
 
-    // بستهٔ مُهرشده — تحویلِ مستقیم (قطعی، بدون داوریِ دوباره).
+    // sealed bundle — direct delivery (deterministic, no re-arbitration).
     if let (Some(md), Some(js)) = (&product.skill_md, &product.skill_json) {
         return Ok(Json(ProductSkillPackageResponse {
             product_id,
@@ -809,8 +809,8 @@ pub async fn product_skill(
         }));
     }
 
-    // فورجِ در-جا — داوریِ زندهٔ مایرون روی محتوای فعلی (نظمِ مطلق: هیچ
-    // حالتِ کهنه‌ای معتبر نیست؛ خودِ محتوا داوری می‌شود).
+    // on-the-fly forge — Mairon's live arbitration over the current content (absolute order: no
+    // stale state is valid; the content itself is arbitrated).
     let verdict = kian_hermes::MaironSovereignJudge::judge_market_product(&product_id, &product.preview_html);
     if verdict.total_score < MARKETPLACE_APPROVAL_THRESHOLD {
         return Err(DomainError::new(
@@ -859,11 +859,11 @@ pub async fn product_skill(
     }))
 }
 
-/// `POST /market/products/{id}/reviews` — رأی واقعی شهروند با ستارهٔ سخت‌سنجی‌شدهٔ
-/// `1..=5`؛ خریدِ تاییدشده (اسکرو `RELEASED`) وزنِ بیزیِ کامل می‌گیرد. ۲۰۱.
+/// `POST /market/products/{id}/reviews` — a real citizen vote with a validated
+/// `1..=5` star; a verified purchase (escrow `RELEASED`) gets the full Bayesian weight. 201.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ ستاره/نظر نامعتبر؛ ۴۰۴ محصول ناموجود؛ ۴۲۲ رأی تکراری؛ 500 SQL.
+/// 401 missing session; 400 invalid star/review; 404 product missing; 422 duplicate vote; 500 SQL.
 pub async fn submit_review(
     State(state): State<Arc<AppState>>,
     Path(product_id): Path<String>,
@@ -884,7 +884,7 @@ pub async fn submit_review(
             )
             .into()
         })?;
-    // عکسِ فوریِ نمرهٔ مایرون: مُهرِ رسمی اگر باشد، وگرنه داوریِ تازهٔ قطعی
+    // an instant snapshot of Mairon's score: the official seal if present, otherwise a fresh deterministic
     let mairon_score = if product.mairon_score > 0 {
         product.mairon_score
     } else {
@@ -924,7 +924,7 @@ pub async fn submit_review(
         mairon_score,
     )
     .map_err(|msg: &'static str| {
-        // ستاره/نظر نامعتبر → ۴۰۰؛ رأی تکراری → ۴۲۲ (نگاشت صادقانهٔ لبهٔ HTTP)
+        // invalid star/review → 400; duplicate vote → 422 (honest HTTP edge mapping)
         if msg.contains("between 1 and 5") || msg.contains("must not") {
             ApiFailure::Http(kian_contracts::HttpFailure::invalid_request(1))
         } else {
@@ -962,11 +962,11 @@ pub async fn submit_review(
     })))
 }
 
-/// `GET /market/products/{id}/reviews` — خلاصهٔ بیزی ۵-ستاره + هیستوگرام +
+/// `GET /market/products/{id}/reviews` — the Bayesian 5-star summary + histogram +
 /// `combined_rank_score` (`0.60 * bayesian_stars * 20 + 0.40 * mairon_score`).
 ///
 /// # Errors
-/// ۴۰۴ محصول ناموجود؛ 500 خطای SQL.
+/// 404 product missing; 500 SQL error.
 pub async fn list_reviews(
     State(state): State<Arc<AppState>>,
     Path(product_id): Path<String>,
@@ -1000,7 +1000,7 @@ pub async fn list_reviews(
             mairon_score_at_review: r.mairon_score_at_review,
         })
         .collect();
-    // لایهٔ فنی: مُهرِ رسمی اگر باشد، وگرنه داوریِ قطعیِ تازه روی preview_html
+    // technical layer: the official seal if present, otherwise a fresh deterministic arbitration on preview_html
     let (score, badge) = if product.mairon_score > 0 {
         (product.mairon_score, product.mairon_badge.clone())
     } else {
@@ -1018,8 +1018,8 @@ pub async fn list_reviews(
         .clamped(),
         Vec::new(),
     );
-    // نمرهٔ رسمی مایرون در خلاصه از مُهر/داوریِ تازه می‌آید — با بازسازی حکمِ
-    // امتیاز برابر، موتور بیزی دامنه بدون کپیِ فرمول مصرف می‌شود.
+    // Mairon's official score in the summary comes from the seal/fresh arbitration — with an
+    // equal-score verdict reconstruction, the domain's Bayesian engine is consumed without copying the formula.
     let verdict_with_score = evaluate_user_product_with_mairon(
         &product_id,
         pillar_scores_for_total(score),
@@ -1054,8 +1054,8 @@ pub async fn list_reviews(
     }))
 }
 
-/// چیدمانِ قطعی چهار ستون برای رسیدن به مجموعِ هدف — نشانِ رسمیِ مایرون در
-/// خلاصهٔ وایر با موتور دامنه بازتولید می‌شود (بدون کپیِ فرمول نشان).
+/// A deterministic four-column arrangement to reach the target sum — Mairon's official badge in
+/// the wire summary is reproduced with the domain engine (no copying of the badge formula).
 fn pillar_scores_for_total(target: u8) -> MaironReaPillarScores {
     let a = target.min(25);
     let rest = target - a;
@@ -1097,7 +1097,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// احراز کاربر تلگرام و گرفتن توکن.
+    /// Authenticate a Telegram user and issue a token.
     async fn auth(app: &axum::Router, tg_id: &str, username: &str) -> String {
         let init_data = make_test_init_data(BOT, tg_id, Some(username));
         let res = app
@@ -1115,7 +1115,7 @@ mod tests {
         json_body(res).await["token"].as_str().unwrap().to_owned()
     }
 
-    /// ضرب Din به حساب شهروند (مسیر ادمین M2 — بذر صحنهٔ بازار).
+    /// Mint Din to a citizen account (M2 admin route — seeding the market scene).
     async fn mint(app: &axum::Router, account: &str, amount: i64) {
         let res = app
             .clone()
@@ -1137,7 +1137,7 @@ mod tests {
         let app = app().await;
         let token = auth(&app, "111", "seller").await;
 
-        // ثبت محصول — ۲۰۱
+        // product registration — 201
         let res = app
             .clone()
             .oneshot(
@@ -1146,7 +1146,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
-                        json!({ "title": "دستور پخت نان", "description": "توضیح کامل", "priceDin": 250 })
+                        json!({ "title": "\u{62f}\u{633}\u{62a}\u{648}\u{631} \u{67e}\u{62e}\u{62a} \u{646}\u{627}\u{646}", "description": "\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6a9}\u{627}\u{645}\u{644}", "priceDin": 250 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1158,7 +1158,7 @@ mod tests {
         assert_eq!(body["sellerId"], "citizen:111");
         assert_eq!(body["priceDin"], 250);
 
-        // فهرست عمومی
+        // public listing
         let res = app
             .clone()
             .oneshot(
@@ -1172,7 +1172,7 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["items"].as_array().unwrap().len(), 1);
 
-        // خرید از خود — ۴۲۲
+        // self-purchase — 422
         let product_id = body["items"][0]["id"].as_str().unwrap().to_owned();
         let res = app
             .oneshot(
@@ -1189,7 +1189,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(clippy::too_many_lines)] // چرخهٔ کامل خرید اتمی + کنش‌های طرفین — خوانایی تست مهم‌تر
+    #[allow(clippy::too_many_lines)] // the full atomic-purchase cycle + both parties' actions — test readability matters more
     async fn full_purchase_cycle_through_escrow() {
         let app = app().await;
         let seller = auth(&app, "222", "seller2").await;
@@ -1203,7 +1203,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({ "title": "کلاس زبان", "description": "یک جلسه", "priceDin": 500 })
+                        json!({ "title": "\u{6a9}\u{644}\u{627}\u{633} \u{632}\u{628}\u{627}\u{646}", "description": "\u{6cc}\u{6a9} \u{62c}\u{644}\u{633}\u{647}", "priceDin": 500 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1213,7 +1213,7 @@ mod tests {
         let product_id = json_body(res).await["id"].as_str().unwrap().to_owned();
         mint(&app, "citizen:333", 1_000).await;
 
-        // خرید — امانت باید FUNDED شود
+        // purchase — the escrow must become FUNDED
         let res = app
             .clone()
             .oneshot(
@@ -1232,7 +1232,7 @@ mod tests {
         assert_eq!(body["escrow"]["buyerId"], "citizen:333");
         let escrow_id = body["escrow"]["id"].as_str().unwrap().to_owned();
 
-        // تراز خریدار پس از قفل پول
+        // buyer balance after the funds lock
         let res = app
             .clone()
             .oneshot(
@@ -1248,7 +1248,7 @@ mod tests {
         assert_eq!(me["balance"], 500, "1000 − 500 locked");
         assert_eq!(me["escrowLocked"], 500);
 
-        // تحویل از سمت خریدار — ۴۰۳ (فقط فروشنده)
+        // deliver from the buyer side — 403 (seller only)
         let res = app
             .clone()
             .oneshot(
@@ -1263,7 +1263,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // تحویل از سمت فروشنده — ۲۰۰ و DELIVERED
+        // deliver from the seller side — 200 and DELIVERED
         let res = app
             .clone()
             .oneshot(
@@ -1279,7 +1279,7 @@ mod tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["escrow"]["status"], "DELIVERED");
 
-        // آزادسازی از سمت خریدار — مالیات ۱۰٪ منشور
+        // release from the buyer side — the 10% charter tax
         let res = app
             .clone()
             .oneshot(
@@ -1295,7 +1295,7 @@ mod tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["escrow"]["status"], "RELEASED");
 
-        // تسویهٔ نهایی: فروشنده ۴۵۰ + خزانه ۵۰
+        // final settlement: seller 450 + treasury 50
         let res = app
             .clone()
             .oneshot(
@@ -1309,7 +1309,7 @@ mod tests {
         let eco = json_body(res).await;
         assert_eq!(eco["trialBalanceSum"], 0, "the ledger must always balance");
 
-        // سفارش‌های من — هر دو طرف می‌بینند
+        // my orders — both sides see it
         let res = app
             .clone()
             .oneshot(
@@ -1325,7 +1325,7 @@ mod tests {
         assert_eq!(mine["orders"].as_array().unwrap().len(), 1);
         assert_eq!(mine["orders"][0]["status"], "RELEASED");
 
-        // فروشنده محصولش را می‌بیند
+        // the seller sees their product
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -1354,7 +1354,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({ "title": "گنج", "description": "بسیار گران", "priceDin": 900 })
+                        json!({ "title": "\u{6af}\u{646}\u{62c}", "description": "\u{628}\u{633}\u{6cc}\u{627}\u{631} \u{6af}\u{631}\u{627}\u{646}", "priceDin": 900 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1363,7 +1363,7 @@ mod tests {
             .unwrap();
         let product_id = json_body(res).await["id"].as_str().unwrap().to_owned();
 
-        // بدون ضرب — تراز صفر؛ خرید باید overdraft ۴۲۲ بدهد
+        // no mint — zero balance; the purchase must yield a 422 overdraft
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -1390,10 +1390,10 @@ mod tests {
         let stranger = auth(&app, "604", "stranger").await;
         mint(&app, "citizen:602", 2_000).await;
 
-        let full_html = "<!doctype html><html><body><h1>محصول کامل پولی</h1></body></html>";
-        let preview_html = "<div><h1>دموی رایگان</h1></div>";
+        let full_html = "<!doctype html><html><body><h1>\u{645}\u{62d}\u{635}\u{648}\u{644} \u{6a9}\u{627}\u{645}\u{644} \u{67e}\u{648}\u{644}\u{6cc}</h1></body></html>";
+        let preview_html = "<div><h1>\u{62f}\u{645}\u{648}\u{6cc} \u{631}\u{627}\u{6cc}\u{6af}\u{627}\u{646}</h1></div>";
 
-        // ساخت محصول با پیش‌نمایش، کد کامل HTML و ۲۰٪ پورسانت معرف
+        // create a product with a preview, full HTML code, and a 20% referrer commission
         let res = app
             .clone()
             .oneshot(
@@ -1403,8 +1403,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "محاسبه‌گر سود کریپتو",
-                            "description": "ابزار تعاملی تک‌صفحه‌ای",
+                            "title": "\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
+                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc}",
                             "priceDin": 1_000,
                             "previewHtml": preview_html,
                             "affiliateBps": 2_000,
@@ -1425,7 +1425,7 @@ mod tests {
         assert_eq!(created["previewHtml"], preview_html);
         assert!(created.get("deliveryPayload").is_none());
 
-        // صفحهٔ عمومی تک‌محصول — previewHtml دارد ولی deliveryPayload هرگز لو نمی‌رود
+        // the public single-product page — has previewHtml but deliveryPayload never leaks
         let res = app
             .clone()
             .oneshot(
@@ -1441,7 +1441,7 @@ mod tests {
         assert_eq!(pub_prod["previewHtml"], preview_html);
         assert!(pub_prod.get("deliveryPayload").is_none());
 
-        // خرید با شناسهٔ عددی معرف ("603" → "citizen:603")
+        // purchase with a numeric referrer ID ("603" → "citizen:603")
         let res = app
             .clone()
             .oneshot(
@@ -1461,7 +1461,7 @@ mod tests {
         let escrow_id = purchase["escrow"]["id"].as_str().unwrap().to_owned();
         assert_eq!(purchase["escrow"]["status"], "FUNDED");
 
-        // غریبه نمی‌تواند به deliveryPayload دسترسی پیدا کند → ۴۰۳
+        // a stranger cannot access deliveryPayload → 403
         let res = app
             .clone()
             .oneshot(
@@ -1475,7 +1475,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // خریدار بلافاصله در حالت FUNDED محتوای HTML کامل را می‌بیند → ۲۰۰
+        // the buyer sees the full HTML content immediately in FUNDED state → 200
         let res = app
             .clone()
             .oneshot(
@@ -1495,7 +1495,7 @@ mod tests {
         assert_eq!(del["state"], "FUNDED");
         assert_eq!(del["deliveryPayload"], full_html);
 
-        // آزادسازی مستقیم توسط خریدار (تحویل آنی + تسویه ۴پستینگی)
+        // direct release by the buyer (instant delivery + a 4-posting settlement)
         let res = app
             .clone()
             .oneshot(
@@ -1511,7 +1511,7 @@ mod tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["escrow"]["status"], "RELEASED");
 
-        // بررسی تراز ۳ ذی‌نفع: فروشنده ۷۰۰ + خزانه ۱۰۰ + معرف ۲۰۰ = ۱۰۰۰
+        // check the 3 beneficiaries' balances: seller 700 + treasury 100 + referrer 200 = 1000
         let res = app
             .clone()
             .oneshot(
@@ -1568,8 +1568,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "قالب داشبورد",
-                            "description": "HTML کامل",
+                            "title": "\u{642}\u{627}\u{644}\u{628} \u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}",
+                            "description": "HTML \u{6a9}\u{627}\u{645}\u{644}",
                             "priceDin": 300,
                             "deliveryPayload": "<html>broken</html>"
                         })
@@ -1581,7 +1581,7 @@ mod tests {
             .unwrap();
         let product_id = json_body(res).await["id"].as_str().unwrap().to_owned();
 
-        // معرف ناموجود در سیستم نباید خرید مشتری را خراب کند
+        // a referrer missing from the system must not break the customer's purchase
         let res = app
             .clone()
             .oneshot(
@@ -1599,7 +1599,7 @@ mod tests {
         assert_eq!(res.status(), 201);
         let escrow_id = json_body(res).await["escrow"]["id"].as_str().unwrap().to_owned();
 
-        // فروشنده نمی‌تواند از مسیر خریدار dispute بزند → ۴۰۳
+        // the seller cannot dispute via the buyer route → 403
         let res = app
             .clone()
             .oneshot(
@@ -1607,14 +1607,14 @@ mod tests {
                     .method("POST")
                     .uri(format!("/api/v1/market/escrows/{escrow_id}/dispute"))
                     .header("authorization", format!("Bearer {seller}"))
-                    .body(Body::from(json!({ "reason": "تلاش غیرمجاز" }).to_string()))
+                    .body(Body::from(json!({ "reason": "\u{62a}\u{644}\u{627}\u{634} \u{63a}\u{6cc}\u{631}\u{645}\u{62c}\u{627}\u{632}" }).to_string()))
                     .unwrap(),
             )
             .await
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // خریدار اختلاف ثبت می‌کند → ۲۰۰ و DISPUTED
+        // the buyer files the dispute → 200 and DISPUTED
         let res = app
             .clone()
             .oneshot(
@@ -1623,7 +1623,7 @@ mod tests {
                     .uri(format!("/api/v1/market/escrows/{escrow_id}/dispute"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({ "reason": "فایل HTML اجرا نمی‌شود" }).to_string(),
+                        json!({ "reason": "\u{641}\u{627}\u{6cc}\u{644} HTML \u{627}\u{62c}\u{631}\u{627} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}" }).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1632,9 +1632,9 @@ mod tests {
         assert_eq!(res.status(), 200);
         let disputed = json_body(res).await;
         assert_eq!(disputed["escrow"]["status"], "DISPUTED");
-        assert_eq!(disputed["escrow"]["disputeReason"], "فایل HTML اجرا نمی‌شود");
+        assert_eq!(disputed["escrow"]["disputeReason"], "\u{641}\u{627}\u{6cc}\u{644} HTML \u{627}\u{62c}\u{631}\u{627} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
 
-        // در وضعیت DISPUTED دریافت delivery رد می‌شود → ۴۲۲
+        // in DISPUTED state, the delivery fetch is rejected → 422
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -1647,14 +1647,14 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
     }
-    // ── مُهر مایرون + رأی ۵-ستارهٔ شهروندان — مسیرهای زندهٔ HTTP (Wave 3) ──
+    // ── Mairon seal + citizens' 5-star vote — live HTTP routes (Wave 3) ──
 
-    /// آرتیفکتِ آهنگری‌شده — از گیت مایرون عبور می‌کند (RTL + ۳۹۰ + ۳ سکشن + اسکریپت).
+    /// The forged artifact — passes Mairon's gate (RTL + 390 + 3 sections + script).
     const FORGED_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
 <style>body{font-family:'Vazirmatn',sans-serif;max-width: 390px;}</style>\
 </head><body>\
-<section aria-label=\"الف\">داشبورد</section><section>گزارش</section><section>تنظیمات</section>\
+<section aria-label=\"\u{627}\u{644}\u{641}\">\u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}</section><section>\u{6af}\u{632}\u{627}\u{631}\u{634}</section><section>\u{62a}\u{646}\u{638}\u{6cc}\u{645}\u{627}\u{62a}</section>\
 <script>/* assert: 390px zero-overflow */</script>\
 </body></html>";
 
@@ -1669,7 +1669,7 @@ mod tests {
                     .body(Body::from(
                         json!({
                             "title": title,
-                            "description": "آرتیفکت تک‌صفحه‌ای آهنگری‌شده برای گیت مایرون",
+                            "description": "\u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc}‌\u{634}\u{62f}\u{647} \u{628}\u{631}\u{627}\u{6cc} \u{6af}\u{6cc}\u{62a} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}",
                             "priceDin": 500,
                             "previewHtml": FORGED_PREVIEW
                         })
@@ -1683,17 +1683,17 @@ mod tests {
         json_body(res).await["id"].as_str().unwrap().to_owned()
     }
 
-    /// دروازهٔ دو-کلیدی: مُهر فقط با حکم مایرون + تأیید سازنده می‌نشیند؛
-    /// رأی ۵-ستاره با وزن بیزی و هیستوگرام دقیق جمع می‌شود؛ رأی تکراری ۴۲۲.
+    /// The two-key gate: the seal lands only with Mairon's verdict + creator confirmation;
+    /// the 5-star vote accumulates with Bayesian weight and an exact histogram; duplicate votes 422.
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
     async fn mairon_confirm_two_key_gate_then_review_lifecycle() {
         let app = app().await;
         let seller = auth(&app, "321", "forge-seller").await;
         let buyer = auth(&app, "322", "star-buyer").await;
-        let product_id = create_forged_product(&app, &seller, "محصول آهنگری‌شده").await;
+        let product_id = create_forged_product(&app, &seller, "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc}‌\u{634}\u{62f}\u{647}").await;
 
-        // محصولِ بدون مُهر — خلاصهٔ رأی، داوریِ تازهٔ مایرون را نشان می‌دهد
+        // the unsealed product — the vote summary shows Mairon's fresh arbitration
         let res = app
             .clone()
             .oneshot(
@@ -1709,7 +1709,7 @@ mod tests {
         assert_eq!(body["totalReviews"], 0);
         assert!(body["maironReaScore"].as_u64().unwrap() >= 85, "body: {body}");
 
-        // غیر از سازنده → ۴۰۳ (کلید دوم قابل سرقت نیست)
+        // anyone but the creator → 403 (the second key cannot be stolen)
         let res = app
             .clone()
             .oneshot(
@@ -1724,7 +1724,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // کلید ۱ + کلید ۲ — سازنده تأیید می‌کند → مُهر Forge-Grade
+        // key 1 + key 2 — the creator confirms → the Forge-Grade seal
         let res = app
             .clone()
             .oneshot(
@@ -1745,7 +1745,7 @@ mod tests {
         assert!(score >= 85, "score: {score}");
         assert!(body["maironVisibleBadge"].as_str().unwrap().contains("Forge-Grade"));
 
-        // نمای عمومی محصول حالا مُهر را حمل می‌کند (additive wire)
+        // the public product view now carries the seal (additive wire)
         let res = app
             .clone()
             .oneshot(
@@ -1760,7 +1760,7 @@ mod tests {
         assert_eq!(body["maironScore"], score);
         assert!(body["maironBadge"].as_str().unwrap().contains("Forge-Grade"));
 
-        // رأی خریدار — ۵ ستاره؛ خرید تاییدشده ندارد → وزن ۰.۲۵ (ضد-سوریل)
+        // buyer vote — 5 stars; no verified purchase → weight 0.25 (anti-shill)
         let res = app
             .clone()
             .oneshot(
@@ -1769,7 +1769,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 5, "comment": "آهنگری واقعاً تمیز است — بدون اسلوپ"}).to_string(),
+                        json!({"stars": 5, "comment": "\u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{648}\u{627}\u{642}\u{639}\u{627}\u{64b} \u{62a}\u{645}\u{6cc}\u{632} \u{627}\u{633}\u{62a} — \u{628}\u{62f}\u{648}\u{646} \u{627}\u{633}\u{644}\u{648}\u{67e}"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1782,7 +1782,7 @@ mod tests {
         assert_eq!(review["maironScoreAtReview"], score);
         assert!(review["reviewId"].as_str().unwrap().starts_with("rev:"));
 
-        // قفلِ یک‌رأیی — همان شهروند → ۴۲۲
+        // the one-vote lock — the same citizen → 422
         let res = app
             .clone()
             .oneshot(
@@ -1791,7 +1791,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 1, "comment": "رأی دوم سوریل است"}).to_string(),
+                        json!({"stars": 1, "comment": "\u{631}\u{623}\u{6cc} \u{62f}\u{648}\u{645} \u{633}\u{648}\u{631}\u{6cc}\u{644} \u{627}\u{633}\u{62a}"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1799,7 +1799,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
 
-        // ستارهٔ بیرون از ۱..=۵ → ۴۰۰
+        // a star outside 1..=5 → 400
         let res = app
             .clone()
             .oneshot(
@@ -1808,7 +1808,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({"stars": 0, "comment": "ستارهٔ نامعتبر"}).to_string(),
+                        json!({"stars": 0, "comment": "\u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631}"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1816,7 +1816,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 400);
 
-        // خلاصهٔ بیزی — هیستوگرام دقیق + رتبهٔ ترکیبی
+        // the Bayesian summary — exact histogram + composite rating
         let res = app
             .clone()
             .oneshot(
@@ -1837,10 +1837,10 @@ mod tests {
         let combined = body["combinedRankScore"].as_f64().unwrap();
         let expected = 0.60 * (bayes * 20.0) + 0.40 * f64::from(u32::try_from(score).unwrap());
         assert!((combined - expected).abs() < 1e-9, "combined: {combined} vs {expected}");
-        assert!(body["fiveStarDisplay"].as_str().unwrap().contains("⚒️ نمره مایرون REA"));
+        assert!(body["fiveStarDisplay"].as_str().unwrap().contains("⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA"));
     }
 
-    /// محصولِ خام — گیت مایرون صادقانه رد می‌کند (۴۲۲) و مُهر نمی‌نشیند.
+    /// The raw product — Mairon's gate honestly rejects it (422) and no seal lands.
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
     async fn mairon_confirm_honestly_rejects_unforged_artifact() {
@@ -1855,8 +1855,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "محصول خام",
-                            "description": "بدون آرتیفکت واقعی",
+                            "title": "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{62e}\u{627}\u{645}",
+                            "description": "\u{628}\u{62f}\u{648}\u{646} \u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a} \u{648}\u{627}\u{642}\u{639}\u{6cc}",
                             "priceDin": 100
                         })
                         .to_string(),
@@ -1885,7 +1885,7 @@ mod tests {
             .as_str()
             .unwrap()
             .contains("not approved"));
-        // رأی روی محصولِ بدون مُهر — عکسِ نمرهٔ داوریِ تازه ثبت می‌شود
+        // a vote on the unsealed product — the fresh arbitration score snapshot is recorded
         let buyer = auth(&app, "332", "candid-buyer").await;
         let res = app
             .clone()
@@ -1895,7 +1895,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 2, "comment": "هنوز آهنگری نشده"}).to_string(),
+                        json!({"stars": 2, "comment": "\u{647}\u{646}\u{648}\u{632} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{646}\u{634}\u{62f}\u{647}"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1907,22 +1907,22 @@ mod tests {
         assert!(stamp < 85, "fresh judgement must be honest: {stamp}");
     }
 
-    /// پیش‌نمایشِ غنیِ فارسی — از گیتِ REA مایرون (`>= 85`) می‌گذرد:
-    /// ۵ سکشن (معماری)، `dir="rtl"` + `max-width:390px` + Vazirmatn + viewport
-    /// (UX)، ۴ اسکریپت + ۲ پروب + aria (راستی‌آزمایی).
+    /// The rich Persian preview — passes Mairon's REA gate (`>= 85`):
+    /// 5 sections (architecture), `dir="rtl"` + `max-width:390px` + Vazirmatn + viewport
+    /// (UX), 4 scripts + 2 probes + aria (verification).
     const RICH_FA_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
 <style>body{font-family:'Vazirmatn';max-width:390px}</style></head><body>\
-<section id=\"sod\">محاسبهٔ سود مرکب</section>\
-<section id=\"asset\">دارایی و بدهی</section>\
-<section id=\"market\">بازار لحظه‌ای</section>\
-<section id=\"risk\">مدیریت ریسک</section>\
-<section id=\"report\">گزارش ماهانه</section>\
-<div role=\"main\" aria-label=\"محاسبه‌گر مالی\"></div>\
-<div data-probe=\"p1\">پروبِ داده</div>\
-<div data-probe=\"p2\">پروبِ بازبینی</div>\
-<script>/* محاسبه */</script><script>/* نمودار */</script>\
-<script>/* ریسک */</script><script>/* گزارش */</script>\
+<section id=\"sod\">\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}\u{654} \u{633}\u{648}\u{62f} \u{645}\u{631}\u{6a9}\u{628}</section>\
+<section id=\"asset\">\u{62f}\u{627}\u{631}\u{627}\u{6cc}\u{6cc} \u{648} \u{628}\u{62f}\u{647}\u{6cc}</section>\
+<section id=\"market\">\u{628}\u{627}\u{632}\u{627}\u{631} \u{644}\u{62d}\u{638}\u{647}‌\u{627}\u{6cc}</section>\
+<section id=\"risk\">\u{645}\u{62f}\u{6cc}\u{631}\u{6cc}\u{62a} \u{631}\u{6cc}\u{633}\u{6a9}</section>\
+<section id=\"report\">\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</section>\
+<div role=\"main\" aria-label=\"\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{645}\u{627}\u{644}\u{6cc}\"></div>\
+<div data-probe=\"p1\">\u{67e}\u{631}\u{648}\u{628}\u{650} \u{62f}\u{627}\u{62f}\u{647}</div>\
+<div data-probe=\"p2\">\u{67e}\u{631}\u{648}\u{628}\u{650} \u{628}\u{627}\u{632}\u{628}\u{6cc}\u{646}\u{6cc}</div>\
+<script>/* \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647} */</script><script>/* \u{646}\u{645}\u{648}\u{62f}\u{627}\u{631} */</script>\
+<script>/* \u{631}\u{6cc}\u{633}\u{6a9} */</script><script>/* \u{6af}\u{632}\u{627}\u{631}\u{634} */</script>\
 </body></html>";
 
     async fn create_rich_product(app: &axum::Router, seller: &str) -> String {
@@ -1935,8 +1935,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "حسابدار — محاسبه‌گر سود کریپتو",
-                            "description": "ابزار تعاملی تک‌صفحه‌ای فارسی با گزارش ماهانه",
+                            "title": "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
+                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}",
                             "priceDin": 2_000,
                             "previewHtml": RICH_FA_PREVIEW
                         })
@@ -1956,7 +1956,7 @@ mod tests {
         let seller = auth(&app, "888001", "skill_seller").await;
         let product_id = create_rich_product(&app, &seller).await;
 
-        // فراخوانیِ اول — فورجِ در-جا پس از داوریِ زندهٔ مایرون.
+        // first call — an on-the-fly forge after Mairon's live arbitration.
         let res = app
             .clone()
             .oneshot(
@@ -1974,24 +1974,24 @@ mod tests {
         assert!(body["reaScore"].as_u64().unwrap() >= 85);
         assert!(body["maironVisibleBadge"].as_str().unwrap().contains("⚒️"));
         assert_eq!(body["originLocale"], "fa");
-        // SKILL.md با پیش‌مادهٔ YAML و گیت‌های راستی‌آزمایی.
+        // SKILL.md with YAML front matter and verification gates.
         let skill_md = body["skillMd"].as_str().unwrap();
         assert!(skill_md.starts_with("---\n"));
         assert!(skill_md.contains("mairon_certified: true"));
         assert!(skill_md.contains("rea_score:"));
         assert!(skill_md.contains("## Verification Gates"));
-        // skill.json — مانیفستِ رجیستری.
+        // skill.json — the registry manifest.
         let manifest: serde_json::Value =
             serde_json::from_str(body["skillJson"].as_str().unwrap()).unwrap();
         assert_eq!(manifest["mairon_certified"], serde_json::Value::Bool(true));
         assert_eq!(manifest["origin_locale"], "fa");
         assert!(manifest["registry"]["compatible"].as_array().unwrap().len() >= 3);
-        // نوارِ پرچمِ دایره‌ای — مبدأ + ۲ ترجمهٔ پیش‌فرضِ مهاجرت 0008.
+        // the circular flag ribbon — provenance + the 2 default translations from migration 0008.
         let strip = body["circularFlagStripHtml"].as_str().unwrap();
         assert_eq!(strip.matches("arda-flag-badge").count(), 3);
         assert!(strip.contains("data-origin=\"fa\""));
 
-        // فراخوانیِ دوم — بستهٔ مُهرشده بدون فورجِ دوباره (قطعی).
+        // second call — the sealed bundle without re-forging (deterministic).
         let res = app
             .clone()
             .oneshot(
@@ -2022,10 +2022,10 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "دموی ساده",
-                            "description": "پیش‌نمایشِ زیرِ گیتِ مایرون",
+                            "title": "\u{62f}\u{645}\u{648}\u{6cc} \u{633}\u{627}\u{62f}\u{647}",
+                            "description": "\u{67e}\u{6cc}\u{634}‌\u{646}\u{645}\u{627}\u{6cc}\u{634}\u{650} \u{632}\u{6cc}\u{631}\u{650} \u{6af}\u{6cc}\u{62a}\u{650} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}",
                             "priceDin": 500,
-                            "previewHtml": "<div><h1>دموی رایگان</h1></div>"
+                            "previewHtml": "<div><h1>\u{62f}\u{645}\u{648}\u{6cc} \u{631}\u{627}\u{6cc}\u{6af}\u{627}\u{646}</h1></div>"
                         })
                         .to_string(),
                     ))

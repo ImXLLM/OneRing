@@ -1,21 +1,21 @@
-//! `kian-domain` — هسته خالص دامنه KIAN.
+//! `kian-domain` — the pure core of the KIAN domain.
 //!
-//! لایه‌ای که همه‌چیز به آن بسته می‌شود و خودش به هیچ‌چیز بسته نمی‌شود:
-//! صفر وابستگی خارجی، صفر IO، صفر ساعت پنهان. یک‌به‌یک مهاجرت‌یافته از
-//! کرت `dropagentx-domain` (پورت TypeScript طبق ADR-009) — طبق
-//! docs/migration-map.md با «همان کرت، بازتأیید تست‌ها».
+//! The layer everything depends on and that itself depends on nothing:
+//! zero external dependencies, zero IO, zero hidden clocks. Migrated one-to-one from
+//! the `dropagentx-domain` crate (TypeScript port per ADR-009) — per
+//! docs/migration-map.md with "same crate, tests re-verified".
 //!
-//! ماژول‌ها:
-//! - [`money`] — ADR-002: پول صحیح برندشده (Din — مرز 2^53−1 حفظ شده)
-//! - [`ledger`] — ADR-003: دفتر دوطرفه تغییرناپذیر — Posting تنها منبع حقیقت
-//! - [`escrow`] — ADR-004: ماشین وضعیت ۸ حالته امانت روی دفتر
-//! - [`charter`] — منشور ۱۰ ماده‌ای کشور دیجیتال (مالیات ۱۰٪ + آستانه HITL)
-//! - [`errors`] — ۲۰ کد خطا + Result
-//! - [`events`] — رویدادهای دامنه با شناسه دترمینیستیک
-//! - [`viral_ranker`] — رتبه‌سنج وایرال بازار (پورت `xai-org/x-algorithm` ۲۰۲۶)
-//! - [`cas`] — قفل خوش‌بینانهٔ CAS + کلید idempotency امانت (پورت `JavaGuide`)
-//! - [`mairon_rea_and_reviews`] — دروازهٔ داوری زندهٔ محصول `Mairon` + موتور
-//!   ستارهٔ ۵گانهٔ جامعه (`morluto/rea` `v6.10.1` — Wave 2 Step 6)
+//! Modules:
+//! - [`money`] — ADR-002: correct branded money (Din — 2^53-1 boundary preserved)
+//! - [`ledger`] — ADR-003: immutable double-sided ledger — Posting as the single source of truth
+//! - [`escrow`] — ADR-004: 8-state escrow state machine on the ledger
+//! - [`charter`] — the 10-article charter of the digital nation (10% tax + HITL threshold)
+//! - [`errors`] — 20 error codes + Result
+//! - [`events`] — domain events with deterministic IDs
+//! - [`viral_ranker`] — the market's viral ranker (port of `xai-org/x-algorithm` 2026)
+//! - [`cas`] — CAS optimistic lock + escrow idempotency key (port of `JavaGuide`)
+//! - [`mairon_rea_and_reviews`] — the `Mairon` live product REA arbitration gateway + the
+//!   community five-star engine (`morluto/rea` `v6.10.1` — Wave 2 Step 6)
 #![forbid(unsafe_code)]
 
 pub mod cas;
@@ -28,19 +28,19 @@ pub mod mairon_rea_and_reviews;
 pub mod money;
 pub mod viral_ranker;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate ID — for the smoke test and logs.
 pub const NAME: &str = "kian-domain";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// سلام‌سنج — نشانه زنده‌بودن سیم‌کشی.
+/// Health probe — a sign that the wiring is alive.
 #[must_use]
 pub fn hello() -> &'static str {
     "kian_domain · KIAN is alive"
 }
 
-// ---------- re-exports اصلی (API آرگونومیک برای آداپتورها) ----------
+// ---------- main re-exports (ergonomic API for adapters) ----------
 pub use charter::{
     assert_mint_within_cap, requires_hitl, split_seller_tax, split_seller_tax_affiliate, tax_of,
     Charter, CharterArticle, SellerSplit, CHARTER_ARTICLES, DEFAULT_AFFILIATE_BPS,
@@ -86,8 +86,8 @@ mod tests {
         assert!(hello().ends_with("alive"));
     }
 
-    /// خوشه‌آزمون یکپارچگی مهاجرت — سفر کامل پول در یک تست:
-    /// ضرب → اسکرو → تسویه با مالیات ۱۰٪ → تراز آزمایشی تقدس.
+    /// Migration integration test cluster — the full money journey in one test:
+    /// mint → escrow → settlement with 10% tax → the sacred trial balance.
     #[test]
     fn end_to_end_money_journey_conserved() {
         let l0 = open_ledger();
@@ -103,7 +103,7 @@ mod tests {
         .unwrap();
         let l = add_account(
             &l,
-            Account { id: "user:kia".into(), kind: AccountKind::User, label: Some("کیا".into()) },
+            Account { id: "user:kia".into(), kind: AccountKind::User, label: Some("\u{6a9}\u{6cc}\u{627}".into()) },
         )
         .unwrap();
         let l = add_account(
@@ -111,7 +111,7 @@ mod tests {
             Account { id: "user:ada".into(), kind: AccountKind::User, label: None },
         )
         .unwrap();
-        // ضرب ۱۰۰۰ Đ برای کیا
+        // Mint 1000 Đ for Kian
         let l = post(
             &l,
             &PostCommand {
@@ -127,7 +127,7 @@ mod tests {
         )
         .unwrap()
         .state;
-        // خرید ۴۰۰ Đ با اسکرو
+        // Buy 400 Đ with escrow
         let o1 = create_escrow(
             &l,
             &open_registry(),
@@ -174,7 +174,7 @@ mod tests {
             },
         )
         .unwrap();
-        assert_eq!(balance_of(&o4.ledger, "user:ada").unwrap(), 360); // ۴۰۰ − ۱۰٪
+        assert_eq!(balance_of(&o4.ledger, "user:ada").unwrap(), 360); // 400 − 10%
         assert_eq!(balance_of(&o4.ledger, TREASURY_ACCOUNT_ID).unwrap(), 40);
         assert_eq!(balance_of(&o4.ledger, "user:kia").unwrap(), 600);
         let tb = trial_balance(&o4.ledger);

@@ -1,20 +1,20 @@
--- 0005_builder_referral — پیش‌نمایش و آرتیفکت HTML، پورسانت رفرال اسکرو و جلسات سازندهٔ محصول با AI
+-- 0005_builder_referral — HTML preview and artifact, escrow referral commission, and AI product-builder sessions
 --
--- قواعد:
---  * ستون‌های جدید روی "Product" و "Escrow" دارای مقدار پیش‌فرض ایمن هستند تا
---    دیتابیس‌های قدیمی و مسیر مهاجرت لگاسی بدون شکست ارتقا یابند.
---  * جدول‌های BuilderSession و BuilderMessage با IF NOT EXISTS برای فاز ۴ ساخته می‌شوند.
+-- Rules:
+--  * new columns on "Product" and "Escrow" carry safe defaults so that legacy
+--    databases and the legacy migration path upgrade without failure.
+--  * the BuilderSession and BuilderMessage tables are created with IF NOT EXISTS for phase 4.
 
--- ارتقای جدول Product: پیش‌نمایش HTML، درصد پورسانت معرف و نوع آرتیفکت
+-- Product table upgrade: HTML preview, referrer commission bps, and artifact kind
 ALTER TABLE "Product" ADD COLUMN "previewHtml" TEXT NOT NULL DEFAULT '';
 ALTER TABLE "Product" ADD COLUMN "affiliateBps" INTEGER NOT NULL DEFAULT 1000;
 ALTER TABLE "Product" ADD COLUMN "artifactKind" TEXT NOT NULL DEFAULT 'html';
 
--- ارتقای جدول Escrow: حساب معرف و درصد پورسانت ثبت‌شده در زمان خرید
+-- Escrow table upgrade: referrer account and commission bps recorded at purchase time
 ALTER TABLE "Escrow" ADD COLUMN "referrer" TEXT;
 ALTER TABLE "Escrow" ADD COLUMN "affiliateBps" INTEGER NOT NULL DEFAULT 0;
 
--- جلسات ساخت محصول تعاملی با AI (آماده‌سازی برای فاز ۴)
+-- AI interactive product-builder sessions (preparation for phase 4)
 CREATE TABLE IF NOT EXISTS "BuilderSession" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "accountId" TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS "BuilderSession" (
 CREATE INDEX IF NOT EXISTS "BuilderSession_accountId_updatedAt_idx"
     ON "BuilderSession"("accountId", "updatedAt");
 
--- پیام‌های گفتگوی چندمرحله‌ای سازندهٔ محصول
+-- multi-turn product-builder chat messages
 CREATE TABLE IF NOT EXISTS "BuilderMessage" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "sessionId" TEXT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "BuilderMessage" (
 CREATE INDEX IF NOT EXISTS "BuilderMessage_sessionId_id_idx"
     ON "BuilderMessage"("sessionId", "id");
 
--- درخواست‌های برداشت کریپتو (فاز ۶ — قفل/سوزاندن اتمی Din در لحظهٔ ثبت برای ضد دابل‌اسپند)
+-- crypto withdrawal requests (phase 6 — atomic Din lock/burn at record time to prevent double-spend)
 CREATE TABLE IF NOT EXISTS "WithdrawalRequest" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "accountId" TEXT NOT NULL,

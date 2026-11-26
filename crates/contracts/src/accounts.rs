@@ -1,37 +1,37 @@
-//! قراردادهای حساب/موجودی — پورت `accounts.ts`.
+//! Account/balance contracts — port of `accounts.ts`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::{Din, Id};
 
-/// ثبت حساب کاربر (موجودی از ۰ شروع می‌شود) — `createAccountRequestSchema`.
+/// Register a user account (balance starts at 0) — `createAccountRequestSchema`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateAccountRequest {
-    /// شناسهٔ حساب (پیشوندهای سیستم رزرو شده‌اند — فاز ۴ در هندلر چک می‌شود)
+    /// Account ID (system prefixes are reserved — checked in the handler in phase 4)
     pub id: Id,
-    /// برچسب اختیاری (≤۱۲۰)
+    /// Optional label (≤120)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(max_length = 120)]
     pub label: Option<String>,
 }
 
-/// نمای حساب — `accountViewSchema`.
+/// Account view — `accountViewSchema`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountView {
-    /// شناسهٔ حساب
+    /// Account ID
     pub id: String,
-    /// نوع حساب (`user` و…)
+    /// Account type (`user` etc.)
     pub kind: String,
-    /// برچسب (nullable — صریح روی سیم)
+    /// Label (nullable — explicit on the wire)
     #[schema(required = true)]
     pub label: Option<String>,
-    /// موجودی مشتق‌شده از دفتر (ADR-003) — صحیح علامت‌دار امن
+    /// Balance derived from the ledger (ADR-003) — a safe signed integer
     #[schema(minimum = -9_007_199_254_740_991_i64, maximum = 9_007_199_254_740_991_i64)]
     pub balance: i64,
-    /// زمان ایجاد (ISO-8601)
+    /// Creation time (ISO-8601)
     pub created_at: String,
 }
 
@@ -39,17 +39,17 @@ pub struct AccountView {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountListResponse {
-    /// ردیف‌ها
+    /// Rows
     pub items: Vec<AccountView>,
 }
 
-/// `balanceResponseSchema` — شفافیت عمومی.
+/// `balanceResponseSchema` — public transparency.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BalanceResponse {
-    /// شناسهٔ حساب
+    /// Account ID
     pub account_id: String,
-    /// موجودی
+    /// Balance
     pub balance: Din,
 }
 

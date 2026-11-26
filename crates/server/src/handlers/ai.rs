@@ -1,9 +1,9 @@
-//! هندلرهای گیت‌وی AI (M4) — وضعیت صادقانه، گفت‌وگو با پاکت بودجه، مصرف امروز.
+//! AI gateway handlers (M4) — honest status, chat with a budget envelope, today's usage.
 //!
-//! امنیت: `chat` و `usage` نشست bearer می‌خواهند (هویت هرگز از بدنه نمی‌آید)؛
-//! `status` عمومی است ولی هیچ کلیدی در آن نیست — فقط نام/مدل/فعال بودن اسلات‌ها.
-//! بودجه: گیت سخت قبل از هر فراخوانی (`used + estimate ≤ cap`) و ثبت مصرف بعد
-//! از آن — سقف روزانه از پیکربندی (`KIAN_AI_DAILY_TOKENS`).
+//! Security: `chat` and `usage` require a bearer session (identity never comes from the body);
+//! `status` is public but contains no keys — only slot names/models/enabled flags.
+//! Budget: a hard gate before every call (`used + estimate ≤ cap`) and usage recording after
+//! it — the daily cap comes from configuration (`KIAN_AI_DAILY_TOKENS`).
 
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -20,14 +20,14 @@ use crate::error::{ApiFailure, ApiResult};
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// برآورد توکن یک فراخوانی عمومی چت — پاکت سخت؛ مهارت‌های هرمس با برآورد
-/// خودشان گیت می‌خورند، اینجا فقط `/ai/chat` خام است.
+/// Token estimate for a public chat call — hard envelope; Hermes skills gate with
+/// their own estimates; this is only the raw `/ai/chat`.
 const CHAT_ESTIMATE_TOKENS: i64 = 1_000;
 
-/// `GET /ai/status` — عمومی؛ چیپ صادقانهٔ health و داشبورد.
+/// `GET /ai/status` — public; the honest chip for health and the dashboard.
 ///
 /// # Errors
-/// هیچ — همیشه ۲۰۰ (وضعیت صادقانه حتی وقتی Disabled).
+/// None — always 200 (honest status even when Disabled).
 pub async fn status(State(state): State<Arc<AppState>>) -> ApiResult<Json<AiStatusResponse>> {
     let slots = state
         .ai
@@ -43,11 +43,11 @@ pub async fn status(State(state): State<Arc<AppState>>) -> ApiResult<Json<AiStat
     }))
 }
 
-/// `POST /ai/chat` — نشست‌دار؛ redaction → گیت بودجه → فال‌بک سه‌اسلات →
-/// ثبت مصرف. همهٔ شکست‌ها تایپ‌شده و صادقانه.
+/// `POST /ai/chat` — sessioned; redaction → budget gate → three-slot fallback →
+/// usage recording. All failures are typed and honest.
 ///
 /// # Errors
-/// ۴۰۱ نشست، ۴۲۹ سقف روزانه، ۵۰۳ گیت‌وی غیرفعال، ۵۰۲ همهٔ اسلات‌ها شکست.
+/// 401 session, 429 daily cap, 503 gateway disabled, 502 all slots failed.
 pub async fn chat(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -55,7 +55,7 @@ pub async fn chat(
 ) -> ApiResult<Json<AiChatResponse>> {
     let user = require_session(&state, &headers).await?;
     let req: AiChatRequest = crate::handlers::parse_body(&bytes)?;
-    // اعتبارسنجی دامنه‌ای روی سیم — تعداد و اندازهٔ پیام‌ها
+    // Domain validation on the wire — message count and size
     if req.messages.is_empty() || req.messages.len() > 20 {
         return Err(HttpFailure::invalid_request(1).into());
     }
@@ -64,7 +64,7 @@ pub async fn chat(
     }
 
     let Some(budget) = BudgetEnvelope::new(state.config.ai.daily_cap_tokens) else {
-        // سقف منفی = پیکربندی خراب — صادقانه غیرفعال، هرگز باز
+        // Negative cap = broken configuration — honestly disabled, never open
         return Err(HttpFailure::ai_disabled().into());
     };
     let (used_today, _calls) = state.store.ai_tokens_today(&user.id).await?;
@@ -118,10 +118,10 @@ pub async fn chat(
     }))
 }
 
-/// `GET /ai/usage` — مصرف امروز من — مبنای نمایش پاکت بودجه در UI.
+/// `GET /ai/usage` — my usage today — the basis for showing the budget envelope in the UI.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۵۰۰ خطای db — خواندن مصرف امروز.
+/// 401 session; 500 db error — reading today's usage.
 pub async fn usage(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -159,12 +159,12 @@ mod tests {
         cfg.ai = AiConfig { slots, daily_cap_tokens: 1_000 };
         let scripted = ScriptedClient::new(vec![
             Ok(kian_ai::gateway::CompletionPacket {
-                content: "پاسخ ۱".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{6f1}".into(),
                 prompt_tokens: 30,
                 completion_tokens: 20,
             }),
             Ok(kian_ai::gateway::CompletionPacket {
-                content: "پاسخ ۲".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{6f2}".into(),
                 prompt_tokens: 10,
                 completion_tokens: 5,
             }),
@@ -200,7 +200,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// status بدون اسلات — صادقانه disabled؛ با اسلات — enabled با مدل.
+    /// status without a slot — honestly disabled; with a slot — enabled with a model.
     #[tokio::test]
     async fn status_is_honest_about_slots() {
         let app_off = app(Vec::new()).await;
@@ -232,7 +232,7 @@ mod tests {
         assert!(!wire.contains("\"k\""), "slot key must never appear on the wire");
     }
 
-    /// chat بدون نشست → ۴۰۱؛ با نشست و گیت‌وی فعال → ۲۰۰ + ثبت مصرف.
+    /// chat without a session → 401; with a session and an active gateway → 200 + usage recorded.
     #[tokio::test]
     async fn chat_requires_session_and_records_usage() {
         let app = app(vec![SlotConfig {
@@ -243,14 +243,14 @@ mod tests {
         }])
         .await;
 
-        // بدون نشست
+        // without a session
         let res = app
             .clone()
             .oneshot(
                 axum::http::Request::builder()
                     .method("POST")
                     .uri("/api/v1/ai/chat")
-                    .body(Body::from(r#"{"messages":[{"role":"user","content":"سلام"}]}"#))
+                    .body(Body::from(r#"{"messages":[{"role":"user","content":"Hello"}]}"#))
                     .unwrap(),
             )
             .await
@@ -259,7 +259,7 @@ mod tests {
         let err = body_json(res).await;
         assert_eq!(err["error"]["code"], "SESSION_REQUIRED");
 
-        // با نشست
+        // with a session
         let tok = token(&app).await;
         let res = app
             .clone()
@@ -268,7 +268,7 @@ mod tests {
                     .method("POST")
                     .uri("/api/v1/ai/chat")
                     .header("authorization", format!("Bearer {tok}"))
-                    .body(Body::from(r#"{"messages":[{"role":"user","content":"سلام"}]}"#))
+                    .body(Body::from(r#"{"messages":[{"role":"user","content":"Hello"}]}"#))
                     .unwrap(),
             )
             .await
@@ -279,7 +279,7 @@ mod tests {
         assert_eq!(body["totalTokens"], 50);
         assert_eq!(body["remainingTokens"], 950);
 
-        // usage — مصرف ثبت شده
+        // usage — recorded usage
         let res = app
             .clone()
             .oneshot(
@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(body["dailyCap"], 1_000);
     }
 
-    /// گیت‌وی غیرفعال → ۵۰۳ `AI_DISABLED` صادقانه — هیچ دروغی نمی‌شود.
+    /// Gateway disabled → honest 503 `AI_DISABLED` — no lies are told.
     #[tokio::test]
     async fn chat_without_slots_is_503_ai_disabled() {
         let app = app(Vec::new()).await;
@@ -308,7 +308,7 @@ mod tests {
                     .method("POST")
                     .uri("/api/v1/ai/chat")
                     .header("authorization", format!("Bearer {tok}"))
-                    .body(Body::from(r#"{"messages":[{"role":"user","content":"سلام"}]}"#))
+                    .body(Body::from(r#"{"messages":[{"role":"user","content":"Hello"}]}"#))
                     .unwrap(),
             )
             .await

@@ -1,11 +1,11 @@
-//! نقطهٔ ورود سرور — بوت fail-closed: دیتابیس ناسالم یا مهاجرت شکسته، پروسه را
-//! با کد خروج غیرصفر و پیام صادقانه می‌بندد. لاگ‌ها JSON — trace layer آکسوم.
+//! Server entry point — fail-closed boot: an unhealthy database or broken migration makes the
+//! process exit with a non-zero code and an honest message. Logs are JSON — axum trace layer.
 
 use kian_server::{build_router, AppState, ServerConfig};
 
 #[tokio::main]
 async fn main() {
-    // لاگ JSON — env-filter با RUST_LOG (پیش‌فرض info)
+    // JSON logs — env-filter via RUST_LOG (default info)
     tracing_subscriber::fmt()
         .json()
         .with_env_filter(
@@ -17,8 +17,8 @@ async fn main() {
     let config = ServerConfig::from_env();
     let admin_enabled = config.admin_key.is_some();
 
-    // پوشهٔ والد دیتابیس فایل‌محور — sqlx فایل را می‌سازد اما پوشه را نه
-    // let-chains (edition 2024) — گارد پوشهٔ دیتابیس در یک شرط
+    // Parent directory of the file-backed database — sqlx creates the file but not the directory
+    // let-chains (edition 2024) — database directory guard in a single condition
     if let Some(parent) = config.db_file_path().and_then(|p| p.parent().map(std::path::Path::to_path_buf))
         && let Err(e) = std::fs::create_dir_all(&parent)
     {
@@ -41,7 +41,7 @@ async fn main() {
         eprintln!("boot refused: system accounts failed — {e}");
         std::process::exit(3);
     }
-    // مغز M4 — ۱۶ مهارت هرمس + ناوگان ۷ نقش (idempotent؛ وضعیت ادمین حفظ می‌شود)
+    // M4 brain — 16 Hermes skills + a fleet of 7 roles (idempotent; admin state is preserved)
     if let Err(e) = kian_server::handlers::hermes::seed_skills(&store).await {
         eprintln!("boot refused: hermes skill seed failed — {e}");
         std::process::exit(3);

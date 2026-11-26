@@ -1,88 +1,88 @@
-//! پیکربندی بوت سرور — فقط از env؛ هیچ secret در کد (فیلتر REA: `text.credential_markers`).
+//! Server boot configuration — env-only; no secrets in code (REA filter: `text.credential_markers`).
 //!
-//! fail-closed: کلید ادمین تنظیم‌نشده یعنی اندپوینت‌های ادمین **غیرفعال** (هرگز باز) —
-//! تصمیم در `verify_kian_key` + `require_admin` گرفته می‌شود، اینجا فقط خوانده می‌شود.
-//! همین قرارداد برای `KIAN_BOT_TOKEN` (هویت تلگرام M3) و اسلات‌های AI (M4) برقرار است.
+//! fail-closed: an unset admin key means admin endpoints are **disabled** (never open) —
+//! the decision happens in `verify_kian_key` + `require_admin`; this module only reads it.
+//! The same contract holds for `KIAN_BOT_TOKEN` (M3 Telegram identity) and the AI slots (M4).
 
 use kian_ai::AiConfig;
 
-/// پیکربندی بوت — تغییرناپذیر پس از شروع.
+/// Boot configuration — immutable after startup.
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
-    /// کلید ادمین — از `KIAN_ADMIN_KEY`؛ `None` = ادمین غیرفعال (fail-closed).
-    /// حداقل ۱۶ کاراکتر توسط گارد قراردادی تضمین می‌شود.
+    /// Admin key — from `KIAN_ADMIN_KEY`; `None` = admin disabled (fail-closed).
+    /// Minimum 16 characters enforced by the contractual guard.
     pub admin_key: Option<String>,
-    /// توکن بات تلگرام — از `KIAN_BOT_TOKEN`؛ `None` = هویت تلگرام غیرفعال
-    /// (fail-closed؛ همان قرارداد ادمین). هرگز لاگ یا در پاسخ نمی‌رود.
+    /// Telegram bot token — from `KIAN_BOT_TOKEN`; `None` = Telegram identity disabled
+    /// (fail-closed; same contract as admin). Never logged or echoed into responses.
     pub bot_token: Option<String>,
-    /// راز وبهوک تلگرام — از `KIAN_BOT_WEBHOOK_SECRET`؛ `None` = وبهوک بات
-    /// غیرفعال (fail-closed فاز ۵). تلگرام در هر آپدیت هدر
-    /// `X-Telegram-Bot-Api-Secret-Token` می‌فرستد؛ مقایسهٔ زمان‌ثابت.
+    /// Telegram webhook secret — from `KIAN_BOT_WEBHOOK_SECRET`; `None` = the bot webhook
+    /// is disabled (fail-closed, Phase 5). Telegram sends the header
+    /// `X-Telegram-Bot-Api-Secret-Token` on every update; compared in constant time.
     pub bot_webhook_secret: Option<String>,
-    /// URL مینی‌اپ — از `KIAN_MINIAPP_URL`؛ پیش‌فرض localhost:3000. دکمهٔ
-    /// «ورود به مینی‌اپ» در پاسخ‌های بات از همین می‌آید.
+    /// Mini-app URL — from `KIAN_MINIAPP_URL`; default localhost:3000. The
+    /// «Open Mini App» button in bot replies comes from this.
     pub miniapp_url: String,
-    /// عمر نشست bearer به ساعت — از `KIAN_SESSION_TTL_HOURS`؛ پیش‌فرض ۱۶۸ (۷ روز).
+    /// Bearer session TTL in hours — from `KIAN_SESSION_TTL_HOURS`; default 168 (7 days).
     pub session_ttl_hours: i64,
-    /// آدرس خزانهٔ TON برای واریزها — از `KIAN_TON_TREASURY`؛ پیش‌فرض رشتهٔ خالی
-    /// (فرانت از `/health`-مانند endpoint استفاده نمی‌کند؛ فقط سمت کلاینت env دارد).
+    /// TON treasury address for deposits — from `KIAN_TON_TREASURY`; default empty string
+    /// (the front end consumes no `/health`-like endpoint; env is client-side only).
     pub ton_treasury: String,
-    /// نرخ تبدیل دیین به تون — از `KIAN_TON_TO_DIN`؛ پیش‌فرض ۱۰۰۰ دیین به تون.
-    /// محاسبهٔ ضرب: `micro_ton * rate / 1_000_000` — حذف اعشار به کف (حداقل ۱).
+    /// Din-to-TON conversion rate — from `KIAN_TON_TO_DIN`; default 1000 Din per TON.
+    /// Mint calculation: `micro_ton * rate / 1_000_000` — floored integer division (minimum 1).
     pub ton_to_din_rate: i64,
-    /// نرخ تبدیل دیین به USDT — از `KIAN_USDT_TO_DIN`؛ پیش‌فرض ۱۰۰۰ Đ به USDT
-    /// (هم‌مقیاس با نرخ TON). ضرب: `micro_usdt * rate / 1_000_000`.
+    /// Din-to-USDT conversion rate — from `KIAN_USDT_TO_DIN`; default 1000 Đ to USDT
+    /// (same scale as the TON rate). Calculation: `micro_usdt * rate / 1_000_000`.
     pub usdt_to_din_rate: i64,
-    /// نصاب پارلمان — از `KIAN_NATION_QUORUM`؛ پیش‌فرض ۳.
+    /// Parliament quorum — from `KIAN_NATION_QUORUM`; default 3.
     pub nation_quorum: i64,
-    /// آدرس خزانهٔ هر زنجیره — از `KIAN_TREASURY_TRX/SOL/TON/BSC`؛ خالی یعنی
-    /// تنظیم‌نشده (شفاف در `/wallet/treasury`، نه مخفی).
+    /// Per-chain treasury address — from `KIAN_TREASURY_TRX/SOL/TON/BSC`; empty means
+    /// unset (transparent in `/wallet/treasury`, not hidden).
     pub treasury_trx: String,
-    /// خزانه سولانا
+    /// Solana treasury
     pub treasury_sol: String,
-    /// خزانه تون
+    /// TON treasury
     pub treasury_ton: String,
-    /// خزانه بایننس‌چین
+    /// Binance Chain treasury
     pub treasury_bsc: String,
-    /// گیت‌وی AI (M4) — سه اسلات فال‌بک + سقف روزانه؛ از env با [`AiConfig::from_env`].
-    /// کلیدهای اسلات هرگز لاگ یا روی سیم نمی‌روند.
+    /// AI gateway (M4) — three fallback slots + a daily cap; loaded from env via [`AiConfig::from_env`].
+    /// Slot keys are never logged or put on the wire.
     pub ai: AiConfig,
-    /// دیتابیس sqlite — از `KIAN_DATABASE_URL`؛ پیش‌فرض فایل محلی. فرمت:
-    /// مسیر خام (`data/kian.sqlite`)، `:memory:` یا `sqlite::memory:` —
-    /// `V3Store::connect` کل رشته را filename می‌گیرد (بدون scheme/query).
+    /// sqlite database — from `KIAN_DATABASE_URL`; default local file. Format:
+    /// raw path (`data/kian.sqlite`), `:memory:`, or `sqlite::memory:` —
+    /// `V3Store::connect` takes the whole string as a filename (no scheme/query).
     pub database_url: String,
-    /// هاست bind — از `KIAN_HOST`؛ پیش‌فرض 127.0.0.1.
+    /// Bind host — from `KIAN_HOST`; default 127.0.0.1.
     pub host: String,
-    /// پورت bind — از `KIAN_PORT`؛ پیش‌فرض 8088.
+    /// Bind port — from `KIAN_PORT`; default 8088.
     pub port: u16,
-    /// سقف درخواست در پنجرهٔ ۶۰ثانیه‌ای — از `KIAN_RATE_LIMIT`؛ پیش‌فرض ۱۲۰.
+    /// Request cap per 60-second window — from `KIAN_RATE_LIMIT`; default 120.
     pub rate_limit: usize,
-    /// اعتماد به `X-Forwarded-For` — از `KIAN_TRUST_PROXY`؛ پیش‌فرض true
-    /// (استقرار پشت پروکسی معتبر مثل Railway که XFF را می‌نویسد). false =
-    /// فقط IP سوکت ملاک است — استقرار مستقیم: هر کلاینت با XFF جعلی می‌توانست
-    /// سقف نرخ را دور بزند (اصلاح امنیتی تست بار ۲۰۲۵-۱۱).
+    /// `X-Forwarded-For` trust — from `KIAN_TRUST_PROXY`; default true
+    /// (deployment behind a trusted proxy such as Railway that writes XFF). false =
+    /// only the socket IP counts — direct deployment: any client with forged XFF could
+    /// slip past the rate cap (security fix from the 2025-11 load test).
     pub trust_proxy: bool,
-    /// پوشهٔ بکاپ‌های `VACUUM INTO` — از `KIAN_BACKUP_DIR`؛ پیش‌فرض data/backups.
+    /// `VACUUM INTO` backups folder — from `KIAN_BACKUP_DIR`; default data/backups.
     pub backup_dir: String,
-    /// تعداد بکاپ نگه‌داشتنی — از `KIAN_KEEP_BACKUPS`؛ پیش‌فرض ۷.
+    /// Backups retained — from `KIAN_KEEP_BACKUPS`; default 7.
     pub keep_backups: usize,
-    /// اوریجین‌های مجاز CORS (مینی‌اپ وب) — از `KIAN_CORS_ORIGIN` با ویرگول؛
-    /// پیش‌فرض فقط localhost:3000. fail-closed: اوریجین ناشناخته هرگز پاسخ
-    /// preflight نمی‌گیرد.
+    /// Allowed CORS origins (web mini app) — from `KIAN_CORS_ORIGIN`, comma-separated;
+    /// default localhost:3000 only. fail-closed: unknown origins never receive a
+    /// preflight response.
     pub cors_origins: Vec<String>,
-    /// حالت توسعه/دمو — اندپوینت‌های `/auth/dev-login` و `/wallet/faucet` را
-    /// فعال می‌کند. قراردادِ سختِ fail-closed (بازرسی فارنزیک D1 — Commit #27):
-    /// تنها مقدارِ صریحِ `KIAN_DEV_MODE=1`/`true`/`yes` (بی‌توجه به بزرگی حروف)
-    /// آن را روشن می‌کند؛ تنظیم‌نشده یا هر مقدارِ دیگر (`0`، `false`، `no`، `on`،
-    /// رشتهٔ خالی) یعنی خاموش — حتی اگر توکن بات هم غایب باشد. غیاب توکن بات
-    /// هرگز `dev_mode` را روشن نمی‌کند؛ تست‌ها صراحتاً `config.dev_mode = true`
-    /// می‌گذارند ([`ServerConfig::base`] پایهٔ تست است، نه تولید).
+    /// Development/demo mode — enables the `/auth/dev-login` and `/wallet/faucet`
+    /// endpoints. Strict fail-closed contract (D1 forensic review — Commit #27):
+    /// only the explicit values `KIAN_DEV_MODE=1`/`true`/`yes` (case-insensitive)
+    /// turn it on; unset or any other value (`0`, `false`, `no`, `on`,
+    /// empty string) means off — even with the bot token absent too. A missing bot token
+    /// never turns `dev_mode` on; tests set `config.dev_mode = true` explicitly
+    /// ([`ServerConfig::base`] is the test base, not production).
     pub dev_mode: bool,
 }
 
 impl ServerConfig {
-    /// پایهٔ fail-closed — مبنای `from_env` و سازندهٔ تست‌ها: همه‌چیز خاموش،
-    /// bind محلی، بدون ادمین، بدون اسلات AI.
+    /// fail-closed base — the foundation of `from_env` and the test constructor: everything off,
+    /// local bind, no admin, no AI slots.
     #[must_use]
     pub fn base() -> Self {
         Self {
@@ -111,17 +111,17 @@ impl ServerConfig {
             backup_dir: "/tmp/kian-test-backups".into(),
             keep_backups: 1,
             cors_origins: Vec::new(),
-            // پایهٔ تست — اندپوینت‌های دمو روشن تا چرخهٔ سازنده→خرید بدون تلگرام
-            // باز شود. تولید هرگز از اینجا عبور نمی‌کند: `from_env` اکیداً
-            // fail-closed است (تنها `KIAN_DEV_MODE=1|true|yes` روشن می‌کند) و
-            // تست‌های دمو هم این فیلد را صراحتاً ست می‌کنند.
+            // test base — demo endpoints on so the builder->purchase loop opens without Telegram
+            // opens. Production never passes through here: `from_env` is strictly
+            // fail-closed (only `KIAN_DEV_MODE=1|true|yes` turns it on) and
+            // the demo tests set this field explicitly.
             dev_mode: true,
         }
     }
 
-    /// مسیر فایل دیتابیس‌های فایل‌محور — `None` برای حافظه.
-    /// همان نرمال‌سازی `V3Store::connect`: حذف پیشوند `file:`/`sqlite:` و
-    /// تشخیص `:memory:`؛ بخشِ `?query` نادیده گرفته می‌شود.
+    /// File path for file-backed databases — `None` for in-memory.
+    /// Same normalization as `V3Store::connect`: strips the `file:`/`sqlite:` prefix and
+    /// detects `:memory:`; the `?query` part is ignored.
     #[must_use]
     pub fn db_file_path(&self) -> Option<std::path::PathBuf> {
         let without_file = self
@@ -139,14 +139,14 @@ impl ServerConfig {
         Some(std::path::PathBuf::from(normalized))
     }
 
-    /// خواندن از محیط — هیچ چیز fail نمی‌شود؛ ادمین‌نبودن فقط «غیرفعال» است.
+    /// Read from the environment — nothing fails; a missing admin just means «disabled».
     #[must_use]
     pub fn from_env() -> Self {
         let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
         let bot_token = env("KIAN_BOT_TOKEN");
-        // D1 (کمیسیون فارنزیک #27): حالت dev اکیداً fail-closed — غیاب پرچم
-        // هرگز روشنش نمی‌کند، حتی بدون توکن بات (رفتار قدیمیِ «غیاب توکن بات
-        // یعنی dev روشن» حذف شد؛ درِ پشتی fail-open بسته شد).
+        // D1 (forensic commission #27): dev mode is strictly fail-closed — the flag's absence
+        // never turns it on, even without a bot token (the old "missing bot token means dev on"
+        // behavior was removed; the fail-open backdoor is closed).
         let dev_mode = dev_mode_from_env(std::env::var("KIAN_DEV_MODE").ok());
         Self {
             admin_key: env("KIAN_ADMIN_KEY"),
@@ -206,10 +206,10 @@ impl ServerConfig {
     }
 }
 
-/// D1 — هستهٔ خالصِ fail-closed حالت dev: تنها `1`/`true`/`yes`
-/// (بی‌توجه به بزرگی حروف، با trim) روشن می‌کند؛ `None` (تنظیم‌نشده) و
-/// هر مقدار دیگری — حتی بدون توکن بات — یعنی خاموش. تابع خالص تا تستِ
-/// بدون رقابتِ env ممکن باشد (env فرایند-گسترده است و تست‌های موازی مزاحم می‌شوند).
+/// D1 — the pure fail-closed core of dev mode: only `1`/`true`/`yes`
+/// (case-insensitive, trimmed) turn it on; `None` (unset) and
+/// any other value — even without a bot token — means off. Pure function so tests can
+/// run without env races (env is process-wide and parallel tests would interfere).
 fn dev_mode_from_env(raw: Option<String>) -> bool {
     raw.is_some_and(|v| {
         matches!(
@@ -223,10 +223,10 @@ fn dev_mode_from_env(raw: Option<String>) -> bool {
 mod tests {
     use super::*;
 
-    /// پیش‌فرض‌های امن: ادمین غیرفعال، bind محلی، سقف نرخ معقول.
+    /// Safe defaults: admin disabled, local bind, a reasonable rate cap.
     #[test]
     fn defaults_are_fail_closed() {
-        // در محیط تست متغیرها ممکن است تنظیم شده باشند — فقط ساختار را چک می‌کنیم
+        // env variables may be set in the test environment — we only check the structure
         let cfg = ServerConfig::from_env();
         if std::env::var("KIAN_ADMIN_KEY").is_err() {
             assert!(
@@ -238,10 +238,10 @@ mod tests {
         assert!(cfg.keep_backups > 0);
     }
 
-    /// حالت dev — پرچم صریح بر هر چیز غالب است؛ تست‌ها فیلد را صراحتاً ست می‌کنند.
+    /// Dev mode — the explicit flag trumps everything; tests set the field explicitly.
     #[test]
     fn dev_mode_is_explicit_field_on_test_base() {
-        // پرچم صریح بر باتِ حاضر غالب است
+        // the explicit flag trumps a present bot token
         let mut cfg = ServerConfig::base();
         cfg.bot_token = Some("123:tok".into());
         cfg.dev_mode = false;
@@ -250,21 +250,21 @@ mod tests {
         assert!(cfg.dev_mode);
     }
 
-    /// D1 — کمیسیون فارنزیک #27: تنظیم‌نشدهٔ `KIAN_DEV_MODE` اکیداً fail-closed
-    /// است؛ غیاب توکن بات دیگر هرگز `dev_mode` را روشن نمی‌کند.
+    /// D1 — forensic commission #27: an unset `KIAN_DEV_MODE` is strictly fail-closed;
+    /// a missing bot token never turns `dev_mode` on again.
     #[test]
     fn dev_mode_is_strictly_fail_closed_when_unset_even_without_bot_token() {
-        // «تنظیم‌نشده» = None — با هر وضعیت توکن بات، خروجی false است
+        // "unset" = None — the output is false regardless of bot-token state
         assert!(!dev_mode_from_env(None));
         assert!(!dev_mode_from_env(Some(String::new())));
         assert!(!dev_mode_from_env(Some("   ".into())));
-        // مقادیر شبیه-روشنِ ناقص هم خاموش می‌مانند (fail-closed سخت‌گیر)
+        // partial near-on values also stay off (strict fail-closed)
         for off in ["0", "false", "no", "off", "on", "enabled", "dev", "1,0", "yes please"] {
             assert!(!dev_mode_from_env(Some(off.into())), "{off} must stay off");
         }
     }
 
-    /// D1 — تنها سه مقدار صریح روشن می‌کنند؛ هر مقدار دیگری خاموش است.
+    /// D1 — only the three explicit values turn it on; every other value is off.
     #[test]
     fn dev_mode_only_explicit_truthy_values_enable_it() {
         for on in ["1", "true", "TRUE", "True", "yes", "YES", " 1 ", "true "] {
@@ -275,9 +275,9 @@ mod tests {
         }
     }
 
-    // ── D6 — پاریتیِ قطعیِ ۶۹کلیدیِ P0 تا P5 روی هر سه فایلِ env (Commit #28) ──
+    // ── D6 — deterministic 69-key parity of P0..P5 across all three env files (Commit #28) ──
 
-    /// ریشهٔ ورک‌اسپیس از `CARGO_MANIFEST_DIR` (`crates/server` → ریشه).
+    /// Workspace root from `CARGO_MANIFEST_DIR` (`crates/server` → root).
     fn workspace_root() -> std::path::PathBuf {
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
@@ -286,7 +286,7 @@ mod tests {
             .to_path_buf()
     }
 
-    /// کلیدهایِ `KEY=VALUE` یک فایلِ env به ترتیبِ ظاهری — کامنت/سطرِ خالی نادیده.
+    /// `KEY=VALUE` keys of an env file in order of appearance — comments/blank lines ignored.
     fn parse_env_keys(path: &std::path::Path) -> Vec<String> {
         std::fs::read_to_string(path)
             .unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
@@ -306,8 +306,8 @@ mod tests {
             .collect()
     }
 
-    /// هر سه فایلِ env باید دقیقاً همان ۶۹ کلیدِ کانونیک را در همان ترتیبِ
-    /// P0 → P5 حمل کنند — قفلِ قطعیِ Gate 2 (D6).
+    /// All three env files must carry exactly the same 69 canonical keys in the same
+    /// P0 → P5 order — the deterministic Gate 2 lock (D6).
     #[test]
     fn env_files_have_exact_69_key_p0_to_p5_parity() {
         let root = workspace_root();
@@ -322,12 +322,12 @@ mod tests {
             assert_eq!(canonical[idx], *key, "P0 block must open .env.example in order");
         }
 
-        // railway.env.example — همان ترتیبِ بایت‌به‌بایت
+        // railway.env.example — the same byte-for-byte order
         let railway = parse_env_keys(&railway_path);
         assert_eq!(railway.len(), 69, "railway.env.example must carry exactly 69 keys");
         assert_eq!(railway, canonical, "railway.env.example key order must mirror .env.example exactly");
 
-        // railway-env-v1.0.0.json — گروه‌هایِ P0..P5 با همان مجموعهٔ کلید
+        // railway-env-v1.0.0.json — P0..P5 groups with the same key set
         let raw = std::fs::read_to_string(&json_path)
             .unwrap_or_else(|e| panic!("read {}: {e}", json_path.display()));
         let parsed: serde_json::Value = serde_json::from_str(&raw)
@@ -355,15 +355,15 @@ mod tests {
         let mut sorted_canonical = canonical.clone();
         sorted_canonical.sort();
         assert_eq!(sorted_json, sorted_canonical, "json key set must equal the 69 canonical keys");
-        // KIAN_DEV_MODE=0 و کلیدِ ادمینِ ≥۱۶ کاراکتری روی وایرِ JSON
+        // KIAN_DEV_MODE=0 and a >=16-character admin key on the JSON wire
         assert_eq!(parsed["P1_sovereign_security_fail_closed"]["KIAN_DEV_MODE"], "0");
         assert_eq!(
             parsed["P1_sovereign_security_fail_closed"]["KIAN_ADMIN_KEY"],
             "replace-with-32-char-sovereign-admin-key-min16"
         );
 
-        // ترتیبِ فیزیکیِ فایلِ JSON — اولینِ وقوعِ هر کلید باید در همان ترتیبِ
-        // P0 → P5 بیاید (گروه‌ها پیش از _notes می‌آیند).
+        // physical order of the JSON file — the first occurrence of each key must follow the same
+        // P0 → P5 order (groups come before _notes).
         let mut last: Option<usize> = None;
         for key in &canonical {
             let needle = format!("\"{key}\"");

@@ -1,59 +1,59 @@
-//! Typed errors + Result pattern — مرز دامنه fail-closed.
+//! Typed errors + Result pattern — the fail-closed domain boundary.
 //!
-//! قاعده: هیچ panic از مرز دامنه عبور نمی‌کند؛ هر عملیات
-//! `Result<T, DomainError>` برمی‌گرداند. panic فقط خطای برنامه‌نویس است
-//! (داخل تست‌ها مجاز است). یک‌به‌یک با `errors.ts` نسخه TypeScript.
+//! Rule: no panic crosses the domain boundary; every operation
+//! returns `Result<T, DomainError>`. Panic is a programmer error only
+//! (allowed inside tests). One-to-one with the TypeScript `errors.ts`.
 
 use std::collections::BTreeMap;
 use std::fmt;
 
-/// ۲۰ کد خطای دامنه — یک‌به‌یک با `DomainErrorCode` نسخه TS.
+/// 20 domain error codes — one-to-one with the TS `DomainErrorCode`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum DomainErrorCode {
-    /// مقدار پول صحیح نیست (در TS: عدد غیر صحیح یا خارج محدوده امن)
+    /// money value is not an integer (in TS: non-integer or outside the safe range)
     NonIntegerAmount,
-    /// مقدار پول منفی است
+    /// money value is negative
     NegativeAmount,
-    /// مقدار از محدوده امن صحیح (2^53−1) بیرون می‌زند
+    /// value escapes the safe integer range (2^53−1)
     AmountOutOfRange,
-    /// نقاط پایه (bps) خارج از [0, 10000]
+    /// basis points (bps) outside [0, 10000]
     BpsOutOfRange,
-    /// تراکنش کمتر از دو ردیف دارد
+    /// transaction has fewer than two rows
     TooFewPostings,
-    /// مجموع ردیف‌های تراکنش صفر نیست
+    /// transaction rows do not sum to zero
     UnbalancedTransaction,
-    /// حساب ناشناخته
+    /// unknown account
     UnknownAccount,
-    /// نوع حساب برای این عملیات مجاز نیست
+    /// account kind not allowed for this operation
     InvalidAccountKind,
-    /// حساب تکراری
+    /// duplicate account
     DuplicateAccount,
-    /// نقض قاعده جهت حساب (کسر موجودی/ضرب mint و…)
+    /// account direction rule violated (balance debit/mint and so on)
     AccountOverdraft,
-    /// گذار غیرمجاز ماشین وضعیت
+    /// illegal state machine transition
     InvalidTransition,
-    /// امانت یافت نشد
+    /// escrow not found
     EscrowNotFound,
-    /// امانت تکراری
+    /// duplicate escrow
     EscrowAlreadyExists,
-    /// عملیات ≥ ۵۰,۰۰۰ Đ بدون تأیید انسانی
+    /// operation ≥ 50,000 Đ without human approval
     RequiresHumanApproval,
-    /// سقف ضرب سالانه نقض شد
+    /// annual mint cap violated
     MintCapExceeded,
-    /// رکورد HITL یافت نشد
+    /// HITL record not found
     HitlNotFound,
-    /// این عملیات نیازی به HITL ندارد
+    /// this operation does not require HITL
     HitlNotRequired,
-    /// این رکورد HITL قبلاً تصمیم گرفته شده
+    /// this HITL record has already been decided
     HitlAlreadyDecided,
-    /// رکورد HITL منقضی شده
+    /// HITL record has expired
     HitlExpired,
-    /// محصول یافت نشد
+    /// product not found
     ProductNotFound,
 }
 
 impl DomainErrorCode {
-    /// رشته کانانیکی — یکسان با نسخه TS (برای لاگ، API و dual-run).
+    /// Canonical string — identical to the TS version (for logs, API and dual-run).
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -87,12 +87,12 @@ impl fmt::Display for DomainErrorCode {
     }
 }
 
-/// مقدار متادیتا — معادل `string | number` در TS.
+/// Metadata value — equivalent to `string | number` in TS.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MetaValue {
-    /// مقدار متنی
+    /// text value
     Text(String),
-    /// مقدار صحیح
+    /// integer value
     Int(i64),
 }
 
@@ -105,28 +105,28 @@ impl fmt::Display for MetaValue {
     }
 }
 
-/// متادیتای خطا — کلیدها مرتب (`BTreeMap`) تا خروجی dual-run دترمینیستیک باشد.
+/// Error metadata — keys sorted (`BTreeMap`) so dual-run output is deterministic.
 pub type Meta = BTreeMap<String, MetaValue>;
 
-/// خطای دامنه: کد تایپ‌شده + پیام + متادیتای اختیاری.
+/// Domain error: typed code + message + optional metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DomainError {
-    /// کد خطا
+    /// error code
     pub code: DomainErrorCode,
-    /// پیام توضیحی (انگلیسی/فارسی — برای لاگ و UI)
+    /// explanatory message (English/Persian — for logs and UI)
     pub message: String,
-    /// متادیتای ساختاریافته (مثل `sum`، `accountId`، `newBalance`)
+    /// structured metadata (e.g. `sum`, `accountId`, `newBalance`)
     pub meta: Meta,
 }
 
 impl DomainError {
-    /// خطای ساده بدون متادیتا.
+    /// Simple error without metadata.
     #[must_use]
     pub fn new(code: DomainErrorCode, message: impl Into<String>) -> Self {
         Self { code, message: message.into(), meta: Meta::new() }
     }
 
-    /// افزودن یک جفت متادیتا (builder).
+    /// Add one metadata pair (builder).
     #[must_use]
     pub fn with_meta(mut self, key: impl Into<String>, value: impl Into<MetaValue>) -> Self {
         self.meta.insert(key.into(), value.into());
@@ -160,7 +160,7 @@ impl From<i64> for MetaValue {
     }
 }
 
-/// نتیجه عملیات دامنه — معادل `Result<T>` سفارشی نسخه TS.
+/// Domain operation result — equivalent to the TS version’s custom `Result<T>`.
 pub type DomainResult<T> = Result<T, DomainError>;
 
 #[cfg(test)]
@@ -178,9 +178,9 @@ mod tests {
     fn error_display_and_meta_builder() {
         let e = DomainError::new(DomainErrorCode::UnbalancedTransaction, "bad sum")
             .with_meta("sum", 15_i64)
-            .with_meta("note", "فارسی");
+            .with_meta("note", "\u{641}\u{627}\u{631}\u{633}\u{6cc}");
         assert_eq!(e.to_string(), "UNBALANCED_TRANSACTION: bad sum");
         assert_eq!(e.meta.get("sum"), Some(&MetaValue::Int(15)));
-        assert_eq!(e.meta.get("note"), Some(&MetaValue::Text("فارسی".into())));
+        assert_eq!(e.meta.get("note"), Some(&MetaValue::Text("\u{641}\u{627}\u{631}\u{633}\u{6cc}".into())));
     }
 }

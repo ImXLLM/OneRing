@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * KIAN REA gate — گام ۴ (M4: ادمین و مغز)
+ * KIAN REA gate — step 4 (M4: admin and the brain)
  *
- * سه ستون این گام:
- *  ۱) سطح دسترسی X-KIAN-Key — گوار fail-closed با مقایسهٔ زمان‌ثابت؛
- *     شواهد: تست ماتریس گارد روی سیم + grep درون‌بندی هندلرهای ادمین.
- *  ۲) redaction — اسکن قطعی رازها در گیت‌وی AI؛ شواهد: تست‌های kian-ai.
- *  ۳) sandbox — مهارت‌ها فقط هندلرهای ثبت‌شده را اجرا می‌کنند؛ سپر ورودی/خروجی؛
- *     شواهد: تست‌های kian-hermes.
+ * The three pillars of this step:
+ *  1) X-KIAN-Key access level — fail-closed guard with constant-time comparison;
+ *     evidence: the guard matrix test on the wire + grep proof of the admin handler wiring.
+ *  2) redaction — deterministic secret scanning in the AI gateway; evidence: the kian-ai tests.
+ *  3) sandbox — skills only run registered handlers; input/output shield;
+ *     evidence: the kian-hermes tests.
  *
- * به‌علاوه audit-release-exposure روی سه آرتیفکت:
- *   - باینری کرنل release (strip=symbols)
- *   - standalone پنل ادمین (بدون سورس‌مپ)
- *   - standalone وب (گام ۱)
+ * Plus audit-release-exposure on three artifacts:
+ *   - the release kernel binary (strip=symbols)
+ *   - the admin panel standalone (no source maps)
+ *   - the web standalone (step 1)
  *
- * خروج: 0 = پاس، 3 = شکست. گزارش: docs/rea/step4-m4-gate-report.txt
+ * Exit: 0 = pass, 3 = failure. Report: docs/rea/step4-m4-gate-report.txt
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -28,7 +28,7 @@ const AUDIT = path.join(ROOT, "tools/rea/release-exposure.mjs");
 let failures = 0;
 const lines = [];
 const say = (s = "") => { lines.push(s); console.log(s); };
-// cargo ممکن است در ~/.cargo/bin باشد — PATH صریح برای spawnSync بدون shell
+// cargo may live in ~/.cargo/bin — explicit PATH for spawnSync without a shell
 const ENV = {
   ...process.env,
   PATH: `${process.env.HOME ?? ""}/.cargo/bin:${process.env.PATH ?? ""}`,
@@ -53,7 +53,7 @@ say(`# admin:  apps/admin/.next/standalone — audit-release-exposure --fail_on 
 say(`# web:    apps/web/.next/standalone — audit-release-exposure --fail_on low`);
 say("");
 
-/* ── ۱) سطح دسترسی X-KIAN-Key ──────────────────────────────────────────── */
+/* ── 1) X-KIAN-Key access level ──────────────────────────────────────────── */
 say("════ 1) X-KIAN-Key access control ════");
 const securityRs = path.join(ROOT, "crates/contracts/src/security.rs");
 check("constant-time compare (subtle ct_eq) in contracts", grepCount(securityRs, "ct_eq") >= 1);
@@ -67,7 +67,7 @@ check("admin/a2a/mcp routes wired", ["/admin/overview", "/a2a/messages", "/mcp/i
   .every((r) => grepCount(routesRs, r) >= 1));
 say("");
 
-/* ── ۲) redaction — تست‌های kian-ai ─────────────────────────────────────── */
+/* ── 2) redaction — kian-ai tests ─────────────────────────────────────── */
 say("════ 2) redaction (kian-ai tests) ════");
 const t1 = run("cargo", ["test", "-p", "kian-ai", "--lib"], { timeout: 300_000 });
 const m1 = t1.out.match(/test result: ok\. (\d+) passed; (\d+) failed/);
@@ -77,7 +77,7 @@ const patterns = ["private_key_hex", "bot_token", "pem_key", "jwt", "mnemonic", 
 check("all six redaction patterns present", patterns.every((p) => grepCount(redact, p) >= 1));
 say("");
 
-/* ── ۳) sandbox / سپر هرمس — تست‌های kian-hermes ───────────────────────── */
+/* ── 3) sandbox / Hermes shield — kian-hermes tests ───────────────────────── */
 say("════ 3) hermes shield + sandbox (kian-hermes tests) ════");
 const t2 = run("cargo", ["test", "-p", "kian-hermes", "--lib"], { timeout: 300_000 });
 const m2 = t2.out.match(/test result: ok\. (\d+) passed; (\d+) failed/);
@@ -89,23 +89,23 @@ const hermesLib = path.join(ROOT, "crates/hermes/src/lib.rs");
 check("sandbox principle documented", grepCount(hermesLib, "sandbox") >= 1);
 say("");
 
-/* ── ۴) گوار ادمین روی سیم — تست ماتریس ────────────────────────────────── */
+/* ── 4) admin guard on the wire — matrix test ────────────────────────────────── */
 say("════ 4) admin guard matrix over the wire (kian-server test) ════");
 const t3 = run("cargo", ["test", "-p", "kian-server", "--lib", "admin_guard"], { timeout: 300_000 });
 check("admin guard matrix test green", /test result: ok/.test(t3.out) && !/FAILED/.test(t3.out));
 say("");
 
-/* ── ۵) بدون credential در پنل ادمین ───────────────────────────────────── */
+/* ── 5) No credentials in the admin panel ───────────────────────────────────── */
 say("════ 5) no credential markers in admin app source ════");
 let credHits = 0;
 for (const f of ["apps/admin/app/page.tsx", "apps/admin/lib/admin-api.ts", "apps/admin/app/layout.tsx"]) {
   const src = readFileSync(path.join(ROOT, f), "utf8");
-  // نام env مجاز؛ مقدار کلید هرگز
+  // env name allowed; the key value never
   credHits += (src.match(/kian-m4-gate|test-admin-key|sk-[A-Za-z0-9]{20}/g) ?? []).length;
 }
 check("no literal admin key in admin source", credHits === 0, `${credHits} hits`);
 
-/* ── ۶) audit سه آرتیفکت ───────────────────────────────────────────────── */
+/* ── 6) audit of the three artifacts ───────────────────────────────────────── */
 say("");
 say("════ 6) audit-release-exposure ════");
 mkdirSync(path.join(ROOT, "docs/rea"), { recursive: true });
@@ -130,7 +130,7 @@ for (const [name, rel] of artifacts) {
   say(`  filters: not_observed×${notObserved} monitored×${monitored} exposed×${exposed}`);
 }
 
-/* ── جمع‌بندی ──────────────────────────────────────────────────────────── */
+/* ── Summary ──────────────────────────────────────────────────────────── */
 say("");
 say(`════ verdict: ${failures === 0 ? "PASS — step 4 gate green (exit 0)" : `FAIL — ${failures} failing check(s) (exit 3)`} ════`);
 writeFileSync(REPORT, `${lines.join("\n")}\n`);

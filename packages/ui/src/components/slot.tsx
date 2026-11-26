@@ -3,8 +3,8 @@ import { Children, cloneElement, isValidElement, type ReactElement, type HTMLAtt
 type SlotProps = HTMLAttributes<HTMLElement> & { children?: React.ReactNode };
 
 /**
- * Slot سبک — جایگزین بدون‌وابستگیِ @radix-ui/react-slot.
- * کلاس و props والد را روی تنها فرزندِ element دار می‌نشیند.
+ * Lightweight Slot — a dependency-free replacement for @radix-ui/react-slot.
+ * Merges the parent's className and props onto its single element child.
  */
 export function Slot({ children, className, ...props }: SlotProps) {
   const child = Children.only(children);

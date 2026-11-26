@@ -1,18 +1,18 @@
-//! `telegram_api9` — آداپتورهای Bot API 9 مینی‌اپ تلگرام (پورت گنجینهٔ tdesktop).
+//! `telegram_api9` — Telegram mini-app Bot API 9 adapters (port from the tdesktop vault).
 //!
-//! پورت از `tdesktop-telegram-gems/02_kian_v2_adapters/kian_telegram_bot_api9.rs`
-//! (ممیزی `telegramdesktop/tdesktop` + الگوی رسمی Bot API ۹):
+//! Ported from `tdesktop-telegram-gems/02_kian_v2_adapters/kian_telegram_bot_api9.rs`
+//! (auditing `telegramdesktop/tdesktop` + the official Bot API 9 pattern):
 //!
-//! * [`validate_init_data`] — اعتبارسنجی `Telegram.WebApp.initData` با HMAC
-//!   بات-توکن: رشتهٔ چکِ `key=value` مرتب با LF، **فقط `hash` حذف می‌شود** و
-//!   فیلد `signature` امروزی در HMAC می‌ماند؛ کلید مشتق
-//!   `HMAC-SHA256("WebAppData", bot_token)` و مقایسهٔ زمان-ثابت.
-//!   این تجزیه‌گر برای اعتبارسنجی امضای Ed25519 ثالث نیست.
-//! * [`StartAppPayload`] — پارامتر شروع وایرال دقیقاً `p_<productId>_r_<refTgId>`.
-//! * [`StarsInvoicePayload`] — بار فاکتور Stars با ارز `XTR` (سقف ۱۲۸ بایت،
-//!   کلید جست‌وجوی DB — نه توکن احراز).
+//! * [`validate_init_data`] — validates `Telegram.WebApp.initData` with the
+//!   bot-token HMAC: the LF-sorted `key=value` check string, **only `hash` is removed** and
+//!   the modern `signature` field stays inside the HMAC; the derived key is
+//!   `HMAC-SHA256("WebAppData", bot_token)` and the comparison is constant-time.
+//!   This parser does not validate third-party Ed25519 signatures.
+//! * [`StartAppPayload`] — the viral start parameter exactly `p_<productId>_r_<refTgId>`.
+//! * [`StarsInvoicePayload`] — the Stars invoice payload with the `XTR` currency (128-byte cap,
+//!   a DB lookup key — not an auth token).
 //!
-//! وابستگی صفر: SHA-256/HMAC به‌صورت خالص پیاده شده (بدون openssl-system).
+//! Zero dependencies: SHA-256/HMAC are implemented in pure Rust (no openssl-system).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -221,7 +221,7 @@ fn decode_hash(value: &str) -> Option<[u8; 32]> {
     Some(result)
 }
 
-/// هگز امن (فقط در تست‌ها برای امضا و بردارهای مرجع به کار می‌رود).
+/// Safe hex (used only in tests for signing and reference vectors).
 #[cfg(test)]
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -265,9 +265,9 @@ fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
     sha256(&outer)
 }
 
-// پورت ۱:۱ الگوریتم مرجع SHA-256 (FIPS 180-4) — نام‌های تک‌حرفی a..h و
-// ثابت‌های K استانداردِ بدون جداکننده، فرمول pad و chunks_exact هم همان
-// فرم مرجع‌اند.
+// 1:1 port of the reference SHA-256 algorithm (FIPS 180-4) — single-letter names a..h and
+// the standard K constants without separators; the pad formula and chunks_exact follow the same
+// reference form.
 #[allow(
     clippy::many_single_char_names,
     clippy::unreadable_literal,

@@ -1,19 +1,19 @@
-//! کوئری‌های خواندن/نوشتن فاز ۴ — پورت پرس‌وجوهای `back/server/src/*.ts` که
-//! فرمان دامنه نیستند: صف HITL، محصولات داشبورد، دنبالهٔ audit، مصرف AI و
-//! بکاپ `VACUUM INTO`.
+//! Phase 4 read/write queries — port of the `back/server/src/*.ts` queries that
+//! are not domain commands: the HITL queue, dashboard products, the audit trail, AI usage, and
+//! the `VACUUM INTO` backup.
 //!
-//! قواعد ثابت فاز ۲ سر جایشان است:
-//! * ترازها هرگز ذخیره نمی‌شوند — همیشه مشتق از `Posting` (ADR-003).
-//! * هر فرمان پول‌محور داخل همان تراکنشِ `apply`/تخصیص HITL هم audit و هم
-//!   outbox می‌نویسد.
-//! * تصمیم HITL «تأیید ⇒ تسویه» اتمی است: یک تراکنش، یا هر دو یا هیچ‌کدام.
+//! The Phase 2 ground rules hold:
+//! * Balances are never stored — always derived from `Posting` (ADR-003).
+//! * Every money-moving command, inside the same `apply`/HITL allocation transaction,
+//!   writes both audit and outbox.
+//! * The HITL "approve ⇒ settle" decision is atomic: one transaction, both or neither.
 //!
-//! خطاهای صف HITL عمداً به‌صورت [`kian_domain::DomainError`] با کدهای
-//! دامنه برمی‌گردند (`HITL_NOT_FOUND` و…) تا نگاشت ۴۰۴/۴۲۲ِ `contracts::error`
-//! بدون تکرار، درست کار کند.
+//! HITL queue errors deliberately surface as [`kian_domain::DomainError`] with domain codes
+//! (`HITL_NOT_FOUND` and so on) so the 404/422 mapping in `contracts::error`
+//! keeps working without duplication.
 
-// سبک legacy: توابع کمکی درون‌تابعی گاهی بعد از statementها تعریف می‌شوند؛
-// بازآرایی ساختاری کل فایل خارج از دامنهٔ مهاجرت M2 است.
+// Legacy style: nested helper functions are sometimes defined after statements;
+// restructuring the whole file is out of scope for the M2 migration.
 #![allow(clippy::items_after_statements)]
 #![allow(clippy::needless_pass_by_value)]
 
@@ -31,80 +31,80 @@ use crate::store::{
 };
 use crate::wire::event_payload;
 
-// ── صف HITL ─────────────────────────────────────────────────────────────────
+// ── HITL queue ─────────────────────────────────────────────────────────────────
 
-/// ردیف خام درخواست HITL از جدول `HitlRequest`.
+/// Raw HITL request row from the `HitlRequest` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HitlRow {
-    /// شناسه
+    /// Identifier
     pub id: String,
-    /// نوع (`ESCROW_RELEASE`)
+    /// Kind (`ESCROW_RELEASE`)
     pub kind: String,
-    /// امانت مربوط
+    /// Related escrow
     pub escrow_id: String,
-    /// مبلغ
+    /// Amount
     pub amount: i64,
-    /// درخواست‌دهنده
+    /// Requester
     pub requester_id: String,
-    /// یادداشت اختیاری
+    /// Optional note
     pub note: Option<String>,
-    /// وضعیت (`PENDING`/`APPROVED`/`REJECTED`/`EXPIRED`)
+    /// Status (`PENDING`/`APPROVED`/`REJECTED`/`EXPIRED`)
     pub status: String,
-    /// زمان ایجاد ISO
+    /// ISO creation time
     pub created_at: String,
-    /// زمان انقضا ISO
+    /// ISO expiry time
     pub expires_at: String,
-    /// تصمیم‌گیرنده
+    /// Decided by
     pub decided_by: Option<String>,
-    /// زمان تصمیم
+    /// Decision time
     pub decided_at: Option<String>,
-    /// یادداشت تصمیم
+    /// Decision note
     pub decision_note: Option<String>,
 }
 
-/// خروجی تصمیم HITL — درخواست به‌روزشده + حاصل تسویه (فقط برای APPROVE).
-/// ردیف مصرف AI برای جدول `AiUsage` (فاز ۶).
+/// HITL decision output — updated request + settlement result (APPROVE only).
+/// AI usage row for the `AiUsage` table (Phase 6).
 #[derive(Debug, Clone)]
 pub struct AiUsageRow {
-    /// کاربر (`user:tg:<id>`)
+    /// User (`user:tg:<id>`)
     pub user_id: String,
-    /// ایجنت (`orchestrator`)
+    /// Agent (`orchestrator`)
     pub agent: String,
-    /// ارائه‌دهنده
+    /// Provider
     pub provider: String,
-    /// مدل
+    /// Model
     pub model: String,
-    /// نوع سیکل (`chat`)
+    /// Cycle kind (`chat`)
     pub kind: String,
-    /// توکن ورودی
+    /// Prompt tokens
     pub prompt_tokens: i64,
-    /// توکن خروجی
+    /// Completion tokens
     pub completion_tokens: i64,
-    /// مجموع
+    /// Total
     pub total_tokens: i64,
-    /// نتیجهٔ ممیزی (`ai.ok|refused|failed|pending`)
+    /// Audit outcome (`ai.ok|refused|failed|pending`)
     pub outcome: String,
 }
 
-/// خروجی تصمیم HITL — درخواست به‌روزرسانی + حاصل تسویه (فقط برای APPROVE).
+/// HITL decision output — updated request + settlement result (APPROVE only).
 #[derive(Debug, Clone)]
 pub struct HitlDecision {
-    /// درخواست پس از تصمیم
+    /// Request after the decision
     pub request: HitlRow,
-    /// امانت پس از تسویه (فقط approve)
+    /// Escrow after settlement (approve only)
     pub escrow: Option<Escrow>,
-    /// تراکنش تسویه (فقط approve؛ در replay تراکنش اصلی)
+    /// Settlement transaction (approve only; the original tx on replay)
     pub tx: Option<PostedTransaction>,
-    /// آیا تسویه یک replay بود؟
+    /// Was the settlement a replay?
     pub replayed: bool,
 }
 
-/// فرمان تسویه با کلید قطعی — `hitl:<id>:approve` (فاز ۳ مستند کرده).
+/// Settlement command with a deterministic key — `hitl:<id>:approve` (documented in Phase 3).
 fn settlement_key(hitl_id: &str) -> String {
     format!("hitl:{hitl_id}:approve")
 }
 
-/// ردیف HITL را از یک ردیف SQL خام می‌سازد.
+/// Builds a HITL row from a raw SQL row.
 fn hitl_row_from(row: sqlx::sqlite::SqliteRow) -> HitlRow {
     use sqlx::Row;
     HitlRow {
@@ -126,20 +126,20 @@ fn hitl_row_from(row: sqlx::sqlite::SqliteRow) -> HitlRow {
 const HITL_SELECT: &str = r#"SELECT "id","kind","escrowId","amount","requesterId","note","status","createdAt","expiresAt","decidedBy","decidedAt","decisionNote" FROM "HitlRequest""#;
 
 impl V3Store {
-    /// خواندن یک درخواست HITL — `None` یعنی وجود ندارد.
+    /// Read one HITL request — `None` means it does not exist.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_hitl(&self, id: &str) -> DbResult<Option<HitlRow>> {
         let sql = format!("{HITL_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlsafe::audited(sql.clone())).bind(id).fetch_optional(self.pool_ref()).await?;
         Ok(row.map(hitl_row_from))
     }
 
-    /// فهرست درخواست‌های HITL با فیلتر وضعیت اختیاری — جدیدترین اول.
+    /// List HITL requests with an optional status filter — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_hitl(&self, status: Option<&str>) -> DbResult<Vec<HitlRow>> {
         let (sql, has_filter) = match status {
             Some(_) => (
@@ -159,14 +159,14 @@ impl V3Store {
         Ok(rows.into_iter().map(hitl_row_from).collect())
     }
 
-    /// صف‌کردن درخواست HITL — `id` تکراری خطا نیست؛ همان درخواست موجود برمی‌گردد
-    /// (replay-safe مثل `hitl.ts`). مبلغ از امانت کپی می‌شود؛ مسابقهٔ درج هم‌زمان
-    /// با `ON CONFLICT DO NOTHING` + بازخوانی حل می‌شود.
+    /// Enqueue a HITL request — a duplicate `id` is not an error; the existing request is returned
+    /// (replay-safe like `hitl.ts`). The amount is copied from the escrow; a concurrent insert race
+    /// is resolved with `ON CONFLICT DO NOTHING` + re-read.
     ///
     /// # Errors
-    /// امانت ناموجود → `ESCROW_NOT_FOUND` (دامنه)؛ خطای SQL.
+    /// Missing escrow → `ESCROW_NOT_FOUND` (domain); SQL error.
     pub async fn enqueue_hitl(&self, row: HitlRow, escrow_id: &str) -> DbResult<HitlRow> {
-        // موجود بودن امانت — همان قرارداد TS (amount از امانت کپی می‌شود)
+        // Escrow existence check — same TS contract (amount is copied from the escrow)
         let escrow = self.get_escrow(escrow_id).await?;
         if escrow.is_none() {
             return Err(DomainError::new(
@@ -200,18 +200,18 @@ impl V3Store {
         let existing =
             sqlx::query(sqlsafe::audited(sql.clone())).bind(&row.id).fetch_one(&mut *tx).await.map(hitl_row_from)?;
         if existing.created_at == row.created_at && existing.status == "PENDING" {
-            // این درج تازه بود — audit یک‌بار
+            // This insert was fresh — audit once
             insert_audit(&mut tx, "server", "hitl.create", Some(&row.id), Some(&row.kind)).await?;
         }
         tx.commit().await?;
         Ok(existing)
     }
 
-    /// رد کردن درخواست HITL — هیچ پولی جابه‌جا نمی‌شود.
+    /// Reject a HITL request — no money moves.
     ///
     /// # Errors
-    /// `HITL_NOT_FOUND` / `HITL_ALREADY_DECIDED` / `HITL_EXPIRED` (کد دامنه →
-    /// 404/422 در لایهٔ قرارداد) یا خطای SQL.
+    /// `HITL_NOT_FOUND` / `HITL_ALREADY_DECIDED` / `HITL_EXPIRED` (domain code →
+    /// 404/422 in the contract layer) or a SQL error.
     pub async fn reject_hitl(
         &self,
         id: &str,
@@ -241,19 +241,19 @@ impl V3Store {
         Ok(updated)
     }
 
-    /// تأیید درخواست HITL و اجرای تسویه «در همان تراکنش» — قلب فاز ۴.
+    /// Approve a HITL request and settle "in the same transaction" — the heart of Phase 4.
     ///
-    /// ترتیب گام‌ها روی یک `sqlx::Transaction`:
-    /// ۱) گارد وضعیت (PENDING بودن) با `UPDATE … WHERE status='PENDING'` —
-    ///    رقابت دو ادمین فقط یکی را عبور می‌دهد؛ دومی `HITL_ALREADY_DECIDED`.
-    /// ۲) تسویه از مسیر دامنهٔ خالص (`release_escrow`) با کلید قطعی
-    ///    `hitl:<id>:approve` — پول ۹۰/۱۰ دقیقاً یک‌بار جابه‌جا می‌شود.
-    /// ۳) `persist_outcome` — Tx + Posting + Escrow + outbox + audit همه در
-    ///    همان تراکنش.
+    /// Step order on one `sqlx::Transaction`:
+    /// 1) Status guard (must be PENDING) via `UPDATE … WHERE status='PENDING'` —
+    ///    a two-admin race lets exactly one through; the second gets `HITL_ALREADY_DECIDED`.
+    /// 2) Settlement through the pure domain path (`release_escrow`) with the deterministic
+    ///    `hitl:<id>:approve` key — the 90/10 money moves exactly once.
+    /// 3) `persist_outcome` — Tx + Posting + Escrow + outbox + audit all in
+    ///    the same transaction.
     ///
     /// # Errors
-    /// کدهای دامنه (`HITL_*`، `REQUIRES_HUMAN_APPROVAL` و…) یا خطای SQL —
-    /// هر شکست کل تراکنش را برمی‌گرداند (هیچ پولی نمی‌ماند).
+    /// Domain codes (`HITL_*`, `REQUIRES_HUMAN_APPROVAL`, and so on) or a SQL error —
+    /// any failure rolls back the whole transaction (no money is left behind).
     pub async fn approve_hitl_and_settle(
         &self,
         id: &str,
@@ -262,7 +262,7 @@ impl V3Store {
     ) -> DbResult<HitlDecision> {
         let mut tx = self.pool_ref().begin().await?;
 
-        // ۱) گارد اتمی: فقط PENDING → APPROVED عبور می‌کند.
+        // 1) Atomic guard: only PENDING → APPROVED passes.
         let row = self.hitl_pending_guard_tx(&mut tx, id).await?;
         let now = now_iso();
         let updated = sqlx::query(
@@ -276,7 +276,7 @@ impl V3Store {
         .execute(&mut *tx)
         .await?;
         if updated.rows_affected() != 1 {
-            // رقابت: ادمین دیگری زودتر تصمیم گرفت → خطای تایپ‌شده، بازپرداخت صفر.
+            // Race: another admin decided first → typed error, zero refund.
             tx.rollback().await?;
             return Err(DomainError::new(
                 DomainErrorCode::HitlAlreadyDecided,
@@ -286,8 +286,8 @@ impl V3Store {
         }
         insert_audit(&mut tx, decided_by, "hitl.approve", Some(id), note).await?;
 
-        // ۲+۳) تسویه از مسیر دامنهٔ خالص — همان تراکنش. گارد PENDING یعنی
-        // مسیر replay در عمل ناممکن است؛ کلید قطعی فقط کمربند ایمنی رقابت است.
+        // 2+3) Settlement through the pure domain path — same transaction. The PENDING guard makes
+        // the replay path practically impossible; the deterministic key is only a concurrency safety belt.
         let ledger = load_ledger_state(&mut tx).await?;
         let registry = load_escrow_registry(&mut tx, Some(&row.escrow_id)).await?;
         let settle_opts = ApplyOptions {
@@ -332,7 +332,7 @@ impl V3Store {
         Ok(HitlDecision { request, escrow: outcome.escrow, tx: outcome.tx, replayed: false })
     }
 
-    /// گارد «PENDING» داخل تراکنش — خطاهای دامنه‌ای تایپ‌شده برمی‌گرداند.
+    /// "PENDING" guard inside a transaction — returns typed domain errors.
     async fn hitl_pending_guard_tx(
         &self,
         exec: &mut sqlx::SqliteConnection,
@@ -358,7 +358,7 @@ impl V3Store {
             .into());
         }
         if row.expires_at.as_str() < now_iso().as_str() {
-            // منقضی‌شده اما هنوز sweep نشده — همان معناشناسی انقضا.
+            // Expired but not yet swept — same expiry semantics.
             return Err(DomainError::new(
                 DomainErrorCode::HitlExpired,
                 format!("HITL request {id} expired at {}", row.expires_at),
@@ -368,10 +368,10 @@ impl V3Store {
         Ok(row)
     }
 
-    /// sweep انقضا — همهٔ PENDINGهای سررسیدگذشته → `EXPIRED`. خروجی: تعداد.
+    /// Expiry sweep — all overdue PENDING requests → `EXPIRED`. Returns: the count.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn sweep_expired_hitl(&self) -> DbResult<i64> {
         let now = now_iso();
         let mut tx = self.pool_ref().begin().await?;
@@ -392,73 +392,73 @@ impl V3Store {
     }
 }
 
-// ── محصولات داشبورد ─────────────────────────────────────────────────────────
+// ── Dashboard products ─────────────────────────────────────────────────────────
 
-/// ردیف محصول از جدول `Product` — ستون‌ها یک‌به‌یک با `schema.prisma`:
-/// فیلدهای dashboard-only (Stars/stock/featured/salesCount) ستون ندارند و در
-/// نمای داشبورد مشتق می‌شوند (Stars ریل نیست — صفر؛ stock نامحدود؛
-/// sales از اسکروهای تسویه‌شده با `productRef`).
+/// Product row from the `Product` table — columns one-to-one with `schema.prisma`:
+/// dashboard-only fields (Stars/stock/featured/salesCount) have no column and are
+/// derived in the dashboard view (Stars is not real currency — zero; stock is unlimited;
+/// sales from settled escrows with a `productRef`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProductRow {
-    /// شناسه (`prod:<uuid>`)
+    /// Identifier (`prod:<uuid>`)
     pub id: String,
-    /// فروشنده
+    /// Seller
     pub seller_id: String,
-    /// عنوان
+    /// Title
     pub title: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// دسته
+    /// Category
     pub category: Option<String>,
-    /// قیمت به دیین — ستون واقعی `priceDin` (ریل کریدیت)
+    /// Price in din — the real `priceDin` column (real credits)
     pub price_din: i64,
-    /// پیش‌نمایش امن HTML پیش از خرید (عمومی)
+    /// Safe pre-purchase HTML preview (public)
     pub preview_html: String,
-    /// نرخ پورسانت معرف بر حسب نقاط پایه (`0..=5000`؛ پیش‌فرض ۱۰۰۰ = ۱۰٪)
+    /// Affiliate commission rate in basis points (`0..=5000`; default 1000 = 10%)
     pub affiliate_bps: u16,
-    /// نوع آرتیفکت تک‌صفحه‌ای (پیش‌فرض `"html"`)
+    /// Single-page artifact kind (default `"html"`)
     pub artifact_kind: String,
-    /// محتوای تحویل (فقط در کوئری اختصاصی تحویل به خریدار خوانده می‌شود؛ در لیست عمومی `None`)
+    /// Delivery payload (read only by the dedicated buyer-delivery query; `None` in public listings)
     pub delivery_payload: Option<String>,
-    /// فعال؟
+    /// Active?
     pub active: bool,
-    /// زمان ایجاد ISO
+    /// ISO creation time
     pub created_at: String,
-    /// نمرهٔ REA مایرون مُهر‌شده (`0` = هنوز مُهر نشده)
+    /// Stamped Mairon REA score (`0` = not yet stamped)
     pub mairon_score: u8,
-    /// نشان مرئی مایرون (خالی = مُهر نشده)
+    /// Visible Mairon badge (empty = not yet stamped)
     pub mairon_badge: String,
-    /// زبانِ مبدأ ARDA — پیش‌فرض `'en'` (مهاجرت 0008)
+    /// ARDA origin locale — default `'en'` (migration 0008)
     pub origin_locale: String,
-    /// JSON زبان‌های پشتیبانی‌شده — پیش‌فرض `["en","fa","ar"]` (مهاجرت 0008)
+    /// Supported locales JSON — default `["en","fa","ar"]` (migration 0008)
     pub supported_locales_json: String,
-    /// سند `SKILL.md` فورج‌شدهٔ مایرون (`None` = هنوز فورج نشده)
+    /// Mairon-forged `SKILL.md` document (`None` = not yet forged)
     pub skill_md: Option<String>,
-    /// مانیفست `skill.json` فورج‌شدهٔ مایرون (`None` = هنوز فورج نشده)
+    /// Mairon-forged `skill.json` manifest (`None` = not yet forged)
     pub skill_json: Option<String>,
-    /// مُهرِ زمانِ آخرین تیکِ کرونِ ۲۴ساعتهٔ ARDA
+    /// Timestamp of the last ARDA 24-hour cron tick
     pub arda_last_localized_at: Option<String>,
 }
 
-/// یک رأی ۵-ستارهٔ ثبت‌شدهٔ شهروند روی محصول (`"ProductReview"`) — مُهر مایرون
-/// و رأی جامعه (Wave 3 — Trinity marketplace gate).
+/// A citizen's recorded 5-star vote on a product (`"ProductReview"`) — Mairon stamp
+/// plus community vote (Wave 3 — Trinity marketplace gate).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProductReviewRow {
-    /// شناسهٔ یکتای رأی (`rev:<uuid>`)
+    /// Unique vote identifier (`rev:<uuid>`)
     pub id: String,
-    /// شناسهٔ محصول
+    /// Product identifier
     pub product_id: String,
-    /// حساب شهروند رأی‌دهنده
+    /// Reviewing citizen account
     pub reviewer_id: String,
-    /// ستاره (`1..=5`)
+    /// Stars (`1..=5`)
     pub stars: u8,
-    /// نظر صحیح‌سنجی‌شده
+    /// Validated comment
     pub comment: String,
-    /// خرید تاییدشده — اتصال به امانت تسویه‌شده (ضد-سوریل)
+    /// Verified purchase — linked to a settled escrow (anti-Sybil)
     pub verified_purchase: bool,
-    /// عکس فوری نمرهٔ REA مایرون هنگام رأی
+    /// Snapshot of the Mairon REA score at vote time
     pub mairon_score_at_review: u8,
-    /// زمان ثبت ISO
+    /// ISO recorded time
     pub created_at: String,
 }
 
@@ -479,23 +479,23 @@ fn product_review_row_from(row: sqlx::sqlite::SqliteRow) -> ProductReviewRow {
     }
 }
 
-/// فیلترهای فهرست محصولات — همان کوئری‌های TS (`q`/`limit`/`offset`).
+/// Product listing filters — the same TS queries (`q`/`limit`/`offset`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ProductFilter {
-    /// جست‌وجوی زیررشته‌ای در عنوان/توضیح
+    /// Substring search over title/description
     pub q: Option<String>,
-    /// سقف صفحه
+    /// Page size
     pub limit: i64,
-    /// از این‌جا
+    /// From here
     pub offset: i64,
-    /// فقط فعال‌ها؟
+    /// Active only?
     pub active_only: bool,
 }
 
-/// کوئری عمومی محصول — ستون `deliveryPayload` عمداً خوانده نمی‌شود تا هرگز لو نرود.
+/// Public product query — the `deliveryPayload` column is deliberately not read so it can never leak.
 const PRODUCT_PUBLIC_SELECT: &str = r#"SELECT "id","sellerId","title","description","category","priceDin","previewHtml","affiliateBps","artifactKind","active","createdAt","maironScore","maironBadge","originLocale","supportedLocalesJson","skillMd","skillJson","ardaLastLocalizedAt" FROM "Product""#;
 
-/// ستون‌های پیش‌فرضِ ایمن ARDA — برای INSERTهای قدیمی و مسیر لگاسی.
+/// Safe ARDA default columns — for legacy INSERTs and the legacy path.
 const ARDA_DEFAULT_LOCALES_JSON: &str = "[\"en\",\"fa\",\"ar\"]";
 
 fn product_row_public_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
@@ -551,10 +551,10 @@ fn product_row_with_delivery_from(row: sqlx::sqlite::SqliteRow) -> ProductRow {
 }
 
 impl V3Store {
-    /// فهرست محصولات با فیلتر — جدیدترین اول (بدون `deliveryPayload`).
+    /// List products with a filter — newest first (without `deliveryPayload`).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_products(&self, f: &ProductFilter) -> DbResult<Vec<ProductRow>> {
         let mut where_clauses: Vec<&str> = Vec::new();
         if f.active_only {
@@ -571,7 +571,7 @@ impl V3Store {
         let sql = format!(
             "{PRODUCT_PUBLIC_SELECT}{where_sql} ORDER BY \"createdAt\" DESC, \"id\" DESC LIMIT ? OFFSET ?"
         );
-        // like بیرون از if نگه داشته می‌شود — bind قرضش را تا fetch_all نگه می‌دارد
+        // like is kept outside the if — bind holds its borrow until fetch_all
         let like = f.q.as_ref().map(|qs| {
             let escaped = qs.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
             format!("%{escaped}%")
@@ -584,10 +584,10 @@ impl V3Store {
         Ok(rows.into_iter().map(product_row_public_from).collect())
     }
 
-    /// شمارش محصولات با همان فیلتر — برای `total`.
+    /// Count products with the same filter — for `total`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_products(&self, f: &ProductFilter) -> DbResult<i64> {
         let mut where_clauses: Vec<&str> = Vec::new();
         if f.active_only {
@@ -615,21 +615,21 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// خواندن نمای عمومی یک محصول — بدون `deliveryPayload` (امن برای مسیر عمومی).
+    /// Read a product's public view — without `deliveryPayload` (safe for the public path).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_product(&self, id: &str) -> DbResult<Option<ProductRow>> {
         let sql = format!("{PRODUCT_PUBLIC_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlsafe::audited(sql.clone())).bind(id).fetch_optional(self.pool_ref()).await?;
         Ok(row.map(product_row_public_from))
     }
 
-    /// خواندن کامل محصول همراه با `deliveryPayload` — **فقط** پس از تأیید هویت
-    /// خریدار/فروشنده و وضعیت پرداخت‌شدهٔ اسکرو فراخوانی شود.
+    /// Full product read including `deliveryPayload` — call **only** after verifying the
+    /// buyer/seller identity and the escrow's paid status.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_product_with_delivery(&self, id: &str) -> DbResult<Option<ProductRow>> {
         let row = sqlx::query(
             r#"SELECT "id","sellerId","title","description","category","priceDin",
@@ -644,10 +644,10 @@ impl V3Store {
         Ok(row.map(product_row_with_delivery_from))
     }
 
-    /// درج محصول — شناسه از قبل ساخته‌شده (`prod:<uuid>`).
+    /// Insert a product — the id is pre-generated (`prod:<uuid>`).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_product(&self, p: &ProductRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "Product"
@@ -685,11 +685,11 @@ impl V3Store {
         Ok(())
     }
 
-    /// مُهر دو-کلیدی مایرون روی لیستینگ — نمره و نشان فقط پس از عبور حکمِ
-    /// داور **و** تأیید صریح سازنده اینجا می‌نشیند (`maironScore`/`maironBadge`).
+    /// Mairon two-key stamp on the listing — score and badge land here only after the arbiter's
+    /// verdict passes **and** the maker explicitly confirms (`maironScore`/`maironBadge`).
     ///
     /// # Errors
-    /// محصول ناموجود → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    /// Missing product → `PRODUCT_NOT_FOUND` (domain); SQL error.
     pub async fn stamp_product_mairon(
         &self,
         id: &str,
@@ -716,12 +716,12 @@ impl V3Store {
         Ok(())
     }
 
-    /// مُهرِ بومی‌سازیِ ARDA — زبانِ مبدأ، نوارِ زبان‌های پشتیبانی‌شده، بستهٔ
-    /// مهارتِ فورج‌شدهٔ مایرون و مُهرِ زمانِ کرونِ ۲۴ساعته روی محصول می‌نشیند
-    /// (مهاجرت 0008 — Wave 4). هر ۲۰ ستونِ موجودِ محصول محفوظ می‌ماند.
+    /// ARDA localization stamp — writes the origin locale, the supported-locale band, the
+    /// Mairon-forged skill bundle, and the 24-hour cron timestamp onto the product
+    /// (migration 0008 — Wave 4). All 20 existing product columns are preserved.
     ///
     /// # Errors
-    /// محصول ناموجود → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    /// Missing product → `PRODUCT_NOT_FOUND` (domain); SQL error.
     pub async fn stamp_product_arda(
         &self,
         id: &str,
@@ -756,11 +756,11 @@ impl V3Store {
         Ok(())
     }
 
-    /// ثبت رأی شهروند — قفلِ یک‌رأییِ (محصول، رأی‌دهنده) در سطح UNIQUE؛
-    /// رأی تکراری → `EscrowAlreadyExists` (۴۲۲، همان قاعدهٔ دامنه).
+    /// Record a citizen vote — a one-vote-per-(product, reviewer) lock at the UNIQUE level;
+    /// a duplicate vote → `EscrowAlreadyExists` (422, same domain rule).
     ///
     /// # Errors
-    /// محصول ناموجود → `PRODUCT_NOT_FOUND`؛ رأی تکراری → ۴۲۲؛ خطای SQL.
+    /// Missing product → `PRODUCT_NOT_FOUND`; duplicate vote → 422; SQL error.
     pub async fn insert_product_review(&self, r: &ProductReviewRow) -> DbResult<()> {
         let product = self.get_product(&r.product_id).await?;
         if product.is_none() {
@@ -806,10 +806,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// همهٔ رأی‌های یک محصول — جدیدترین اول.
+    /// All votes for a product — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_product_reviews(&self, product_id: &str) -> DbResult<Vec<ProductReviewRow>> {
         let sql = format!(
             "{PRODUCT_REVIEW_SELECT} WHERE \"productId\" = ? ORDER BY \"createdAt\" DESC, \"id\" DESC"
@@ -821,11 +821,11 @@ impl V3Store {
         Ok(rows.into_iter().map(product_review_row_from).collect())
     }
 
-    /// آیا این شهروندِ خریدِ تاییدشدهٔ (اسکرو `RELEASED`) روی این محصول دارد؟
-    /// — وزنِ رأی واقعی `1.0` در برابر `0.25` (ضد-سوریل، لایهٔ بیزی).
+    /// Does this citizen have a verified purchase (`RELEASED` escrow) on this product?
+    /// — real vote weight `1.0` versus `0.25` (anti-Sybil, Bayesian layer).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn has_verified_purchase(&self, product_id: &str, buyer_id: &str) -> DbResult<bool> {
         let count: i64 = sqlx::query_scalar(
             r#"SELECT COUNT(*) FROM "Escrow" WHERE "productRef"=? AND "buyerId"=? AND "status"='RELEASED'"#,
@@ -837,12 +837,12 @@ impl V3Store {
         Ok(count > 0)
     }
 
-    /// به‌روزرسانی جزئی محصول — فقط فیلدهای `Some` اعمال می‌شوند. ستون‌های
-    /// ویرایش‌پذیر: title/category/priceDin/description/active (خلاصهٔ مسیر
-    /// رجیستری — stock و stars فقط نمای داشبوردند).
+    /// Partial product update — only `Some` fields are applied. Editable
+    /// columns: title/category/priceDin/description/active (registry-path
+    /// summary — stock and stars are dashboard-view only).
     ///
     /// # Errors
-    /// محصول ناموجod → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    /// Missing product → `PRODUCT_NOT_FOUND` (domain); SQL error.
     pub async fn update_product(
         &self,
         id: &str,
@@ -882,10 +882,10 @@ impl V3Store {
         Ok(merged)
     }
 
-    /// حذف محصول.
+    /// Delete a product.
     ///
     /// # Errors
-    /// محصول ناموجod → `PRODUCT_NOT_FOUND` (دامنه)؛ خطای SQL.
+    /// Missing product → `PRODUCT_NOT_FOUND` (domain); SQL error.
     pub async fn delete_product(&self, id: &str) -> DbResult<()> {
         let res = sqlx::query(r#"DELETE FROM "Product" WHERE "id"=?"#)
             .bind(id)
@@ -903,30 +903,30 @@ impl V3Store {
     }
 }
 
-// ── audit + مصرف AI + تجمیع‌های داشبورد ─────────────────────────────────────
+// ── Audit + AI usage + dashboard aggregates ─────────────────────────────────────
 
-/// ردیف audit برای نماهای داشبورد.
+/// Audit row for dashboard views.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuditRowRead {
-    /// شناسه
+    /// Identifier
     pub id: String,
-    /// عامل
+    /// Actor
     pub actor: String,
-    /// اقدام
+    /// Action
     pub action: String,
-    /// هدف
+    /// Target
     pub target: Option<String>,
-    /// متادیتا (JSON رشته‌ای)
+    /// Metadata (string JSON)
     pub meta: Option<String>,
-    /// زمان
+    /// Time
     pub at: String,
 }
 
 impl V3Store {
-    /// فهرست audit — جدیدترین اول (نمونهٔ بزرگ‌ترین `limit` ۲۰۰).
+    /// List audit — newest first (sample capped at `limit`, max 200).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_audit(&self, limit: i64) -> DbResult<Vec<AuditRowRead>> {
         let rows = sqlx::query(
             r#"SELECT "id","actor","action","target","meta","at" FROM "AuditLog"
@@ -950,10 +950,10 @@ impl V3Store {
         Ok(out)
     }
 
-    /// نوشتن audit خارج از فرمان دامنه (محصولات، sweep و…) — همان ستون‌های TS.
+    /// Write audit outside a domain command (products, sweep, and so on) — same TS columns.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn audit_ext(
         &self,
         actor: &str,
@@ -967,10 +967,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// درج ردیف مصرف AI — بعد از هر فراخوانی (مبنای گیت سقف روزانهٔ فاز ۶).
+    /// Insert an AI usage row — after every call (basis of the Phase 6 daily cap gate).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_ai_usage(&self, r: &AiUsageRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "AiUsage" ("id","userId","agent","provider","model","kind","promptTokens","completionTokens","totalTokens","outcome","at")
@@ -992,10 +992,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// جست‌وجوی پایگاه دانش — LIKE روی عنوان/بدنه (مهارت `kb.search` فاز ۶).
+    /// Knowledge base search — LIKE over title/body (Phase 6 `kb.search` skill).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn search_kb(&self, q: &str, limit: i64) -> DbResult<Vec<(String, String, String)>> {
         let pattern = format!("%{q}%");
         let rows = sqlx::query(
@@ -1012,10 +1012,10 @@ impl V3Store {
         Ok(rows.into_iter().map(|r| (r.get("id"), r.get("title"), r.get("body"))).collect())
     }
 
-    /// درج/به‌روزرسانی مدخل دانش — مهارت `kb.upsert` (فقط staff).
+    /// Insert/update a knowledge base entry — `kb.upsert` skill (staff only).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn upsert_kb(&self, id: &str, title: &str, body: &str) -> DbResult<()> {
         let now = now_iso();
         sqlx::query(
@@ -1033,10 +1033,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// مجموع مصرف توکن امروز (UTC) یک کاربر — برای `/ai/usage`.
+    /// A user's total token consumption today (UTC) — for `/ai/usage`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn ai_tokens_today(&self, user_id: &str) -> DbResult<(i64, i64)> {
         let today = utc_today();
         let row = sqlx::query(
@@ -1051,10 +1051,10 @@ impl V3Store {
         Ok((row.get("total"), row.get("calls")))
     }
 
-    /// شمارش فراخوانی‌های AI (همه‌گاه) — برای overview.
+    /// Count AI calls (all time) — for the overview.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn ai_calls_total(&self) -> DbResult<i64> {
         let row = sqlx::query(r#"SELECT COUNT(*) AS c FROM "AiUsage""#)
             .fetch_one(self.pool_ref())
@@ -1063,10 +1063,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// تعداد حساب‌ها — برای `/economy` (accountCount).
+    /// Account count — for `/economy` (accountCount).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn account_count(&self) -> DbResult<i64> {
         let row = sqlx::query(r#"SELECT COUNT(*) AS c FROM "Account""#)
             .fetch_one(self.pool_ref())
@@ -1075,10 +1075,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// تعداد حساب‌های کاربر (`kind='user'`) — KPI کاربران داشبورد.
+    /// User account count (`kind='user'`) — dashboard users KPI.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_users(&self) -> DbResult<i64> {
         let row = sqlx::query(r#"SELECT COUNT(*) AS c FROM "Account" WHERE "kind" = 'user'"#)
             .fetch_one(self.pool_ref())
@@ -1087,10 +1087,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// تعداد همهٔ امانت‌ها (هر وضعیت) — KPI سفارش‌های داشبورد.
+    /// Count of all escrows (every status) — dashboard orders KPI.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_escrows(&self) -> DbResult<i64> {
         let row =
             sqlx::query(r#"SELECT COUNT(*) AS c FROM "Escrow""#).fetch_one(self.pool_ref()).await?;
@@ -1098,10 +1098,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// تعداد درخواست‌های HITL در وضعیت داده‌شده — KPI تأییدهای در انتظار.
+    /// HITL requests in the given status — pending approvals KPI.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_hitl(&self, status: &str) -> DbResult<i64> {
         let row = sqlx::query(r#"SELECT COUNT(*) AS c FROM "HitlRequest" WHERE "status" = ?"#)
             .bind(status)
@@ -1111,10 +1111,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// کل ضرب‌شده از آغاز — قرینهٔ تراز حساب ضرب.
+    /// Total minted all time — mirror of the mint account balance.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn minted_all_time(&self) -> DbResult<i64> {
         let row = sqlx::query(
             r#"SELECT COALESCE(-SUM("amount"),0) AS c FROM "Posting" WHERE "accountId" = (SELECT "id" FROM "Account" WHERE "kind"='mint' LIMIT 1)"#,
@@ -1125,10 +1125,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// کل سوزانده‌شده از آغاز — تراز حساب سوزاندن.
+    /// Total burned all time — the burn account balance.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn burned_all_time(&self) -> DbResult<i64> {
         let row = sqlx::query(
             r#"SELECT COALESCE(SUM("amount"),0) AS c FROM "Posting" WHERE "accountId" = (SELECT "id" FROM "Account" WHERE "kind"='burn' LIMIT 1)"#,
@@ -1139,10 +1139,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// پول قفل‌شدهٔ یک خریدار — Σ مبلغ اسکروهای باز (FUNDED/DELIVERED/DISPUTED).
+    /// A buyer's locked money — sum of open escrow amounts (FUNDED/DELIVERED/DISPUTED).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn locked_for_buyer(&self, buyer_id: &str) -> DbResult<i64> {
         let row = sqlx::query(
             r#"SELECT COALESCE(SUM("amount"),0) AS c FROM "Escrow"
@@ -1155,10 +1155,10 @@ impl V3Store {
         Ok(row.get("c"))
     }
 
-    /// فروش واقعی به ازای فروشنده — تعداد اسکروهای RELEASED (لیدربورد sales).
+    /// Real sales per seller — count of RELEASED escrows (sales leaderboard).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn sales_by_seller(&self) -> DbResult<Vec<(String, i64)>> {
         let rows = sqlx::query(
             r#"SELECT "sellerId" AS s, COUNT(*) AS c FROM "Escrow"
@@ -1174,11 +1174,11 @@ impl V3Store {
         Ok(out)
     }
 
-    /// فروش واقعی به ازای محصول — تعداد اسکروهای RELEASED با `productRef`
-    /// (salesCount نمای داشبورد — از جدول زندهٔ اسکرو مشتق می‌شود، ستون نیست).
+    /// Real sales per product — count of RELEASED escrows with a `productRef`
+    /// (dashboard salesCount — derived from the live escrow table, not a column).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn sales_by_product(&self) -> DbResult<Vec<(String, i64)>> {
         let rows = sqlx::query(
             r#"SELECT "productRef" AS p, COUNT(*) AS c FROM "Escrow"
@@ -1195,10 +1195,10 @@ impl V3Store {
         Ok(out)
     }
 
-    /// عنوان محصول بر اساس شناسه — نماهای سفارش (`None` اگر ارجاع آزاد بود).
+    /// Product title by id — order views (`None` if the reference was free).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn product_title(&self, product_ref: Option<&str>) -> DbResult<Option<String>> {
         let Some(pref) = product_ref else { return Ok(None) };
         let row = sqlx::query(r#"SELECT "title" FROM "Product" WHERE "id" = ?"#)
@@ -1209,10 +1209,10 @@ impl V3Store {
         Ok(row.map(|r| r.get::<String, _>("title")))
     }
 
-    /// سری ۱۴روزهٔ درآمد (تراز خزانه به تفکیک روز) — چارت overview.
+    /// 14-day revenue series (treasury balance per day) — overview chart.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn revenue_series_14d(&self) -> DbResult<Vec<(String, i64)>> {
         let rows = sqlx::query(
             r#"SELECT substr("Tx"."at",1,10) AS day, COALESCE(SUM("Posting"."amount"),0) AS revenue
@@ -1233,11 +1233,11 @@ impl V3Store {
         Ok(out)
     }
 
-    /// بکاپ سازگار SQLite با `VACUUM INTO` + هرس تا `keep` فایلِ جدیدترین.
+    /// SQLite-consistent backup via `VACUUM INTO` + pruning down to the `keep` newest files.
     ///
     /// # Errors
-    /// فروشگاه درون‌حافظه‌ای → [`crate::error::DbError::Config`] (لایهٔ سرور
-    /// به `BACKUP_UNSUPPORTED` ۵۰۳ نگاشت می‌کند)؛ خطای SQL/فایل.
+    /// In-memory store → [`crate::error::DbError::Config`] (the server layer
+    /// maps it to `BACKUP_UNSUPPORTED` 503); SQL/file error.
     pub async fn backup_to_dir(&self, dir: &std::path::Path, keep: usize) -> DbResult<BackupInfo> {
         let Some(src) = self.file_path() else {
             return Err(DbError::Config("in-memory store has no file to snapshot".into()));
@@ -1249,7 +1249,7 @@ impl V3Store {
         let file_name = format!("backup-{stamp}.sqlite");
         let dest = dir.join(&file_name);
         if dest.exists() {
-            // دو بکاپ در یک ثانیه — پسوند شماره‌دار
+            // Two backups within one second — numbered suffix
             let mut i = 1u32;
             loop {
                 let alt = dir.join(format!("backup-{stamp}-{i}.sqlite"));
@@ -1279,7 +1279,7 @@ impl V3Store {
             .await
             .map_err(|e| DbError::Config(format!("backup file missing: {e}")))?
             .len();
-        // هرس — جدیدترین‌ها می‌مانند
+        // Pruning — the newest ones are kept
         let mut entries: Vec<(std::path::PathBuf, std::time::SystemTime)> = Vec::new();
         let mut rd = tokio::fs::read_dir(dir)
             .await
@@ -1309,25 +1309,25 @@ impl V3Store {
     }
 }
 
-/// نتیجهٔ بکاپ — پورت `BackupCreated`.
+/// Backup result — port of `BackupCreated`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BackupInfo {
-    /// مسیر مطلق اسنپ‌شات
+    /// Absolute snapshot path
     pub file: String,
-    /// حجم به بایت
+    /// Size in bytes
     pub size_bytes: u64,
-    /// تعداد نگه‌داشته‌شده‌ها بعد از هرس
+    /// Count kept after pruning
     pub kept: i64,
-    /// زمان ایجاد ISO
+    /// ISO creation time
     pub created_at: String,
 }
 
-/// تاریخ امروز UTC به شکل `YYYY-MM-DD`.
+/// Today's UTC date as `YYYY-MM-DD`.
 fn utc_today() -> String {
     chrono::Utc::now().format("%Y-%m-%d").to_string()
 }
 
-/// تاریخِ «امروز منهای n روز» UTC — برای بازهٔ سری ۱۴روزه.
+/// UTC "today minus n days" date — for the 14-day series window.
 fn utc_today_minus(n: u32) -> String {
     (chrono::Utc::now() - chrono::Duration::days(i64::from(n))).format("%Y-%m-%d").to_string()
 }
@@ -1336,15 +1336,15 @@ fn utc_today_minus(n: u32) -> String {
 #[allow(unused_imports)]
 use crate::store::RecentPosting;
 
-/// رویدادهای دامنه به شکل JSON سیمی — برای درج دستی در outbox (فاز ۵).
+/// Domain events as wire JSON — for manual outbox insertion (Phase 5).
 #[must_use]
 pub fn wire_event(event: &DomainEvent) -> (String, String) {
     (crate::wire::event_kind(event).to_owned(), event_payload(event))
 }
 
-/// بازخوانی وضعیت کامل دفتر + یک امانت — برای مسیرهای ترکیبی آینده.
+/// Reload the full ledger state + one escrow — for future composite paths.
 /// # Errors
-/// خطای SQL یا ناسازگاری وضعیت دفتر/امانت در بارگذاری تراکنشی.
+/// SQL error or ledger/escrow state inconsistency during transactional load.
 pub async fn load_world(
     store: &V3Store,
     escrow_id: Option<&str>,
@@ -1367,10 +1367,10 @@ fn _event_payload_witness(ev: &DomainEvent) -> String {
     event_payload(ev)
 }
 
-/// تسویهٔ تحویل سفارش از مسیر دامنه — برای `POST /orders/{id}/status`.
+/// Order delivery settlement through the domain path — for `POST /orders/{id}/status`.
 ///
 /// # Errors
-/// خطای دامنه یا SQL.
+/// Domain or SQL error.
 pub async fn deliver_order(
     store: &V3Store,
     escrow_id: &str,
@@ -1409,5 +1409,5 @@ pub async fn deliver_order(
         .ok_or_else(|| DbError::Corrupt("deliver completed without escrow".into()))
 }
 
-/// `DomainResult` برای re-export داخلی — کدهای دامنه در امضاهای بالا.
+/// `DomainResult` for internal re-export — domain codes appear in the signatures above.
 pub type QDomainResult<T> = DomainResult<T>;

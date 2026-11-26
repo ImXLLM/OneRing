@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * KIAN M3 — فراهم‌کنندهٔ نشست مینی‌اپ.
+ * KIAN M3 — the mini-app session provider.
  *
- * جریان fail-closed:
- * 1. توکن ذخیره‌شدهٔ معتبر → مستقیم /me.
- * 2. initData تلگرام (WebApp یا fragment مرورگر) → POST /auth/telegram → توکن.
- * 3. هیچ‌کدام → حالت مهمان با پیام «باز کردن داخل تلگرام».
+ * Fail-closed flow:
+ * 1. A valid stored token → straight to /me.
+ * 2. Telegram initData (WebApp or browser fragment) → POST /auth/telegram → token.
+ * 3. Neither → guest mode with an "Open inside Telegram" message.
  *
- * هویت فقط از HMAC سمت کرنل می‌آید؛ این کامپوننت هیچ ادعای هویتی نمی‌سازد.
+ * Identity comes only from the kernel-side HMAC; this component fabricates no identity claims.
  */
 
 import {
@@ -39,7 +39,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<SessionState>({ phase: "loading" });
 
   const authenticate = useCallback(async () => {
-    // ۱) توکن ذخیره‌شده — اگر زنده بود همین کافی است
+    // 1) Stored token — if still alive, that alone suffices
     const token = loadToken();
     if (token) {
       try {
@@ -47,10 +47,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setState({ phase: "ready", me, token });
         return;
       } catch {
-        clearToken(); // نشست مرده — احراز دوباره
+        clearToken(); // Dead session — re-authenticate
       }
     }
-    // ۲) احراز با initData تلگرام
+    // 2) Authenticate with Telegram initData
     const initData = extractInitData();
     if (!initData) {
       setState({ phase: "guest", reason: "outside-telegram" });
@@ -90,7 +90,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await api.logout(state.token);
       } catch {
-        /* نشست شاید قبلاً مرده باشد */
+        /* The session may already be dead */
       }
     }
     clearToken();

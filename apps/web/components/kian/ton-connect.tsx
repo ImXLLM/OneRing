@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * KIAN M3 — جزیرهٔ TON Connect (فقط کلاینت).
+ * KIAN M3 — TON Connect island (client-only).
  *
- * این فایل عمداً جدا است: `@tonconnect/ui-react` در سطح ماژول به APIهای
- * مرورگر دست می‌زند؛ پس فقط با `next/dynamic({ ssr: false })` از صفحهٔ
- * ولت لود می‌شود تا SSR هرگز آن را لمس نکند.
+ * This file is deliberately separate: `@tonconnect/ui-react` touches browser
+ * APIs at module level, so it is loaded from the wallet page via
+ * `next/dynamic({ ssr: false })` so SSR never touches it.
  */
 
 import {
@@ -27,7 +27,7 @@ export default function TonConnectSection({
     <TonConnectUIProvider manifestUrl={`${SITE_URL}/tonconnect-manifest.json`}>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-zinc-400">اتصال ولت TON</span>
+          <span className="text-sm text-zinc-400">&#x627;&#x62a;&#x635;&#x627;&#x644; &#x648;&#x644;&#x62a; TON</span>
           <TonConnectButton className="!rounded-xl" />
         </div>
         <RegisteredAddressBridge onRegister={onRegisterAddress} registering={registering} />
@@ -36,7 +36,7 @@ export default function TonConnectSection({
   );
 }
 
-/** پل داخل provider — useTonAddress فقط زیر TonConnectUIProvider کار می‌کند. */
+/** Bridge inside the provider — useTonAddress only works under TonConnectUIProvider. */
 function RegisteredAddressBridge({
   onRegister,
   registering,
@@ -48,8 +48,8 @@ function RegisteredAddressBridge({
   if (!address) {
     return (
       <p className="text-xs leading-5 text-zinc-500">
-        با TON Connect ولت خود را وصل کنید؛ پس از تأیید ادمین، دیین به حساب
-        شهروندی‌تان ضرب می‌شود.
+        &#x628;&#x627; TON Connect &#x648;&#x644;&#x62a; &#x62e;&#x648;&#x62f; &#x631;&#x627; &#x648;&#x635;&#x644; &#x6a9;&#x646;&#x6cc;&#x62f;&#x61b; &#x67e;&#x633; &#x627;&#x632; &#x62a;&#x623;&#x6cc;&#x6cc;&#x62f; &#x627;&#x62f;&#x645;&#x6cc;&#x646;&#x60c; &#x62f;&#x6cc;&#x6cc;&#x646; &#x628;&#x647; &#x62d;&#x633;&#x627;&#x628;
+        &#x634;&#x647;&#x631;&#x648;&#x646;&#x62f;&#x6cc;‌&#x62a;&#x627;&#x646; &#x636;&#x631;&#x628; &#x645;&#x6cc;‌&#x634;&#x648;&#x62f;.
       </p>
     );
   }
@@ -64,7 +64,7 @@ function RegisteredAddressBridge({
         disabled={registering}
         className="self-start rounded-lg bg-royal-500/20 px-3 py-1.5 text-xs font-semibold text-gold-400 ring-1 ring-gold-400/30 transition-colors hover:bg-royal-500/30 disabled:opacity-50"
       >
-        {registering ? "در حال ثبت…" : "ثبت این آدرس روی هویت من"}
+        {registering ? "\u062f\u0631 \u062d\u0627\u0644 \u062b\u0628\u062a…" : "\u062b\u0628\u062a \u0627\u06cc\u0646 \u0622\u062f\u0631\u0633 \u0631\u0648\u06cc \u0647\u0648\u06cc\u062a \u0645\u0646"}
       </button>
     </div>
   );

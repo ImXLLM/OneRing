@@ -1,5 +1,5 @@
 #![no_main]
-//! fuzz هدف ۲ — پارسر `CreateEscrowRequest`.
+//! Fuzz target 2 — the `CreateEscrowRequest` parser.
 use libfuzzer_sys::fuzz_target;
 use dropagentx_contracts::CreateEscrowRequest;
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# mount_nousresearch_vault.sh — سوارکردن زیرمجموعهٔ منتخب گنجینهٔ NousResearch/hermes-agent
-# (Wave 2 - Step 2) در docs/vault/nousresearch_hermes/ با گندزدایی رازها.
+# mount_nousresearch_vault.sh — mounting a selected subset of the NousResearch/hermes-agent vault
+# (Wave 2 - Step 2) under docs/vault/nousresearch_hermes/ with secret sanitization.
 #
-# ~60 فایل منتخب: فهرست و مانیفست + نقشه‌های پورت Rust (پوشهٔ 06) + اسکیمای کامل
-# Hermes-Function-Calling (پوشهٔ 05) + هستهٔ حلقهٔ ایجنت و فشرده‌ساز (پوشهٔ 01) +
-# حافظه و جستجوی FTS (پوشهٔ 03) + امنیت و گارد حلقهٔ بات (پوشهٔ 04) + ۹ SKILL.md پرچم‌دار.
+# ~60 selected files: listing and manifest + Rust port maps (folder 06) + the complete
+# Hermes-Function-Calling schema (folder 05) + the agent-loop core and compressor (folder 01) +
+# memory and FTS search (folder 03) + bot-loop security and guard (folder 04) + 9 flagship SKILL.md files.
 set -euo pipefail
 
 SRC="/tmp/vault_nousresearch"
@@ -13,14 +13,14 @@ DST="/home/z/my-project/kian-launch/kian/docs/vault/nousresearch_hermes"
 rm -rf "$DST"
 mkdir -p "$DST"
 
-# ── 1. فهرست، مانیفست و نقشه‌های پورت ────────────────────────────────────────
+# ── 1. Listing, manifest, and port maps ────────────────────────────────────────
 cp "$SRC/VAULT_INDEX_FA.md" "$SRC/MANIFEST.json" "$DST/"
 mkdir -p "$DST/06_kian_v2_rust_port_blueprints" "$DST/05_hermes_function_calling_schemas" \
          "$DST/01_hermes_agent_core_loop" "$DST/03_memory_and_session_fts" \
          "$DST/04_gateway_telegram_and_cron" "$DST/02_hermes_builtin_skills_catalog"
 cp "$SRC"/06_kian_v2_rust_port_blueprints/*.md "$DST/06_kian_v2_rust_port_blueprints/"
 
-# ── 2. اسکیمای کامل Hermes-Function-Calling (پوشهٔ 05) ───────────────────────
+# ── 2. Complete Hermes-Function-Calling schema (folder 05) ───────────────────────
 for f in README.md functioncall.py functions.py jsonmode.py prompter.py schema.py \
          utils.py validator.py requirements.txt chat_templates/chatml.j2 \
          chat_templates/vicuna.j2 chat_templates/zephyr.j2 prompt_assets/few_shot.json \
@@ -29,7 +29,7 @@ for f in README.md functioncall.py functions.py jsonmode.py prompter.py schema.p
   cp "$SRC/05_hermes_function_calling_schemas/$f" "$DST/05_hermes_function_calling_schemas/$f"
 done
 
-# ── 3. هستهٔ حلقهٔ ایجنت: انباشتگر استریم، فشرده‌ساز، پرامپت سه‌لایه (پوشهٔ 01) ─
+# ── 3. Agent-loop core: stream accumulator, compressor, three-layer prompt (folder 01) ─
 for f in SOUL.md AGENTS.md SECURITY.md run_agent.py toolsets.py model_tools.py \
          trajectory_compressor.py agent/chat_completion_helpers_tool_calls.py \
          agent/context_compressor.py agent/context_compressor_prune.py \
@@ -39,7 +39,7 @@ for f in SOUL.md AGENTS.md SECURITY.md run_agent.py toolsets.py model_tools.py \
   cp "$SRC/01_hermes_agent_core_loop/$f" "$DST/01_hermes_agent_core_loop/$f"
 done
 
-# ── 4. حافظه و جستجوی جلسه (پوشهٔ 03) ────────────────────────────────────────
+# ── 4. Memory and session search (folder 03) ────────────────────────────────────────
 for f in tools/memory_tool.py tools/memory_tool_store.py agent/memory_manager.py \
          agent/memory_context.py agent/memory_provider.py \
          persistence/sqlite/conversation/_store/search.py \
@@ -49,7 +49,7 @@ for f in tools/memory_tool.py tools/memory_tool_store.py agent/memory_manager.py
   cp "$SRC/03_memory_and_session_fts/$f" "$DST/03_memory_and_session_fts/$f"
 done
 
-# ── 5. امنیت، گیت تأیید و گارد حلقهٔ بات (پوشهٔ 04) ──────────────────────────
+# ── 5. Security, approval gate, and bot-loop guard (folder 04) ──────────────────────────
 for f in agent/redact.py agent/redact_partial_keys.py gateway/bot_loop_guard.py \
          gateway/delivery_ledger.py tools/approval_smart.py \
          tools/approval_variation_selectors.py tools/approval_detection.py \
@@ -58,7 +58,7 @@ for f in agent/redact.py agent/redact_partial_keys.py gateway/bot_loop_guard.py 
   cp "$SRC/04_gateway_telegram_and_cron/$f" "$DST/04_gateway_telegram_and_cron/$f"
 done
 
-# ── 6. ۹ SKILL.md پرچم‌دار (پوشهٔ 02) ────────────────────────────────────────
+# ── 6. 9 flagship SKILL.md files (folder 02) ────────────────────────────────────────
 declare -A SKILLS=(
   ["popular-web-designs"]="creative"
   ["p5js"]="creative"
@@ -77,13 +77,13 @@ for skill in "${!SKILLS[@]}"; do
      "$DST/02_hermes_builtin_skills_catalog/$cat/$skill/SKILL.md"
 done
 
-# ── 7. گندزدایی رازها: sk-… / ghp_… / eyJ… → DUMMY-TEST-FIXTURE ─────────────
+# ── 7. Secret sanitization: sk-… / ghp_… / eyJ… → DUMMY-TEST-FIXTURE ─────────────
 python3 - <<'PYEOF'
 import re
 from pathlib import Path
 
 DST = Path("/home/z/my-project/kian-launch/kian/docs/vault/nousresearch_hermes")
-# الگوهای شبه‌راز — فقط نمونه‌های تست گنجینه را می‌گیرد؛ مستندات واقعی دست‌نخورده می‌ماند
+# Secret-like patterns — catches only the vault's test samples; real documentation stays untouched
 PATTERNS = [
     re.compile(r"sk-[A-Za-z0-9_-]{16,}"),
     re.compile(r"ghp_[A-Za-z0-9]{10,}"),

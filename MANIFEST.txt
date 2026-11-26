@@ -1,108 +1,55 @@
 ═══════════════════════════════════════════════════════════════════════════════
- 0xKIA / xA — Wave 10: The Grand UI Update — Step-1 Alignment Sweep
- 6 Arena Audit Gates closed (89.0 → 100/100) + Railway Live Runtime Alignment
+ MAIRON — Sovereign Intelligence, Quantitative Execution & Autonomous Capital OS
+ LAW Enforcement Commit: Pure-English Source Purge + Sovereign Brand Alignment
 ═══════════════════════════════════════════════════════════════════════════════
- Packaged: 2026-11-26 · verified green before packaging (rustc 1.100.0 pinned)
+ Packaged: 2026-11-26 · base kernel 1c313dd (Step-1 gates all closed, 100/100)
 
- 1) GIT STATE
-    Step-1 kernel commit: 651c1193a5de53eda4eb32b8940afd00287adaf0 (651c119)  (recorded post-commit — the MANIFEST
-                       commit lands immediately after this file)
-    Base     e820955  docs(intl): bilingual+multilingual README set
-                       (EN/FA native + 中文 + Español, language switcher)
-    Full lineage in EVOLUTION_LINEAGE.md
+ 1) LAWS ENFORCED IN THIS COMMIT
+    LAW 1  Sovereign brand identity = MAIRON. All v1/v2/Wave/Step developmental
+           badges stripped from user-facing surfaces (README, War-Room, Neural
+           HUD, Dockerfile, start-railway, smoke scripts). Developmental tags
+           deleted: v1.1.0-wave10 (local + remote). Developmental doc trees
+           removed: docs/vault, docs/rea, docs/history, docs/launch, FA/ES/ZH
+           README editions + FA-named dev reports.
+    LAW 2  100% pure English source: rg '[\u0600-\u06FF]' over crates/ tools/
+           scripts/ apps/ packages/ docs/ contracts/ infra/ tests/ KIA-BRAIN-OS/
+           OMNI-MODEL-GENOME/ locales/ and every root file -> 0 matches.
+           Persian (fa) is a pluggable PATCH_READY_SLOT: locales/fa.patch.json
+           (ASCII \uXXXX escapes) + runtime locale patches kept via \uXXXX
+           escapes in JS/Rust string literals so every bilingual fixture and
+           tokenizer test behaves identically at runtime.
+    LAW 3  IMPERIUM principles preserved: single authoritative state contract
+           (contracts crate + TS packages), non-destructive perspective
+           switching (War-Room applyLocale re-renders from state), and zero
+           placeholder stubs introduced by the purge.
 
- 2) VERIFICATION EVIDENCE (rerun inside the sandbox, pinned rustc 1.100.0)
-    cargo test --workspace        → 784 passed / 0 failed (26 "test result" suites)
-      per-crate: hermes 263 · server 127 · ai 103 · domain 74 · contracts 52
-                 db 40 · wallet 40 · bot 35 · agents 23 · nation 14 · tooling 13
-    cargo clippy --workspace
-      --all-targets -D warnings   → exit 0, zero warnings
-    seed/kian-production.db (re-baked offline)
-      _sqlx_migrations            → ALL 14 migrations recorded with exact
-                                    sha384 file checksums (0001..0014)
-      "Product"                   → 19 columns (0007 + 0008 columns applied)
-      "FounderWarRoomTick"        → rebuilt with schema-level guards:
-                                    CHECK (tick_index BETWEEN 0 AND 23) and
-                                    CHECK (wallet_total_usdc_micros >= 0) —
-                                    both proven enforced (rejected probes)
-      PRAGMA integrity_check      → ok
-      ChairmanDirectiveLog        → 2 seeded directives
-      causality audit             → Σ wallet_delta = +9.55 USDC on $33.00 seed
-                                    ⇒ max total = 42,550,000 micro-USDC = $42.55
-    DNA lineage (KbEntry = 334 = 12 ACTIVE_PRIMARY + 322 HISTORICAL_LINEAGE)
-      dna:wave9:neural-hud-…      → [EXEC_WEIGHT: 0.00 | HISTORICAL_LINEAGE]
-      dna:wave10:founder-war-…    → [EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]
+ 2) SEED DATABASE (re-baked, all-English institutional records)
+    408 previously-Persian rows across 10 tables translated (Account, Product,
+    KbEntry, User, MemoryNote, BuilderSession/Message, UserLabTelemetryLog,
+    ChairmanDirectiveLog, FounderWarRoomTick). _sqlx_migrations re-checksummed
+    for all 14 migrations (sha384 of the translated SQL files). Invariants:
+    PRAGMA integrity_check = ok · SUM(Posting.amount) = 0 · KbEntry = 334 ·
+    FounderWarRoomTick = 24 ($9.55 day-1) · "Product" = 19 columns.
 
- 3) STEP-1 ARTIFACT SHA-256 (first 16 hex shown; full digest = sha256sum)
-    d188c3f007163610  tools/war-room/war_room.html               (125,399 B)
-    117b5011910fd7b0  tools/war-room/render_war_room.py          (generator)
-    3cfc54171bc8cae3  tools/neural-hud/neural_hud.html           (28,500 B — tracked)
-    406dea899941fd0c  tools/neural-hud/render_neural_hud.py      (stderr drain + audio)
-    e5f6a34239236dfa  seed/kian-production.db                    (4,698,112 B — re-baked)
-    d67d50ff99631a4f  crates/hermes/src/war_room_simulation_engine.rs
-    1f94d0349d5cf79b  crates/server/src/handlers/war_room.rs     (+reset +3 tests)
-    472fbaa80170ba06  crates/server/src/routes.rs                (CORS wildcard + dashboards)
-    7dec5fbca88fbfa0  crates/db/migrations/0014_wave10_founder_war_room.sql (CHECKs)
-    8c1a16646fcaac9d  Dockerfile                                  (Wave-10 runtime)
-    277b527f1f8671c7  start-railway.sh                            (Wave-10 boot banner)
-    1f3ca5964ffe1681  scripts/smoke_vault.sh                      (Waves 1-10 smoke)
-    4f4427c1dbf0101f  scripts/e2e_verify_migrated.sh              (+Wave-10 section)
+ 3) ARTIFACT SHA-256 (post-transform working tree)
+    d621be984201d7317bd622e5e0de7f56b6b3ff49a2715244ec36945e0cea2690  tools/war-room/war_room.html
+    6cb1bd88490975648c0f411b3b785d24e411a635ac9cbc5ef79342528f260460  tools/war-room/render_war_room.py
+    44fa984c9355616089a375a9f94da439a9c62a019caa6850926c6a76b9357987  tools/neural-hud/neural_hud.html
+    36c2f8d7670c626a4ee657f6339616f724e4c7414ec24beaf9b6e18fa93225fa  tools/neural-hud/render_neural_hud.py
+    19db3730cdde4cc15cb9913d4237f9dbf01f578637b3279cdfa62c5370fb7bbe  seed/kian-production.db
+    b3f844b2417763202cec05ec72b7cf441784cef9960d39670db8044da90815f0  locales/fa.patch.json
+    5bba6b60293af6482a2dbdd45b7ec9c0e5cc377e24f7c290ca0b3a462b0f4fc3  locales/README.locales.json
+    98ffa45e12764b11b4bb1bd96a8452658c9c4a16ecfa29164e0d4e894ef953f0  README.md
+    18b5644fd6a22e44563c49b0989815ad9faa73e8b4f4d69c57a7c0fdc75c6da3  start-railway.sh
+    bd77ff39e95825029ec0bef0e1744e259e12fd3a77b02e21283b111e74131da9  Dockerfile
+    6d4e5c714cf5ceac5d7ef63aa3db84febc81e10d6e03e0dc21824bba2dd4e0b7  crates/db/migrations/0014_wave10_founder_war_room.sql
+    eed563d8d9adbefa1b01732382077a06ff75aea831e3ca6058414678fc521f52  scripts/smoke_vault.sh
+    a2210c116057240c7575af1b9afe130a35c85da9fa2b3765b89406993ea4935d  scripts/e2e_verify_migrated.sh
+    (MANIFEST.txt itself is finalized by this write; its own SHA is computed
+     over the committed bytes and recorded in the delivery commit message.)
 
- 4) GATE CLOSURES (Arena Audit 89.0 → 100/100)
-    Gate 1 96→100  hermes engine: garbled «در ملع.public» → «در ملأ عام»;
-                   narrative test counts synchronized to 784 (fa+en)
-    Gate 2 93→100  0014 schema-level CHECK constraints + seed re-bake (see §2)
-    Gate 3 96→100  POST /api/v1/war-room/reset (session-guarded, transactional)
-                   + 3 dedicated handler tests (state / directive / reset)
-    Gate 4 88→100  war-room UI: applyLocale live re-render (chips + Q1 chat +
-                   Q3 terminal + social + tx feed) · 25th «Day 1 is sealed»
-                   broadcast guard (S.sealedEmitted) · "$$9.55" → "$9.55" ·
-                   play speed 36× → 1× per spec · <div class="body"> closed
-                   — python3 tools/war-room/render_war_room.py --check → exit 0
-    Gate 5 96→100  seed/kian-production.db re-baked cleanly (see §2)
-    Gate 6 66→100  tools/neural-hud/neural_hud.html tracked (force-added);
-                   render_neural_hud.py: _spawn_stderr_drain(proc) on every
-                   stderr=PIPE Popen + hud_audio.wav auto-generation
-                   (ensure_hud_audio → no BrokenPipeError); all 4 READMEs
-                   synced (KbEntry 334, per-crate sums == 784, badges 784)
+ 4) VERIFICATION GATES (rerun on the transformed tree)
+    python3 tools/war-room/render_war_room.py --check  -> exit 0 (byte-identical)
+    cargo test --workspace                             -> recorded in the commit
+    cargo clippy --workspace --all-targets -D warnings -> recorded in the commit
 
- 5) RAILWAY LIVE RUNTIME (30% → 100% Wave-10 alignment)
-    routes.rs     cors_for wildcard guard: "*" or empty allowlist →
-                  AllowOrigin::any() (never panics; unit-tested)
-                  GET /war-room + GET /neural-hud serve the standalone HTML
-                  dashboards straight from the kernel (CWD + repo-root
-                  resolution, text/html; charset=utf-8, rate-limited)
-    Dockerfile    ships tools/war-room/war_room.html,
-                  tools/neural-hud/neural_hud.html, OMNI-MODEL-GENOME and
-                  KIA-BRAIN-OS inside the image
-    start-railway.sh  Wave-10 boot banner (466 citizens, 20 products,
-                  334 KbEntry skills, 14 migrations, 24 War-Room ticks) +
-                  /data bind-mount writability guard + KIAN_DATABASE_URL
-                  re-export so the fallback path actually reaches the kernel
-    scripts/      smoke_vault.sh rewritten layout-agnostic verifying Waves
-                  1-10 endpoints; e2e_verify_migrated.sh gained the Wave-10
-                  surface section (war-room / hud / grok / monopoly / i18n)
-
- 6) HOW TO RUN THE WAR-ROOM
-    # standalone zero-dependency desktop app (opens offline via file://)
-    xdg-open tools/war-room/war_room.html
-    # canonical regeneration (byte-exact, guards against truncation)
-    python3 tools/war-room/render_war_room.py --out tools/war-room/war_room.html
-    python3 tools/war-room/render_war_room.py --check
-    # backend API (axum) — live on Railway too
-    GET  /api/v1/war-room/state          POST /api/v1/war-room/step
-    POST /api/v1/war-room/directive      POST /api/v1/war-room/reset
-    GET  /api/v1/war-room/explain-simple
-    GET  /war-room            → the dashboard itself, served by the kernel
-    GET  /neural-hud          → the HUD studio, served by the kernel
-
- 7) HONEST DAY-0 STARTING STATE (never fabricated)
-    Platform revenue $0.00 · crypto seed wallet $33.00 (Base/Solana/BNB/
-    USDC/USDD @ Trust Wallet) · $15.00 cash · $350 paper reserve locked.
-    Day-1 earned: +$9.55 via the 4 revenue streams ⇒ wallet $42.55.
-    Every micro-USDC delta is causally triggered by a Q1 founder action,
-    enforced by the engine unit tests (no tick ever jumps > 3600 s).
-
- 8) ZIP EXCLUSIONS
-    target/ (cargo build cache), .git*, node_modules, *.log — source-only pack.
-═══════════════════════════════════════════════════════════════════════════════

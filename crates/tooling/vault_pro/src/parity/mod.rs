@@ -1,18 +1,18 @@
-//! موتور parity فاز ۸ — «همان ورودی → همان پاسخ → همان وضعیت».
+//! The Phase 8 parity engine — «same input → same response → same state».
 //!
-//! قانون طلایی ADR-009 §۶: قرارداد ثابت، پیاده‌سازی متغیر. این ماژول سوئیت
-//! parity را اجرا می‌کند:
+//! The golden rule of ADR-009 §6: contract fixed, implementation variable. This module runs
+//! the parity suite:
 //!
-//! * سناریوهای طلایی (ورودی HTTP عین قرارداد OpenAPI) روی روتر Rust اجرا
-//!   می‌شوند؛ پاسخ **بایت‌به‌بایت** (پس از نرمال‌سازی فیلدهای فرّار مثل
-//!   timestamp و uptime — که بین دو پروسه هرگز برابر نمی‌شوند) با گلدن مقایسه
-//!   می‌شود و وضعیت دیتابیس هم عیناً چک می‌گردد.
-//! * حالت «مقایسهٔ زنده با TS» (`--ts-url`) در باینری `parity` — همان
-//!   سناریوها به سرور TS هم زده می‌شود و diff بایتی گزارش می‌شود؛ این همان
-//!   گیت خروجِ هر پلهٔ dual-run است (ADR-009 §۱۲).
+//! * Golden scenarios (HTTP input identical to the OpenAPI contract) run against the Rust router;
+//!   the response is compared **byte-for-byte** (after normalizing volatile fields such as
+//!   timestamp and uptime — which never match between two processes) against the golden,
+//!   and the database state is checked verbatim as well.
+//! * The «live comparison against TS» mode (`--ts-url`) in the `parity` binary — the same
+//!   scenarios are fired at the TS server too and the byte diff is reported; this is the
+//!   exit gate of each dual-run stage (ADR-009 §12).
 //!
-//! فایل‌های گلدن در `tests/golden/` کرِیت ذخیره‌اند؛ `--record` دوباره
-//! تولیدشان می‌کند و تستِ replay در CI جلوی هر drift بایتی را می‌گیرد.
+//! Golden files live in the crate's `tests/golden/`; `--record` regenerates them and
+//! the replay test in CI blocks any byte drift.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -28,98 +28,98 @@ use tower::ServiceExt;
 use dropagentx_db::V3Store;
 use dropagentx_server::{build_router, AppState, ServerConfig};
 
-/// کلید ادمین سناریوها (≥۱۶ کاراکتر — قاعدهٔ fail-closed).
+/// Scenarios' admin key (>= 16 characters — the fail-closed rule).
 pub const PARITY_KEY: &str = "parity-admin-key-0123456789";
-/// توکن مخفی webhook بات در سناریوهای بات.
+/// Secret bot webhook token for the bot scenarios.
 pub const PARITY_SECRET: &str = "parity-webhook-secret-0123456";
 
 pub mod scenarios;
 
 pub use scenarios::{scenarios, DbExpect, Scenario, Step};
 
-/// یک خوانش وضعیت دیتابیس پس از سناریو — نگه‌دارندهٔ مقادیر خام SQL.
+/// One database state read after a scenario — holder of raw SQL values.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct DbActual {
-    /// Σ کیف کاربران (`Account.kind = 'user'`)
+    /// Σ of user wallets (`Account.kind = 'user'`)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_wallet_sum: Option<i64>,
-    /// تراز خزانهٔ ملی
+    /// National treasury balance
     #[serde(skip_serializing_if = "Option::is_none")]
     pub treasury: Option<i64>,
-    /// تعداد ردیف‌های Tx
+    /// Tx row count
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tx_count: Option<i64>,
-    /// تعداد رویدادهای Outbox
+    /// Outbox event count
     #[serde(skip_serializing_if = "Option::is_none")]
     pub outbox_count: Option<i64>,
-    /// وضعیت اسکرو — کلید `escrow:<id>`
+    /// Escrow state — key `escrow:<id>`
     #[serde(flatten)]
     pub escrow_status: BTreeMap<String, String>,
 }
 
-/// نتیجهٔ اجرای یک سناریو — قبل از مقایسه با گلدن.
+/// One scenario's execution result — before comparison against the golden.
 #[derive(Debug, Clone)]
 pub struct ScenarioResult {
-    /// نام سناریو
+    /// Scenario name
     pub name: String,
-    /// کد وضعیت HTTP
+    /// HTTP status code
     pub status: u16,
-    /// مقدار `content-type`
+    /// `content-type` value
     pub content_type: String,
-    /// بدنهٔ پاسخ پس از نرمال‌سازی (بایت‌های دقیق)
+    /// Response body after normalization (exact bytes)
     pub body: Vec<u8>,
-    /// خوانش دیتابیس
+    /// Database read
     pub db: DbActual,
 }
 
-/// گلدن یک سناریو — همان چیزی که در فایل JSON ذخیره/مقایسه می‌شود.
+/// One scenario's golden — exactly what is stored/compared in the JSON file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Golden {
-    /// نام سناریو
+    /// Scenario name
     pub name: String,
-    /// کد وضعیت مورد انتظار
+    /// Expected status code
     pub status: u16,
-    /// `content-type` مورد انتظار
+    /// Expected `content-type`
     pub content_type: String,
-    /// بدنهٔ نرمال‌شده‌ی مورد انتظار (رشتهٔ UTF-8)
+    /// Expected normalized body (UTF-8 string)
     pub body: String,
-    /// وضعیت دیتابیس مورد انتظار
+    /// Expected database state
     pub db: DbActual,
 }
 
-/// نتیجهٔ مقایسهٔ یک سناریو با گلدن.
+/// Result of comparing one scenario against its golden.
 #[derive(Debug, Clone)]
 pub struct ScenarioCheck {
-    /// نام سناریو
+    /// Scenario name
     pub name: String,
-    /// منطبق بودن کامل (status + content-type + بدنهٔ نرمال + دیتابیس)
+    /// Full match (status + content-type + normalized body + database)
     pub ok: bool,
-    /// فهرست مغایرت‌های یافت‌شده — خالی یعنی سبز
+    /// List of found mismatches — empty means green
     pub diffs: Vec<String>,
 }
 
-/// گزارش کامل سوئیت parity — ورودی گیت dual-run.
+/// Full parity-suite report — the input to the dual-run gate.
 #[derive(Debug, Clone)]
 pub struct ParityReport {
-    /// نتیجهٔ هر سناریو به ترتیب رجیستری
+    /// Result per scenario, in registry order
     pub checks: Vec<ScenarioCheck>,
 }
 
 impl ParityReport {
-    /// همهٔ سناریوها سبزند؟
+    /// Are all scenarios green?
     #[must_use]
     pub fn ok(&self) -> bool {
         self.checks.iter().all(|c| c.ok)
     }
 
-    /// تعداد سناریوهای سبز / کل.
+    /// Green scenarios / total.
     #[must_use]
     pub fn summary(&self) -> (usize, usize) {
         let green = self.checks.iter().filter(|c| c.ok).count();
         (green, self.checks.len())
     }
 
-    /// متن گزارش قابل چاپ — برای لاگ گیت.
+    /// Printable report text — for gate logging.
     #[must_use]
     pub fn render(&self) -> String {
         let (green, total) = self.summary();
@@ -135,22 +135,22 @@ impl ParityReport {
     }
 }
 
-/// الگوی RFC3339 — هر timestamp فرّار روی سیم به توکن ثابت تبدیل می‌شود.
-/// الگو ثابتِ زمان‌کامپایل است؛ اگر روزی خراب شود تستِ
-/// `normalizer_flattens_volatile_fields` در CI قرمز می‌شود (fail-loud)،
-/// پس اینجا هیچ panic/expect ای لازم نیست.
+/// RFC3339 pattern — every volatile timestamp on the wire is normalized to a fixed token.
+/// The pattern is a compile-time constant; if it ever breaks, the
+/// `normalizer_flattens_volatile_fields` test goes red in CI (fail-loud),
+/// so no panic/expect is needed here.
 fn ts_pattern() -> Option<&'static Regex> {
     static RE: std::sync::OnceLock<Option<Regex>> = std::sync::OnceLock::new();
     RE.get_or_init(|| {
-        // نمونهٔ منطبق: `2026-11-12T09:41:00.123Z` یا با آفست `+00:00`
+        // matching example: `2026-11-12T09:41:00.123Z` or with a `+00:00` offset
         Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})$").ok()
     })
     .as_ref()
 }
 
-/// الگوی UUID — شناسه‌های سرورساخت (مثل `prod:<uuid>`) بین موتورها هرگز
-/// برابر نمی‌شوند؛ به توکن ثابت تبدیل می‌شوند (پیشوند `prod:` حفظ می‌شود).
-/// همان سیاست fail-loud الگوی timestamp — گیتِ آن تستِ replay بایتی است.
+/// UUID pattern — server-generated ids (like `prod:<uuid>`) never match across engines;
+/// they are normalized to a fixed token (the `prod:` prefix is preserved).
+/// Same fail-loud policy as the timestamp pattern — the byte replay test is its gate.
 fn uuid_pattern() -> Option<&'static Regex> {
     static RE: std::sync::OnceLock<Option<Regex>> = std::sync::OnceLock::new();
     RE.get_or_init(|| {
@@ -162,7 +162,7 @@ fn uuid_pattern() -> Option<&'static Regex> {
     .as_ref()
 }
 
-/// نرمال‌سازی مقدار JSON — بازگشتی: timestamp → `<TS>`، uptime → `<UPTIME>`.
+/// JSON value normalization — recursive: timestamp → `<TS>`, uptime → `<UPTIME>`.
 #[must_use]
 pub fn normalize_value(v: &Value) -> Value {
     match v {
@@ -189,15 +189,15 @@ pub fn normalize_value(v: &Value) -> Value {
     }
 }
 
-/// نرمال‌سازی بدنهٔ پاسخ — JSON را هوشمندانه، بقیه را با جایگزینی متنی.
+/// Response-body normalization — JSON handled smartly, everything else by text substitution.
 #[must_use]
 pub fn normalize_body(bytes: &[u8]) -> Vec<u8> {
     match serde_json::from_slice::<Value>(bytes) {
         Ok(v) => serde_json::to_vec(&normalize_value(&v)).unwrap_or_default(),
         Err(_) => {
-            // بدنهٔ غیر JSON (مثل صفحهٔ docs) — الگوی متنی با محدودهٔ کامل؛
-            // الگو ثابت است و نمی‌تواند خراب شود، اما بی‌panic: خرابی فرضی =
-            // عبور متن بدون تغییر (تست‌های replay بایتی در CI آن را می‌گیرند).
+            // non-JSON body (such as the docs page) — text patterns over the full range;
+            // the pattern is fixed and cannot fail, but no panic: a hypothetical failure =
+            // passing the text through unchanged (the byte replay tests in CI catch that).
             let text = String::from_utf8_lossy(bytes).into_owned();
             match Regex::new(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})")
                 .ok()
@@ -209,12 +209,12 @@ pub fn normalize_body(bytes: &[u8]) -> Vec<u8> {
     }
 }
 
-/// کانفیگ بوت برای یک سناریو — حداقلی و از محیط مستقل.
+/// Boot config for one scenario — minimal and environment-independent.
 #[derive(Debug, Clone)]
 pub struct BootCfg {
-    /// webhook بات فعال؟ (توکن مخفی + ادمین بات ۴۲)
+    /// Bot webhook enabled? (secret token + bot admin 42)
     pub bot_secret: bool,
-    /// سقف نرخ (پیش‌فرض ۱۲۰ — سناریوی 429 عدد کوچک می‌دهد)
+    /// Rate cap (default 120 — the 429 scenario sets a small number)
     pub rate_limit: usize,
 }
 
@@ -224,10 +224,10 @@ impl Default for BootCfg {
     }
 }
 
-/// بوت روتر کامل روی دیتابیس داده‌شده — همان مسیر `main.rs` تولید.
+/// Boot the full router on the given database — the same path as production `main.rs`.
 ///
 /// # Errors
-/// خطای باز شدن/مهاجرت دیتابیس (در تست یعنی خود سناریو شکست خورده).
+/// Database open/migration error (in a test this means the scenario itself failed).
 pub async fn boot(cfg: &BootCfg, database_url: &str) -> anyhow::Result<(Router, V3Store)> {
     let server_cfg = ServerConfig {
         admin_key: Some(PARITY_KEY.into()),
@@ -245,15 +245,15 @@ pub async fn boot(cfg: &BootCfg, database_url: &str) -> anyhow::Result<(Router, 
     Ok((build_router(state), store))
 }
 
-/// ارسال یک گام HTTP — پاسخ (status, content-type, بدنهٔ خام).
+/// Dispatch one HTTP step — response (status, content-type, raw body).
 ///
 /// # Errors
-/// خطای شبکه/بدنه (در oneshot عملاً نمی‌افتد؛ خرابی یعنی باگ سناریو).
+/// Network/body error (practically impossible with oneshot; a failure means a scenario bug).
 pub async fn send_step(
     router: &Router,
     step: &Step,
 ) -> anyhow::Result<(StatusCode, String, Vec<u8>)> {
-    // مسیرهای سناریو نسبت به /api/v1‌اند — همان عادت app.inject فستیفای
+    // scenario paths are relative to /api/v1 — the same habit as Fastify's app.inject
     let full_path = format!("/api/v1{}", step.path);
     let mut builder = Request::builder().method(step.method).uri(full_path.as_str());
     if step.admin {
@@ -279,12 +279,12 @@ pub async fn send_step(
     Ok((status, ctype, bytes.to_vec()))
 }
 
-/// خوانش خام وضعیت دیتابیس برای مقایسهٔ parity — SQL فقط‌خواندنی مستقل از
-/// دامنه و store (همان روح `proof.rs`: ممیزی نباید باگ کدِ ممیزی‌شده را به
-/// ارث ببرد).
+/// Raw database-state read for parity comparison — read-only SQL, independent of the
+/// domain and store (the spirit of `proof.rs`: the auditor must not inherit bugs from the
+/// audited code).
 ///
 /// # Errors
-/// خطای SQL (یعنی دیتابیس ناسازگار است — خودِ یافتهٔ parity).
+/// SQL error (the database is inconsistent — itself a parity finding).
 pub async fn db_snapshot(pool: &sqlx::SqlitePool, expect: &DbExpect) -> anyhow::Result<DbActual> {
     use sqlx::Row;
     let mut actual = DbActual::default();
@@ -327,10 +327,10 @@ pub async fn db_snapshot(pool: &sqlx::SqlitePool, expect: &DbExpect) -> anyhow::
     Ok(actual)
 }
 
-/// اجرای کامل یک سناریو روی روتر تازه — نتیجهٔ خام (بدون مقایسه).
+/// Run a full scenario on a fresh router — raw result (no comparison).
 ///
 /// # Errors
-/// خطای بوت/SQL — یعنی محیط parity سالم نیست.
+/// Boot/SQL error — the parity environment itself is unhealthy.
 pub async fn run_scenario(
     scenario: &Scenario,
     database_url: &str,
@@ -338,7 +338,7 @@ pub async fn run_scenario(
     let (router, store) = boot(&scenario.boot, database_url).await?;
     for step in &scenario.setup {
         let (status, _, _) = send_step(&router, step).await?;
-        // گام‌های setup باید هرگز 5xx ندهند — 5xx یعنی خود موتور شکسته است
+        // setup steps must never return 5xx — a 5xx means the engine itself is broken
         if status.is_server_error() {
             anyhow::bail!("setup step {} {} → {status}", step.method, step.path);
         }
@@ -355,7 +355,7 @@ pub async fn run_scenario(
     })
 }
 
-/// مقایسهٔ نتیجه با گلدن — فهرست مغایرت‌ها.
+/// Compare the result against the golden — list of mismatches.
 #[must_use]
 pub fn compare(result: &ScenarioResult, golden: &Golden) -> ScenarioCheck {
     let mut diffs = Vec::new();
@@ -386,22 +386,22 @@ pub fn compare(result: &ScenarioResult, golden: &Golden) -> ScenarioCheck {
     ScenarioCheck { name: result.name.clone(), ok: diffs.is_empty(), diffs }
 }
 
-/// پیش‌فرض پوشهٔ گلدن — `crates/tooling/tests/golden`.
+/// Default golden folder — `crates/tooling/tests/golden`.
 #[must_use]
 pub fn default_golden_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden")
 }
 
-/// مسیر فایل گلدن یک سناریو.
+/// Golden file path for one scenario.
 #[must_use]
 pub fn golden_path(dir: &Path, name: &str) -> PathBuf {
     dir.join(format!("{name}.json"))
 }
 
-/// بارگذاری همهٔ گلدن‌ها از پوشه — غایب → `None` (گزارش «گلدن نیست»).
+/// Load all goldens from the folder — missing → `None` (reported as «no golden»).
 ///
 /// # Errors
-/// خطای I/O یا JSON خراب.
+/// I/O error or malformed JSON.
 pub fn load_goldens(dir: &Path) -> anyhow::Result<Vec<Option<Golden>>> {
     scenarios::scenarios()
         .iter()
@@ -417,13 +417,13 @@ pub fn load_goldens(dir: &Path) -> anyhow::Result<Vec<Option<Golden>>> {
         .collect()
 }
 
-/// اجرای همهٔ سناریوها و مقایسه با گلدن‌ها — هستهٔ گیت parity.
+/// Run all scenarios and compare against the goldens — the core of the parity gate.
 ///
-/// آرگومان تابع، برای هر سناریو یک URL دیتابیس تازه می‌سازد (ایزوله بودن
-/// سناریوها از هم).
+/// The function argument provisions a fresh database URL per scenario (scenario
+/// isolation).
 ///
 /// # Errors
-/// خطای I/O گلدن‌ها یا شکست بوت (مغایرت‌ها خودشان در گزارش‌اند).
+/// Golden I/O error or boot failure (mismatches themselves live in the report).
 pub async fn verify_all(
     database_url_factory: impl Fn(usize) -> String,
 ) -> anyhow::Result<ParityReport> {
@@ -446,11 +446,11 @@ pub async fn verify_all(
     Ok(ParityReport { checks })
 }
 
-/// ثبت همهٔ گلدن‌ها از رفتار فعلی Rust — نقطهٔ شروع parity؛ مقایسهٔ واقعی
-/// TS↔Rust در تولید با `parity --ts-url` انجام می‌شود.
+/// Record all goldens from the current Rust behavior — the parity starting point; the real
+/// TS↔Rust comparison in production runs with `parity --ts-url`.
 ///
 /// # Errors
-/// خطای I/O یا بوت.
+/// I/O or boot error.
 pub async fn record_all(database_url_factory: impl Fn(usize) -> String) -> anyhow::Result<usize> {
     let dir = default_golden_dir();
     std::fs::create_dir_all(&dir)?;

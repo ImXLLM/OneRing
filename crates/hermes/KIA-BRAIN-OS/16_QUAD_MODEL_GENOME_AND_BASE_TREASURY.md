@@ -1,105 +1,102 @@
-# DNA شانزدهم مغز خالق: ماتریسِ ژنومِ چهارمدلی، خزانهٔ چهارجریانیِ روزِ اول روی Base و قراردادهایِ Solidity
+# Creator-Brain DNA 16: The Quad-Model Genome Matrix, the Day-One Four-Stream Treasury on Base, and the Solidity Contracts
 
-> `KIA-BRAIN-OS/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md` — Wave 7 (Step 4/4 — FINAL WAVE) کرنل `0xKIA`
-> برچسب اجرایی: `[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]`
-> موتورها: `OMNI-MODEL-GENOME/` · `crates/wallet/src/base_treasury.rs` · `crates/hermes/src/sovereign_monopoly_engine.rs`
-> قراردادها: `contracts/base/ZeroXKiaToken.sol` · `contracts/base/KiaBaseEscrowTreasury.sol`
-> مهاجرت: `0011_sovereign_monopoly_genome_and_base_treasury.sql` · سیم: `GET/POST /api/v1/monopoly/*`
+> `KIA-BRAIN-OS/16_QUAD_MODEL_GENOME_AND_BASE_TREASURY.md` — Wave 7 (Step 4/4 — FINAL WAVE) of the `0xKIA` kernel
+> Execution tag: `[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]`
+> Engines: `OMNI-MODEL-GENOME/` · `crates/wallet/src/base_treasury.rs` · `crates/hermes/src/sovereign_monopoly_engine.rs`
+> Contracts: `contracts/base/ZeroXKiaToken.sol` · `contracts/base/KiaBaseEscrowTreasury.sol`
+> Migration: `0011_sovereign_monopoly_genome_and_base_treasury.sql` · Wire: `GET/POST /api/v1/monopoly/*`
 
 ---
 
-## ۱. چکیدهٔ اجرایی
+## 1. Executive Summary
 
-DNA شانزدهم — موجِ پایانی — سه لایهٔ حاکم را همزمان قفل می‌کند:
+DNA 16 — the final wave — locks three sovereign layers in place at once:
 
-1. **ماتریسِ ژنومِ `OMNI-MODEL-GENOME` v4 (چهارمدلی × ۹فایلی)** — ۳۶ فایلِ
-   canonical برای `GPT 6-Web`، `GEMINI 4 ARAGON HIGH`،
-   `DeepSeek-3.2-WEB-Think-mode` و `Cluade-sonnet-5.5-extra` (با aliasِ
-   `Claude-sonnet-5.5-extra`)؛ هر مدل دقیقاً ۹ فایلِ
-   `01_IDENTITY…` تا `09_DISTILLED_CLONE_SYSTEM_PROMPT.md` دارد + ماتریسِ
-   مقایسهٔ ۲۰تسکی + README؛ ژنوم‌هایِ v1/v2 زیرِ `legacy/` زنده‌اند.
-2. **خزانهٔ حاکمِ روزِ اول روی Ethereum Base (`Chain ID: 8453`)** —
-   چهار جریانِ درآمد با تقسیمِ اتمیِ صفرجمعِ `Precise`: مالیاتِ منشورِ ۱۰٪،
-   پایشِ وابستهٔ ۱۰٪–۵۰٪ با قانونِ «فروشِ مستقیمِ بی‌معرف» (۲۰۰۰ bps پلتفرم /
-   ۸۰۰۰ bps سازنده)، بوست‌هایِ مارژینِ ۱۰۰٪ و اسپردِ برداشتِ ۱.۵٪.
-3. **دو قراردادِ Solidity (`^0.8.24`)** — `ZeroXKiaToken` (عرضهٔ ثابتِ ۱
-   میلیارد + EIP-2612 permit + burn، معماریِ تمیزِ ۱۰۰/۱۰۰ GoPlus/TokenSniffer)
-   و `KiaBaseEscrowTreasury` (امانتِ غیرحضانتی + تقسیم‌گرِ اتمی + قفلِ
-   non-reentrant).
+1. **The `OMNI-MODEL-GENOME` v4 quad-model genome matrix (4 models × 9 files)** — 36 canonical
+   files for `GPT 6-Web`, `GEMINI 4 ARAGON HIGH`, `DeepSeek-3.2-WEB-Think-mode`, and
+   `Cluade-sonnet-5.5-extra` (with the `Claude-sonnet-5.5-extra` alias); each model carries
+   exactly 9 files, `01_IDENTITY…` through `09_DISTILLED_CLONE_SYSTEM_PROMPT.md`, plus a
+   20-task comparison matrix + README; the v1/v2 genomes stay live under `legacy/`.
+2. **The day-one sovereign treasury on Ethereum Base (`Chain ID: 8453`)** — four revenue
+   streams with `Precise` zero-sum atomic splitting: a 10% charter tax, a 10%–50% affiliate
+   watch with the "direct no-referrer sale" rule (2000 bps platform / 8000 bps creator),
+   100% margin boosts, and a 1.5% withdrawal spread.
+3. **Two Solidity contracts (`^0.8.24`)** — `ZeroXKiaToken` (a fixed supply of 1 billion +
+   EIP-2612 permit + burn, a clean 100/100 GoPlus/TokenSniffer architecture) and
+   `KiaBaseEscrowTreasury` (non-custodial escrow + an atomic splitter + a non-reentrant lock).
 
-قرارداد کرنل حفظ شده: صفر `unsafe`، صفر هشدارِ `Clippy` (`-D warnings`)، قطعیتِ
-کامل و صفر شناور روی پول — همهٔ پاها با موتورِ `Precise` Wave 6 اثبات می‌شوند.
+The kernel contract is preserved: zero `unsafe`, zero `Clippy` warnings (`-D warnings`),
+full determinism, and zero floats on money — every leg is proven with the Wave 6 `Precise` engine.
 
-## ۲. ماتریسِ ژنوم — نقشهٔ کاملِ `omni-genome-v4`
+## 2. The Genome Matrix — the Complete `omni-genome-v4` Map
 
-| # | مدل | پوشه | تخصصِ حاکم | آواتارِ ترامینیتی |
+| # | Model | Folder | Sovereign specialty | Trinity avatar |
 | --- | --- | --- | --- | --- |
-| 01 | `GPT 6-Web` | `models/01-gpt-6-web/` | سنتزِ وبِ لحظه‌ای، آرتیفکتِ فریم‌۱ (۳۹۰px صفر-overflow)، محصولِ تمام‌پشتهٔ سریع | `Alpha` |
-| 02 | `GEMINI 4 ARAGON HIGH` | `models/02-gemini-4-aragon-high/` | سنتزِ میان‌مخزنیِ ۱M-توکنی، اورکستراتورِ ۹-مدالیتی، تأییدِ معماریِ کلان | `Logic-Prime` |
-| 03 | `DeepSeek-3.2-WEB-Think-mode` | `models/03-deepseek-3.2-web-think-mode/` | ریاضیاتِ کمّیِ `<think>`، اثباتِ آلفایِ علّیِ CCXT/Vibe، راستی‌آزماییِ رسمی | `Mairon` |
-| 04 | `Cluade-sonnet-5.5-extra` | `models/04-claude-sonnet-5.5-extra/` | جراحیِ Rust، صفر-هشدارِ pedantic، ممیزیِ قرارداد، کپیِ دوزبانه | `Logic-Prime` |
+| 01 | `GPT 6-Web` | `models/01-gpt-6-web/` | Real-time web synthesis, frame-1 artifacts (390px zero-overflow), fast full-stack product | `Alpha` |
+| 02 | `GEMINI 4 ARAGON HIGH` | `models/02-gemini-4-aragon-high/` | 1M-token cross-repo synthesis, the 9-modality orchestrator, macro-architecture validation | `Logic-Prime` |
+| 03 | `DeepSeek-3.2-WEB-Think-mode` | `models/03-deepseek-3.2-web-think-mode/` | Quantitative `<think>` mathematics, causal CCXT/Vibe alpha proofs, formal verification | `Mairon` |
+| 04 | `Cluade-sonnet-5.5-extra` | `models/04-claude-sonnet-5.5-extra/` | Rust surgery, zero pedantic warnings, contract audits, bilingual copy | `Logic-Prime` |
 
-قواعدِ مسیریابی (`QuadTaskDomain → champion`): `web-synthesis`/`ui-ux-artifact`
+Routing rules (`QuadTaskDomain → champion`): `web-synthesis`/`ui-ux-artifact`
 → 01 · `cross-repo-context` → 02 · `quant-proof` → 03 ·
-`rust-systems-audit`/`bilingual-copywriting` → 04. حلِ alias صادقانه است:
-`Cluade-sonnet-5.5-extra` و `Claude-sonnet-5.5-extra` هر دو به مدلِ ۰۴ می‌روند و
-`gpt-6-standard-free` به ۰۱ (سازگاری با ژنومِ موروثی).
+`rust-systems-audit`/`bilingual-copywriting` → 04. Alias resolution is truthful:
+`Cluade-sonnet-5.5-extra` and `Claude-sonnet-5.5-extra` both map to model 04, and
+`gpt-6-standard-free` maps to 01 (compatibility with the inherited genome).
 
-## ۳. منشورِ روزِ اول — «جنگ اول به از صلح آخر»
+## 3. The Day-One Charter — "First War in Exchange for Last Peace"
 
-| جریان | نرخ | مقصد | قانون |
+| Stream | Rate | Destination | Rule |
 | --- | --- | --- | --- |
-| ۱ — مالیاتِ منشور | `1000 bps` (۱۰٪) | `system:kia_sovereign_treasury` | روی هر فروشِ بازارخانه |
-| ۲ — پایشِ وابسته | `1000..=5000 bps` | `user:{ref_id}` | پایشِ پیش‌فرض `1000`؛ بدونِ معرف: پایشِ ۱۰٪ **مستقیم به خزانهٔ حاکم** → پلتفرم `2000 bps`، سازنده `8000 bps` |
-| ۳ — بوستِ لحظه‌ای | `10000 bps` (۱۰۰٪) | `system:kia_sovereign_treasury` | `FeaturedSlot24h` (۲۵۰ XTR / ۵$ USDC / ۵M µKIAN) · `MaironFastTrackAudit` (۱۰۰ XTR / ۲$ / ۲M) · `ViralSwarmAmplifier` (۵۰۰ XTR / ۱۰$ / ۱۰M) |
-| ۴ — اسپردِ برداشت | `150 bps` (۱.۵٪) | `system:kia_sovereign_treasury` | تسویهٔ لحظه‌ای و برداشتِ بین‌زنجیره‌ای |
+| 1 — Charter tax | `1000 bps` (10%) | `system:kia_sovereign_treasury` | On every marketplace sale |
+| 2 — Affiliate watch | `1000..=5000 bps` | `user:{ref_id}` | Default watch `1000`; with no referrer, the 10% watch goes **straight to the sovereign treasury** → platform `2000 bps`, creator `8000 bps` |
+| 3 — Instant boost | `10000 bps` (100%) | `system:kia_sovereign_treasury` | `FeaturedSlot24h` (250 XTR / $5 USDC / 5M µKIAN) · `MaironFastTrackAudit` (100 XTR / $2 / 2M) · `ViralSwarmAmplifier` (500 XTR / $10 / 10M) |
+| 4 — Withdrawal spread | `150 bps` (1.5%) | `system:kia_sovereign_treasury` | Instant settlement and cross-chain withdrawal |
 
-`compute_day_one_atomic_split` چهار پایِ دوطرفه می‌سازد
-(`buyer_debit + kia_treasury + affiliate + creator == 0`) — باقیماندهٔ اتمی روی
-سازنده می‌بندد و اثباتِ صفرجمع با `Precise` بازچک می‌شود؛ تقسیمِ نامتوازن هرگز
-بیرون نمی‌آید و ردیفِ نامتوازن در لایهٔ db رد می‌شود (`DbError::Corrupt`).
+`compute_day_one_atomic_split` produces four double-entry legs
+(`buyer_debit + kia_treasury + affiliate + creator == 0`) — the atomic remainder settles
+onto the creator, and the zero-sum proof is re-checked with `Precise`; an unbalanced split
+never escapes, and an unbalanced row is rejected at the db layer (`DbError::Corrupt`).
 
-## ۴. قراردادهایِ Base `8453`
+## 4. The Base `8453` Contracts
 
-* **`ZeroXKiaToken.sol`** — ERC-20 با عرضهٔ ثابتِ `1,000,000,000 × 10^18` که
-  یک‌بار در constructor به deployer (خزانهٔ حاکم) ضرب می‌شود؛ بدونِ mint
-  پسِ‌constructor، blacklist، pause و مالیاتِ mutable؛ EIP-2612 `permit` با
-  `DOMAIN_SEPARATOR` و `burn` کاربر — هدفِ ۱۰۰/۱۰۰ GoPlus و TokenSniffer.
-* **`KiaBaseEscrowTreasury.sol`** — whitelistِ بستهٔ دارایی (ETH بومی،
-  USDC بومیِ `0x8335…2913`، `$0xKIA`)، `settleMarketplaceSale` (کشِ گروس از
-  خریدار → پاهای اتمی → ledger داخلی)، `purchaseInstantBoost` (۱۰۰٪ به خزانه)
-  و `withdrawWithSpread` (اسپردِ ۱۵۰ bps)؛ همه با قفلِ non-reentrant،
-  effects-then-interactions و خزانهٔ immutable؛ `receive()` مستقیم رد می‌شود.
-* **EIP-681** — `build_base_eip681_payment_uri` برای لینکِ یک‌کلیکیِ
-  Trust/Coinbase/MetaMask با `@8453` اجباری؛ دارایی‌های غیر on-chain
-  (`XTR`, `µKIAN`) خطای `NotOnChainSettleable` می‌دهند — هیچ URI جعلی نیست.
+* **`ZeroXKiaToken.sol`** — an ERC-20 with a fixed supply of `1,000,000,000 × 10^18`,
+  minted once in the constructor to the deployer (the sovereign treasury); no
+  post-constructor mint, no blacklist, no pause, no mutable tax; EIP-2612 `permit` with
+  `DOMAIN_SEPARATOR` and user `burn` — targeting 100/100 on GoPlus and TokenSniffer.
+* **`KiaBaseEscrowTreasury.sol`** — a closed asset whitelist (native ETH,
+  native USDC `0x8335…2913`, `$0xKIA`), `settleMarketplaceSale` (gross cash from the
+  buyer → atomic legs → internal ledger), `purchaseInstantBoost` (100% to the treasury),
+  and `withdrawWithSpread` (a 150 bps spread); all with a non-reentrant lock,
+  effects-then-interactions, and an immutable treasury; direct `receive()` is rejected.
+* **EIP-681** — `build_base_eip681_payment_uri` for one-click Trust/Coinbase/MetaMask
+  links with a mandatory `@8453`; non-on-chain assets
+  (`XTR`, `µKIAN`) return `NotOnChainSettleable` — no fake URI is ever produced.
 
-## ۵. اورکستراتورِ انحصار و سیمِ `/api/v1/monopoly/*`
+## 5. The Monopoly Orchestrator and the `/api/v1/monopoly/*` Wire
 
-`SovereignMonopolyOrchestrator` روترِ ژنوم + منشور + descriptor هایِ Base +
-کیتِ لانچ (`ProductHuntCmcLaunchKit`) را در یک وضعیتِ واحد نگه می‌دارد. سه
-مسیرِ additive:
+`SovereignMonopolyOrchestrator` holds the genome router + charter + Base descriptors +
+the launch kit (`ProductHuntCmcLaunchKit`) in a single state. Three additive routes:
 
-* `GET /monopoly/genome-matrix` — ۴ مدل با وضعیتِ تأییدِ ۹فایلی (هدفِ ۳۶) +
-  ۶ قاعدهٔ مسیریابی؛ تأییدِ دیسکی fail-closed با fallback به builtin.
-* `GET /monopoly/charter-and-base` — چهار جریانِ منشور + پیکربندیِ Base +
-  ممیزیِ هر دو قرارداد.
-* `POST /monopoly/simulate-split` — اجرایِ تقسیم، ماندگاری در
-  `sovereign_treasury_splits` (مهاجرتِ `0011`) و اثباتِ صفرجمع + EIP-681.
+* `GET /monopoly/genome-matrix` — 4 models with 9-file verification status (target 36) +
+  6 routing rules; disk verification is fail-closed with a builtin fallback.
+* `GET /monopoly/charter-and-base` — the four charter streams + Base configuration +
+  the audit of both contracts.
+* `POST /monopoly/simulate-split` — runs the split, persists it in
+  `sovereign_treasury_splits` (migration `0011`), and returns the zero-sum proof + EIP-681.
 
-## ۶. گیتِ پذیرشِ موجِ هفتم
+## 6. The Wave 7 Acceptance Gate
 
-| گیت | وضعیت |
+| Gate | Status |
 | --- | --- |
-| ۳۶ فایلِ ژنوم کامل و بالایِ آستانه | ✅ `models/{01..04}/` |
-| منشور: فروشِ معرف‌دار ۱۰/۱۰/۸۰ و بی‌معرف ۲۰/۰/۸۰ (µUSDC دقیق) | ✅ تستِ قطعی |
-| بوست‌ها ۱۰۰٪ و اسپردِ ۱۵۰ bps بی‌اتلاف | ✅ |
-| EIP-681 با `@8453` + ردِ XTR/µKIAN | ✅ |
-| ردیفِ نامتوازن در db رد می‌شود | ✅ |
-| قراردادها: بدونِ mint بعدی/blacklist/pause/مالیاتِ mutable | ✅ |
-| صفر `unsafe` + صفر هشدارِ clippy | ✅ |
-| `KbEntry` → **۳۳۱** (`kb:dna-16-quad-genome-base-treasury`) | ✅ |
+| All 36 genome files complete and above threshold | ✅ `models/{01..04}/` |
+| Charter: referred sale 10/10/80 and no-referrer 20/0/80 (exact µUSDC) | ✅ deterministic test |
+| Boosts at 100% and a lossless 150 bps spread | ✅ |
+| EIP-681 with `@8453` + rejection of XTR/µKIAN | ✅ |
+| An unbalanced row is rejected at the db layer | ✅ |
+| Contracts: no further mint / no blacklist / no pause / no mutable tax | ✅ |
+| Zero `unsafe` + zero clippy warnings | ✅ |
+| `KbEntry` → **331** (`kb:dna-16-quad-genome-base-treasury`) | ✅ |
 
-*Wave 7 پایانِ خطِ چهارموجی است: هر DNA از ۱۲ تا ۱۶ برچسبِ
-`[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]` دارد و هیچ موجی بدونِ گیتِ مایرون
-بسته نشده است.*
+*Wave 7 closes the four-wave line: DNA 12 through 16 each carry the
+`[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]` tag, and no wave has ever been closed without the
+Mairon gate.*

@@ -1,20 +1,20 @@
-//! وبهوک بات تلگرام (M6) — `POST /bot/webhook` — شِل دوم روی orchestrator خالص.
+//! Telegram bot webhook (M6) — `POST /bot/webhook` — a second shell over the pure orchestrator.
 //!
-//! گاردها (همه fail-closed، قرارداد فاز ۵ که در `contracts::error` پیش‌بینی
-//! شده بود):
-//! * سرور بدون `KIAN_BOT_WEBHOOK_SECRET` → 503 `BOT_DISABLED` — هرگز باز.
-//! * هدر `X-Telegram-Bot-Api-Secret-Token` غایب/نادرست → 401 `BOT_UNAUTHORIZED`
-//!   (مقایسهٔ زمان‌ثابت با [`verify_kian_key`]).
-//! * آپدیت نامعتبر → 200 با `handled:false` — تلگرام باید ۲۰۰ بگیرد؛ خطا برای
-//!   تلگرام معنا ندارد، فقط لاگ می‌شود.
+//! Guards (all fail-closed, per the Phase 5 contract anticipated in
+//! `contracts::error`):
+//! * Server without `KIAN_BOT_WEBHOOK_SECRET` → 503 `BOT_DISABLED` — never open.
+//! * Missing/incorrect `X-Telegram-Bot-Api-Secret-Token` header → 401 `BOT_UNAUTHORIZED`
+//!   (constant-time comparison via [`verify_kian_key`]).
+//! * Invalid update → 200 with `handled:false` — Telegram must receive 200; an error means
+//!   nothing to Telegram and is only logged.
 //!
-//! هویت: آپدیت مستقیم از کانال معتمد تلگرام (وبهوک امضاشده) می‌آید؛ برای دادهٔ
-//! شهروند، [`InProcessPort`] همان مسیر رسمی مینی‌اپ را طی می‌کند — initData
-//! با `build_bot_init_data` ضرب و با `verify_telegram_init_data` تأیید می‌شود؛
-//! **هیچ مسیر جانبی برای هویت و پول وجود ندارد.**
+//! Identity: updates arrive directly from the trusted Telegram channel (signed webhook); for citizen
+//! data, [`InProcessPort`] follows the same official mini-app path — initData
+//! is minted with `build_bot_init_data` and verified with `verify_telegram_init_data`;
+//! **there is no side path for identity or money.**
 //!
-//! پاسخ‌ها از [`TelegramSender`] می‌روند — در تست‌ها `RecordingSender`
-//! (بدون شبکه)، در تولید `TelegramHttpSender` روی Bot API رسمی.
+//! Responses go through [`TelegramSender`] — in tests `RecordingSender`
+//! (no network), in production `TelegramHttpSender` over the official Bot API.
 
 use std::sync::{Arc, Mutex};
 
@@ -35,40 +35,40 @@ use crate::error::{ApiFailure, ApiResult};
 use crate::handlers::auth::{new_session_token, session_expires_at};
 use crate::state::AppState;
 
-/// نام هدر راز وبهوک — رسمی تلگرام.
+/// Webhook secret header name — official Telegram.
 pub const WEBHOOK_SECRET_HEADER: &str = "x-telegram-bot-api-secret-token";
 
-// ── پورت ارسال پاسخ به تلگرام ───────────────────────────────────────────────
+// ── Response delivery port to Telegram ───────────────────────────────────────────────
 
-/// پیام ثبت‌شده برای تست — بدون شبکه.
+/// Recorded message for tests — no network.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordedMessage {
-    /// چت مقصد.
+    /// Target chat.
     pub chat_id: i64,
-    /// متن پاسخ.
+    /// Response text.
     pub text: String,
-    /// دکمه‌های لینک (label, url) — ردیف شیشه‌ای چنددکمه‌ای.
+    /// Link buttons (label, url) — transparent multi-button row.
     pub links: Vec<(String, String)>,
 }
 
-/// پورت ارسال — تنها خروجی به تلگرام؛ تست‌ها ضبط می‌کنند، تولید HTTP می‌زند.
+/// Delivery port — the only output to Telegram; tests record, production sends HTTP.
 #[async_trait]
 pub trait TelegramSender: Send + Sync {
-    /// ارسال یک پیام — شکست فقط لاگ می‌شود (بات نمی‌میرد).
+    /// Send one message — failure is only logged (the bot does not die).
     async fn send_message(&self, msg: &RecordedMessage) -> Result<(), String>;
 }
 
-/// پیاده‌سازی تولید — Bot API رسمی با rustls؛ توکن هرگز در لاگ نمی‌رود.
+/// Production implementation — official Bot API with rustls; the token never enters logs.
 pub struct TelegramHttpSender {
     http: reqwest::Client,
     bot_token: String,
 }
 
 impl TelegramHttpSender {
-    /// ساخت با توکن بات.
+    /// Build with a bot token.
     ///
     /// # Errors
-    /// ساخت کلاینت TLS.
+    /// Build the TLS client.
     pub fn new(bot_token: &str) -> reqwest::Result<Self> {
         Ok(Self {
             http: reqwest::Client::builder()
@@ -107,10 +107,10 @@ impl TelegramSender for TelegramHttpSender {
     }
 }
 
-/// ضبط‌کنندهٔ تست — صفر شبکه، صفر راز.
+/// Test recorder — zero network, zero secrets.
 #[derive(Default, Clone)]
 pub struct RecordingSender {
-    /// پیام‌های ارسال‌شده.
+    /// Sent messages.
     pub sent: Arc<Mutex<Vec<RecordedMessage>>>,
 }
 
@@ -125,26 +125,26 @@ impl TelegramSender for RecordingSender {
     }
 }
 
-// ── پورت کرنل درون‌پردازشی ──────────────────────────────────────────────────
+// ── In-process kernel port ──────────────────────────────────────────────────
 
-/// پورت کرنل بدون HTTP loopback — همان دیتای store، همان مسیر هویت.
+/// Kernel port without HTTP loopback — the same store data, the same identity path.
 pub struct InProcessPort {
-    /// فروشگاه v3 — همان نقطهٔ اتصال هندلرها.
+    /// v3 store — the same connection point as the handlers.
     store: kian_db::V3Store,
-    /// توکن بات برای ضرب initData (هرگز لاگ نمی‌شود).
+    /// Bot token for minting initData (never logged).
     bot_token: String,
-    /// TTL نشست ساعت.
+    /// Session TTL in hours.
     session_ttl_hours: i64,
 }
 
 impl InProcessPort {
-    /// ساخت از پیکربندی + store (بدون چرخهٔ Arc — store کلون می‌شود).
+    /// Build from config + store (no Arc cycle — the store is cloned).
     #[must_use]
     pub fn new(store: kian_db::V3Store, bot_token: &str, session_ttl_hours: i64) -> Self {
         Self { store, bot_token: bot_token.to_owned(), session_ttl_hours }
     }
 
-    /// نشست شهروند از مسیر رسمی هویت: ضرب → تأیید رسمی → ensure → session.
+    /// Citizen session via the official identity path: mint → official verification → ensure → session.
     async fn session_user(
         &self,
         telegram_id: i64,
@@ -239,23 +239,23 @@ impl KernelPort for InProcessPort {
     }
 }
 
-// ── ران‌تایم بات روی AppState ───────────────────────────────────────────────
+// ── Bot runtime on AppState ───────────────────────────────────────────────
 
-/// ران‌تایم وبهوک — هستهٔ خالص + دو پورت؛ فقط وقتی هر دو راز تنظیم شده باشند.
+/// Webhook runtime — the pure core + two ports; only when both secrets are set.
 pub struct BotRuntime {
-    /// هستهٔ خالص — سقف نرخ per-chat (قفل async — handle درون قفل await می‌شود).
+    /// Pure core — per-chat rate cap (async lock — handle is awaited inside the lock).
     pub core: tokio::sync::Mutex<BotCore>,
-    /// پورت ارسال به تلگرام.
+    /// Delivery port to Telegram.
     pub sender: Arc<dyn TelegramSender>,
-    /// پورت کرنل درون‌پردازشی.
+    /// In-process kernel port.
     pub port: InProcessPort,
 }
 
 impl BotRuntime {
-    /// ساخت تولیدی — sender واقعی Bot API.
+    /// Production constructor — a real Bot API sender.
     ///
     /// # Errors
-    /// ساخت کلاینت TLS.
+    /// Build the TLS client.
     pub fn production(
         store: kian_db::V3Store,
         bot_token: &str,
@@ -274,9 +274,9 @@ impl BotRuntime {
     }
 }
 
-// ── هندلر وبهوک ──────────────────────────────────────────────────────────────
+// ── Webhook handler ──────────────────────────────────────────────────────────────
 
-/// گوار راز وبهوک — سه‌وضعیتی fail-closed مثل ادمین.
+/// Webhook secret guard — three-state fail-closed like the admin key.
 fn require_webhook_secret(headers: &HeaderMap, secret: Option<&str>) -> Result<(), ApiFailure> {
     let header_value = headers.get(WEBHOOK_SECRET_HEADER).and_then(|v| v.to_str().ok());
     if secret.is_none() {
@@ -291,7 +291,7 @@ fn require_webhook_secret(headers: &HeaderMap, secret: Option<&str>) -> Result<(
     Ok(())
 }
 
-/// اجرای اکشن‌ها روی sender — شکست هر پیام لاگ می‌شود و ادامه.
+/// Run actions on the sender — each message failure is logged and we continue.
 async fn execute_actions(sender: &dyn TelegramSender, actions: &[BotAction]) -> usize {
     let mut sent = 0;
     for a in actions {
@@ -313,10 +313,10 @@ async fn execute_actions(sender: &dyn TelegramSender, actions: &[BotAction]) -> 
     sent
 }
 
-/// `POST /bot/webhook` — آپدیت تلگرام → orchestrator خالص → پاسخ.
+/// `POST /bot/webhook` — Telegram update → pure orchestrator → response.
 ///
 /// # Errors
-/// 503 `BOT_DISABLED`؛ 401 `BOT_UNAUTHORIZED`؛ 400 بدنهٔ نامعتبر JSON.
+/// 503 `BOT_DISABLED`; 401 `BOT_UNAUTHORIZED`; 400 invalid JSON body.
 pub async fn webhook(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -324,14 +324,14 @@ pub async fn webhook(
 ) -> ApiResult<Json<Value>> {
     require_webhook_secret(&headers, state.config.bot_webhook_secret.as_deref())?;
     let Some(runtime) = state.bot.as_ref() else {
-        // راز تنظیم است اما ران‌تایم ساخته نشده (توکن بات غایب) — fail-closed
+        // secret is set but the runtime was not built (bot token missing) — fail-closed
         return Err(kian_contracts::HttpFailure::bot_disabled().into());
     };
     let raw: Value = serde_json::from_slice(&body)
         .map_err(|_| kian_contracts::HttpFailure::invalid_request(1))?;
 
     let Some(update) = BotUpdate::from_json(&raw) else {
-        // آپدیت غیرپیام/غیرمتنی — به تلگرام ۲۰۰ می‌دهیم، هیچ پاسخی نمی‌رود
+        // non-message/non-text update — Telegram gets a 200, no reply is sent
         tracing::debug!("webhook update ignored (no private text message)");
         return Ok(Json(serde_json::json!({ "ok": true, "handled": false })));
     };
@@ -348,7 +348,7 @@ pub async fn webhook(
     Ok(Json(serde_json::json!({ "ok": true, "handled": true, "sent": sent })))
 }
 
-/// پیام به [`RecordedMessage`] برای تست‌ها — هر [`BotAction`] یک پیام.
+/// Messages to [`RecordedMessage`] for tests — one message per [`BotAction`].
 #[must_use]
 pub fn recorded_of(action: &BotAction) -> RecordedMessage {
     RecordedMessage {
@@ -362,7 +362,7 @@ pub fn recorded_of(action: &BotAction) -> RecordedMessage {
     }
 }
 
-// ── تست‌ها — وبهوک کامل روی روتر واقعی با sender ضبط‌شده ────────────────────
+// ── Tests — full webhook over the real router with a recording sender ────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -377,7 +377,7 @@ mod tests {
     const SECRET: &str = "test-webhook-secret-0123456789";
     const BOT: &str = "123456:TEST-BOT-TOKEN-M6";
 
-    /// وضعیت اپ با ران‌تایم بات + sender ضبط‌شده (تزریق دستی sender).
+    /// App state with the bot runtime + a recording sender (manual sender injection).
     async fn state_with_bot() -> (Arc<AppState>, RecordingSender) {
         let mut config = crate::config::ServerConfig::base();
         config.bot_token = Some(BOT.to_owned());
@@ -386,7 +386,7 @@ mod tests {
         let store = V3Store::connect_in_memory().await.expect("store");
         store.migrate().await.expect("migrate");
         store.ensure_system_accounts().await.expect("system");
-        // ران‌تایم با sender ضبط‌شده — جایگزین تولیدی برای آفلاین‌بودن
+        // runtime with a recording sender — production stand-in for offline runs
         let sender = RecordingSender::default();
         let runtime = BotRuntime {
             core: tokio::sync::Mutex::new(BotCore::new(BotPolicy {
@@ -435,7 +435,7 @@ mod tests {
 
     #[tokio::test]
     async fn webhook_guard_is_fail_closed() {
-        // ۱) سرور بدون راز → 503 BOT_DISABLED (هرگز باز)
+        // 1) server without the secret → 503 BOT_DISABLED (never open)
         let config = crate::config::ServerConfig::base();
         let store = V3Store::connect_in_memory().await.expect("store");
         store.migrate().await.expect("migrate");
@@ -444,12 +444,12 @@ mod tests {
         let res = post_webhook(&state, Some(SECRET), update_json("/start")).await;
         assert_eq!(res.status(), StatusCode::SERVICE_UNAVAILABLE);
 
-        // ۲) راز تنظیم شده، هدر غایب → 401
+        // 2) secret set, header missing → 401
         let (state2, _) = state_with_bot().await;
         let res2 = post_webhook(&state2, None, update_json("/start")).await;
         assert_eq!(res2.status(), StatusCode::UNAUTHORIZED);
 
-        // ۳) هدر نادرست → 401
+        // 3) wrong header → 401
         let res3 = post_webhook(&state2, Some("wrong-secret-0123456789"), update_json("/start")).await;
         assert_eq!(res3.status(), StatusCode::UNAUTHORIZED);
     }
@@ -462,11 +462,11 @@ mod tests {
         let sent = sender.sent.lock().unwrap().clone();
         assert_eq!(sent.len(), 1, "one reply for one command");
         assert_eq!(sent[0].chat_id, 100);
-        assert!(sent[0].text.contains("تراز شما"));
+        assert!(sent[0].text.contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
         assert!(sent[0].text.contains('0'), "in-memory store starts at zero — honest");
-        // توکن هرگز در پاسخ نیست
+        // the token never appears in a response
         assert!(!sent[0].text.contains(BOT));
-        // هویت از مسیر رسمی ساخته شده — کاربر citizen:777 اکنون وجود دارد
+        // identity was built via the official path — user citizen:777 now exists
         let user = state
             .store
             .ensure_telegram_user("777", Some("kia"))
@@ -484,23 +484,23 @@ mod tests {
         assert_eq!(sent.len(), 1);
         assert_eq!(
             sent[0].links.first().map(|(label, _)| label.as_str()),
-            Some("🚀 ورود به مینی‌اپ KIAN")
+            Some("🚀 \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN")
         );
         assert_eq!(
             sent[0].links.first().map(|(_, url)| url.as_str()),
             Some("http://localhost:3000")
         );
-        // دکمهٔ دوم: میان‌بر مستقیم بازار
+        // second button: direct market shortcut
         assert_eq!(
             sent[0].links.get(1).map(|(label, url)| (label.as_str(), url.as_str())),
-            Some(("🛒 بازار KIAN", "http://localhost:3000/market"))
+            Some(("🛒 \u{628}\u{627}\u{632}\u{627}\u{631} KIAN", "http://localhost:3000/market"))
         );
     }
 
     #[tokio::test]
     async fn webhook_rate_limit_stops_amplification() {
         let (state, sender) = state_with_bot().await;
-        // ۲۵ پیام سریع — سقف پیش‌فرض ۲۰ در پنجره
+        // 25 rapid messages — default cap of 20 per window
         for i in 0..25u32 {
             let mut body = update_json("/id");
             body["message"]["text"] = serde_json::json!(format!("/id {i}"));
@@ -509,14 +509,14 @@ mod tests {
             assert_eq!(res.status(), StatusCode::OK);
         }
         let sent = sender.sent.lock().unwrap().len();
-        // ۲۰ پاسخ مجاز + یک هشدار نرخ = ۲۱ — نه بیشتر (بدون تقویت اسپم)
+        // 20 allowed replies + one rate warning = 21 — no more (no spam amplification)
         assert_eq!(sent, 21, "warn once, then silent");
     }
 
     #[tokio::test]
     async fn webhook_garbage_json_is_400_and_unknown_update_is_200() {
         let (state, sender) = state_with_bot().await;
-        // بدنهٔ خراب → 400 (قرارداد parse در لبه)
+        // malformed body → 400 (parse contract at the edge)
         let req = Request::builder()
             .method("POST")
             .uri("/api/v1/bot/webhook")
@@ -526,7 +526,7 @@ mod tests {
             .expect("request");
         let res = build_router(state.clone()).oneshot(req).await.expect("response");
         assert_eq!(res.status(), StatusCode::BAD_REQUEST);
-        // آپدیت غیرپیامی (photo) → 200 handled:false، هیچ پیامی نمی‌رود
+        // non-message update (photo) → 200 handled:false, no message is sent
         let photo = serde_json::json!({
             "update_id": 9,
             "message": { "chat": { "id": 100 }, "from": { "id": 777 }, "photo": [{}] }

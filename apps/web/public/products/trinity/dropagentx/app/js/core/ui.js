@@ -19,10 +19,10 @@ DGX.kfmt = n => {
 
 DGX.timeAgo = ts => {
   const s = Math.max(1, (Date.now() / 1000) - (+ts || 0));
-  if (s < 60) return 'همین حالا';
-  if (s < 3600) return Math.floor(s / 60) + ' دقیقه پیش';
-  if (s < 86400) return Math.floor(s / 3600) + ' ساعت پیش';
-  return Math.floor(s / 86400) + ' روز پیش';
+  if (s < 60) return '\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627';
+  if (s < 3600) return Math.floor(s / 60) + ' \u062f\u0642\u06cc\u0642\u0647 \u067e\u06cc\u0634';
+  if (s < 86400) return Math.floor(s / 3600) + ' \u0633\u0627\u0639\u062a \u067e\u06cc\u0634';
+  return Math.floor(s / 86400) + ' \u0631\u0648\u0632 \u067e\u06cc\u0634';
 };
 
 let _toastT = null;
@@ -73,22 +73,22 @@ DGX.catIcon = key => DGX.icon(DGX.CAT_ICONS[key] || 'box', 'cat-ic');
 /* ════════ roles (v1.1: role-based UI) ════════ */
 DGX.isAdmin  = () => !!(DGX.user && DGX.user.is_admin);
 DGX.isHunter = () => (DGX.user && DGX.user.role === 'hunter');
-DGX.roleFa = r => ({ associate: 'کارآموز', soldier: 'سرباز', capo: 'کاپو',
-                     underboss: 'آندرباس', hunter: 'هانتر' }[r] || 'کاربر');
+DGX.roleFa = r => ({ associate: '\u06a9\u0627\u0631\u0622\u0645\u0648\u0632', soldier: '\u0633\u0631\u0628\u0627\u0632', capo: '\u06a9\u0627\u067e\u0648',
+                     underboss: '\u0622\u0646\u062f\u0631\u0628\u0627\u0633', hunter: '\u0647\u0627\u0646\u062a\u0631' }[r] || '\u06a9\u0627\u0631\u0628\u0631');
 
 /* ════════ Glass web-address hub (links to platform web apps) ════════
    admin:true → only rendered for admins (server enforces the real guard,
    the UI just stops advertising the link to normal users).            */
 DGX.hubItems = [
-  { url: '/links',      ic: 'link',   t: 'هاب لینک', cls: '' },
-  { url: '/admin',      ic: 'shield', t: 'پنل ادمین', cls: 'g-gold', admin: true },
-  { url: '/insights',   ic: 'chart',  t: 'تحلیل',    cls: '',       admin: true },
-  { url: '/live',       ic: 'live',   t: 'زنده', cls: 'g-green' },
-  { url: '/cockpit',    ic: 'bot',    t: 'هرمسا وب', cls: '' },
-  { url: '/shop',       ic: 'shop',   t: 'فروشگاه', cls: 'g-gold' },
-  { url: '/landing',    ic: 'rocket', t: 'لندینگ', cls: '' },
-  { url: 'tg://resolve?domain=DropAgentXBot', ic: 'send', t: 'بات', cls: 'g-green' },
-  { url: '#/sitemap', ic: 'compass', t: '۵۰ صفحه', cls: '' },
+  { url: '/links',      ic: 'link',   t: '\u0647\u0627\u0628 \u0644\u06cc\u0646\u06a9', cls: '' },
+  { url: '/admin',      ic: 'shield', t: '\u067e\u0646\u0644 \u0627\u062f\u0645\u06cc\u0646', cls: 'g-gold', admin: true },
+  { url: '/insights',   ic: 'chart',  t: '\u062a\u062d\u0644\u06cc\u0644',    cls: '',       admin: true },
+  { url: '/live',       ic: 'live',   t: '\u0632\u0646\u062f\u0647', cls: 'g-green' },
+  { url: '/cockpit',    ic: 'bot',    t: '\u0647\u0631\u0645\u0633\u0627 \u0648\u0628', cls: '' },
+  { url: '/shop',       ic: 'shop',   t: '\u0641\u0631\u0648\u0634\u06af\u0627\u0647', cls: 'g-gold' },
+  { url: '/landing',    ic: 'rocket', t: '\u0644\u0646\u062f\u06cc\u0646\u06af', cls: '' },
+  { url: 'tg://resolve?domain=DropAgentXBot', ic: 'send', t: '\u0628\u0627\u062a', cls: 'g-green' },
+  { url: '#/sitemap', ic: 'compass', t: '\u06f5\u06f0 \u0635\u0641\u062d\u0647', cls: '' },
 ];
 DGX.hubItemsFor = () => DGX.hubItems.filter(it => !it.admin || DGX.isAdmin());
 
@@ -110,8 +110,8 @@ DGX.openHub = () => {
     <div class="panel">
       <div class="grip"></div>
       <div class="p-head">
-        <span class="p-title">مکعب وب‌اپ‌ها</span>
-        <span class="p-close" onclick="DGX.closeHub()">✕ بستن</span>
+        <span class="p-title">\u0645\u06a9\u0639\u0628 \u0648\u0628‌\u0627\u067e‌\u0647\u0627</span>
+        <span class="p-close" onclick="DGX.closeHub()">✕ \u0628\u0633\u062a\u0646</span>
       </div>
       <div class="hub-list">${DGX.hubItemsFor().map(DGX.glassBtn).join('')}</div>
     </div>`;
@@ -127,7 +127,7 @@ DGX.storiesBox = cats => `
   <div class="stories">
     <div class="story" onclick="location.hash='#/home?cat=all'">
       <div class="ring"><div class="inner">${DGX.icon('home', 'cat-ic')}</div></div>
-      <div class="nm">همه</div>
+      <div class="nm">\u0647\u0645\u0647</div>
     </div>
     ${(cats || []).map(c => `
     <div class="story" onclick="location.hash='#/home?cat=${c.key}'">
@@ -144,7 +144,7 @@ DGX.postCard = p => `
       <img class="avatar" src="/app/assets/logo.jpg" loading="lazy"
            onerror="this.style.opacity=.25">
       <div>
-        <div class="p-name">${DGX.esc(p.creator_name || p.creator_username || 'سازنده')}
+        <div class="p-name">${DGX.esc(p.creator_name || p.creator_username || '\u0633\u0627\u0632\u0646\u062f\u0647')}
           <span class="vf">${DGX.icon('check','ic-xs')}</span></div>
         <div class="p-sub">@${DGX.esc(p.creator_username || 'dropagentx')} ·
           ${DGX.timeAgo(p.created_at || (Date.now() / 1000))}</div>
@@ -156,17 +156,17 @@ DGX.postCard = p => `
         ? `<img src="${DGX.esc(p.photo_url)}" alt="" loading="lazy"
                onerror="this.parentNode.innerHTML='<div style=&quot;height:170px&quot;></div>'">`
         : `<div class="ph-media">${DGX.icon('box', 'ic-xl')}</div>`}
-      ${p.is_featured ? `<span class="badge-drop">${DGX.icon('flame','ic-s')} DROP ویژه</span>` : ''}
+      ${p.is_featured ? `<span class="badge-drop">${DGX.icon('flame','ic-s')} DROP \u0648\u06cc\u0698\u0647</span>` : ''}
     </a>
     <div class="post-body">
       <a class="post-title" href="#/product?id=${+p.id}"
          style="text-decoration:none;color:inherit">${DGX.esc(p.title)}</a>
       <div class="post-desc">${DGX.esc(p.description || '')}</div>
       <div class="price-row">
-        <span class="price num">${DGX.fmt(p.price_credits)} <small>کردیت</small></span>
+        <span class="price num">${DGX.fmt(p.price_credits)} <small>\u06a9\u0631\u062f\u06cc\u062a</small></span>
         <span class="usd num">≈${(+p.usd || 0).toFixed(2)}$</span>
         <span style="margin-inline-start:auto;color:var(--dim2);font-size:11px;display:flex;align-items:center;gap:4px">
-          ${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} فروش</span>
+          ${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} \u0641\u0631\u0648\u0634</span>
       </div>
     </div>
     <div class="ig-actions">
@@ -181,11 +181,11 @@ DGX.postCard = p => `
     <div class="post-stats">
       ${DGX.statBtn('i-dislike', p.dislike_count, p.disliked ? 'on dislike' : '',
                     `data-eng="dislike"`)}
-      <span style="margin-inline-start:auto;color:var(--dim2);font-size:10.5px;display:flex;align-items:center;gap:4px">${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} فروش</span>
+      <span style="margin-inline-start:auto;color:var(--dim2);font-size:10.5px;display:flex;align-items:center;gap:4px">${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} \u0641\u0631\u0648\u0634</span>
     </div>
     <div class="post-actions">
-      <button class="btn btn-primary" data-buy="${+p.id}" data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} خرید فوری</button>
-      <button class="btn btn-ghost" onclick="location.hash='#/product?id=${+p.id}'">جزئیات ↗</button>
+      <button class="btn btn-primary" data-buy="${+p.id}" data-title="${DGX.esc(p.title)}" data-price="${+p.price_credits || 0}">${DGX.icon('cart','ic-s')} \u062e\u0631\u06cc\u062f \u0641\u0648\u0631\u06cc</button>
+      <button class="btn btn-ghost" onclick="location.hash='#/product?id=${+p.id}'">\u062c\u0632\u0626\u06cc\u0627\u062a ↗</button>
     </div>
   </article>`;
 
@@ -198,12 +198,12 @@ DGX.shareUrl = (url, text) => {
   const t = window.Telegram?.WebApp;
   if (t && t.initData && t.openTelegramLink) {
     t.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url)
-      + '&text=' + encodeURIComponent(text || 'اینو ببین روی DropAgentX 👀'));
+      + '&text=' + encodeURIComponent(text || '\u0627\u06cc\u0646\u0648 \u0628\u0628\u06cc\u0646 \u0631\u0648\u06cc DropAgentX 👀'));
     return;
   }
   if (navigator.share) { navigator.share({ url, title: text || 'DropAgentX' }).catch(() => {}); return; }
   navigator.clipboard.writeText(url)
-    .then(() => DGX.toast('لینک کپی شد 🔗'))
+    .then(() => DGX.toast('\u0644\u06cc\u0646\u06a9 \u06a9\u067e\u06cc \u0634\u062f 🔗'))
     .catch(() => {});
 };
 
@@ -228,29 +228,29 @@ DGX.confirmBuy = (p, done) => {
   const price = +p.price_credits || 0, bal = +DGX.user?.credits || 0;
   const img = p.feed_thumb || p.photo_url || '';
   DGX.sheet(`
-    <h3>${DGX.icon('wallet')} تأیید خرید</h3>
+    <h3>${DGX.icon('wallet')} \u062a\u0623\u06cc\u06cc\u062f \u062e\u0631\u06cc\u062f</h3>
     <div class="buy-prod">
       ${img ? `<img class="bp-img" src="${DGX.esc(img)}">`
             : `<span class="bp-img">${DGX.icon('box')}</span>`}
       <div style="flex:1;min-width:0">
-        <b>${DGX.esc(p.title || 'محصول دیجیتال')}</b>
+        <b>${DGX.esc(p.title || '\u0645\u062d\u0635\u0648\u0644 \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644')}</b>
         ${p.seller ? `<span>${DGX.esc(p.seller)}</span>` : '<span>DropAgentX Market</span>'}
       </div>
       <b class="num" style="color:var(--em)">${DGX.fmt(price)}</b>
     </div>
-    <div class="sumrow"><span>قیمت محصول</span><b class="num">${DGX.fmt(price)} کردیت</b></div>
-    <div class="sumrow"><span>کارمزد خریدار</span><b class="free">۰ — رایگان</b></div>
-    <div class="sumrow"><span>موجودی کیف پول شما</span><b class="num">${DGX.fmt(bal)}</b></div>
-    ${bal < price ? `<div class="insuff">موجودی کافی نیست — از بات واریز کن (‎/start).</div>` : ''}
-    <div class="sumrow total"><span>جمع پرداخت</span><b class="num">${DGX.fmt(price)} کردیت</b></div>
+    <div class="sumrow"><span>\u0642\u06cc\u0645\u062a \u0645\u062d\u0635\u0648\u0644</span><b class="num">${DGX.fmt(price)} \u06a9\u0631\u062f\u06cc\u062a</b></div>
+    <div class="sumrow"><span>\u06a9\u0627\u0631\u0645\u0632\u062f \u062e\u0631\u06cc\u062f\u0627\u0631</span><b class="free">\u06f0 — \u0631\u0627\u06cc\u06af\u0627\u0646</b></div>
+    <div class="sumrow"><span>\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641 \u067e\u0648\u0644 \u0634\u0645\u0627</span><b class="num">${DGX.fmt(bal)}</b></div>
+    ${bal < price ? `<div class="insuff">\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0632 \u0628\u0627\u062a \u0648\u0627\u0631\u06cc\u0632 \u06a9\u0646 (‎/start).</div>` : ''}
+    <div class="sumrow total"><span>\u062c\u0645\u0639 \u067e\u0631\u062f\u0627\u062e\u062a</span><b class="num">${DGX.fmt(price)} \u06a9\u0631\u062f\u06cc\u062a</b></div>
     <button class="btn btn-primary" id="cfGo" ${bal < price ? 'disabled style="opacity:.45"' : ''}>
-      ${DGX.icon('cart', 'ic-s')} تأیید و پرداخت</button>
-    <button class="btn btn-ghost" id="cfNo">انصراف</button>
+      ${DGX.icon('cart', 'ic-s')} \u062a\u0623\u06cc\u06cc\u062f \u0648 \u067e\u0631\u062f\u0627\u062e\u062a</button>
+    <button class="btn btn-ghost" id="cfNo">\u0627\u0646\u0635\u0631\u0627\u0641</button>
   `, ov => {
     ov.querySelector('#cfNo').onclick = () => DGX.closeSheet(ov);
     ov.querySelector('#cfGo').onclick = async () => {
       const b = ov.querySelector('#cfGo');
-      b.disabled = true; b.textContent = '⏳ در حال پردازش…';
+      b.disabled = true; b.textContent = '⏳ \u062f\u0631 \u062d\u0627\u0644 \u067e\u0631\u062f\u0627\u0632\u0634…';
       try {
         const r = await DGX.api(`/api/app/buy/${+p.id}`, { body: {} });
         DGX.closeSheet(ov);
@@ -258,8 +258,8 @@ DGX.confirmBuy = (p, done) => {
         DGX.refreshMe();
         if (done) done(r);
       } catch (e) {
-        DGX.toast(e.msg || 'خرید ناموفق', true);
-        b.disabled = false; b.innerHTML = DGX.icon('cart', 'ic-s') + ' تأیید و پرداخت';
+        DGX.toast(e.msg || '\u062e\u0631\u06cc\u062f \u0646\u0627\u0645\u0648\u0641\u0642', true);
+        b.disabled = false; b.innerHTML = DGX.icon('cart', 'ic-s') + ' \u062a\u0623\u06cc\u06cc\u062f \u0648 \u067e\u0631\u062f\u0627\u062e\u062a';
       }
     };
   });
@@ -278,25 +278,25 @@ DGX.purchaseSuccess = (p, r) => {
   <div class="nsheet ssheet">
     <div class="burst-wrap"><span class="ring-pulse"></span>
       <div class="burst success-ring">${DGX.icon('check')}</div></div>
-    <h3 style="justify-content:center">خرید کامل شد</h3>
-    <p style="color:var(--dim);font-size:12.5px;margin:-4px 0 14px">این محصول دیجیتال حالا مال توست.</p>
+    <h3 style="justify-content:center">\u062e\u0631\u06cc\u062f \u06a9\u0627\u0645\u0644 \u0634\u062f</h3>
+    <p style="color:var(--dim);font-size:12.5px;margin:-4px 0 14px">\u0627\u06cc\u0646 \u0645\u062d\u0635\u0648\u0644 \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644 \u062d\u0627\u0644\u0627 \u0645\u0627\u0644 \u062a\u0648\u0633\u062a.</p>
     <div class="buy-prod" style="text-align:start">
       ${img ? `<img class="bp-img" src="${DGX.esc(img)}">`
             : `<span class="bp-img">${DGX.icon('box')}</span>`}
       <div style="flex:1;min-width:0"><b>${DGX.esc(p.title || '')}</b>
-        <span>تراکنش ${String(tx).slice(0, 10)}…</span></div>
+        <span>\u062a\u0631\u0627\u06a9\u0646\u0634 ${String(tx).slice(0, 10)}…</span></div>
     </div>
     ${r && r.file_url ? `<a class="btn btn-primary" href="${DGX.esc(r.file_url)}" target="_blank">
-      ${DGX.icon('deposit', 'ic-s')} دانلود محصول</a>` : ''}
+      ${DGX.icon('deposit', 'ic-s')} \u062f\u0627\u0646\u0644\u0648\u062f \u0645\u062d\u0635\u0648\u0644</a>` : ''}
     <button class="btn btn-ghost" onclick="location.hash='#/activity';DGX.closeSheet(this.closest('.novl'))">
-      ${DGX.icon('history', 'ic-s')} سفارش‌های من</button>
-    <button class="btn btn-ghost" id="okShare">${DGX.icon('link', 'ic-s')} اشتراک‌گذاری خرید</button>
-    <button class="lnk" id="okClose">بستن</button>
+      ${DGX.icon('history', 'ic-s')} \u0633\u0641\u0627\u0631\u0634‌\u0647\u0627\u06cc \u0645\u0646</button>
+    <button class="btn btn-ghost" id="okShare">${DGX.icon('link', 'ic-s')} \u0627\u0634\u062a\u0631\u0627\u06a9‌\u06af\u0630\u0627\u0631\u06cc \u062e\u0631\u06cc\u062f</button>
+    <button class="lnk" id="okClose">\u0628\u0633\u062a\u0646</button>
   </div>`;
   document.body.appendChild(o);
   o.querySelector('#okClose').onclick = () => DGX.closeSheet(o);
   o.querySelector('#okShare').onclick = () =>
-    DGX.shareUrl(`${location.origin}/#/product?id=${+p.id}`, 'فقط خریدمش روی DropAgentX 🛍 یه نگاه بنداز');
+    DGX.shareUrl(`${location.origin}/#/product?id=${+p.id}`, '\u0641\u0642\u0637 \u062e\u0631\u06cc\u062f\u0645\u0634 \u0631\u0648\u06cc DropAgentX 🛍 \u06cc\u0647 \u0646\u06af\u0627\u0647 \u0628\u0646\u062f\u0627\u0632');
   if (r && r.file_url) open(r.file_url, '_blank');
 };
 
@@ -339,7 +339,7 @@ DGX.weekBars = rows => {
     if (age >= 0 && age < 7 * 86400) days[6 - Math.floor(age / 86400)] += (o.price_credits || 0);
   });
   const max = Math.max(1, ...days);
-  const FA = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+  const FA = ['\u0634', '\u06cc', '\u062f', '\u0633', '\u0686', '\u067e', '\u062c'];
   return days.map((v, i) => `
     <div class="wb"><i style="height:${Math.max(6, Math.round(v / max * 64))}px"></i>
       <span>${v ? DGX.kfmt(v) : ''}</span><b>${FA[i]}</b></div>`).join('');
@@ -347,7 +347,7 @@ DGX.weekBars = rows => {
 
 DGX.wireFeed = root => {
   root.querySelectorAll('[data-eng]').forEach(btn => btn.onclick = async () => {
-    if (!DGX.requireAuth('لایک/سیو')) return;
+    if (!DGX.requireAuth('\u0644\u0627\u06cc\u06a9/\u0633\u06cc\u0648')) return;
     const card = btn.closest('.post'), pid = +card.dataset.pid, type = btn.dataset.eng;
     DGX.haptic('light');
     try {
@@ -375,10 +375,10 @@ DGX.wireFeed = root => {
   /* v1.3: purchases flow through the neon confirm-sheet → success overlay */
   DGX.dblLike(root);
   root.querySelectorAll('[data-buy]').forEach(btn => btn.onclick = () => {
-    if (!DGX.requireAuth('خرید')) return;
+    if (!DGX.requireAuth('\u062e\u0631\u06cc\u062f')) return;
     DGX.confirmBuy({ id: +btn.dataset.buy, title: btn.dataset.title || '',
                      price_credits: +btn.dataset.price || 0 },
-      () => { btn.textContent = '✅ خریده‌شد'; btn.disabled = true; });
+      () => { btn.textContent = '✅ \u062e\u0631\u06cc\u062f\u0647‌\u0634\u062f'; btn.disabled = true; });
   });
 };
 

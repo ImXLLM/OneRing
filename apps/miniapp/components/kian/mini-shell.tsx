@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * KIAN miniapp — پوستهٔ اپ: هدر چسبان + تب‌بار پایینی (موبایل‌اول).
+ * KIAN miniapp — app shell: sticky header + bottom tab bar (mobile-first).
  */
 
 import { useEffect } from "react";
@@ -17,10 +17,10 @@ import {
 } from "@/lib/referral";
 
 const TABS = [
-  { href: "/", label: "خانه", icon: Home },
-  { href: "/builder", label: "استودیو AI", icon: Sparkles },
-  { href: "/market", label: "بازار", icon: Store },
-  { href: "/wallet", label: "ولت", icon: Wallet },
+  { href: "/", label: "\u062e\u0627\u0646\u0647", icon: Home },
+  { href: "/builder", label: "\u0627\u0633\u062a\u0648\u062f\u06cc\u0648 AI", icon: Sparkles },
+  { href: "/market", label: "\u0628\u0627\u0632\u0627\u0631", icon: Store },
+  { href: "/wallet", label: "\u0648\u0644\u062a", icon: Wallet },
 ];
 
 export function MiniShell({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export function MiniShell({ children }: { children: React.ReactNode }) {
           className="mx-auto flex h-14 w-full max-w-3xl items-center gap-3 px-4"
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <Link href="/" className="flex items-center gap-2" aria-label="KIAN — خانه">
+          <Link href="/" className="flex items-center gap-2" aria-label="KIAN — &#x62e;&#x627;&#x646;&#x647;">
             <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-b from-royal-400 to-royal-600 font-black text-white shadow-lg shadow-royal-600/30 ring-1 ring-gold-400/40">
               K
             </span>
@@ -59,25 +59,25 @@ export function MiniShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => void signOut()}
-                  aria-label="خروج از نشست"
+                  aria-label="\u062e\u0631\u0648\u062c \u0627\u0632 \u0646\u0634\u0633\u062a"
                   className="grid size-8 place-items-center rounded-lg text-zinc-500 ring-1 ring-zinc-800 hover:text-zinc-300"
                 >
                   <LogOut className="size-4" aria-hidden />
                 </button>
               </>
             ) : (
-              <span className="text-xs text-zinc-500">نشست برقرار نشده</span>
+              <span className="text-xs text-zinc-500">&#x646;&#x634;&#x633;&#x62a; &#x628;&#x631;&#x642;&#x631;&#x627;&#x631; &#x646;&#x634;&#x62f;&#x647;</span>
             )}
           </div>
         </div>
       </header>
 
-      {/* نوار تعویض پرسونای دمو — فقط برای نشست‌های تستِ (۱۰۰۱/۲۰۰۲/۳۰۰۳) */}
+      {/* Demo persona switcher bar — only for test sessions (1001/2002/3003) */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-3">
         <DemoPersonaBar />
       </div>
 
-      {/* فاصلهٔ پایین به‌اندازهٔ تب‌بار + safe-area — هیچ دکمه‌ای زیر نوار نمی‌رود */}
+      {/* Bottom padding sized to the tab bar + safe-area — no button ever ends up under the bar */}
       <main
         className="mx-auto w-full max-w-3xl flex-1 px-4 py-5"
         style={{

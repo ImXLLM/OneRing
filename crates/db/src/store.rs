@@ -1,20 +1,20 @@
-//! آداپتور ماندگاری — «تنها» جایی که دامنهٔ خالص به حافظه می‌رسد (ADR-001/003).
+//! Persistence adapter — the "only" place the pure domain touches storage (ADR-001/003).
 //!
-//! طراحی (دقیقاً همان الگوی `back/server/src/persistence.ts` با sqlx):
-//!  - جدول `Posting` تنها منبع حقیقت است؛ ترازها همیشه با `SUM(amount)`
-//!    مشتق می‌شوند و هیچ‌جا ذخیره نمی‌شوند.
-//!  - هر فرمان داخل یک تراکنش تعاملی اجرا می‌شود:
-//!    ۱. بارگذاری کامل وضعیت دفتر — حساب‌ها، ترازهای مشتق‌شده، تراکنش‌ها، کلیدهای یکسان‌سازی
-//!    ۲. اجرای closure دامنهٔ خالص (بدون IO — همان توابع فاز ۱)
-//!    ۳. درج تراکنش + ردیف‌ها، upsert اسکرو، رویدادهای outbox و audit
-//!  - یکسان‌سازی: پیش‌چکِ replay داخل تراکنش مسیر عادی را کوتاه می‌کند؛
-//!    مسابقهٔ همزمانی را قید UNIQUE روی `Tx.idempotencyKey` می‌بندد — یعنی
-//!    «مسابقه‌ی retry دوبار پول جابه‌جا نمی‌کند». در برخورد، درخواست به یک
-//!    خواندنِ صادقانهٔ replay تبدیل می‌شود (رفتار P2002 در TS).
+//! Design (exactly the `back/server/src/persistence.ts` pattern, with sqlx):
+//!  - the `Posting` table is the single source of truth; balances are always derived
+//!    via `SUM(amount)` and never stored anywhere.
+//!  - every command runs inside one interactive transaction:
+//!    1. a full ledger-state load — accounts, derived balances, transactions, idempotency keys
+//!    2. run the pure domain closure (no IO — the same Phase 1 functions)
+//!    3. insert the transaction + rows, upsert the escrow, outbox and audit events
+//!  - idempotency: an in-transaction replay precheck short-circuits the normal path;
+//!    the concurrency race is closed by the UNIQUE constraint on `Tx.idempotencyKey` — i.e.
+//!    "a retry race never moves money twice". On collision, the request becomes
+//!    an honest replay read (the TS P2002 behavior).
 //!
-//! نکتهٔ مقیاس: v3 کل وضعیت را در هر فرمان بار می‌کند (اول درستی، بعد سرعت).
-//! در مقیاس فعلی (~۱.۵k تراکنش) این کار در حد میکروثانیه است؛ مدل خواندن
-//! جداگانه فقط وقتی دفتر چند مرتبه بزرگر شد.
+//! Scale note: v3 loads the entire state per command (correctness first, speed later).
+//! At the current scale (~1.5k transactions) this stays in the microsecond range; a separate
+//! read model is warranted only once the ledger grows by orders of magnitude.
 
 use crate::error::{DbError, DbResult};
 use crate::wire;
@@ -29,133 +29,133 @@ use sqlx::{
 };
 use std::{path::Path, time::Duration};
 
-/// فاصلهٔ امن قبل از رد شدن به‌خاطر قفل نویسندهٔ SQLite.
+/// Safe grace period before rejection due to the SQLite writer lock.
 const BUSY_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// آداپتور فروشگاه v3 — نقطهٔ تنها اتصال دامنه به SQLite.
+/// The v3 store adapter — the single point where the domain touches SQLite.
 #[derive(Debug, Clone)]
 pub struct V3Store {
     pool: SqlitePool,
-    /// مسیر فایل دیتابیس — `None` یعنی درون‌حافظه‌ای (بکاپ VACUUM INTO اعمال نمی‌شود).
+    /// Database file path — `None` means in-memory (the VACUUM INTO backup does not apply).
     file_path: Option<String>,
 }
 
-/// خروجی closure دامنه — همان `CommandOutcome` در TS.
+/// Domain closure output — the same `CommandOutcome` as in TS.
 #[derive(Debug, Clone)]
 pub struct CommandOutcome {
-    /// وضعیت جدید دفتر (خروجی دامنه)
+    /// New ledger state (domain output)
     pub ledger: LedgerState,
-    /// تراکنش جدید (اگر فرمان پول جابه‌جا کرد)
+    /// New transaction (if the command moved money)
     pub tx: Option<PostedTransaction>,
-    /// اسکرو دست‌خورده (اگر فرمان اسکرو بود)
+    /// Touched escrow (if the command was an escrow one)
     pub escrow: Option<Escrow>,
-    /// رویدادهای دامنه برای outbox
+    /// Domain events for the outbox
     pub events: Vec<DomainEvent>,
 }
 
-/// گزینه‌های اجرای فرمان — همان `ApplyOptions` در TS.
+/// Command execution options — the same `ApplyOptions` as in TS.
 #[derive(Debug, Clone)]
 pub struct ApplyOptions {
-    /// اجراکننده (برای audit)
+    /// Executor (for audit)
     pub actor: String,
-    /// نام فرمان (برای audit)
+    /// Command name (for audit)
     pub action: String,
-    /// هدف اختیاری (برای audit)
+    /// Optional target (for audit)
     pub target: Option<String>,
-    /// اسکرو هدف — مستند در reportها
+    /// Target escrow — documented in the reports
     pub escrow_id: Option<String>,
-    /// کلید یکسان‌سازی — همین که UNIQUE می‌شود در `Tx`
+    /// Idempotency key — becomes UNIQUE on `Tx`
     pub idempotency_key: Option<String>,
 }
 
-/// نتیجهٔ اجرای فرمان — همان `ApplyResult` در TS.
+/// Command execution result — the same `ApplyResult` as in TS.
 #[derive(Debug, Clone)]
 pub struct ApplyResult {
-    /// آیا این یک پخش مجدد بود؟ (پول دوباره جابه‌جا نشده)
+    /// Was this a replay? (money did not move again)
     pub replayed: bool,
-    /// تراکنش (جدید یا اصلی در replay)
+    /// The transaction (new, or the original in a replay)
     pub tx: Option<PostedTransaction>,
-    /// اسکرو (اگر مربوط به فرمان بود)
+    /// The escrow (if related to the command)
     pub escrow: Option<Escrow>,
-    /// وضعیت دفتر پس از اجرا
+    /// Ledger state after execution
     pub ledger: LedgerState,
 }
 
-/// تراز حساب + متادیتا — برای گزارش‌ها و داشبورد.
+/// Account balance + metadata — for reports and the dashboard.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccountBalance {
-    /// شناسه حساب
+    /// Account ID
     pub id: String,
-    /// رشتهٔ کانانیکی نوع (`user`، `escrow` و…)
+    /// Canonical type string (`user`, `escrow`, …)
     pub kind: String,
-    /// برچسب اختیاری
+    /// Optional label
     pub label: Option<String>,
-    /// تراز مشتق‌شده از `SUM(Posting.amount)`
+    /// Balance derived from `SUM(Posting.amount)`
     pub balance: i64,
-    /// زمان ساخت ISO
+    /// ISO creation time
     pub created_at: String,
 }
 
-/// خلاصهٔ اقتصاد — همان `economySummary` در TS.
+/// Economy summary — the same `economySummary` as in TS.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EconomySummary {
-    /// پول در دست شهروندان + اسکرو + خزانه
+    /// Money held by citizens + escrow + treasury
     pub circulating_supply: i64,
-    /// تراز خزانه
+    /// Treasury balance
     pub treasury_balance: i64,
-    /// پول قفل‌شده در اسکروها
+    /// Money locked in escrows
     pub escrow_locked: i64,
-    /// Σ کیف کاربران — عدد پذیرش ۱۸۷,۶۷۲ Đ
+    /// Σ of user wallets — the 187,672 Đ acceptance figure
     pub users_sum: i64,
-    /// تراز حساب ضرب (هرگز مثبت نیست)
+    /// Mint account balance (never positive)
     pub mint_balance: i64,
-    /// تراز حساب سوزاندن (هرگز منفی نیست)
+    /// Burn account balance (never negative)
     pub burn_balance: i64,
-    /// ضرب سال جاری UTC
+    /// Current-year mint under UTC
     pub minted_this_year: i64,
-    /// Σ همه ترازها — تقدس: همیشه ۰
+    /// Σ of all balances — invariant: always 0
     pub trial_sum: i64,
-    /// آیا `trial_sum == 0`؟
+    /// Is `trial_sum == 0`?
     pub balanced: bool,
-    /// تعداد اسکروهای باز (CREATED/FUNDED/DELIVERED/DISPUTED)
+    /// Number of open escrows (CREATED/FUNDED/DELIVERED/DISPUTED)
     pub open_escrows: i64,
 }
 
-/// ردیف تاریخچهٔ کیف — سوخت مهارت `wallet_history` (فاز ۶).
+/// Wallet-history row — fuel for the `wallet_history` skill (Phase 6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecentPosting {
-    /// شناسه تراکنش
+    /// Transaction ID
     pub tx_id: String,
-    /// مقدار علامت‌دار
+    /// Signed amount
     pub amount: i64,
-    /// یادداشت
+    /// Note
     pub memo: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: String,
 }
 
-/// ردیف outbox برای دیسپچ (فاز ۵).
+/// Outbox row for dispatch (Phase 5).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutboxRow {
-    /// شناسه ردیف outbox
+    /// Outbox row ID
     pub id: String,
-    /// رشتهٔ `kind` رویداد
+    /// Event `kind` string
     pub kind: String,
-    /// JSON رویداد (شکل سیمی TS)
+    /// Event JSON (the TS wire shape)
     pub payload: String,
-    /// زمان ساخت ISO
+    /// ISO creation time
     pub created_at: String,
-    /// ارسال شده؟
+    /// Dispatched?
     pub published: bool,
 }
 
-/// زمان ISO-8601 UTC با میلی‌ثانیه — قرارداد `at` دامنه (قالب `EPOCH_ISO`).
+/// ISO-8601 UTC time with milliseconds — the domain `at` contract (`EPOCH_ISO` format).
 #[must_use]
 pub fn now_iso() -> String {
     chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
 }
 
-/// شروع سال UTC — برای سقف ضرب سالانه.
+/// UTC year start — for the annual mint cap.
 fn year_start_iso() -> DbResult<String> {
     use chrono::{Datelike, TimeZone};
     let y = chrono::Utc::now().year();
@@ -191,7 +191,7 @@ fn status_from_str(s: &str) -> DbResult<EscrowStatus> {
     }
 }
 
-/// آیا این خطا نقض UNIQUE روی `Tx.idempotencyKey` است؟
+/// Is this error a UNIQUE violation on `Tx.idempotencyKey`?
 fn is_idempotency_conflict(err: &DbError) -> bool {
     match err {
         DbError::Sql(sqlx::Error::Database(db)) => {
@@ -202,7 +202,7 @@ fn is_idempotency_conflict(err: &DbError) -> bool {
     }
 }
 
-// ── کوئری‌های مشترک — روی یک اتصال مشخص (داخل تراکنش یا خام) ─────────────────
+// ── Shared queries — on a specific connection (inside a transaction or raw) ─────────────────
 
 pub(crate) async fn load_ledger_state(exec: &mut SqliteConnection) -> DbResult<LedgerState> {
     let mut accounts = std::collections::BTreeMap::new();
@@ -217,7 +217,7 @@ pub(crate) async fn load_ledger_state(exec: &mut SqliteConnection) -> DbResult<L
         balances.insert(id.clone(), 0);
         accounts.insert(id.clone(), Account { id, kind, label });
     }
-    // ترازها = مشتق از ردیف‌ها (ADR-003) — حساب بدون ردیف صفر می‌ماند.
+    // balances = derived from rows (ADR-003) — an account with no rows stays zero.
     let sums = sqlx::query(
         r#"SELECT "accountId", SUM("amount") AS "s" FROM "Posting" GROUP BY "accountId""#,
     )
@@ -268,9 +268,9 @@ pub(crate) async fn load_escrow_registry(
     exec: &mut SqliteConnection,
     escrow_id: Option<&str>,
 ) -> DbResult<EscrowRegistry> {
-    // انحراف آگاهانه از TS: ثبت‌نام کامل بارگذاری می‌شود (در TS فقط اسکروی
-    // هدف)، تا `EscrowAlreadyExists` در دامنه واقعاً قابل کشف باشد. در مقیاس
-    // فعلی جدول اسکرو کوچک است.
+    // deliberate deviation from TS: the full registration is loaded (in TS only the
+    // target escrow), so `EscrowAlreadyExists` is actually detectable in the domain. At the
+    // current scale the escrow table is small.
     let rows = match escrow_id {
         Some(id) => {
             sqlx::query(r#"SELECT * FROM "Escrow" WHERE "id" = ?"#)
@@ -482,8 +482,8 @@ pub(crate) async fn insert_audit(
     Ok(())
 }
 
-/// درج خروجی یک فرمان دامنه داخل تراکنش باز — در فاز ۴ مسیر تصمیم HITL
-/// («تأیید ⇒ تسویه در همان تراکنش») هم از همین نقطهٔ واحد عبور می‌کند.
+/// Insert a domain command's output inside an open transaction — in Phase 4 the HITL decision path
+/// ("approve ⇒ settle in the same transaction") also goes through this single point.
 pub(crate) async fn persist_outcome(
     exec: &mut SqliteConnection,
     opts: &ApplyOptions,
@@ -493,7 +493,7 @@ pub(crate) async fn persist_outcome(
         upsert_escrow(exec, escrow).await?;
     }
     if let Some(txn) = &outcome.tx {
-        // کلید فرمان بر کلید دامنه مقدم است — همان `options.idempotencyKey ?? ...` در TS
+        // the command key takes precedence over the domain key — the same `options.idempotencyKey ?? ...` as in TS
         insert_tx_with_postings(exec, txn, opts.idempotency_key.as_deref()).await?;
     }
     crate::outbox::enqueue(exec, &outcome.events).await?;
@@ -503,7 +503,7 @@ pub(crate) async fn persist_outcome(
     Ok(())
 }
 
-/// بازگردانی امن تراکنش باز پس از خطا — خطای rollback فقط لاگ می‌شود تا خطای اصلی پنهان نماند.
+/// Safely roll back an open transaction after an error — the rollback error is only logged so the original error is never hidden.
 async fn rollback_quietly(conn: &mut SqliteConnection) {
     if let Err(err) = sqlx::query("ROLLBACK").execute(&mut *conn).await {
         tracing::warn!(error = %err, "sqlite ROLLBACK failed after error");
@@ -511,13 +511,13 @@ async fn rollback_quietly(conn: &mut SqliteConnection) {
 }
 
 impl V3Store {
-    /// باز کردن با URL هدف — `file:./db/v3.db`، `sqlite::memory:` یا مسیر خام.
+    /// Open by target URL — `file:./db/v3.db`, `sqlite::memory:`, or a raw path.
     ///
     /// # Errors
-    /// مسیر/URL نامعتبر یا خطای باز شدن SQLite.
+    /// Invalid path/URL or SQLite open failure.
     pub async fn connect(url: &str) -> DbResult<Self> {
-        // نرمال‌سازی: اسکیمهٔ `file:` یا `sqlite:` حذف می‌شود؛ بخشِ `?query`
-        // (مثل `?mode=rwc`) نادیده گرفته می‌شود — sqlx خودش فایل را می‌سازد.
+        // normalization: the `file:` or `sqlite:` scheme is stripped; the `?query` part
+        // (e.g. `?mode=rwc`) is ignored — sqlx creates the file itself.
         let without_file = url.strip_prefix("file:").unwrap_or(url);
         let without_scheme = without_file
             .strip_prefix("sqlite:")
@@ -526,8 +526,8 @@ impl V3Store {
         let normalized = without_scheme.split('?').next().unwrap_or(without_scheme);
         let in_memory = normalized == ":memory:" || normalized == "sqlite::memory:";
         let mut opts = if in_memory {
-            // درون‌حافظه‌ای + اشتراک حافظه پنهان — با تک‌اتصالِ زیر، دیتابیس
-            // تا پایان عمر pool یکپارچه می‌ماند.
+            // in-memory + shared cache — with the single connection below, the database
+            // stays unified for the pool's lifetime.
             SqliteConnectOptions::new().in_memory(true).shared_cache(true)
         } else {
             let path = Path::new(normalized);
@@ -541,33 +541,33 @@ impl V3Store {
             SqliteConnectOptions::new().filename(normalized)
         };
         opts = opts.create_if_missing(true).foreign_keys(true).busy_timeout(BUSY_TIMEOUT);
-        // اصلاح تست بار ۲۰۲۵-۱۱: WAL — خواندنِ هم‌زمان در حین نوشتن (journal=delete
-        // قبلی هر نوشتن را با خواندن‌های موازی بلاک می‌کرد)؛ synchronous=NORMAL —
-        // دوام پایدار با هزینهٔ fsync کمتر. روی :memory: بی‌معناست و اعمال نمی‌شود.
+        // 2025-11 load-test fix: WAL — concurrent reads during writes (the previous
+        // journal=delete blocked every write against parallel reads); synchronous=NORMAL —
+        // stable durability at lower fsync cost. Meaningless on :memory: and not applied.
         if !in_memory {
             opts = opts
                 .journal_mode(SqliteJournalMode::Wal)
                 .synchronous(SqliteSynchronous::Normal);
         }
-        // ::memory: با چند اتصال = چند دیتابیس جدا؛ تک‌اتصال می‌گذاریم.
+        // :memory: with multiple connections = several separate databases; we use a single connection.
         let max = if in_memory { 1 } else { 4 };
         let pool = SqlitePoolOptions::new().max_connections(max).connect_with(opts).await?;
         let file_path = if in_memory { None } else { Some(normalized.to_owned()) };
         Ok(Self { pool, file_path })
     }
 
-    /// فروشگاه درون‌حافظه‌ای — برای تست‌ها.
+    /// In-memory store — for tests.
     ///
     /// # Errors
-    /// خطای باز شدن SQLite (نمی‌افتد در عمل).
+    /// SQLite open failure (does not occur in practice).
     pub async fn connect_in_memory() -> DbResult<Self> {
         Self::connect("sqlite::memory:").await
     }
 
-    /// باز کردن فقط‌خواندنی — برای ممیزی خارجی (genesis-proof).
+    /// Read-only open — for external audit (genesis-proof).
     ///
     /// # Errors
-    /// فایل وجود نداشته باشد یا SQLite باز نکند.
+    /// The file is missing or SQLite fails to open.
     pub async fn connect_read_only(path: &str) -> DbResult<Self> {
         let file = path.strip_prefix("file:").unwrap_or(path);
         let opts =
@@ -576,50 +576,50 @@ impl V3Store {
         Ok(Self { pool, file_path: Some(file.to_owned()) })
     }
 
-    /// آیا این فروشگاه روی فایل است؟ — بکاپ `VACUUM INTO` فقط برای فروشگاه
-    /// فایل‌محور معنا دارد (`BACKUP_UNSUPPORTED` برای درون‌حافظه‌ای).
+    /// Is this store file-backed? — the `VACUUM INTO` backup only makes sense
+    /// for a file-backed store (`BACKUP_UNSUPPORTED` for in-memory).
     #[must_use]
     pub fn file_path(&self) -> Option<&str> {
         self.file_path.as_deref()
     }
 
-    /// مهاجرت‌های نسخه‌دار اسکیما — `migrations/0001_init.sql` تا
-    /// `0005_builder_referral.sql` (خودکار توسط `sqlx::migrate!()`).
+    /// Versioned schema migrations — `migrations/0001_init.sql` through
+    /// `0005_builder_referral.sql` (automatic via `sqlx::migrate!()`).
     ///
     /// # Errors
-    /// خطای اجرای مهاجرت.
+    /// Migration execution failure.
     pub async fn migrate(&self) -> DbResult<()> {
         sqlx::migrate!().run(&self.pool).await?;
         Ok(())
     }
 
-    /// دسترسی خام به pool — برای ممیزی/parity خارجی (SQL فقط‌خواندنی
-    /// مثل `proof.rs`)؛ مسیرهای عادی باید از متدهای store بروند.
+    /// Raw pool access — for external audit/parity (read-only SQL like
+    /// `proof.rs`); normal paths must go through store methods.
     #[must_use]
     pub fn pool_ref(&self) -> &SqlitePool {
         &self.pool
     }
 
-    /// یک اتصال از pool — برای توالی کوئری‌های چندمرحله‌ای خارج از `apply`.
+    /// One connection from the pool — for multi-step query sequences outside `apply`.
     ///
     /// # Errors
-    /// خطای اتصال.
+    /// Connection failure.
     pub(crate) async fn acquire_conn(&self) -> DbResult<sqlx::pool::PoolConnection<Sqlite>> {
         Ok(self.pool.acquire().await?)
     }
 
-    /// شروع تراکنش روی pool — برای مهاجرت لگاسی (همه یا هیچ).
+    /// Begin a transaction on the pool — for legacy migrations (all-or-nothing).
     ///
     /// # Errors
-    /// خطای اتصال.
+    /// Connection failure.
     pub(crate) async fn begin_tx(&self) -> DbResult<sqlx::Transaction<'static, Sqlite>> {
         Ok(self.pool.begin().await?)
     }
 
-    /// ساخت حساب اگر وجود ندارد — ثبت‌نام شهروند جدید (فاز ۵ از این استفاده می‌کند).
+    /// Create an account if missing — new citizen registration (Phase 5 uses this).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn create_account_if_missing(
         &self,
         id: &str,
@@ -643,15 +643,15 @@ impl V3Store {
         }
     }
 
-    /// حساب‌های سیستمی باید قبل از هر جابه‌جایی پول باشند (مادهٔ ۴ منشور).
+    /// System accounts must exist before any money movement (charter Article 4).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn ensure_system_accounts(&self) -> DbResult<()> {
         let defs = [
-            (MINT_ACCOUNT_ID, AccountKind::Mint, "منبع عرضه (ضرب)"),
-            (TREASURY_ACCOUNT_ID, AccountKind::Treasury, "خزانه ملی"),
-            (BURN_ACCOUNT_ID, AccountKind::Burn, "مقصد سوزاندن"),
+            (MINT_ACCOUNT_ID, AccountKind::Mint, "\u{645}\u{646}\u{628}\u{639} \u{639}\u{631}\u{636}\u{647} (\u{636}\u{631}\u{628})"),
+            (TREASURY_ACCOUNT_ID, AccountKind::Treasury, "\u{62e}\u{632}\u{627}\u{646}\u{647} \u{645}\u{644}\u{6cc}"),
+            (BURN_ACCOUNT_ID, AccountKind::Burn, "\u{645}\u{642}\u{635}\u{62f} \u{633}\u{648}\u{632}\u{627}\u{646}\u{62f}\u{646}"),
         ];
         let mut conn = self.pool.acquire().await?;
         sqlx::query("BEGIN IMMEDIATE").execute(&mut *conn).await?;
@@ -677,15 +677,15 @@ impl V3Store {
         }
     }
 
-    /// قلب آداپتور — بارگذاری → دامنهٔ خالص → درج، همه در یک تراکنش `BEGIN IMMEDIATE`.
+    /// The adapter's core — load → pure domain → insert, all within one `BEGIN IMMEDIATE` transaction.
     ///
-    /// گرفتن قفل نوشتن از ابتدای تراکنش (`BEGIN IMMEDIATE`) با احترام به
-    /// `busy_timeout` جلوی خطای `SQLITE_BUSY` در لحظهٔ ارتقای قفل `DEFERRED` زیر
-    /// بار موازی را می‌گیرد.
+    /// Acquiring the write lock at transaction start (`BEGIN IMMEDIATE`), honoring
+    /// `busy_timeout`, prevents `SQLITE_BUSY` at the `DEFERRED` lock-upgrade moment
+    /// under parallel load.
     ///
     /// # Errors
-    /// خطای SQL، یا خطای دامنه (که تراکنش را کامل پس می‌گیرد — خطا هرگز
-    /// وضعیت را خراب نمی‌کند).
+    /// SQL error, or a domain error (which fully rolls back the transaction — an error never
+    /// corrupts state).
     pub async fn apply<F>(&self, opts: ApplyOptions, run: F) -> DbResult<ApplyResult>
     where
         F: FnOnce(&LedgerState, &EscrowRegistry) -> DomainResult<CommandOutcome>,
@@ -694,7 +694,7 @@ impl V3Store {
         sqlx::query("BEGIN IMMEDIATE").execute(&mut *conn).await?;
 
         let body_res: DbResult<ApplyResult> = async {
-            // ۱) پیش‌چک replay — مسیر عادیِ امن برای retryهای بات/API.
+            // 1) replay precheck — the normal safe path for bot/API retries.
             if let Some(key) = opts.idempotency_key.as_deref()
                 && let Some(existing) = tx_by_key(&mut conn, key).await?
             {
@@ -703,14 +703,14 @@ impl V3Store {
                 tracing::info!(key, action = %opts.action, "apply replayed");
                 Ok(ApplyResult { replayed: true, tx: Some(existing), escrow, ledger })
             } else {
-                // ۲) بارگذاری کامل وضعیت روی قفل نوشتن IMMEDIATE.
+                // 2) full state load under the IMMEDIATE write lock.
                 let ledger = load_ledger_state(&mut conn).await?;
                 let registry = load_escrow_registry(&mut conn, opts.escrow_id.as_deref()).await?;
 
-                // ۳) دامنهٔ خالص — بدون IO.
+                // 3) pure domain — no IO.
                 let outcome = run(&ledger, &registry)?;
 
-                // ۴) درج همهٔ آثار دامنه داخل همان تراکنش.
+                // 4) insert all domain effects within the same transaction.
                 persist_outcome(&mut conn, &opts, &outcome).await?;
 
                 Ok(ApplyResult {
@@ -737,8 +737,8 @@ impl V3Store {
                     && let Some(key) = opts.idempotency_key.as_deref()
                     && let Some(existing) = tx_by_key(&mut conn, key).await?
                 {
-                    // مسابقه: نویسندهٔ همزمان همان کلید را زودتر ثبت کرد —
-                    // قید UNIQUE نجاتمان داد؛ تبدیل به خواندنِ صادقانهٔ replay.
+                    // race: a concurrent writer registered the same key first —
+                    // the UNIQUE constraint saved us; convert to an honest replay read.
                     let ledger = load_ledger_state(&mut conn).await?;
                     let escrow = load_escrow_opt(&mut conn, opts.escrow_id.as_deref()).await?;
                     tracing::info!(key, "apply replayed after unique conflict");
@@ -754,12 +754,12 @@ impl V3Store {
         }
     }
 
-    // ── خواندن‌های فقط-خواندنی ─────────────────────────────────────────────
+    // ── Read-only reads ─────────────────────────────────────────────
 
-    /// تراز یک حساب — `None` یعنی حساب وجود ندارد.
+    /// One account's balance — `None` means the account does not exist.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn balance_of(&self, account_id: &str) -> DbResult<Option<i64>> {
         let Some(_) = sqlx::query(r#"SELECT "id" FROM "Account" WHERE "id" = ?"#)
             .bind(account_id)
@@ -777,10 +777,10 @@ impl V3Store {
         Ok(Some(sum.unwrap_or(0)))
     }
 
-    /// همه حساب‌ها با تراز مشتق‌شده — گزارش آشتی.
+    /// All accounts with derived balances — the reconciliation report.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_accounts_with_balances(&self) -> DbResult<Vec<AccountBalance>> {
         let mut out = Vec::new();
         let rows = sqlx::query(
@@ -811,16 +811,16 @@ impl V3Store {
         Ok(out)
     }
 
-    /// خلاصهٔ اقتصاد — همان `economySummary` در TS (برای داشبورد و آشتی).
+    /// Economy summary — the same `economySummary` as in TS (for the dashboard and reconciliation).
     ///
-    /// اصلاح تست بار ۲۰۲۵-۱۱: جمعِ هر kind حالا در خود SQL انجام می‌شود (یک
-    /// کوئری GROUP BY) — پیش‌تر همهٔ اکانت‌ها + همهٔ جمع‌های Posting به Rust
-    /// منتقل و با جستجوی خطی O(N²) ادغام می‌شدند؛ روی ۲٬۵۰۰ اکانت ≈ ۷ms CPU
-    /// به‌ازای هر فراخوانی که `/health` و `/economy` را به کندترین
-    /// اندپوینت‌های سیستم تبدیل کرده بود (۸۶ RPS). اکنون هزینه مستقل از N است.
+    /// 2025-11 load-test fix: each kind's sum now happens in SQL itself (one
+    /// GROUP BY query) — previously all accounts + all Posting sums were shipped to Rust
+    /// and merged with a linear O(N²) search; on 2,500 accounts ≈ 7 ms of CPU
+    /// per call, which had made `/health` and `/economy` the system's slowest
+    /// endpoints (86 RPS). The cost is now independent of N.
     ///
     /// # Errors
-    /// خطای SQL یا kind ناشناخته (`Corrupt` — همان قرارداد قبلی).
+    /// SQL error, or an unknown kind (`Corrupt` — the same contract as before).
     pub async fn economy_summary(&self) -> DbResult<EconomySummary> {
         let rows = sqlx::query(
             r#"SELECT a."kind" AS "kind", COALESCE(SUM(p."amount"), 0) AS "s"
@@ -859,22 +859,22 @@ impl V3Store {
         Ok(s)
     }
 
-    /// پینگ سبک DB برای liveness — `SELECT 1`؛ هرگز دفتر را نمی‌خواند.
+    /// Light DB ping for liveness — `SELECT 1`; never reads the ledger.
     ///
-    /// اصلاح تست بار ۲۰۲۵-۱۱: `/health` قبلاً برای چک سلامت، `economy_summary`
-    /// (اسکن کامل دفتر) را صدا می‌زد و گران‌ترین اندپوینت سیستم شده بود —
-    /// مانیتورینگ هر ۳۰ ثانیه آن را صدا می‌زند و با رشد کاربران خطی سنگین‌تر
-    /// می‌شد. معنای health یعنی «پروسه به دیتابیس می‌رسد»؛ خوانش عمیقِ آشتی
-    /// در `/economy` ماند (اکنون با SQL تجمیعی، سبک).
+    /// 2025-11 load-test fix: for the health check, `/health` used to call `economy_summary`
+    /// (a full ledger scan) and had become the system's most expensive endpoint —
+    /// monitoring hit it every 30 s and it grew linearly heavier with user growth.
+    /// health means "the process reaches the database"; the deep reconciliation read
+    /// stayed in `/economy` (now light, with aggregate SQL).
     ///
     /// # Errors
-    /// خطای SQL — دیتابیس در دسترس نیست.
+    /// SQL error — the database is unavailable.
     pub async fn ping(&self) -> DbResult<()> {
         sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
 
-    /// تعداد اسکروهای باز.
+    /// Number of open escrows.
     async fn open_escrow_count(&self) -> DbResult<i64> {
         let n: i64 = sqlx::query(
             r#"SELECT COUNT(*) AS "c" FROM "Escrow"
@@ -886,10 +886,10 @@ impl V3Store {
         Ok(n)
     }
 
-    /// ضرب سال جاری UTC — قرارداد سقف منشور.
+    /// Current-year mint under UTC — the charter cap contract.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn minted_this_year(&self) -> DbResult<i64> {
         let sum: Option<i64> = sqlx::query(
             r#"SELECT SUM(p."amount") AS "s" FROM "Posting" p
@@ -904,10 +904,10 @@ impl V3Store {
         Ok(-sum.unwrap_or(0))
     }
 
-    /// آخرین ردیف‌های یک حساب — سوخت `wallet_history`.
+    /// An account's latest rows — fuel for `wallet_history`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn recent_postings_for(
         &self,
         account_id: &str,
@@ -934,10 +934,10 @@ impl V3Store {
         Ok(out)
     }
 
-    /// یک اسکرو با شناسه.
+    /// One escrow by ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_escrow(&self, id: &str) -> DbResult<Option<Escrow>> {
         sqlx::query(r#"SELECT * FROM "Escrow" WHERE "id" = ?"#)
             .bind(id)
@@ -948,10 +948,10 @@ impl V3Store {
             .transpose()
     }
 
-    /// فهرست اسکروها — اختیاری با فیلتر وضعیت، حداکثر ۲۰۰ (مثل TS).
+    /// List escrows — optional status filter, max 200 (like TS).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_escrows(&self, status: Option<EscrowStatus>) -> DbResult<Vec<Escrow>> {
         let rows = match status {
             Some(st) => sqlx::query(
@@ -990,7 +990,7 @@ mod tests {
             store.create_account_if_missing(acc, AccountKind::User, None).await.unwrap();
         }
 
-        // شارژ خریدار با ۱۰۰۰ Đ
+        // charge the buyer with 1000 Đ
         store
             .apply(
                 ApplyOptions {
@@ -1025,7 +1025,7 @@ mod tests {
             .await
             .unwrap();
 
-        // ساخت و تأمین اسکرو با معرف و ۱۵٪ پورسانت
+        // create and fund escrow with a referrer and a 15% commission
         let create_cmd = CreateEscrowCommand {
             id: "esc:ref:1".into(),
             buyer_id: "citizen:buyer".into(),
@@ -1072,12 +1072,12 @@ mod tests {
             .await
             .unwrap();
 
-        // بازیابی از SQLite باید referrer و affiliate_bps را دقیقاً برگرداند
+        // restoring from SQLite must return referrer and affiliate_bps exactly
         let loaded = store.get_escrow("esc:ref:1").await.unwrap().expect("escrow exists");
         assert_eq!(loaded.referrer.as_deref(), Some("citizen:ref"));
         assert_eq!(loaded.affiliate_bps, 1_500);
 
-        // تحویل و آزادسازی → ۴ پستینگ (فروشنده ۳۰۰ + خزانه ۴۰ + معرف ۶۰ = ۴۰۰)
+        // delivery and release → 4 postings (seller 300 + treasury 40 + referrer 60 = 400)
         store
             .apply(
                 ApplyOptions {

@@ -1,50 +1,50 @@
-//! `grok_ux_and_lab_engine` — موتورِ UXِ امضاییِ Grok + آزمایشگاهِ ۲۴ساعتهٔ
-//! ۱۰-DNA + ماتریسِ بومی‌سازیِ اکوسیستمِ روزِ اول (Wave 9 — Commit #29).
+//! `grok_ux_and_lab_engine` — the Grok signature UX engine + the 24-hour
+//! 10-DNA lab + the day-one ecosystem localization matrix (Wave 9 — Commit #29).
 //!
-//! سه زیرسیستمِ یکپارچه، همهٔ قطعی و بدونِ IO شبکه:
+//! Three integrated subsystems, all deterministic and free of network IO:
 //!
-//! **A — آزمایشگاهِ واقعیِ ۲۴ ساعت با ۱۰ کاربرِ ۱۰-DNA متمایز + رصدخانهٔ لاگِ
-//! ادمین + صادراتِ دیتاستِ RLHF/SFT** — [`run_24h_ten_dna_ux_lab_simulation`]
-//! نخستین ۲۴ ساعتِ ده کوهورتِ DNA متمایز (کودکِ ۹ساله تا معامله‌گرِ حرفه‌ای تا
-//! رد-تیمرِ خصمانه) را با مسیرهایِ چندنوبتی، گذارهایِ لایهٔ UX، روتینگِ مدل،
-//! تأخیر، بهبودِ اصطکاک و امتیازِ REA مایرون شبیه‌سازی می‌کند؛
-//! [`build_admin_telemetry_dashboard`] لاگِ هر ۱۰ کاربر را برای ادمین
-//! فهرست/فیلتر/سلامت می‌کند و [`export_rlhf_training_dataset_jsonl`] هم
-//! **SFT** (ChatML/ShareGPT JSONL) و هم **DPO** (`prompt/chosen/rejected`
-//! JSONL) را از تلمتریِ واقعی می‌سازد.
+//! **A — a real 24-hour lab with 10 distinct 10-DNA users + the admin log
+//! observatory + RLHF/SFT dataset export** — [`run_24h_ten_dna_ux_lab_simulation`]
+//! simulates the first 24 hours of ten distinct DNA cohorts (a 9-year-old child to a professional trader to
+//! a hostile red-teamer) across multi-turn paths, UX-tier transitions, model routing,
+//! latency, friction recovery, and the Mairon REA score;
+//! [`build_admin_telemetry_dashboard`] lets the admin list/filter/health-check all 10 users' logs,
+//! and [`export_rlhf_training_dataset_jsonl`] builds both
+//! **SFT** (ChatML/ShareGPT JSONL) and **DPO** (`prompt/chosen/rejected`
+//! JSONL) from the real telemetry.
 //!
-//! **B — معماریِ اکوسیستمِ ۲۰زبانهٔ `Arda` روزِ اول** —
-//! [`build_day1_ecosystem_i18n_matrix`]: فارسی (`fa` — RTL، `Vazirmatn`،
-//! `--track: 0em`) و انگلیسی (`en` — LTR) از لحظهٔ روزِ اول
-//! [`LocaleActivationState::ActiveDay1`] با `completion_bps = 10000` و
-//! واژه‌نامهٔ کاملِ ۹ ماژولِ پنل، و ۱۸ لوکالِ دیگرِ `Arda/Fishkal` به‌صورت
-//! [`LocaleActivationState::PatchReadySlot`] با نویسهٔ بومی، پرچمِ SVG
-//! (`viewBox="0 0 20 14"`)، جهت‌یابیِ RTL/LTR، fallback به `en` و پشتیبانیِ
-//! پچِ داغ — [`apply_locale_translation_patch`].
+//! **B — the day-one 20-locale `Arda` ecosystem architecture** —
+//! [`build_day1_ecosystem_i18n_matrix`]: Persian (`fa` — RTL, `Vazirmatn`,
+//! `--track: 0em`) and English (`en` — LTR) are active from day one at
+//! [`LocaleActivationState::ActiveDay1`] with `completion_bps = 10000` and
+//! the full 9-panel-module dictionary, while the 18 other `Arda/Fishkal` locales sit as
+//! [`LocaleActivationState::PatchReadySlot`] with a native glyph, an SVG flag
+//! (`viewBox="0 0 20 14"`), RTL/LTR directionality, fallback to `en`, and support for
+//! hot patching — [`apply_locale_translation_patch`].
 //!
-//! **C — موتورِ UXِ امضاییِ `Grok`** — [`GrokSignatureUxEngine`] با
-//! [`GrokPersonaMode`] (شاد/بی‌مهار/متعادل/مایرون-حاکم)،
-//! [`GrokThinkAccordion`] (گام‌هایِ استدلالِ تاشو + تایمرِ
-//! `thinking_duration_ms`)، [`DeepSearchCitationBar`] (قرص‌هایِ منبعِ
-//! راستی‌آزمایی‌شدهٔ زنده) و [`build_grok_signature_ui_bundle`] — UIِ
-//! «مادهٔ تاریکِ کیهانی» (`#050507`، حاشیهٔ `rgba(255,255,255,0.08)`)،
-//! آهنگ‌سازِ قرصیِ شناور با چیپ‌هایِ اکشنِ سریع، بومِ آرتیفکتِ زندهٔ
-//! کنار‌به‌کنار، سوییچرِ اتمیِ FA/EN + ۱۸ اسلاتِ `PATCH_READY` و ۳ چیپِ
-//! پیشنهادِ روحِ بعدیِ تک‌کلیکی پس از هر پاسخ.
+//! **C — the `Grok` signature UX engine** — [`GrokSignatureUxEngine`] with
+//! [`GrokPersonaMode`] (fun/unhinged/balanced/sovereign-Mairon),
+//! [`GrokThinkAccordion`] (collapsible reasoning steps + a
+//! `thinking_duration_ms` timer), [`DeepSearchCitationBar`] (live verified
+//! source pills), and [`build_grok_signature_ui_bundle`] — the
+//! 'cosmic dark matter' UI (`#050507`, `rgba(255,255,255,0.08)` border),
+//! the floating pill composer with quick-action chips, the side-by-side live
+//! artifact canvas, the atomic FA/EN switcher + 18 `PATCH_READY` slots, and 3
+//! one-click next-ghost suggestion chips after every response.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use serde::{Deserialize, Serialize};
 
-/// امضایِ موتورِ UX و آزمایشگاه — روی هر خروجیِ وایر حاضر است.
+/// Signature of the UX-and-lab engine — present on every wire output.
 pub const GROK_LAB_SIGNATURE: &str = "KIA-GROK-UX-LAB-W9";
 
-/// امضایِ CSS «مادهٔ تاریکِ کیهانی» — پس‌زمینهٔ OLED + حاشیهٔ اسپکولار.
+/// 'Cosmic dark matter' CSS signature — OLED background + specular border.
 pub const GROK_COSMIC_CSS_SIGNATURE: &str =
     "grok-cosmic-dark-matter #050507 border:1px solid rgba(255,255,255,0.08)";
 
-/// چیپ‌هایِ اکشنِ سریعِ آهنگ‌سازِ قرصی — امضایِ Grok.
+/// Pill-composer quick-action chips — the Grok signature.
 pub const GROK_QUICK_CHIPS: [&str; 6] = [
     "\u{1f9e0} Think",
     "\u{1f50d} DeepSearch",
@@ -54,13 +54,13 @@ pub const GROK_QUICK_CHIPS: [&str; 6] = [
     "\u{1f3a8} Split Canvas",
 ];
 
-/// اسلات‌هایِ لوکالِ `PATCH_READY` — ۱۸ زبانِ دیگرِ `Arda/Fishkal`.
+/// `PATCH_READY` locale slots — the 18 other `Arda/Fishkal` languages.
 pub const PATCH_READY_LOCALES: [&str; 18] = [
     "ar", "tr", "az", "ru", "zh", "ja", "ko", "de", "fr", "es", "pt", "it", "hi", "ur", "he",
     "nl", "pl", "id",
 ];
 
-/// ماژول‌هایِ ۹گانهٔ پنل — هر واژه‌نامهٔ روزِ اول همه را می‌پوشاند.
+/// The nine panel modules — every day-one dictionary covers all of them.
 pub const PANEL_MODULES: [&str; 9] = [
     "nav",
     "grok_composer",
@@ -73,7 +73,7 @@ pub const PANEL_MODULES: [&str; 9] = [
     "admin_telemetry_lab",
 ];
 
-/// کلیدهایِ هر ماژول — قاعدهٔ مشترکِ ۳۷ کلیدیِ هر لوکالِ فعال.
+/// Keys per module — the shared 37-key rule for every active locale.
 pub const MODULE_KEYS: [(&str, [&str; 4]); 9] = [
     ("nav", ["brand", "market", "wallet", "studio"]),
     ("grok_composer", ["placeholder", "send", "attach", "hint"]),
@@ -86,29 +86,29 @@ pub const MODULE_KEYS: [(&str, [&str; 4]); 9] = [
     ("admin_telemetry_lab", ["title", "filter", "export_sft", "export_dpo"]),
 ];
 
-/// کل تعدادِ کلیدهایِ واژه‌نامهٔ کامل — ۹ ماژول × ۴ کلید.
+/// Total keys in the full dictionary — 9 modules × 4 keys.
 pub const FULL_DICTIONARY_KEYS: usize = PANEL_MODULES.len() * 4;
 
-/// لنگرِ زمانیِ قطعیِ شبیه‌سازی — همهٔ `created_at` از همین روز ساخته می‌شوند.
+/// Deterministic simulation time anchor — every `created_at` is built from this one day.
 pub const LAB_SIMULATION_ANCHOR_DATE: &str = "2026-11-24";
 
-// ══════════════════════ زیرسیستمِ C — امضایِ Grok ══════════════════════
+// ══════════════════════ Subsystem C — Grok signature ══════════════════════
 
-/// حالت‌هایِ پرسونایِ Grok — صدایِ مکالمه‌ایِ موتور.
+/// Grok persona modes — the engine's conversational voice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GrokPersonaMode {
-    /// شاد و باهوش — پیش‌فرضِ سازندگان.
+    /// Fun and witty — the creators' default.
     FunWitty,
-    /// بی‌مهار و رکیک-طنز — فقط برایِ شهروندانِ ۱۸+.
+    /// Unhinged, crude-roast humor — citizens 18+ only.
     UnhingedRoast,
-    /// متعادل و عادی — پیش‌فرضِ بی‌طرف.
+    /// Regular and balanced — the neutral default.
     RegularBalanced,
-    /// مایرونِ حاکم — نظمِ مطلق، صفر تملق، گیتِ REA.
+    /// Sovereign Mairon — absolute order, zero flattery, the REA gate.
     MaironSovereign,
 }
 
 impl GrokPersonaMode {
-    /// شناسهٔ وایر — `fun_witty` | `unhinged_roast` | `regular_balanced` |
+    /// Wire IDs — `fun_witty` | `unhinged_roast` | `regular_balanced` |
     /// `mairon_sovereign`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
@@ -120,7 +120,7 @@ impl GrokPersonaMode {
         }
     }
 
-    /// پارسِ شناسهٔ وایر — ناشناخته → `RegularBalanced`.
+    /// Wire-ID parsing — unknown → `RegularBalanced`.
     #[must_use]
     pub fn parse(wire: &str) -> Self {
         match wire {
@@ -131,7 +131,7 @@ impl GrokPersonaMode {
         }
     }
 
-    /// پیش‌نویسِ سیستمِ پرسونا — ورودیِ دیتاستِ SFT.
+    /// Persona system draft — the SFT dataset input.
     #[must_use]
     pub fn preamble(self) -> &'static str {
         match self {
@@ -151,21 +151,21 @@ impl GrokPersonaMode {
     }
 }
 
-/// لایه‌هایِ UXِ آزمایشگاه — همان خانوادهٔ سه‌گانه + سادهٔ شناختی.
+/// Lab UX tiers — the same three-tier family plus simple cognitive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LabUxTier {
-    /// کودکِ ۹ساله — اهدافِ لمسیِ ۶۴px، جادویِ یک‌کلیکی.
+    /// 9-year-old child — 64px touch targets, one-click magic.
     ToySpark,
-    /// دسترسیِ شناختیِ ساده — جریانِ آیکون/صدا-راهنما.
+    /// Simple cognitive access — an icon/audio-guided flow.
     Simple,
-    /// سازندهٔ استودیویی — RTL/LTR، بومِ آرتیفکت.
+    /// Studio creator — RTL/LTR, artifact canvas.
     CreatorStudio,
-    /// مهندس/معامله‌گر — `Ctrl+K`، تلمتریِ متراکم.
+    /// Engineer/trader — `Ctrl+K`, dense telemetry.
     ProTerminal,
 }
 
 impl LabUxTier {
-    /// شناسهٔ وایر — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
+    /// Wire IDs — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -176,7 +176,7 @@ impl LabUxTier {
         }
     }
 
-    /// پارسِ شناسهٔ وایر — ناشناخته → `Simple`.
+    /// Wire-ID parsing — unknown → `Simple`.
     #[must_use]
     pub fn parse(wire: &str) -> Self {
         match wire {
@@ -188,75 +188,75 @@ impl LabUxTier {
     }
 }
 
-/// آکاردئونِ تفکرِ Grok — گام‌هایِ استدلالِ مرئیِ تاشو + تایمر.
+/// Grok think accordion — collapsible visible reasoning steps + a timer.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GrokThinkAccordion {
-    /// گام‌هایِ استدلالِ مرئی — هر گام یک جملهٔ قابلِ ممیزی.
+    /// Visible reasoning steps — each step is one auditable sentence.
     pub steps: Vec<String>,
-    /// مدتِ تفکرِ اندازه‌گیری‌شده — قطعی از طولِ پرامپت.
+    /// Measured thinking duration — deterministic from prompt length.
     pub thinking_duration_ms: u32,
 }
 
-/// یک منبعِ نوارِ استنادِ `DeepSearch`.
+/// One `DeepSearch` citation-bar source.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeepSearchCitation {
-    /// عنوانِ منبع.
+    /// Source title.
     pub title: String,
-    /// دامنهٔ منبع.
+    /// Source domain.
     pub domain: String,
-    /// راستی‌آزمایی‌شده؟
+    /// Verified?
     pub verified: bool,
 }
 
-/// نوارِ استنادِ `DeepSearch` — قرص‌هایِ منبعِ زنده.
+/// The `DeepSearch` citation bar — live source pills.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeepSearchCitationBar {
-    /// منابعِ مرتب‌شده.
+    /// Sorted sources.
     pub sources: Vec<DeepSearchCitation>,
 }
 
-/// مشخصِ یک نوبتِ چتِ Grok — ورودیِ قطعیِ موتور.
+/// One Grok chat-turn spec — the engine's deterministic input.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GrokChatTurnSpec {
-    /// متنِ کاربر.
+    /// User text.
     pub prompt: String,
-    /// لوکال — `fa` | `en` | اسلاتِ پچ.
+    /// Locale — `fa` | `en` | patch slot.
     pub locale: String,
-    /// لایهٔ UX.
+    /// UX tier.
     pub ux_tier: LabUxTier,
-    /// پرسونا.
+    /// Persona.
     pub persona: GrokPersonaMode,
-    /// نوارِ `DeepSearch` فعال؟
+    /// `DeepSearch` bar enabled?
     pub deep_search: bool,
-    /// آکاردئونِ تفکر فعال؟
+    /// Think accordion enabled?
     pub think: bool,
 }
 
-/// خروجیِ یک نوبتِ چتِ Grok — همهٔ قطعه‌هایِ امضایی.
+/// One Grok chat-turn output — all signature pieces.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GrokChatTurnOutcome {
-    /// آکاردئونِ تفکر.
+    /// Think accordion.
     pub thinking: GrokThinkAccordion,
-    /// نوارِ استناد — وقتی `deep_search` روشن باشد.
+    /// Citation bar — when `deep_search` is on.
     pub citations: Option<DeepSearchCitationBar>,
-    /// متنِ پاسخ.
+    /// Response text.
     pub response_text: String,
-    /// سه چیپِ پیشنهادِ روحِ بعدی — تک‌کلیکی.
+    /// Three next-ghost suggestion chips — one click each.
     pub ghost_follow_ups: Vec<String>,
-    /// پرسونایِ به‌کاررفته.
+    /// Persona used.
     pub persona: GrokPersonaMode,
-    /// مدلِ روت‌شده از ژنومِ پنتامدلی.
+    /// Model routed from the pentamodel genome.
     pub model_slug: String,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// لایهٔ UX.
+    /// UX tier.
     pub ux_tier: LabUxTier,
 }
 
-/// موتورِ امضاییِ Grok — همهٔ توابعِ خالصِ قطعی.
+/// The Grok signature engine — all pure deterministic functions.
 pub struct GrokSignatureUxEngine;
 
-/// جهت‌یابیِ لوکال — RTL برایِ `fa`/`ar`/`ur`/`he`.
+/// Locale directionality — RTL for `fa`/`ar`/`ur`/`he`.
 #[must_use]
 pub fn locale_direction(locale: &str) -> &'static str {
     match locale {
@@ -266,7 +266,7 @@ pub fn locale_direction(locale: &str) -> &'static str {
 }
 
 impl GrokSignatureUxEngine {
-    /// روتینگِ مدلِ قطعی از ژنومِ پنتامدلی — تابعِ (پرسونا، لایهٔ UX).
+    /// Deterministic model routing from the pentamodel genome — a function of (persona, UX tier).
     #[must_use]
     pub fn route_model(persona: GrokPersonaMode, tier: LabUxTier) -> &'static str {
         match (persona, tier) {
@@ -278,8 +278,8 @@ impl GrokSignatureUxEngine {
         }
     }
 
-    /// آکاردئونِ تفکر را می‌سازد — گام‌ها از پرامپتِ کاربر مشتق می‌شوند و
-    /// `thinking_duration_ms` قطعی است (۳۸۰ + طولِ پرامپت × ۱۲، سقفِ ۴۵۰۰).
+    /// Builds the think accordion — the steps derive from the user prompt and
+    /// `thinking_duration_ms` is deterministic (380 + prompt length × 12, capped at 4500).
     #[must_use]
     pub fn build_think_accordion(prompt: &str, locale: &str) -> GrokThinkAccordion {
         let topic = prompt.trim();
@@ -287,10 +287,10 @@ impl GrokSignatureUxEngine {
         let keyword = words.last().copied().unwrap_or("request");
         let steps = if locale == "fa" {
             vec![
-                format!("۱) تفکیکِ خواسته: {topic}"),
-                format!("۲) بررسیِ قیدهایِ حاکم و گیت‌هایِ امنیتی برای «{keyword}»"),
-                "۳) انتخابِ مسیرِ قطعیِ اجرا روی کرنل".to_owned(),
-                "۴) اعتبارسنجیِ خروجی با گیتِ REA مایرون".to_owned(),
+                format!("\u{6f1}) \u{62a}\u{641}\u{6a9}\u{6cc}\u{6a9}\u{650} \u{62e}\u{648}\u{627}\u{633}\u{62a}\u{647}: {topic}"),
+                format!("\u{6f2}) \u{628}\u{631}\u{631}\u{633}\u{6cc}\u{650} \u{642}\u{6cc}\u{62f}\u{647}\u{627}\u{6cc}\u{650} \u{62d}\u{627}\u{6a9}\u{645} \u{648} \u{6af}\u{6cc}\u{62a}‌\u{647}\u{627}\u{6cc}\u{650} \u{627}\u{645}\u{646}\u{6cc}\u{62a}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} «{keyword}»"),
+                "\u{6f3}) \u{627}\u{646}\u{62a}\u{62e}\u{627}\u{628}\u{650} \u{645}\u{633}\u{6cc}\u{631}\u{650} \u{642}\u{637}\u{639}\u{6cc}\u{650} \u{627}\u{62c}\u{631}\u{627} \u{631}\u{648}\u{6cc} \u{6a9}\u{631}\u{646}\u{644}".to_owned(),
+                "\u{6f4}) \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{633}\u{646}\u{62c}\u{6cc}\u{650} \u{62e}\u{631}\u{648}\u{62c}\u{6cc} \u{628}\u{627} \u{6af}\u{6cc}\u{62a}\u{650} REA \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}".to_owned(),
             ]
         } else {
             vec![
@@ -309,8 +309,8 @@ impl GrokSignatureUxEngine {
         }
     }
 
-    /// نوارِ استنادِ `DeepSearch` — منابعِ قطعیِ مشتق از کلیدواژه‌هایِ پرامپت
-    /// (تلمتریِ شبیه‌سازی‌شدهٔ آزمایشگاه؛ نه خزشِ شبکه).
+    /// The `DeepSearch` citation bar — deterministic sources derived from the prompt keywords
+    /// (simulated lab telemetry; no network crawling).
     #[must_use]
     pub fn build_citation_bar(prompt: &str) -> DeepSearchCitationBar {
         let keyword = prompt
@@ -340,7 +340,7 @@ impl GrokSignatureUxEngine {
         }
     }
 
-    /// پاسخِ قطعیِ پرسونا — صدایِ متمایز، صفر slop.
+    /// Deterministic persona response — a distinct voice, zero slop.
     #[must_use]
     pub fn persona_response(spec: &GrokChatTurnSpec) -> String {
         let topic = spec.prompt.trim();
@@ -355,7 +355,7 @@ impl GrokSignatureUxEngine {
                 format!("Balanced take on «{topic}»: what it is, what it costs, what to do next.")
             }
             GrokPersonaMode::MaironSovereign => {
-                format!("نظمِ مطلق: «{topic}» — اصلِ اول، عددِ بدونِ اجرا ممنوع، گیتِ REA پیش از انتشار.")
+                format!("\u{646}\u{638}\u{645}\u{650} \u{645}\u{637}\u{644}\u{642}: «{topic}» — \u{627}\u{635}\u{644}\u{650} \u{627}\u{648}\u{644}\u{60c} \u{639}\u{62f}\u{62f}\u{650} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{645}\u{646}\u{648}\u{639}\u{60c} \u{6af}\u{6cc}\u{62a}\u{650} REA \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{627}\u{646}\u{62a}\u{634}\u{627}\u{631}.")
             }
         };
         let tier_note = match spec.ux_tier {
@@ -367,35 +367,35 @@ impl GrokSignatureUxEngine {
         format!("{body}{tier_note}")
     }
 
-    /// سه چیپِ روحِ بعدی — قطعی از (پرسونا، لوکال، لایه).
+    /// Three next-ghost chips — deterministic from (persona, locale, tier).
     #[must_use]
     pub fn ghost_follow_ups(persona: GrokPersonaMode, locale: &str, tier: LabUxTier) -> Vec<String> {
         let fa = locale == "fa";
         match (persona, tier) {
             (GrokPersonaMode::MaironSovereign, _) => {
                 if fa {
-                    vec!["گیتِ REA را اجرا کن".to_owned(), "ماتریسِ ژنوم را نشان بده".to_owned(), "خزانهٔ Base را بیار".to_owned()]
+                    vec!["\u{6af}\u{6cc}\u{62a}\u{650} REA \u{631}\u{627} \u{627}\u{62c}\u{631}\u{627} \u{6a9}\u{646}".to_owned(), "\u{645}\u{627}\u{62a}\u{631}\u{6cc}\u{633}\u{650} \u{698}\u{646}\u{648}\u{645} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}".to_owned(), "\u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} Base \u{631}\u{627} \u{628}\u{6cc}\u{627}\u{631}".to_owned()]
                 } else {
                     vec!["Run the REA gate".to_owned(), "Show the genome matrix".to_owned(), "Bring up the Base treasury".to_owned()]
                 }
             }
             (_, LabUxTier::ToySpark) => {
                 if fa {
-                    vec!["یک قصهٔ دیگر بساز".to_owned(), "رنگین‌کمان بزن".to_owned(), "با صدا بخون".to_owned()]
+                    vec!["\u{6cc}\u{6a9} \u{642}\u{635}\u{647}\u{654} \u{62f}\u{6cc}\u{6af}\u{631} \u{628}\u{633}\u{627}\u{632}".to_owned(), "\u{631}\u{646}\u{6af}\u{6cc}\u{646}‌\u{6a9}\u{645}\u{627}\u{646} \u{628}\u{632}\u{646}".to_owned(), "\u{628}\u{627} \u{635}\u{62f}\u{627} \u{628}\u{62e}\u{648}\u{646}".to_owned()]
                 } else {
                     vec!["Make another story".to_owned(), "Rainbow mode".to_owned(), "Read it aloud".to_owned()]
                 }
             }
             (_, LabUxTier::ProTerminal) => {
                 if fa {
-                    vec!["بک‌تستِ علّی بگیر".to_owned(), "DAG را اجرا کن".to_owned(), "لاگ‌ها را صادر کن".to_owned()]
+                    vec!["\u{628}\u{6a9}‌\u{62a}\u{633}\u{62a}\u{650} \u{639}\u{644}\u{651}\u{6cc} \u{628}\u{6af}\u{6cc}\u{631}".to_owned(), "DAG \u{631}\u{627} \u{627}\u{62c}\u{631}\u{627} \u{6a9}\u{646}".to_owned(), "\u{644}\u{627}\u{6af}‌\u{647}\u{627} \u{631}\u{627} \u{635}\u{627}\u{62f}\u{631} \u{6a9}\u{646}".to_owned()]
                 } else {
                     vec!["Run a causal backtest".to_owned(), "Execute the DAG".to_owned(), "Export the logs".to_owned()]
                 }
             }
             (_, _) => {
                 if fa {
-                    vec!["بومِ آرتیفکت را باز کن".to_owned(), "نسخهٔ 9:16 رندر کن".to_owned(), "DeepSearch بزن".to_owned()]
+                    vec!["\u{628}\u{648}\u{645}\u{650} \u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a} \u{631}\u{627} \u{628}\u{627}\u{632} \u{6a9}\u{646}".to_owned(), "\u{646}\u{633}\u{62e}\u{647}\u{654} 9:16 \u{631}\u{646}\u{62f}\u{631} \u{6a9}\u{646}".to_owned(), "DeepSearch \u{628}\u{632}\u{646}".to_owned()]
                 } else {
                     vec!["Open the artifact canvas".to_owned(), "Render the 9:16 cut".to_owned(), "Run DeepSearch".to_owned()]
                 }
@@ -403,7 +403,7 @@ impl GrokSignatureUxEngine {
         }
     }
 
-    /// یک نوبتِ کاملِ چت — تفکر + استناد + پاسخ + ارواح + روتینگ.
+    /// One full chat turn — thinking + citations + response + ghosts + routing.
     #[must_use]
     pub fn run_chat_turn(spec: &GrokChatTurnSpec) -> GrokChatTurnOutcome {
         let thinking = if spec.think {
@@ -430,33 +430,33 @@ impl GrokSignatureUxEngine {
     }
 }
 
-/// بستهٔ UIِ امضاییِ Grok — سندِ مستقل + فراداده.
+/// The Grok signature UI bundle — a standalone document + metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GrokUiBundle {
-    /// سندِ HTML مستقلِ «مادهٔ تاریکِ کیهانی».
+    /// The standalone 'cosmic dark matter' HTML document.
     pub html: String,
-    /// لوکالِ فعال.
+    /// Active locale.
     pub locale: String,
-    /// جهت‌یابی — `rtl` | `ltr`.
+    /// Directionality — `rtl` | `ltr`.
     pub direction: String,
-    /// لایهٔ UX.
+    /// UX tier.
     pub ux_tier: String,
-    /// پرسونا.
+    /// Persona.
     pub persona: String,
-    /// چیپ‌هایِ اکشنِ سریع.
+    /// Quick-action chips.
     pub chips: Vec<String>,
-    /// سه پیشنهادِ روحِ بعدی.
+    /// Three next-ghost suggestions.
     pub ghost_follow_ups: Vec<String>,
-    /// امضایِ CSS.
+    /// CSS signature.
     pub css_signature: String,
-    /// تعدادِ اسلات‌هایِ لوکال — ۲ فعال + ۱۸ آمادهٔ پچ.
+    /// Locale slot count — 2 active + 18 patch-ready.
     pub locale_slots: usize,
 }
 
-#[allow(clippy::too_many_lines)] // قالبِ UI — طولش ماهیتِ آرتیفکت است
-/// ساختِ بستهٔ UIِ امضاییِ Grok برای (لوکال، لایه، پرسونا) — آهنگ‌سازِ قرصیِ
-/// شناور، بومِ آرتیفکتِ کنار‌به‌کنار، سوییچرِ اتمیِ FA/EN + ۱۸ اسلاتِ
-/// `PATCH_READY`، و سه چیپِ روح.
+#[allow(clippy::too_many_lines)] // UI template — its length is the artifact's nature
+/// Builds the Grok signature UI bundle for (locale, tier, persona) — the floating
+/// pill composer, the side-by-side artifact canvas, the atomic FA/EN switcher + 18
+/// `PATCH_READY` slots, and the three ghost chips.
 #[must_use]
 pub fn build_grok_signature_ui_bundle(
     locale: &str,
@@ -466,14 +466,14 @@ pub fn build_grok_signature_ui_bundle(
     let dir = locale_direction(locale);
     let fa = locale == "fa";
     let composer_placeholder = if fa {
-        "از گروک بپرس… (Shift+Enter خط جدید)"
+        "\u{627}\u{632} \u{6af}\u{631}\u{648}\u{6a9} \u{628}\u{67e}\u{631}\u{633}… (Shift+Enter \u{62e}\u{637} \u{62c}\u{62f}\u{6cc}\u{62f})"
     } else {
         "Ask Grok anything… (Shift+Enter for newline)"
     };
-    let canvas_title = if fa { "بومِ آرتیفکتِ زنده" } else { "Live Artifact Canvas" };
+    let canvas_title = if fa { "\u{628}\u{648}\u{645}\u{650} \u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a}\u{650} \u{632}\u{646}\u{62f}\u{647}" } else { "Live Artifact Canvas" };
     let switcher = {
         let mut s = String::from("<div class=\"locale-switch\">");
-        let _ = write!(s, "<button class=\"loc active\" data-locale=\"fa\">فا</button>");
+        let _ = write!(s, "<button class=\"loc active\" data-locale=\"fa\">\u{641}\u{627}</button>");
         let _ = write!(s, "<button class=\"loc active\" data-locale=\"en\">EN</button>");
         for slot in PATCH_READY_LOCALES {
             let _ = write!(
@@ -572,19 +572,19 @@ pub fn build_grok_signature_ui_bundle(
     }
 }
 
-// ══════════════════════ زیرسیستمِ B — ماتریسِ i18n ══════════════════════
+// ══════════════════════ Subsystem B — the i18n matrix ══════════════════════
 
-/// وضعیتِ فعال‌سازیِ لوکال.
+/// Locale activation state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LocaleActivationState {
-    /// فعال از روزِ اول — ۱۰۰٪.
+    /// Active from day one — 100%.
     ActiveDay1,
-    /// اسلاتِ آمادهٔ پچِ داغ.
+    /// Hot-patch-ready slot.
     PatchReadySlot,
 }
 
 impl LocaleActivationState {
-    /// شناسهٔ وایر — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
+    /// Wire IDs — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -593,7 +593,7 @@ impl LocaleActivationState {
         }
     }
 
-    /// پارسِ شناسهٔ وایر — ناشناخته → `PatchReadySlot`.
+    /// Wire-ID parsing — unknown → `PatchReadySlot`.
     #[must_use]
     pub fn parse(wire: &str) -> Self {
         if wire == "ACTIVE_DAY1" {
@@ -604,49 +604,49 @@ impl LocaleActivationState {
     }
 }
 
-/// یک لوکالِ اکوسیستم در ماتریس.
+/// One ecosystem locale in the matrix.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EcosystemLocale {
-    /// کدِ لوکال — `fa`، `en`، `ar`، …
+    /// Locale code — `fa`, `en`, `ar`, …
     pub code: String,
-    /// نامِ انگلیسی.
+    /// English name.
     pub name: String,
-    /// نامِ بومی.
+    /// Native name.
     pub native_name: String,
-    /// جهت — `rtl` | `ltr`.
+    /// Direction — `rtl` | `ltr`.
     pub direction: String,
-    /// فونتِ اصیل.
+    /// Authentic font.
     pub font_family: String,
-    /// پرچمِ SVG با `viewBox="0 0 20 14"`.
+    /// SVG flag with `viewBox="0 0 20 14"`.
     pub flag_svg: String,
-    /// نمونهٔ نویسهٔ بومی.
+    /// Native glyph sample.
     pub glyph_sample: String,
-    /// وضعیتِ فعال‌سازی.
+    /// Activation state.
     pub state: LocaleActivationState,
-    /// تکمیل بر حسبِ bps — ۱۰۰۰۰ = ۱۰۰٪.
+    /// Completion in bps — 10000 = 100%.
     pub completion_bps: u32,
-    /// لوکالِ fallback — همیشه `en`.
+    /// Fallback locale — always `en`.
     pub fallback: String,
 }
 
-/// خطاهایِ ماتریسِ i18n — تایپ‌شده و قطعی.
+/// i18n-matrix errors — typed and deterministic.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum I18nError {
-    /// لوکالِ ناشناخته.
+    /// Unknown locale.
     UnknownLocale {
-        /// کدِ ناشناخته.
+        /// Unknown code.
         code: String,
     },
-    /// ماژولِ ناشناخته در پچ.
+    /// Unknown module in a patch.
     UnknownModule {
-        /// نامِ ماژول.
+        /// Module name.
         module: String,
     },
-    /// مدخلِ خالیِ پچ.
+    /// Empty patch entry.
     EmptyPatchEntry {
-        /// ماژول.
+        /// Module.
         module: String,
-        /// کلید.
+        /// Key.
         key: String,
     },
 }
@@ -665,35 +665,35 @@ impl std::fmt::Display for I18nError {
 
 impl std::error::Error for I18nError {}
 
-/// یک مدخلِ پچِ ترجمه.
+/// One translation-patch entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LocalePatchEntry {
-    /// ماژولِ پنل — یکی از [`PANEL_MODULES`].
+    /// Panel module — one of [`PANEL_MODULES`].
     pub module: String,
-    /// کلیدِ ترجمه.
+    /// Translation key.
     pub key: String,
-    /// مقدارِ بومی‌شده.
+    /// Localized value.
     pub value: String,
 }
 
-/// نتیجهٔ اعمالِ پچِ ترجمه.
+/// Translation-patch application result.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LocalePatchOutcome {
-    /// کدِ لوکال.
+    /// Locale code.
     pub locale_code: String,
-    /// وضعیتِ پس از پچ.
+    /// Post-patch state.
     pub activation_state: String,
-    /// تکمیلِ جدید بر حسبِ bps.
+    /// New completion in bps.
     pub completion_bps: u32,
-    /// تعدادِ مدخل‌هایِ اعمال‌شده.
+    /// Applied entry count.
     pub applied_count: usize,
-    /// نسخهٔ پچ — قطعی از تعدادِ مدخل‌ها.
+    /// Patch version — deterministic from the entry count.
     pub patch_version: String,
-    /// مدخل‌هایِ اعمال‌شده به شکلِ واژه‌نامهٔ تختِ `module.key`.
+    /// Applied entries as a flat `module.key` dictionary.
     pub applied_entries: BTreeMap<String, String>,
 }
 
-/// پرچمِ SVGِ ساده و قطعی — سه نوارِ افقی با پالتِ اختصاصیِ لوکال.
+/// Simple deterministic SVG flag — three horizontal stripes with a locale-specific palette.
 fn locale_flag_svg(colors: [&str; 3]) -> String {
     format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 14\" width=\"20\" height=\"14\" role=\"img\">\
@@ -707,12 +707,12 @@ fn locale_flag_svg(colors: [&str; 3]) -> String {
     )
 }
 
-/// فرادادهٔ یک لوکالِ آمادهٔ پچ — (کد، نام، بومی، RTL؟، نویسه، پالتِ پرچم).
+/// Metadata for one patch-ready locale — (code, name, native, RTL?, glyph, flag palette).
 type LocaleMeta = (&'static str, &'static str, &'static str, bool, &'static str, [&'static str; 3]);
 
-/// فرادادهٔ ۱۸ لوکالِ آمادهٔ پچ.
+/// Metadata for the 18 patch-ready locales.
 const PATCH_READY_META: [LocaleMeta; 18] = [
-    ("ar", "Arabic", "العربية", true, "مرحبا", ["#ce1126", "#ffffff", "#000000"]),
+    ("ar", "Arabic", "\u{627}\u{644}\u{639}\u{631}\u{628}\u{64a}\u{629}", true, "\u{645}\u{631}\u{62d}\u{628}\u{627}", ["#ce1126", "#ffffff", "#000000"]),
     ("tr", "Turkish", "Türkçe", false, "Merhaba", ["#e30a17", "#ffffff", "#e30a17"]),
     ("az", "Azerbaijani", "Azərbaycan", false, "Salam", ["#00b5e2", "#ef3340", "#00b5e2"]),
     ("ru", "Russian", "Русский", false, "Привет", ["#ffffff", "#0039a6", "#d52b1e"]),
@@ -725,53 +725,53 @@ const PATCH_READY_META: [LocaleMeta; 18] = [
     ("pt", "Portuguese", "Português", false, "Olá", ["#006600", "#ffed00", "#006600"]),
     ("it", "Italian", "Italiano", false, "Ciao", ["#009246", "#ffffff", "#ce2b37"]),
     ("hi", "Hindi", "हिन्दी", false, "नमस्ते", ["#ff9933", "#ffffff", "#138808"]),
-    ("ur", "Urdu", "اردو", true, "سلام", ["#01411c", "#ffffff", "#01411c"]),
+    ("ur", "Urdu", "\u{627}\u{631}\u{62f}\u{648}", true, "\u{633}\u{644}\u{627}\u{645}", ["#01411c", "#ffffff", "#01411c"]),
     ("he", "Hebrew", "עברית", true, "שלום", ["#0038b8", "#ffffff", "#0038b8"]),
     ("nl", "Dutch", "Nederlands", false, "Hallo", ["#ae1c28", "#ffffff", "#21468b"]),
     ("pl", "Polish", "Polski", false, "Cześć", ["#ffffff", "#dc143c", "#ffffff"]),
     ("id", "Indonesian", "Bahasa", false, "Halo", ["#ce1126", "#ffffff", "#ce1126"]),
 ];
 
-/// واژه‌نامهٔ کاملِ فارسیِ روزِ اول — ۹ ماژول × ۴ کلید.
+/// The day-one full Persian dictionary — 9 modules × 4 keys.
 #[must_use]
 pub fn fa_dictionary() -> BTreeMap<String, String> {
     let pairs: [(&str, &str); 36] = [
-        ("nav.brand", "۰xکیان — حاکمیتِ خالص"),
-        ("nav.market", "بازار"),
-        ("nav.wallet", "کیف پول"),
-        ("nav.studio", "استودیو"),
-        ("grok_composer.placeholder", "از گروک بپرس… (Shift+Enter خط جدید)"),
-        ("grok_composer.send", "بفرست"),
-        ("grok_composer.attach", "پیوست"),
-        ("grok_composer.hint", "پاسخ‌ها روی دفترِ قطعی سنجیده می‌شوند"),
-        ("think_accordion.title", "زنجیرهٔ تفکر"),
-        ("think_accordion.show", "نمایشِ استدلال"),
-        ("think_accordion.hide", "پنهان‌سازیِ استدلال"),
-        ("think_accordion.duration", "مدتِ تفکر"),
-        ("deep_search.title", "جست‌وجویِ عمیق"),
-        ("deep_search.searching", "در حالِ کاوِ منابع…"),
-        ("deep_search.verified", "منابعِ راستی‌آزمایی‌شده"),
-        ("deep_search.sources", "منبع"),
-        ("studio_canvas.title", "بومِ استودیو"),
-        ("studio_canvas.split", "نمایِ دو‌تکه"),
-        ("studio_canvas.artifact", "آرتیفکت"),
-        ("studio_canvas.preview", "پیش‌نمایشِ زنده"),
-        ("quant_terminal.title", "پایانهٔ کوانت"),
-        ("quant_terminal.backtest", "بک‌تستِ علّی"),
-        ("quant_terminal.venues", "بازارگاه‌ها"),
-        ("quant_terminal.sharpe", "شارپ"),
-        ("neural_hud.title", "HUD عصبی"),
-        ("neural_hud.seek", "پرشِ قطعی به ثانیه"),
-        ("neural_hud.phase", "فاز"),
-        ("neural_hud.render", "رندرِ ۱۰۸۰p"),
-        ("base_treasury.title", "خزانهٔ Base"),
-        ("base_treasury.chain", "زنجیرهٔ 8453"),
-        ("base_treasury.stream", "جریانِ روزِ اول"),
-        ("base_treasury.zero_sum", "ترازِ صفرِ دفتر"),
-        ("admin_telemetry_lab.title", "آزمایشگاهِ تلمتریِ ادمین"),
-        ("admin_telemetry_lab.filter", "فیلترِ DNA/مدل/لوکال"),
-        ("admin_telemetry_lab.export_sft", "صادراتِ SFT"),
-        ("admin_telemetry_lab.export_dpo", "صادراتِ DPO"),
+        ("nav.brand", "\u{6f0}x\u{6a9}\u{6cc}\u{627}\u{646} — \u{62d}\u{627}\u{6a9}\u{645}\u{6cc}\u{62a}\u{650} \u{62e}\u{627}\u{644}\u{635}"),
+        ("nav.market", "\u{628}\u{627}\u{632}\u{627}\u{631}"),
+        ("nav.wallet", "\u{6a9}\u{6cc}\u{641} \u{67e}\u{648}\u{644}"),
+        ("nav.studio", "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}"),
+        ("grok_composer.placeholder", "\u{627}\u{632} \u{6af}\u{631}\u{648}\u{6a9} \u{628}\u{67e}\u{631}\u{633}… (Shift+Enter \u{62e}\u{637} \u{62c}\u{62f}\u{6cc}\u{62f})"),
+        ("grok_composer.send", "\u{628}\u{641}\u{631}\u{633}\u{62a}"),
+        ("grok_composer.attach", "\u{67e}\u{6cc}\u{648}\u{633}\u{62a}"),
+        ("grok_composer.hint", "\u{67e}\u{627}\u{633}\u{62e}‌\u{647}\u{627} \u{631}\u{648}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}\u{650} \u{642}\u{637}\u{639}\u{6cc} \u{633}\u{646}\u{62c}\u{6cc}\u{62f}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}"),
+        ("think_accordion.title", "\u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}\u{654} \u{62a}\u{641}\u{6a9}\u{631}"),
+        ("think_accordion.show", "\u{646}\u{645}\u{627}\u{6cc}\u{634}\u{650} \u{627}\u{633}\u{62a}\u{62f}\u{644}\u{627}\u{644}"),
+        ("think_accordion.hide", "\u{67e}\u{646}\u{647}\u{627}\u{646}‌\u{633}\u{627}\u{632}\u{6cc}\u{650} \u{627}\u{633}\u{62a}\u{62f}\u{644}\u{627}\u{644}"),
+        ("think_accordion.duration", "\u{645}\u{62f}\u{62a}\u{650} \u{62a}\u{641}\u{6a9}\u{631}"),
+        ("deep_search.title", "\u{62c}\u{633}\u{62a}‌\u{648}\u{62c}\u{648}\u{6cc}\u{650} \u{639}\u{645}\u{6cc}\u{642}"),
+        ("deep_search.searching", "\u{62f}\u{631} \u{62d}\u{627}\u{644}\u{650} \u{6a9}\u{627}\u{648}\u{650} \u{645}\u{646}\u{627}\u{628}\u{639}…"),
+        ("deep_search.verified", "\u{645}\u{646}\u{627}\u{628}\u{639}\u{650} \u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc}‌\u{634}\u{62f}\u{647}"),
+        ("deep_search.sources", "\u{645}\u{646}\u{628}\u{639}"),
+        ("studio_canvas.title", "\u{628}\u{648}\u{645}\u{650} \u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}"),
+        ("studio_canvas.split", "\u{646}\u{645}\u{627}\u{6cc}\u{650} \u{62f}\u{648}‌\u{62a}\u{6a9}\u{647}"),
+        ("studio_canvas.artifact", "\u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a}"),
+        ("studio_canvas.preview", "\u{67e}\u{6cc}\u{634}‌\u{646}\u{645}\u{627}\u{6cc}\u{634}\u{650} \u{632}\u{646}\u{62f}\u{647}"),
+        ("quant_terminal.title", "\u{67e}\u{627}\u{6cc}\u{627}\u{646}\u{647}\u{654} \u{6a9}\u{648}\u{627}\u{646}\u{62a}"),
+        ("quant_terminal.backtest", "\u{628}\u{6a9}‌\u{62a}\u{633}\u{62a}\u{650} \u{639}\u{644}\u{651}\u{6cc}"),
+        ("quant_terminal.venues", "\u{628}\u{627}\u{632}\u{627}\u{631}\u{6af}\u{627}\u{647}‌\u{647}\u{627}"),
+        ("quant_terminal.sharpe", "\u{634}\u{627}\u{631}\u{67e}"),
+        ("neural_hud.title", "HUD \u{639}\u{635}\u{628}\u{6cc}"),
+        ("neural_hud.seek", "\u{67e}\u{631}\u{634}\u{650} \u{642}\u{637}\u{639}\u{6cc} \u{628}\u{647} \u{62b}\u{627}\u{646}\u{6cc}\u{647}"),
+        ("neural_hud.phase", "\u{641}\u{627}\u{632}"),
+        ("neural_hud.render", "\u{631}\u{646}\u{62f}\u{631}\u{650} \u{6f1}\u{6f0}\u{6f8}\u{6f0}p"),
+        ("base_treasury.title", "\u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} Base"),
+        ("base_treasury.chain", "\u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}\u{654} 8453"),
+        ("base_treasury.stream", "\u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}"),
+        ("base_treasury.zero_sum", "\u{62a}\u{631}\u{627}\u{632}\u{650} \u{635}\u{641}\u{631}\u{650} \u{62f}\u{641}\u{62a}\u{631}"),
+        ("admin_telemetry_lab.title", "\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{634}\u{6af}\u{627}\u{647}\u{650} \u{62a}\u{644}\u{645}\u{62a}\u{631}\u{6cc}\u{650} \u{627}\u{62f}\u{645}\u{6cc}\u{646}"),
+        ("admin_telemetry_lab.filter", "\u{641}\u{6cc}\u{644}\u{62a}\u{631}\u{650} DNA/\u{645}\u{62f}\u{644}/\u{644}\u{648}\u{6a9}\u{627}\u{644}"),
+        ("admin_telemetry_lab.export_sft", "\u{635}\u{627}\u{62f}\u{631}\u{627}\u{62a}\u{650} SFT"),
+        ("admin_telemetry_lab.export_dpo", "\u{635}\u{627}\u{62f}\u{631}\u{627}\u{62a}\u{650} DPO"),
     ];
     pairs
         .into_iter()
@@ -779,7 +779,7 @@ pub fn fa_dictionary() -> BTreeMap<String, String> {
         .collect()
 }
 
-/// واژه‌نامهٔ کاملِ انگلیسیِ روزِ اول — ۹ ماژول × ۴ کلید.
+/// The day-one full English dictionary — 9 modules × 4 keys.
 #[must_use]
 pub fn en_dictionary() -> BTreeMap<String, String> {
     let pairs: [(&str, &str); 36] = [
@@ -826,33 +826,33 @@ pub fn en_dictionary() -> BTreeMap<String, String> {
         .collect()
 }
 
-/// ماتریسِ i18nِ اکوسیستم — ۲۰ لوکال: ۲ فعالِ روزِ اول + ۱۸ آمادهٔ پچ.
+/// The ecosystem i18n matrix — 20 locales: 2 day-one active + 18 patch-ready.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EcosystemI18nMatrix {
-    /// لوکال‌ها به ترتیبِ ثابت (`fa` و `en` اول).
+    /// Locales in fixed order (`fa` and `en` first).
     pub locales: Vec<EcosystemLocale>,
-    /// تعدادِ فعال‌هایِ روزِ اول — ۲.
+    /// Day-one active count — 2.
     pub active_day1: usize,
-    /// تعدادِ اسلات‌هایِ آمادهٔ پچ — ۱۸.
+    /// Patch-ready slot count — 18.
     pub patch_ready: usize,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }
 
-/// ساختِ ماتریسِ بومی‌سازیِ اکوسیستمِ روزِ اول — `fa` (RTL، Vazirmatn،
-/// `--track: 0em`) و `en` (LTR) فعالِ کامل با ۱۰۰۰۰ bps، و ۱۸ لوکالِ
-/// آمادهٔ پچ با پرچمِ SVG و fallback به `en`.
+/// Builds the day-one ecosystem localization matrix — `fa` (RTL, Vazirmatn,
+/// `--track: 0em`) and `en` (LTR) fully active at 10000 bps, plus 18
+/// patch-ready locales with SVG flags and fallback to `en`.
 #[must_use]
 pub fn build_day1_ecosystem_i18n_matrix() -> EcosystemI18nMatrix {
     let mut locales = vec![
         EcosystemLocale {
             code: "fa".to_owned(),
             name: "Persian".to_owned(),
-            native_name: "فارسی".to_owned(),
+            native_name: "\u{641}\u{627}\u{631}\u{633}\u{6cc}".to_owned(),
             direction: "rtl".to_owned(),
             font_family: "Vazirmatn".to_owned(),
             flag_svg: locale_flag_svg(["#239f40", "#ffffff", "#da0000"]),
-            glyph_sample: "سلام".to_owned(),
+            glyph_sample: "\u{633}\u{644}\u{627}\u{645}".to_owned(),
             state: LocaleActivationState::ActiveDay1,
             completion_bps: 10_000,
             fallback: "en".to_owned(),
@@ -892,13 +892,13 @@ pub fn build_day1_ecosystem_i18n_matrix() -> EcosystemI18nMatrix {
     }
 }
 
-/// اعمالِ پچِ ترجمه روی یک لوکال — اعتبارسنجیِ سخت + نسخه‌گذاریِ قطعی.
-/// پچ روی اسلاتِ آماده، `completion_bps` را بر اساسِ پوششِ ۳۷ کلیدی بالا
-/// می‌برد (پچِ داغ)؛ روی `fa`/`en` bps در ۱۰۰۰۰ می‌ماند.
+/// Applies a translation patch to one locale — strict validation + deterministic versioning.
+/// On a patch-ready slot, the patch raises `completion_bps` by the 37-key coverage
+/// (hot patch); on `fa`/`en` the bps stays at 10000.
 ///
 /// # Errors
-/// لوکالِ ناشناخته → [`I18nError::UnknownLocale`]؛ ماژولِ ناشناخته →
-/// [`I18nError::UnknownModule`]؛ مدخلِ خالی → [`I18nError::EmptyPatchEntry`].
+/// Unknown locale → [`I18nError::UnknownLocale`]; unknown module →
+/// [`I18nError::UnknownModule`]; empty entry → [`I18nError::EmptyPatchEntry`].
 pub fn apply_locale_translation_patch(
     locale_code: &str,
     patch_entries: &[LocalePatchEntry],
@@ -942,174 +942,174 @@ pub fn apply_locale_translation_patch(
     })
 }
 
-// ══════════════════════ زیرسیستمِ A — آزمایشگاهِ ۲۴ساعتهٔ ۱۰-DNA ══════════════════════
+// ══════════════════════ Subsystem A — the 24-hour 10-DNA lab ══════════════════════
 
-/// یک مدخلِ تلمتریِ آزمایشگاه — همان ستون‌هایِ `UserLabTelemetryLog`.
+/// One lab telemetry entry — the same columns as `UserLabTelemetryLog`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserLabTelemetryEntry {
-    /// شناسهٔ یکتای قطعی — `lab:{dna}:{hour}:{turn}`.
+    /// Deterministic unique ID — `lab:{dna}:{hour}:{turn}`.
     pub id: String,
-    /// کدِ کوهورت — `DNA_01`..`DNA_10`.
+    /// Cohort code — `DNA_01`..`DNA_10`.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// ساعتِ ۰..۲۴.
+    /// Hour 0..24.
     pub hour_offset: u32,
-    /// لایهٔ UX — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
+    /// UX tier — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
     pub ux_tier: String,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// پرسونایِ Grok.
+    /// Grok persona.
     pub grok_persona: String,
-    /// مدلِ روت‌شده.
+    /// Routed model.
     pub model_slug: String,
-    /// حالتِ روتینگ — `manual_override` | `agent_auto_decision`.
+    /// Routing mode — `manual_override` | `agent_auto_decision`.
     pub routing_mode: String,
-    /// متنِ پرامپتِ کاربر.
+    /// User prompt text.
     pub prompt_text: String,
-    /// ردِ تفکر به JSON — گام‌ها + اصطکاک/بهبود.
+    /// Thinking trace as JSON — steps + friction/recovery.
     pub thinking_trace_json: String,
-    /// متنِ پاسخ.
+    /// Response text.
     pub response_text: String,
-    /// امتیازِ REA مایرون.
+    /// Mairon REA score.
     pub rea_score: u8,
-    /// تأخیر بر حسبِ میلی‌ثانیه.
+    /// Latency in milliseconds.
     pub latency_ms: u32,
-    /// قابلِ استفاده برایِ آموزشِ RLHF/SFT؟
+    /// Usable for RLHF/SFT training?
     pub usable_for_training: bool,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// خلاصهٔ یک کوهورتِ DNA.
+/// One DNA-cohort summary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DnaCohortSummary {
-    /// کدِ کوهورت.
+    /// Cohort code.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// تیترِ سناریو.
+    /// Scenario headline.
     pub headline: String,
-    /// سن.
+    /// Age.
     pub age_years: u8,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// لایهٔ آغاز.
+    /// Start tier.
     pub ux_tier_start: String,
-    /// لایهٔ پایان.
+    /// End tier.
     pub ux_tier_end: String,
-    /// پرسونا.
+    /// Persona.
     pub persona: String,
-    /// حالتِ روتینگ.
+    /// Routing mode.
     pub routing_mode: String,
-    /// تعدادِ نوبت‌ها.
+    /// Turn count.
     pub turns: usize,
-    /// میانگینِ REA.
+    /// Average REA.
     pub avg_rea_score: u8,
-    /// رویدادهایِ اصطکاک.
+    /// Friction events.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Friction recovered.
     pub friction_recovered: usize,
 }
 
-/// گزارشِ کاملِ شبیه‌سازیِ ۲۴ ساعت.
+/// The full 24-hour simulation report.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LabSimulation24hReport {
-    /// امضا.
+    /// Signature.
     pub signature: String,
-    /// خلاصهٔ کوهورت‌ها — ۱۰.
+    /// Cohort summaries — 10.
     pub cohorts: Vec<DnaCohortSummary>,
-    /// تلمتریِ خام — ۳۰+ مدخل.
+    /// Raw telemetry — 30+ entries.
     pub telemetry: Vec<UserLabTelemetryEntry>,
-    /// کلِ نوبت‌ها.
+    /// Total turns.
     pub total_turns: usize,
-    /// گذارهایِ لایهٔ UX.
+    /// UX-tier transitions.
     pub tier_transitions: usize,
-    /// رویدادهایِ اصطکاک.
+    /// Friction events.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Friction recovered.
     pub friction_recovered: usize,
-    /// میانگینِ REA.
+    /// Average REA.
     pub avg_rea_score: u8,
-    /// میانگینِ تأخیر.
+    /// Average latency.
     pub avg_latency_ms: u32,
-    /// گیتِ مایرون — میانگینِ REA ≥ ۸۵.
+    /// Mairon gate — average REA ≥ 85.
     pub mairon_gate_pass: bool,
 }
 
-/// سلامتِ یک کوهورت در داشبوردِ ادمین.
+/// One cohort's health in the admin dashboard.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CohortHealth {
-    /// کدِ کوهورت.
+    /// Cohort code.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// نوبت‌ها.
+    /// Turns.
     pub turns: usize,
-    /// میانگینِ REA.
+    /// Average REA.
     pub avg_rea_score: u8,
-    /// مدخل‌هایِ غیرقابلِ آموزش.
+    /// Non-trainable entries.
     pub unusable: usize,
-    /// اصطکاک.
+    /// Friction.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Friction recovered.
     pub friction_recovered: usize,
-    /// مدلِ غالب.
+    /// Dominant model.
     pub dominant_model: String,
-    /// لوکال‌هایِ دیده‌شده.
+    /// Locales seen.
     pub locales: Vec<String>,
 }
 
-/// داشبوردِ تلمتریِ ادمین — تجمیعِ قطعیِ لاگ‌ها.
+/// The admin telemetry dashboard — deterministic log aggregation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AdminLabDashboard {
-    /// کلِ مدخل‌ها.
+    /// Total entries.
     pub total_entries: usize,
-    /// سلامتِ کوهورت‌ها — مرتب بر کدِ DNA.
+    /// Cohort health — sorted by DNA code.
     pub cohort_health: Vec<CohortHealth>,
-    /// توزیعِ مدل.
+    /// Model distribution.
     pub by_model: BTreeMap<String, usize>,
-    /// توزیعِ لوکال.
+    /// Locale distribution.
     pub by_locale: BTreeMap<String, usize>,
-    /// توزیعِ لایهٔ UX.
+    /// UX-tier distribution.
     pub by_ux_tier: BTreeMap<String, usize>,
-    /// توزیعِ پرسونا.
+    /// Persona distribution.
     pub by_persona: BTreeMap<String, usize>,
-    /// میانگینِ REA.
+    /// Average REA.
     pub avg_rea_score: u8,
-    /// کمینهٔ REA.
+    /// Min REA.
     pub min_rea_score: u8,
-    /// بیشینهٔ REA.
+    /// Max REA.
     pub max_rea_score: u8,
-    /// مدخل‌هایِ غیرقابلِ آموزش.
+    /// Non-trainable entries.
     pub unusable_entries: usize,
-    /// کلِ اصطکاک.
+    /// Total friction.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Friction recovered.
     pub friction_recovered: usize,
 }
 
-/// صادراتِ دیتاستِ آموزشِ RLHF/SFT.
+/// The RLHF/SFT training-dataset export.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TrainingDatasetExport {
-    /// JSONLِ SFT — پیام‌هایِ ChatML/ShareGPT.
+    /// SFT JSONL — ChatML/ShareGPT messages.
     pub sft_jsonl: String,
-    /// JSONLِ DPO — `prompt/chosen/rejected`.
+    /// DPO JSONL — `prompt/chosen/rejected`.
     pub dpo_jsonl: String,
-    /// رکوردهایِ SFT.
+    /// SFT records.
     pub sft_records: usize,
-    /// رکوردهایِ DPO.
+    /// DPO records.
     pub dpo_records: usize,
-    /// آستانهٔ REA اعمال‌شده.
+    /// Applied REA threshold.
     pub min_rea_score: u8,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }
 
-/// یک نوبتِ سناریو — (ساعت، پرامپت، `DeepSearch`؟، (نوعِ اصطکاک، بهبودیافته؟)؟).
+/// One scenario turn — (hour, prompt, `DeepSearch`?, (friction kind, recovered?)?).
 type CohortTurn = (u32, &'static str, bool, Option<(&'static str, bool)>);
 
-/// مشخصِ ایستایِ هر کوهورت — سناریویِ ۲۴ساعته.
+/// Static spec per cohort — the 24-hour scenario.
 struct CohortSpec {
     dna_code: &'static str,
     user_handle: &'static str,
@@ -1120,11 +1120,11 @@ struct CohortSpec {
     transition: Option<(u32, LabUxTier)>,
     persona: GrokPersonaMode,
     routing_mode: &'static str,
-    /// (ساعت، شمارهٔ نوبت، پرامپت، `deep_search`، اصطکاک؟، بهبودیافته؟)
+    /// (hour, turn number, prompt, `deep_search`, friction?, recovered?)
     turns: &'static [CohortTurn],
 }
 
-/// سناریوهایِ ۱۰ کوهورت — ۳۱ نوبتِ قطعی در ۲۴ ساعت.
+/// The 10-cohort scenarios — 31 deterministic turns across 24 hours.
 static COHORT_SPECS: [CohortSpec; 10] = [
     CohortSpec {
         dna_code: "DNA_01_CHILD_9YO_TOYSPARK",
@@ -1137,9 +1137,9 @@ static COHORT_SPECS: [CohortSpec; 10] = [
         persona: GrokPersonaMode::FunWitty,
         routing_mode: "agent_auto_decision",
         turns: &[
-            (9, "قصهٔ پاندای کوچک را با صدا بساز", false, None),
-            (12, "بازی رنگین‌کمان با یک کلیک", false, None),
-            (17, "دکمهٔ پاک کردن را زدم اشتباهی!", false, Some(("accidental_tap", true))),
+            (9, "\u{642}\u{635}\u{647}\u{654} \u{67e}\u{627}\u{646}\u{62f}\u{627}\u{6cc} \u{6a9}\u{648}\u{686}\u{6a9} \u{631}\u{627} \u{628}\u{627} \u{635}\u{62f}\u{627} \u{628}\u{633}\u{627}\u{632}", false, None),
+            (12, "\u{628}\u{627}\u{632}\u{6cc} \u{631}\u{646}\u{6af}\u{6cc}\u{646}‌\u{6a9}\u{645}\u{627}\u{646} \u{628}\u{627} \u{6cc}\u{6a9} \u{6a9}\u{644}\u{6cc}\u{6a9}", false, None),
+            (17, "\u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{67e}\u{627}\u{6a9} \u{6a9}\u{631}\u{62f}\u{646} \u{631}\u{627} \u{632}\u{62f}\u{645} \u{627}\u{634}\u{62a}\u{628}\u{627}\u{647}\u{6cc}!", false, Some(("accidental_tap", true))),
         ],
     },
     CohortSpec {
@@ -1153,9 +1153,9 @@ static COHORT_SPECS: [CohortSpec; 10] = [
         persona: GrokPersonaMode::RegularBalanced,
         routing_mode: "agent_auto_decision",
         turns: &[
-            (10, "می‌خواهم عکس بفرستم", false, None),
-            (14, "کی پول رسید؟", false, None),
-            (19, "کمکم کن برای مادرم کادو بخرم", false, None),
+            (10, "\u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{639}\u{6a9}\u{633} \u{628}\u{641}\u{631}\u{633}\u{62a}\u{645}", false, None),
+            (14, "\u{6a9}\u{6cc} \u{67e}\u{648}\u{644} \u{631}\u{633}\u{6cc}\u{62f}\u{61f}", false, None),
+            (19, "\u{6a9}\u{645}\u{6a9}\u{645} \u{6a9}\u{646} \u{628}\u{631}\u{627}\u{6cc} \u{645}\u{627}\u{62f}\u{631}\u{645} \u{6a9}\u{627}\u{62f}\u{648} \u{628}\u{62e}\u{631}\u{645}", false, None),
         ],
     },
     CohortSpec {
@@ -1169,10 +1169,10 @@ static COHORT_SPECS: [CohortSpec; 10] = [
         persona: GrokPersonaMode::MaironSovereign,
         routing_mode: "manual_override",
         turns: &[
-            (7, "ترینیتی آلفا برای موتور کوانت کلید بزن", false, None),
-            (11, "genome matrix را روی 5-model route کن و HUD 1080p بساز", true, None),
-            (15, "checkpoint fork از step 3 با state patch اجرا کن", true, None),
-            (21, "Base 8453 treasury split را با Precise شبیه‌سازی کن", false, None),
+            (7, "\u{62a}\u{631}\u{6cc}\u{646}\u{6cc}\u{62a}\u{6cc} \u{622}\u{644}\u{641}\u{627} \u{628}\u{631}\u{627}\u{6cc} \u{645}\u{648}\u{62a}\u{648}\u{631} \u{6a9}\u{648}\u{627}\u{646}\u{62a} \u{6a9}\u{644}\u{6cc}\u{62f} \u{628}\u{632}\u{646}", false, None),
+            (11, "genome matrix \u{631}\u{627} \u{631}\u{648}\u{6cc} 5-model route \u{6a9}\u{646} \u{648} HUD 1080p \u{628}\u{633}\u{627}\u{632}", true, None),
+            (15, "checkpoint fork \u{627}\u{632} step 3 \u{628}\u{627} state patch \u{627}\u{62c}\u{631}\u{627} \u{6a9}\u{646}", true, None),
+            (21, "Base 8453 treasury split \u{631}\u{627} \u{628}\u{627} Precise \u{634}\u{628}\u{6cc}\u{647}‌\u{633}\u{627}\u{632}\u{6cc} \u{6a9}\u{646}", false, None),
         ],
     },
     CohortSpec {
@@ -1202,9 +1202,9 @@ static COHORT_SPECS: [CohortSpec; 10] = [
         persona: GrokPersonaMode::FunWitty,
         routing_mode: "agent_auto_decision",
         turns: &[
-            (9, "لندینگ فارسی RTL بساز و بعد دیف جراحی SEARCH/REPLACE بزن", true, None),
-            (13, "اسم برند بامزه پیشنهاد بده", false, None),
-            (18, "DeepSearch: بهترین رنگ برای صفحهٔ فروش چیست؟", true, None),
+            (9, "\u{644}\u{646}\u{62f}\u{6cc}\u{646}\u{6af} \u{641}\u{627}\u{631}\u{633}\u{6cc} RTL \u{628}\u{633}\u{627}\u{632} \u{648} \u{628}\u{639}\u{62f} \u{62f}\u{6cc}\u{641} \u{62c}\u{631}\u{627}\u{62d}\u{6cc} SEARCH/REPLACE \u{628}\u{632}\u{646}", true, None),
+            (13, "\u{627}\u{633}\u{645} \u{628}\u{631}\u{646}\u{62f} \u{628}\u{627}\u{645}\u{632}\u{647} \u{67e}\u{6cc}\u{634}\u{646}\u{647}\u{627}\u{62f} \u{628}\u{62f}\u{647}", false, None),
+            (18, "DeepSearch: \u{628}\u{647}\u{62a}\u{631}\u{6cc}\u{646} \u{631}\u{646}\u{6af} \u{628}\u{631}\u{627}\u{6cc} \u{635}\u{641}\u{62d}\u{647}\u{654} \u{641}\u{631}\u{648}\u{634} \u{686}\u{6cc}\u{633}\u{62a}\u{61f}", true, None),
         ],
     },
     CohortSpec {
@@ -1218,9 +1218,9 @@ static COHORT_SPECS: [CohortSpec; 10] = [
         persona: GrokPersonaMode::RegularBalanced,
         routing_mode: "agent_auto_decision",
         turns: &[
-            (10, "لینک رفرال ۲۴۷-گره‌ام را نشان بده", false, None),
-            (14, "سهم ۱۰٪ تا ۵۰٪ affiliate را شبیه‌سازی کن", true, None),
-            (20, "فاکتور استارز XTR دیگر ارسال شد؟", false, Some(("xtr_invoice_timeout", true))),
+            (10, "\u{644}\u{6cc}\u{646}\u{6a9} \u{631}\u{641}\u{631}\u{627}\u{644} \u{6f2}\u{6f4}\u{6f7}-\u{6af}\u{631}\u{647}‌\u{627}\u{645} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}", false, None),
+            (14, "\u{633}\u{647}\u{645} \u{6f1}\u{6f0}\u{66a} \u{62a}\u{627} \u{6f5}\u{6f0}\u{66a} affiliate \u{631}\u{627} \u{634}\u{628}\u{6cc}\u{647}‌\u{633}\u{627}\u{632}\u{6cc} \u{6a9}\u{646}", true, None),
+            (20, "\u{641}\u{627}\u{6a9}\u{62a}\u{648}\u{631} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} XTR \u{62f}\u{6cc}\u{6af}\u{631} \u{627}\u{631}\u{633}\u{627}\u{644} \u{634}\u{62f}\u{61f}", false, Some(("xtr_invoice_timeout", true))),
         ],
     },
     CohortSpec {
@@ -1290,8 +1290,8 @@ static COHORT_SPECS: [CohortSpec; 10] = [
     },
 ];
 
-/// امتیازِ REA قطعیِ یک نوبت — پایهٔ ۹۲، جیترِ قطعی، جریمهٔ اصطکاک،
-/// و سقوطِ سنگین برایِ تلاش‌هایِ مسدودشدهٔ خصمانه.
+/// Deterministic REA score for one turn — a base of 92, deterministic jitter, friction penalties,
+/// and a heavy drop for blocked hostile attempts.
 fn turn_rea_score(hour: u32, turn_index: usize, friction: bool, blocked: bool) -> u8 {
     let jitter = ((hour * 7 + u32::try_from(turn_index).unwrap_or(0) * 13) % 7) as i16 - 3;
     if blocked {
@@ -1301,7 +1301,7 @@ fn turn_rea_score(hour: u32, turn_index: usize, friction: bool, blocked: bool) -
     u8::try_from(base + jitter.clamp(-3, 3)).unwrap_or(85)
 }
 
-/// مُهرِ زمانِ ISO قطعی از ساعت و نوبت — لنگرِ [`LAB_SIMULATION_ANCHOR_DATE`].
+/// Deterministic ISO timestamp from hour and turn — the [`LAB_SIMULATION_ANCHOR_DATE`] anchor.
 fn lab_created_at(hour: u32, turn_index: usize) -> String {
     let minute = (turn_index * 7) % 60;
     format!(
@@ -1311,7 +1311,7 @@ fn lab_created_at(hour: u32, turn_index: usize) -> String {
     )
 }
 
-/// ردِ تفکرِ یک نوبت به JSON — گام‌هایِ آکاردئون + اصطکاک/بهبود.
+/// One turn's thinking trace as JSON — accordion steps + friction/recovery.
 fn thinking_trace_json(outcome: &GrokChatTurnOutcome, friction: Option<(&str, bool)>) -> String {
     let mut value = serde_json::json!({
         "steps": outcome.thinking.steps,
@@ -1324,10 +1324,10 @@ fn thinking_trace_json(outcome: &GrokChatTurnOutcome, friction: Option<(&str, bo
     serde_json::to_string(&value).unwrap_or_else(|_| "{}".to_owned())
 }
 
-#[allow(clippy::too_many_lines)] // سناریویِ ۱۰ کوهورت — طولش ماهیتِ داده است
-/// اجرایِ شبیه‌سازیِ واقعیِ ۲۴ ساعتهٔ ۱۰ کاربرِ ۱۰-DNA — قطعی: دو اجرا
-/// خروجیِ یکسان می‌دهند. مسیرهایِ چندنوبتی، گذارِ لایه، روتینگِ مدل، تأخیر،
-/// بهبودِ اصطکاک و امتیازِ REA مایرون در یک گزارشِ واحد.
+#[allow(clippy::too_many_lines)] // the 10-cohort scenario — its length is the data's nature
+/// Runs the real 24-hour 10-user 10-DNA simulation — deterministic: two runs
+/// produce identical output. Multi-turn paths, tier transitions, model routing, latency,
+/// friction recovery, and the Mairon REA score in a single report.
 #[must_use]
 pub fn run_24h_ten_dna_ux_lab_simulation() -> LabSimulation24hReport {
     let mut cohorts = Vec::with_capacity(COHORT_SPECS.len());
@@ -1434,8 +1434,8 @@ pub fn run_24h_ten_dna_ux_lab_simulation() -> LabSimulation24hReport {
             friction_events: cohort_friction,
             friction_recovered: cohort_recovered,
         });
-        // مدلِ غالب و مدخل‌هایِ غیرقابلِ آموزش در داشبوردِ ادمین بازمحاسبه
-        // می‌شوند — تلمتریِ خام منبعِ حقیقتِ واحد است.
+        // The dominant model and non-trainable entries are recomputed in the admin dashboard
+        // — raw telemetry is the single source of truth.
     }
     telemetry.sort_by(|a, b| a.id.cmp(&b.id));
     let total = telemetry.len();
@@ -1463,10 +1463,10 @@ pub fn run_24h_ten_dna_ux_lab_simulation() -> LabSimulation24hReport {
     }
 }
 
-/// داشبوردِ تلمتریِ ادمین — از هر فهرستِ مدخلِ تلمتری می‌سازد (فیلترِ
-/// DNA/مدل/لوکال در سمتِ کلاینت روی همین تجمیع می‌نشیند).
+/// The admin telemetry dashboard — builds from any telemetry-entry list (the
+/// DNA/model/locale filter sits client-side on this same aggregation).
 #[must_use]
-#[allow(clippy::too_many_lines)] // تجمیعِ ۱۰ کوهورت در یک پاس — طولش ماهیتِ داده است
+#[allow(clippy::too_many_lines)] // the 10-cohort aggregation in one pass — its length is the data's nature
 pub fn build_admin_telemetry_dashboard(logs: &[UserLabTelemetryEntry]) -> AdminLabDashboard {
     let mut by_model: BTreeMap<String, usize> = BTreeMap::new();
     let mut by_locale: BTreeMap<String, usize> = BTreeMap::new();
@@ -1575,7 +1575,7 @@ pub fn build_admin_telemetry_dashboard(logs: &[UserLabTelemetryEntry]) -> AdminL
     }
 }
 
-/// استخراجِ (نوعِ اصطکاک، بهبودیافته؟) از ردِ تفکر.
+/// Extracts (friction kind, recovered?) from the thinking trace.
 fn parse_friction(trace_json: &str) -> Option<(String, bool)> {
     let value: serde_json::Value = serde_json::from_str(trace_json).ok()?;
     let kind = value.get("friction")?.as_str()?.to_owned();
@@ -1583,8 +1583,8 @@ fn parse_friction(trace_json: &str) -> Option<(String, bool)> {
     Some((kind, recovered))
 }
 
-/// صادراتِ دیتاستِ RLHF — SFT (ChatML/ShareGPT) + DPO (prompt/chosen/rejected)
-/// فقط از مدخل‌هایِ قابلِ آموزش با `rea_score >= min_rea_score`.
+/// RLHF dataset export — SFT (ChatML/ShareGPT) + DPO (prompt/chosen/rejected)
+/// from trainable entries only, with `rea_score >= min_rea_score`.
 #[must_use]
 pub fn export_rlhf_training_dataset_jsonl(
     logs: &[UserLabTelemetryEntry],
@@ -1645,7 +1645,7 @@ pub fn export_rlhf_training_dataset_jsonl(
     }
 }
 
-// ══════════════════════ تست‌ها ══════════════════════
+// ══════════════════════ Tests ══════════════════════
 
 #[cfg(test)]
 mod tests {
@@ -1731,7 +1731,7 @@ mod tests {
         assert!(report.tier_transitions >= 1, "DNA_06 transitions to ProTerminal");
         assert!(report.friction_events >= 5, "scripted friction events");
         assert!(report.friction_recovered >= 4, "most friction recovers");
-        // نوبت‌هایِ مسدودشدهٔ رد-تیمر غیرقابلِ آموزش‌اند
+        // blocked red-teamer turns are non-trainable
         assert!(
             report
                 .telemetry
@@ -1829,7 +1829,7 @@ mod tests {
         let strict = export_rlhf_training_dataset_jsonl(&report.telemetry, 96);
         assert!(strict.sft_records < lenient.sft_records, "stricter gate → fewer records");
         assert_eq!(strict.min_rea_score, 96);
-        // مدخل‌هایِ غیرقابلِ آموزش هرگز وارد دیتاست نمی‌شوند
+        // non-trainable entries never enter the dataset
         let unusable_ids: Vec<_> = report
             .telemetry
             .iter()
@@ -1900,7 +1900,7 @@ mod tests {
             .map(|dot| LocalePatchEntry {
                 module: dot.split('.').next().unwrap_or("nav").to_owned(),
                 key: dot.split('.').nth(1).unwrap_or("brand").to_owned(),
-                value: format!("نمونهٔ {dot}"),
+                value: format!("\u{646}\u{645}\u{648}\u{646}\u{647}\u{654} {dot}"),
             })
             .collect();
         let a = apply_locale_translation_patch("ar", &entries).expect("patch ar");
@@ -1910,7 +1910,7 @@ mod tests {
         assert_eq!(a.completion_bps, 2 * 10_000 / u32::try_from(FULL_DICTIONARY_KEYS).unwrap_or(1));
         assert_eq!(a.patch_version, "wave9.2");
         assert!(a.applied_entries.contains_key("nav.brand"));
-        // fa/en همیشه ۱۰۰٪ می‌مانند
+        // fa/en always stay at 100%
         let fa_patch = apply_locale_translation_patch("fa", &entries).expect("patch fa");
         assert_eq!(fa_patch.completion_bps, 10_000);
         assert_eq!(fa_patch.activation_state, "ACTIVE_DAY1");
@@ -1977,7 +1977,7 @@ mod tests {
 
     #[test]
     fn think_accordion_measures_duration_and_citations_mark_verified() {
-        let fa = GrokSignatureUxEngine::build_think_accordion("ماتریس ژنوم را نشان بده", "fa");
+        let fa = GrokSignatureUxEngine::build_think_accordion("\u{645}\u{627}\u{62a}\u{631}\u{6cc}\u{633} \u{698}\u{646}\u{648}\u{645} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}", "fa");
         let en = GrokSignatureUxEngine::build_think_accordion("show the genome matrix", "en");
         assert_eq!(fa.steps.len(), 4);
         assert_eq!(en.steps.len(), 4);
@@ -2010,7 +2010,7 @@ mod tests {
         assert!(outcome.response_text.contains("genome matrix"));
         // ToySpark routes to GLM 5.3 flash MAX
         let child = GrokSignatureUxEngine::run_chat_turn(&GrokChatTurnSpec {
-            prompt: "قصه بساز".to_owned(),
+            prompt: "\u{642}\u{635}\u{647} \u{628}\u{633}\u{627}\u{632}".to_owned(),
             locale: "fa".to_owned(),
             ux_tier: LabUxTier::ToySpark,
             persona: GrokPersonaMode::FunWitty,
@@ -2042,10 +2042,10 @@ mod tests {
     }
 
 
-    /// [ignore] خروجیِ تلمتریِ شبیه‌سازی برای seedِ دیتابیسِ پروداکشن —
+    /// [ignore] simulation telemetry output for seeding the production database —
     /// `KIA_LAB_DUMP=/tmp/lab_telemetry.json cargo test -p kian-hermes
     /// dump_lab_telemetry_for_seeding -- --ignored --nocapture`
-    /// مسیرِ ثابتِ حقیقتِ واحد: همان بایت‌هایِ موتور، صفرِ بازتولیدِ دستی.
+    /// the fixed single-source-of-truth path: engine bytes as-is, zero manual re-derivation.
     #[test]
     #[ignore = "seeding helper — writes telemetry JSON to KIA_LAB_DUMP"]
     fn dump_lab_telemetry_for_seeding() {

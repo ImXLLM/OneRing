@@ -1,27 +1,27 @@
-//! تست بازپخش parity فاز ۸ — گیت درون‌CI.
+//! The phase 8 parity replay test — the in-CI gate.
 //!
-//! همهٔ سناریوهای طلایی روی روتر Rust (دیتابیس درون‌حافظه‌ای تازه به ازای هر
-//! سناریو) اجرا و پاسخ + وضعیت دیتابیس **بایت‌به‌بایت** با گلدن‌های
-//! `tests/golden/*.json` مقایسه می‌شود. هر drift بایتی یعنی قرارداد تغییر
-//! کرده — یا باگ است یا تغییر عمدی قرارداد که در آن صورت `parity --record`
-//! باید آگاهانه اجرا شود و diff بازبینی شود.
+//! All golden scenarios run on the Rust router (a fresh in-memory database per
+//! scenario) and the response + database state are compared **byte-for-byte** with the
+//! `tests/golden/*.json` goldens. Any byte drift means the contract changed —
+//! either a bug or an intentional contract change, in which case `parity --record`
+//! must be run knowingly and the diff reviewed.
 
-// یکپارچگی‌سنجی — unwrap/expect عمدی‌اند
+// integration test — unwrap/expect are intentional
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use dropagentx_tooling::parity;
 
-/// گیت اصلی — همهٔ سناریوها سبز یا شکست تست.
+/// The main gate — all scenarios green or the test fails.
 #[tokio::test]
 async fn every_golden_scenario_replays_byte_for_byte() {
     let report = parity::verify_all(|_| "sqlite::memory:".into()).await.unwrap();
     let (green, total) = report.summary();
     assert_eq!(green, total, "parity drift detected:\n{}", report.render());
-    // ADR-009 فاز ۸ — پوشش «~۳۰ سناریوی طلایی»: رجیستری باید ≥۳۰ باشد
+    // ADR-009 phase 8 — covers the "~30 golden scenarios": the registry must be ≥30
     assert!(total >= 30, "golden scenario registry shrank: {total}");
 }
 
-/// نرمال‌ساز — timestamp و uptime فرّار باید به توکن ثابت برسند.
+/// Normalizer — volatile timestamp and uptime must collapse to fixed tokens.
 #[test]
 fn normalizer_flattens_volatile_fields() {
     let body = serde_json::json!({
@@ -34,11 +34,11 @@ fn normalizer_flattens_volatile_fields() {
     assert_eq!(out["uptime"], "<UPTIME>");
     assert_eq!(out["nested"]["decidedAt"], "<TS>");
     assert_eq!(out["nested"]["amount"], 10);
-    // نرمال‌سازی دوباره — ایدمپوتنت
+    // normalizing again — idempotent
     assert_eq!(parity::normalize_value(&out), out);
 }
 
-/// گیت مالی parity — تخطی از ۹۰/۱۰ حتی در نرمال‌سازی هم مغایرت است.
+/// The parity money gate — breaking 90/10 is a mismatch even under normalization.
 #[tokio::test]
 async fn release_scenario_db_state_is_locked_in_golden() {
     let scenarios = parity::scenarios();

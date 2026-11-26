@@ -1,5 +1,5 @@
-# @kian/admin — پنل عملیات
+# @kian/admin — The Operations Panel
 
-جانشین `web_admin.py` (۷۱ اندپوینت) در 10x.
-ماژول‌ها: کاربران، تراکنش‌ها/امانت‌ها، فلت ایجنت‌ها، پارلمان (تصمیم‌های HITL)، مهارت‌ها، پشتیبانی، اپراتور خزانه.
-احراز هویت: X-KIAN-Key + session عملیاتی؛ لاگ کامل audit.
+Successor to `web_admin.py` (71 endpoints) in 10x.
+Modules: users, transactions/escrows, agent fleet, parliament (HITL decisions), skills, support, treasury operator.
+Authentication: X-KIAN-Key + operational session; full audit logging.

@@ -1,15 +1,15 @@
-//! هندلرهای استودیوی ادراک‌سیار — مورفِ شناختیِ سه‌لایه، ابراستودیوی
-//! ۹-مدالیتیِ صفر-هزینه و ویترین پورتفولیو (Wave 5 — Step 2/4).
+//! Mobile-perception studio handlers — the three-tier cognitive morph, the zero-cost
+//! 9-modality super-studio, and the portfolio showcase (Wave 5 — Step 2/4).
 //!
-//! سه مسیر additive:
-//! - `GET /studio/ux-profiles` — سه لایهٔ شناختی + ۹ مدالیتی + گزارشِ
-//!   ۶ درمانِ قضاییِ پورتفولیو (عمومی؛ قطعی)؛
-//! - `POST /studio/generate` — تولیدِ زندهٔ آرتیفکت: لایه‌سنجِ تلمتری →
-//!   `OmniModalStudioEngine` (باندلِ دوگانهٔ `Fishkal+Cosmos`) → بسته‌بندیِ
-//!   ۲۰-زبانهٔ ARDA → فورجِ `SKILL.md` مایرون (گیتِ REA) → ماندگاری در
-//!   `studio_creations`؛
-//! - `GET /studio/portfolio-catalog` — ویترینِ غنی‌شده با ارتقای دو
-//!   ویترینیِ برتر، توکن‌های گلسِ تاریک و پالتِ فرمانِ کیبورد-اول.
+//! Three additive routes:
+//! - `GET /studio/ux-profiles` — three cognitive tiers + 9 modalities + the
+//!   6 forensic portfolio remediations report (public; deterministic);
+//! - `POST /studio/generate` — live artifact generation: telemetry tier gauge →
+//!   `OmniModalStudioEngine` (the `Fishkal+Cosmos` dual bundle) → ARDA
+//!   20-language packaging → the Mairon `SKILL.md` forge (REA gate) → persistence in
+//!   `studio_creations`;
+//! - `GET /studio/portfolio-catalog` — the enriched showcase with top-two
+//!   featured promotion, dark glass tokens, and a keyboard-first command palette.
 
 use std::sync::Arc;
 
@@ -42,10 +42,10 @@ use crate::handlers::parse_body;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// امضای پروفایل‌های UX — گیتِ آزمون.
+/// UX profile signatures — test gate.
 pub const STUDIO_UX_SIGNATURE: &str = "studio-ux-profiles-v1";
 
-/// نگاشتِ لایهٔ شناختی به نمای وایر.
+/// Maps a cognitive tier to the wire view.
 #[must_use]
 pub fn tier_view(profile: &kian_hermes::super_studio_engine::CognitiveTierProfile) -> CognitiveTierView {
     CognitiveTierView {
@@ -62,7 +62,7 @@ pub fn tier_view(profile: &kian_hermes::super_studio_engine::CognitiveTierProfil
     }
 }
 
-/// نگاشتِ مدالیتی به نمای وایر.
+/// Maps a modality to the wire view.
 #[must_use]
 pub fn modality_view(spec: &kian_hermes::super_studio_engine::StudioModalitySpec) -> StudioModalityView {
     StudioModalityView {
@@ -74,7 +74,7 @@ pub fn modality_view(spec: &kian_hermes::super_studio_engine::StudioModalitySpec
     }
 }
 
-/// نگاشتِ گزارشِ ایمنی به نمای وایر — همیشه ۶/۶ `fixed`.
+/// Maps the safety report to the wire view — always 6/6 `fixed`.
 #[must_use]
 pub fn safety_view() -> PortfolioSafetyReportView {
     let fixes = portfolio_safety_report();
@@ -95,7 +95,7 @@ pub fn safety_view() -> PortfolioSafetyReportView {
     }
 }
 
-/// نگاشتِ کارتِ ویترین به نمای وایر.
+/// Maps a showcase card to the wire view.
 #[must_use]
 pub fn card_view(card: &kian_hermes::super_studio_engine::StorefrontProjectCard) -> StorefrontProjectCardView {
     StorefrontProjectCardView {
@@ -121,13 +121,13 @@ pub fn card_view(card: &kian_hermes::super_studio_engine::StorefrontProjectCard)
     }
 }
 
-/// `GET /studio/ux-profiles` — قراردادِ کاملِ مورفِ شناختی (عمومی).
+/// `GET /studio/ux-profiles` — the full cognitive-morph contract (public).
 ///
-/// سه لایهٔ `ToySpark`/`CreatorStudio`/`ProTerminal`، ۹ مدالیتیِ
-/// صفر-هزینه و ۶ درمانِ قضاییِ پورتفولیو — کاملاً قطعی و بدونِ نشست.
+/// The three `ToySpark`/`CreatorStudio`/`ProTerminal` tiers, 9
+/// zero-cost modalities, and 6 forensic portfolio remediations — fully deterministic, sessionless.
 ///
 /// # Errors
-/// رخ نمی‌دهد — خروجی قطعیِ موتور است.
+/// Cannot happen — deterministic engine output.
 pub async fn ux_profiles() -> Json<StudioUxProfilesResponse> {
     Json(StudioUxProfilesResponse {
         tiers: cognitive_tier_profiles().iter().map(tier_view).collect(),
@@ -140,14 +140,14 @@ pub async fn ux_profiles() -> Json<StudioUxProfilesResponse> {
     })
 }
 
-/// `GET /studio/portfolio-catalog` — ویترینِ غنی‌شدهٔ سازنده (عمومی).
+/// `GET /studio/portfolio-catalog` — the enriched builder showcase (public).
 ///
-/// دو `featured` برتر در صدر (`index.js:L17–18`)، توکن‌های گلسِ تاریکِ
-/// `style.css`، پالتِ فرمانِ کیبورد-اول (`Ctrl+K`/`Meta+K`/`/`) و ریشهٔ
-/// قابل‌حملِ کاتالوگ (Fix #1) — بدونِ هیچ نشست.
+/// Top-two `featured` promotion (`index.js:L17–18`), the dark glass
+/// `style.css` tokens, the keyboard-first command palette (`Ctrl+K`/`Meta+K`/`/`), and the
+/// portable catalog root (Fix #1) — with no session at all.
 ///
 /// # Errors
-/// رخ نمی‌دهد — خروجی قطعیِ موتور است.
+/// Cannot happen — deterministic engine output.
 pub async fn portfolio_catalog() -> Json<PortfolioCatalogResponse> {
     let catalog = seed_storefront_catalog();
     let promoted = promote_featured_top2(&catalog);
@@ -175,17 +175,17 @@ pub async fn portfolio_catalog() -> Json<PortfolioCatalogResponse> {
     })
 }
 
-/// `POST /studio/generate` — تولیدِ زندهٔ آفرینش استودیو (نشست شهروند).
+/// `POST /studio/generate` — live studio-creation generation (citizen session).
 ///
-/// ورودی: پرامپت (از جملهٔ کودکِ ۹ساله تا مشخصهٔ مهندسِ ۲۸ساله) +
-/// مدالیتیِ هدف + لایهٔ صریحِ اختیاری. خط لوله: استنتاج/لغوِ لایهٔ شناختی →
-/// مولدِ آرتیفکت (`OmniModalStudioEngine` با باندلِ دوگانهٔ
-/// `Fishkal+Cosmos`) → بسته‌بندیِ ۲۰-زبانهٔ ARDA (تزریقِ ایدمپوتنت + نوارِ
-/// پرچمِ دایره‌ای) → فورجِ `SKILL.md`/`skill.json` مایرون (گیتِ REA >= 85)
-/// → ماندگاری در `studio_creations`. ۲۰۰.
+/// Input: the prompt (from a 9-year-old child to a 28-year-old engineer profile) +
+/// target modality + an optional explicit tier. Pipeline: cognitive-tier inference/override →
+/// artifact generator (`OmniModalStudioEngine` with the dual
+/// `Fishkal+Cosmos` bundle) → ARDA 20-language packaging (idempotent injection + the circular
+/// flag bar) → the Mairon `SKILL.md`/`skill.json` forge (REA gate >= 85)
+/// → persistence in `studio_creations`. 200.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر/مدالیتیِ ناشناخته/پرامپتِ خالی.
+/// 401 missing session; 400 invalid body/unknown modality/empty prompt.
 #[allow(clippy::too_many_lines)]
 pub async fn generate(
     State(state): State<Arc<AppState>>,
@@ -207,7 +207,7 @@ pub async fn generate(
         .map(str::trim)
         .and_then(CognitiveTier::parse);
 
-    // ۱ — استنتاج/لغوِ لایهٔ شناختی از تلمتری (بدونِ هرگز پرسیدنِ سن).
+    // 1 — cognitive-tier inference/override from telemetry (never asking age).
     let tier = infer_or_override_tier(&CognitiveTelemetry {
         prompt_length_chars: prompt.chars().count(),
         uses_technical_tokens: uses_technical_tokens(&prompt),
@@ -215,9 +215,9 @@ pub async fn generate(
         explicit_tier_override: explicit,
     });
 
-    // ۲ — مولدِ آرتیفکت (خط لولهٔ Trinity استودیو): در `ToySpark` جریانِ
-    // داستان/بازیِ یک‌کلیکی (`build_toyspark_instant_creation`) همیشه بر
-    // مدالیتی می‌چربد؛ در لایه‌های بالاتر مولدِ مدالیتیِ کامل اجرا می‌شود.
+    // 2 — artifact generator (the studio Trinity pipeline): in `ToySpark` the
+    // one-click story/game flow (`build_toyspark_instant_creation`) always
+    // wins over modality; higher tiers run the full modality generator.
     let engine = OmniModalStudioEngine;
     let (artifact, storefront) = if tier == CognitiveTier::ToySpark {
         let creation = build_toyspark_instant_creation(&prompt);
@@ -239,7 +239,7 @@ pub async fn generate(
         let card = StorefrontProjectCard {
             slug: slug.clone(),
             name: art.title.clone(),
-            tagline: format!("آفرینش {} روی مدالیتیِ {}", tier.fa_label(), modality.fa_label()),
+            tagline: format!("\u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634} {} \u{631}\u{648}\u{6cc} \u{645}\u{62f}\u{627}\u{644}\u{6cc}\u{62a}\u{6cc}\u{650} {}", tier.fa_label(), modality.fa_label()),
             category: format!("studio-{}", modality.as_str()),
             stack: vec![
                 "html5".to_owned(),
@@ -269,7 +269,7 @@ pub async fn generate(
         (art, card)
     };
 
-    // ۳ — بسته‌بندیِ ۲۰-زبانهٔ ARDA روی آرتیفکت.
+    // 3 — ARDA 20-language packaging of the artifact.
     let origin = req
         .origin_locale
         .as_deref()
@@ -307,7 +307,7 @@ pub async fn generate(
     let strip = render_product_flag_strip(&origin, &strip_codes[1..]).unwrap_or_default();
     let supported = bundle.locales.clone();
 
-    // ۴ — فورجِ مهارتِ مایرون (REA قطعی همیشه بالای گیتِ ۸۵).
+    // 4 — the Mairon skill forge (deterministic REA always above the 85 gate).
     let creation_id = format!("studio:{}", uuid::Uuid::new_v4());
     let forge = MaironSkillForge::forge_skill_package(&SkillForgeRequest {
         product_id: creation_id.clone(),
@@ -318,7 +318,7 @@ pub async fn generate(
     })
     .ok();
 
-    // ۵ — کارتِ ویترین + ماندگاری در `studio_creations`.
+    // 5 — showcase card + persistence in `studio_creations`.
     let card = storefront;
     let card_json = serde_json::to_string(&card).unwrap_or_else(|_| "{}".to_owned());
     let created_at = now_iso();
@@ -367,13 +367,13 @@ pub async fn generate(
     }))
 }
 
-/// شمارِ مدالیتی‌ها — گیتِ آزمونِ هندلر.
+/// Modality count — handler test gate.
 #[must_use]
 pub fn studio_modality_count() -> usize {
     STUDIO_MODALITY_COUNT
 }
 
-/// شمارِ درمان‌های قضاییِ پورتفولیو — گیتِ آزمونِ هندلر.
+/// Portfolio remediation count — handler test gate.
 #[must_use]
 pub fn portfolio_fix_count() -> usize {
     PortfolioFix::PortableRootPath.id() as usize + 5
@@ -411,7 +411,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// احراز کاربر تلگرام و گرفتن توکن.
+    /// Authenticate a Telegram user and capture the token.
     async fn auth(app: &axum::Router, tg_id: &str, username: &str) -> String {
         let init_data = make_test_init_data(BOT, tg_id, Some(username));
         let res = app
@@ -505,7 +505,7 @@ mod tests {
         assert_eq!(palette["openShortcuts"], json!(["Ctrl+K", "Meta+K", "/"]));
         assert_eq!(palette["keyboardFirst"], true);
         assert!(palette["js"].as_str().unwrap().contains("e.key === '/'"));
-        // ۱۲ کلیدِ کانونی + پسوندهای تجاری روی اولین کارت.
+        // 12 canonical keys + commercial extensions on the first card.
         let first = &projects[0];
         for key in [
             "slug", "name", "tagline", "category", "stack", "highlights",
@@ -525,7 +525,7 @@ mod tests {
                 axum::http::Request::builder()
                     .method("POST")
                     .uri("/api/v1/studio/generate")
-                    .body(Body::from(json!({ "prompt": "سلام", "modality": "copy" }).to_string()))
+                    .body(Body::from(json!({ "prompt": "\u{633}\u{644}\u{627}\u{645}", "modality": "copy" }).to_string()))
                     .unwrap(),
             )
             .await
@@ -540,7 +540,7 @@ mod tests {
         let authz = format!("Bearer {token}");
         for payload in [
             json!({ "prompt": "", "modality": "copy" }),
-            json!({ "prompt": "سلام", "modality": "hologram" }),
+            json!({ "prompt": "\u{633}\u{644}\u{627}\u{645}", "modality": "hologram" }),
         ] {
             let res = app
                 .clone()
@@ -571,7 +571,7 @@ mod tests {
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
                         json!({
-                            "prompt": "یه دایناسور آبی که توی فضا بستنی می‌فروشه",
+                            "prompt": "\u{6cc}\u{647} \u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{6a9}\u{647} \u{62a}\u{648}\u{6cc} \u{641}\u{636}\u{627} \u{628}\u{633}\u{62a}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{647}",
                             "modality": "workspace"
                         })
                         .to_string(),
@@ -590,14 +590,14 @@ mod tests {
         assert!(body["reaScore"].as_i64().unwrap() >= 88);
         assert!(body["skillMd"].as_str().unwrap().contains("mairon_certified: true"));
         assert!(body["skillJson"].as_str().unwrap().contains("\"name\""));
-        // آرتیفکت: داستان‌کتابِ قابل بازی + باندلِ تزریقیِ ARDA + موتورهای دوگانه.
+        // Artifact: a playable storybook + the ARDA injectable bundle + dual engines.
         let artifact = body["artifactHtml"].as_str().unwrap();
         assert!(artifact.contains("data-action=\"magic\""));
         assert!(artifact.contains("min-width: 64px"));
         assert!(artifact.contains("speechSynthesis"));
         assert!(artifact.contains("data-arda-runtime=\"on\""));
         assert!(artifact.contains("ARDA_STUDIO.fishkal.dampFk") || artifact.contains("ARDA_STUDIO.cosmos.sfx.ping"));
-        // نوارِ پرچمِ دایره‌ای — ۲۰ نشان.
+        // Circular flag bar — 20 badges.
         assert_eq!(
             body["circularFlagStripHtml"]
                 .as_str()
@@ -606,13 +606,13 @@ mod tests {
                 .count(),
             20
         );
-        // باندلِ دوگانه روی وایر با امضا و مُهرِ sha256.
+        // Dual bundle on the wire with signature and a sha256 seal.
         assert_eq!(body["dualBundle"]["signature"], "fishkal-cosmos-dual-v1");
         assert_eq!(body["dualBundle"]["contentSha256"].as_str().unwrap().len(), 64);
-        // کارتِ ویترینِ آمادهٔ فروش.
+        // Marketplace-ready showcase card.
         assert_eq!(body["storefrontCard"]["cognitiveTierBadge"], "ToySpark");
         assert_eq!(body["storefrontCard"]["featured"], true);
-        // ماندگاری در studio_creations.
+        // Persistence in studio_creations.
         let creation_id = body["creationId"].as_str().unwrap().to_owned();
         let check = app
             .clone()
@@ -622,7 +622,7 @@ mod tests {
                     .uri("/api/v1/studio/generate")
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
-                        json!({ "prompt": "دومین آفرینش", "modality": "sfx" }).to_string(),
+                        json!({ "prompt": "\u{62f}\u{648}\u{645}\u{6cc}\u{646} \u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634}", "modality": "sfx" }).to_string(),
                     ))
                     .unwrap(),
             )
@@ -666,7 +666,7 @@ mod tests {
         assert!(artifact.contains("data-modality=\"video\""));
         assert!(artifact.contains("fishkal.dampFk"));
         assert!(artifact.contains("requestAnimationFrame"));
-        // لایهٔ صریح بر استنتاجِ تلمتری می‌چربد — وضعیتِ پروژه حفظ می‌شود.
+        // The explicit tier wins over telemetry inference — project state is preserved.
         assert_eq!(body["storefrontCard"]["cognitiveTierBadge"], "ProTerminal");
     }
 }

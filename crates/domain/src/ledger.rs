@@ -1,41 +1,41 @@
-//! ADR-003 — دفتر دوطرفه تغییرناپذیر (هسته عملیاتی خالص).
+//! ADR-003 — the immutable double-entry ledger (pure operational kernel).
 //!
-//! قراردادها:
-//!  - مقدار ردیف > 0 → بستانکار (ورود به حساب)، مقدار < 0 → بدهکار (خروج از حساب).
-//!  - هر تراکنش حداقل ۲ ردیف دارد و مجموع‌شان **همیشه** صفر است.
-//!  - قواعد جهت هر نوع حساب (fail-closed):
-//!    user/escrow/treasury → تراز هرگز منفی نمی‌شود،
-//!    mint → تراز هرگز مثبت نمی‌شود (فقط عرضه صادر می‌کند)،
-//!    burn → تراز هرگز منفی نمی‌شود (فقط پول نابودشده می‌گیرد).
-//!  - idempotencyKey: پست دوباره با همان کلید = پخش مجدد no-op و برگشت
-//!    تراکنش اصلی (امن برای retryهای بات/API).
-//!  - حفاظت (تقدسی): Σ تراز همه حساب‌ها = 0، همیشه.
+//! Contracts:
+//!  - posting value > 0 → credit (into the account), value < 0 → debit (out of the account).
+//!  - every transaction has at least 2 postings and their sum is **always** zero.
+//!  - direction rules per account kind (fail-closed):
+//!    user/escrow/treasury → the balance can never go negative,
+//!    mint → the balance can never go positive (it only emits supply),
+//!    burn → the balance can never go negative (it only receives destroyed money).
+//!  - idempotencyKey: posting again with the same key = a no-op replay returning
+//!    the original transaction (safe for bot/API retries).
+//!  - invariant (sanctity): Σ of all account balances = 0, always.
 //!
-//! تغییرناپذیری: هر عملیات یک `LedgerState` **جدید** برمی‌گرداند
-//! (clone-on-write) — خطا هرگز وضعیت را خراب نمی‌کند.
+//! Immutability: every operation returns a **new** `LedgerState`
+//! (clone-on-write) — an error never corrupts the state.
 
 use crate::errors::{DomainError, DomainErrorCode, DomainResult, MetaValue};
 use crate::events::EPOCH_ISO;
 use crate::money::MAX_DIN;
 use std::collections::BTreeMap;
 
-/// نوع حساب — جهت‌گیری قواعد fail-closed.
+/// Account kind — drives the fail-closed rules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum AccountKind {
-    /// حساب شهروند — هرگز منفی نمی‌شود
+    /// Citizen account — can never go negative
     User,
-    /// حساب امانت — هرگز منفی نمی‌شود
+    /// Escrow account — can never go negative
     Escrow,
-    /// حساب خزانه کشور — هرگز منفی نمی‌شود
+    /// National treasury account — can never go negative
     Treasury,
-    /// حساب ضرب — هرگز مثبت نمی‌شود (فقط عرضه صادر می‌کند)
+    /// Mint account — can never go positive (only emits supply)
     Mint,
-    /// حساب سوزاندن — هرگز منفی نمی‌شود (فقط پول نابود می‌گیرد)
+    /// Burn account — can never go negative (only receives destroyed money)
     Burn,
 }
 
 impl AccountKind {
-    /// رشته کانانیکی — یکسان با نسخه TS.
+    /// Canonical string — identical to the TS version.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -54,82 +54,82 @@ impl std::fmt::Display for AccountKind {
     }
 }
 
-/// شناسهٔ حساب در دفتر (مثلاً `user:buyer`، `citizen:123` یا `escrow:e1`).
+/// Account id in the ledger (e.g. `user:buyer`, `citizen:123`, or `escrow:e1`).
 pub type AccountId = String;
 
-/// حساب در دفتر.
+/// An account in the ledger.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Account {
-    /// شناسه یکتا (مثل `user:buyer` یا `escrow:e1`)
+    /// Unique id (e.g. `user:buyer` or `escrow:e1`)
     pub id: AccountId,
-    /// نوع حساب
+    /// Account kind
     pub kind: AccountKind,
-    /// برچسب اختیاری (مثلاً نام فارسی)
+    /// Optional label (e.g. a Persian name)
     pub label: Option<String>,
 }
 
-/// یک ردیف تراکنش — مقدار علامت‌دار صحیح.
+/// One transaction posting — a signed integer amount.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Posting {
-    /// حساب هدف
+    /// Target account
     pub account_id: String,
-    /// مقدار علامت‌دار (بستانکار > 0، بدهکار < 0)
+    /// Signed amount (credit > 0, debit < 0)
     pub amount: i64,
 }
 
 impl Posting {
-    /// میان‌بر ساخت ردیف.
+    /// Posting construction shortcut.
     #[must_use]
     pub fn new(account_id: impl Into<String>, amount: i64) -> Self {
         Self { account_id: account_id.into(), amount }
     }
 }
 
-/// تراکنش ثبت‌شده.
+/// A recorded transaction.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostedTransaction {
-    /// شناسه یکتا (`tx_N` یا صریح)
+    /// Unique id (`tx_N` or explicit)
     pub id: String,
-    /// کلید یکسان‌سازی اختیاری
+    /// Optional idempotency key
     pub idempotency_key: Option<String>,
-    /// ردیف‌ها (کپی مستقل)
+    /// Postings (independent copy)
     pub postings: Vec<Posting>,
-    /// یادداشت اختیاری
+    /// Optional note
     pub memo: Option<String>,
-    /// زمان ISO-8601 (فراهم‌شده توسط فراخوان/آداپتور — دامنه ساعت ندارد)
+    /// ISO-8601 timestamp (supplied by the caller/adapter — no clock domain)
     pub at: String,
 }
 
-/// وضعیت کامل دفتر — تغییرناپذیر از دید فراخوان.
+/// Full ledger state — immutable from the caller's point of view.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LedgerState {
-    /// حساب‌ها بر اساس شناسه
+    /// Accounts keyed by id
     pub accounts: BTreeMap<String, Account>,
-    /// ترازها بر اساس شناسه
+    /// Balances keyed by id
     pub balances: BTreeMap<String, i64>,
-    /// تراکنش‌های ثبت‌شده
+    /// Recorded transactions
     pub txs: BTreeMap<String, PostedTransaction>,
-    /// کلید یکسان‌سازی → شناسه تراکنش
+    /// Idempotency key → transaction id
     pub idempotency: BTreeMap<String, String>,
 }
 
-/// حساب‌های سیستمی شناخته‌شده (قرارداد مشترک با آداپتورها).
+/// Known system accounts (shared contract with the adapters).
 pub const MINT_ACCOUNT_ID: &str = "mint:genesis";
-/// حساب خزانه کشور.
+/// National treasury account.
 pub const TREASURY_ACCOUNT_ID: &str = "treasury:nation";
-/// حساب سوزاندن.
+/// Burn account.
 pub const BURN_ACCOUNT_ID: &str = "burn:void";
 
-/// دفتر خالی باز می‌کند.
+/// Opens an empty ledger.
 #[must_use]
 pub fn open_ledger() -> LedgerState {
     LedgerState::default()
 }
 
-/// افزودن حساب — شناسه تکراری رد می‌شود.
+/// Add an account — duplicate ids are rejected.
 ///
 /// # Errors
-/// `DUPLICATE_ACCOUNT` اگر حساب وجود داشته باشد.
+/// `DUPLICATE_ACCOUNT` if the account already exists.
 pub fn add_account(state: &LedgerState, account: Account) -> DomainResult<LedgerState> {
     if state.accounts.contains_key(&account.id) {
         return Err(DomainError::new(
@@ -150,33 +150,33 @@ pub fn add_account(state: &LedgerState, account: Account) -> DomainResult<Ledger
     })
 }
 
-/// فرمان ثبت تراکنش.
+/// Transaction post command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostCommand {
-    /// شناسه صریح اختیاری (پیش‌فرض: `tx_N`)
+    /// Optional explicit id (default: `tx_N`)
     pub id: Option<String>,
-    /// کلید یکسان‌سازی اختیاری
+    /// Optional idempotency key
     pub idempotency_key: Option<String>,
-    /// ردیف‌ها (≥ ۲ و مجموع صفر)
+    /// Postings (>= 2, summing to zero)
     pub postings: Vec<Posting>,
-    /// یادداشت اختیاری
+    /// Optional note
     pub memo: Option<String>,
-    /// زمان ISO اختیاری — پیش‌فرض epoch دترمینیستیک
+    /// Optional ISO timestamp — defaults to the deterministic epoch
     pub at: Option<String>,
 }
 
-/// نتیجه ثبت تراکنش.
+/// Transaction post result.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostOutcome {
-    /// وضعیت جدید دفتر (در replay، همان وضعیت ورودی)
+    /// New ledger state (on replay, the input state unchanged)
     pub state: LedgerState,
-    /// تراکنش ثبت‌شده (در replay، تراکنش اصلی)
+    /// Recorded transaction (on replay, the original transaction)
     pub tx: PostedTransaction,
-    /// آیا این یک پخش مجدد (replay) بود؟
+    /// Was this a replay?
     pub replayed: bool,
 }
 
-/// نقض قاعده جهت — `mint` مثبت نمی‌شود؛ بقیه منفی نمی‌شوند.
+/// Direction rule violation — `mint` cannot go positive; the rest cannot go negative.
 #[must_use]
 pub const fn is_overdraft_violation(kind: AccountKind, balance: i64) -> bool {
     match kind {
@@ -187,13 +187,13 @@ pub const fn is_overdraft_violation(kind: AccountKind, balance: i64) -> bool {
     }
 }
 
-/// ثبت تراکنش — چهار گام: replay → شکل → توازن → قواعد جهت، سپس commit.
+/// Post a transaction — four steps: replay → shape → balance → direction rules, then commit.
 ///
 /// # Errors
-/// طبق کدهای دامنه: `TOO_FEW_POSTINGS`، `NON_INTEGER_AMOUNT`،
-/// `UNKNOWN_ACCOUNT`، `UNBALANCED_TRANSACTION`، `ACCOUNT_OVERDRAFT`.
+/// Domain codes: `TOO_FEW_POSTINGS`, `NON_INTEGER_AMOUNT`,
+/// `UNKNOWN_ACCOUNT`, `UNBALANCED_TRANSACTION`, `ACCOUNT_OVERDRAFT`.
 pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome> {
-    // ۱) پخش مجدد یکسان‌سازی‌شده — برگرداندن تراکنش اصلی مجاز است، خطا نیست.
+    // 1) Idempotent replay — returning the original transaction is allowed, not an error.
     if let Some(key) = &cmd.idempotency_key
         && let Some(existing_id) = state.idempotency.get(key)
         && let Some(existing) = state.txs.get(existing_id)
@@ -205,7 +205,7 @@ pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome>
         });
     }
 
-    // ۲) اعتبارسنجی شکل.
+    // 2) Shape validation.
     if cmd.postings.len() < 2 {
         return Err(DomainError::new(
             DomainErrorCode::TooFewPostings,
@@ -213,7 +213,7 @@ pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome>
         ));
     }
     for p in &cmd.postings {
-        // مرز امن TS: |amount| ≤ 2^53−1
+        // TS-safe boundary: |amount| ≤ 2^53−1
         if p.amount.unsigned_abs() > MAX_DIN as u64 {
             return Err(DomainError::new(
                 DomainErrorCode::NonIntegerAmount,
@@ -248,7 +248,7 @@ pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome>
         .with_meta("sum", sum));
     }
 
-    // ۳) قواعد جهت (fail-closed) — روی پیش‌نویس ارزیابی؛ فقط اگر تمیز بود commit.
+    // 3) Direction rules (fail-closed) — evaluated on the draft; commit only if clean.
     let mut draft = state.balances.clone();
     for p in &cmd.postings {
         *draft.entry(p.account_id.clone()).or_insert(0) += p.amount;
@@ -270,7 +270,7 @@ pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome>
         }
     }
 
-    // ۴) Commit — وضعیت جدید تغییرناپذیر.
+    // 4) Commit — a new immutable state.
     let tx_id = cmd.id.clone().unwrap_or_else(|| format!("tx_{}", state.txs.len() + 1));
     let tx = PostedTransaction {
         id: tx_id,
@@ -292,39 +292,39 @@ pub fn post(state: &LedgerState, cmd: &PostCommand) -> DomainResult<PostOutcome>
     })
 }
 
-/// تراز یک حساب.
+/// The balance of one account.
 ///
 /// # Errors
-/// `UNKNOWN_ACCOUNT` اگر حساب وجود نداشته باشد.
+/// `UNKNOWN_ACCOUNT` if the account does not exist.
 pub fn balance_of(state: &LedgerState, account_id: &str) -> DomainResult<i64> {
     state.balances.get(account_id).copied().ok_or_else(|| {
         DomainError::new(DomainErrorCode::UnknownAccount, format!("Unknown account {account_id}"))
     })
 }
 
-/// سطر تراز آزمایشی.
+/// Trial-balance row.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrialBalanceRow {
-    /// شناسه حساب
+    /// Account id
     pub account_id: String,
-    /// نوع حساب
+    /// Account kind
     pub kind: AccountKind,
-    /// تراز
+    /// Balance
     pub balance: i64,
 }
 
-/// تراز آزمایشی — تقدسی: `balanced == true` همیشه.
+/// Sanity balance — sacred invariant: `balanced == true` always.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrialBalance {
-    /// سطرها (مرتب بر اساس شناسه — دترمینیستیک)
+    /// Rows (sorted by id — deterministic)
     pub rows: Vec<TrialBalanceRow>,
-    /// Σ همه ترازها
+    /// Σ of all balances
     pub sum: i64,
-    /// آیا Σ = 0؟
+    /// Is Σ = 0?
     pub balanced: bool,
 }
 
-/// محاسبه تراز آزمایشی.
+/// Compute the trial balance.
 #[must_use]
 pub fn trial_balance(state: &LedgerState) -> TrialBalance {
     let mut rows = Vec::new();
@@ -342,7 +342,7 @@ pub fn trial_balance(state: &LedgerState) -> TrialBalance {
     TrialBalance { sum, balanced: sum == 0, rows }
 }
 
-/// پول در دست شهروندان (user + escrow + treasury) = صادرشده − سوزانده‌شده.
+/// Money in citizens' hands (user + escrow + treasury) = minted − burned.
 #[must_use]
 pub fn circulating_supply(state: &LedgerState) -> i64 {
     let mut total: i64 = 0;
@@ -383,7 +383,7 @@ mod tests {
             Account {
                 id: "user:buyer".into(),
                 kind: AccountKind::User,
-                label: Some("خریدار".into()),
+                label: Some("\u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631}".into()),
             },
         )
         .unwrap();
@@ -392,7 +392,7 @@ mod tests {
             Account {
                 id: "user:seller".into(),
                 kind: AccountKind::User,
-                label: Some("فروشنده".into()),
+                label: Some("\u{641}\u{631}\u{648}\u{634}\u{646}\u{62f}\u{647}".into()),
             },
         )
         .unwrap();
@@ -484,7 +484,7 @@ mod tests {
             },
         );
         assert_eq!(unknown.unwrap_err().code, DomainErrorCode::UnknownAccount);
-        // در TS پست اعشاری رد می‌شود؛ در Rust همان کد برای خروج از مرز امن است
+        // in TS a fractional post is rejected; in Rust the same code guards the safe boundary
         let beyond = post(
             &l,
             &PostCommand {
@@ -518,7 +518,7 @@ mod tests {
         let e = r.unwrap_err();
         assert_eq!(e.code, DomainErrorCode::AccountOverdraft);
         assert_eq!(e.meta.get("newBalance"), Some(&MetaValue::Int(-100)));
-        // وضعیت پس از خطا دست‌نخورده
+        // state untouched after an error
         assert_eq!(balance_of(&l, "user:buyer").unwrap(), 500);
         assert_eq!(balance_of(&l, "user:seller").unwrap(), 0);
     }
@@ -528,7 +528,7 @@ mod tests {
         let mut l = new_ledger();
         l = mint_to(&l, "user:buyer", 1_000);
         assert_eq!(balance_of(&l, MINT).unwrap(), -1_000);
-        // بستانکاری که mint را بالای صفر ببرد رد می‌شود
+        // a credit that pushes mint above zero is rejected
         let bad_mint = post(
             &l,
             &PostCommand {
@@ -542,7 +542,7 @@ mod tests {
         let e = bad_mint.unwrap_err();
         assert_eq!(e.code, DomainErrorCode::AccountOverdraft);
         assert_eq!(e.meta.get("accountId"), Some(&MetaValue::Text(MINT.into())));
-        // دریافت توسط burn مجاز است
+        // receipt by burn is allowed
         let burn_ok = post(
             &l,
             &PostCommand {
@@ -554,7 +554,7 @@ mod tests {
             },
         );
         assert!(burn_ok.is_ok());
-        // ماتریس قواعد
+        // rules matrix
         assert!(is_overdraft_violation(AccountKind::Mint, 1));
         assert!(is_overdraft_violation(AccountKind::Burn, -1));
         assert!(is_overdraft_violation(AccountKind::User, -1));
@@ -580,7 +580,7 @@ mod tests {
         let second = post(&first.state, &cmd).unwrap();
         assert!(second.replayed);
         assert_eq!(second.tx.id, first.tx.id);
-        assert_eq!(second.state, first.state); // وضعیت تغییرناپذیر یکسان
+        assert_eq!(second.state, first.state); // identical immutable state
         assert_eq!(balance_of(&second.state, "user:buyer").unwrap(), 400);
         assert_eq!(balance_of(&second.state, "user:seller").unwrap(), 100);
     }
@@ -631,9 +631,9 @@ mod tests {
         assert_ne!(r2.tx.id, "tx_1");
     }
 
-    /// PRNG دترمینیستیک — پورت دقیق mulberry32 تا با نسخه TS یکسان بماند.
-    #[allow(clippy::many_single_char_names)] // پورت ۱:۱ الگوریتم مرجع — نام‌ها عمدی
-    #[allow(clippy::unreadable_literal)] // ثابت‌های مرجع PRNG — یک‌به‌یک با TS
+    /// Deterministic PRNG — an exact mulberry32 port so it stays identical to the TS version.
+    #[allow(clippy::many_single_char_names)] // 1:1 port of the reference algorithm — the names are intentional
+    #[allow(clippy::unreadable_literal)] // reference PRNG constants — one-to-one with TS
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
     fn mulberry32(seed: u32) -> impl FnMut() -> f64 {
         let mut t = seed;
@@ -694,7 +694,7 @@ mod tests {
                     }
                 }
                 Err(e) => {
-                    // عملیات ناموفق فقط خطای سیاست است، هرگز شکاف حفاظت
+                    // a failed operation is a policy error only, never an invariant breach
                     assert!(
                         matches!(
                             e.code,
@@ -726,7 +726,7 @@ mod tests {
         )
         .unwrap();
         l = mint_to(&l, "user:buyer", 1_000);
-        // تامین اسکرو
+        // fund escrow
         l = post(
             &l,
             &PostCommand {
@@ -742,7 +742,7 @@ mod tests {
         )
         .unwrap()
         .state;
-        // تسویه ۴پستینگی: فروشنده ۷۹۱ + خزانه ۹۹ + معرف ۱۰۹ = ۹۹۹
+        // 4-posting settlement: seller 791 + treasury 99 + referrer 109 = 999
         let out = post(
             &l,
             &PostCommand {

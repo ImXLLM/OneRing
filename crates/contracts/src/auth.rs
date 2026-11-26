@@ -1,112 +1,112 @@
-//! قراردادهای هویت M3 — احراز Telegram initData، نشست‌ها و واریز TON.
+//! M3 identity contracts — Telegram initData authentication, sessions and TON deposits.
 //!
-//! هویت هرگز از بدنهٔ درخواست مشتق نمی‌شود — فقط از `initData` امضاشدهٔ
-//! `Telegram.WebApp` (طرح رسمی HMAC در [`crate::security`]). نشست توکنی
-//! اپاک است و با `Authorization: Bearer` می‌آید.
+//! Identity is never derived from the request body — only from the signed `Telegram.WebApp`
+//! `initData` (official HMAC scheme in [`crate::security`]). A session is an
+//! opaque token delivered via `Authorization: Bearer`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::Din;
 
-/// درخواست احراز تلگرام — رشتهٔ کامل `initData` خام از `Telegram.WebApp`.
+/// Telegram authentication request — the full raw `initData` string from `Telegram.WebApp`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TelegramAuthRequest {
-    /// `window.Telegram.WebApp.initData` — بدون هیچ دست‌کاری
+    /// `window.Telegram.WebApp.initData` — without any tampering
     pub init_data: String,
 }
 
-/// نمای کاربر مینی‌اپ — هویت تلگرام متصل به حساب دفتر دوطرفه.
+/// Mini-app user view — a Telegram identity bound to a double-entry ledger account.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserView {
-    /// شناسه پایدار (`citizen:{telegram_id}`)
+    /// Stable ID (`citizen:{telegram_id}`)
     pub id: String,
-    /// شناسهٔ عددی تلگرام (رشته — حفاظ 2^53−1)
+    /// Telegram numeric ID (string — guard against 2^53−1)
     pub telegram_id: String,
-    /// یوزرنیم تلگرام بدون `@` — اختیاری (کلید غایب روی سیم)
+    /// Telegram username without `@` — optional (key absent on the wire)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
-    /// حساب دفتر متصل به این هویت
+    /// Ledger account bound to this identity
     pub account_id: String,
-    /// آدرس ولت TON متصل — `null` صریح تا وقتی TON Connect وصل شود
+    /// Connected TON wallet address — explicit `null` until TON Connect links
     pub ton_address: Option<String>,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
 }
 
-/// پاسخ احراز موفق — توکن نشست + نمای کاربر.
+/// Successful authentication response — session token + user view.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthResponse {
-    /// توکن نشست (۶۴ hex) — در `Authorization: Bearer` برگردانده می‌شود
+    /// Session token (64 hex) — echoed back in `Authorization: Bearer`
     pub token: String,
-    /// انقضای توکن ISO
+    /// Token expiry (ISO)
     pub expires_at: String,
-    /// کاربر احرازشده
+    /// Authenticated user
     pub user: UserView,
 }
 
-/// ردیف تاریخچهٔ کیف روی وایر — مبلغ علامت‌دار (بدهکار منفی).
+/// Wallet history row on the wire — signed amount (debit negative).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletTxView {
-    /// شناسه تراکنش دفتر
+    /// Ledger transaction ID
     pub tx_id: String,
-    /// مبلغ علامت‌دار به دیین — منفی یعنی خروج از حساب
+    /// Signed amount in Din — negative means leaving the account
     pub amount: i64,
-    /// یادداشت — `null` صریح اگر ثبت نشده
+    /// Memo — explicit `null` when not recorded
     pub memo: Option<String>,
-    /// زمان ISO
+    /// Time (ISO)
     pub at: String,
 }
 
-/// وضعیت من کامل — هویت + تراز مشتق‌شده + تاریخچهٔ اخیر.
+/// Full /me status — identity + derived balance + recent history.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MeResponse {
-    /// کاربر احرازشده
+    /// Authenticated user
     pub user: UserView,
-    /// تراز آزاد دیین (SUM دفتر — ADR-003)
+    /// Free Din balance (ledger SUM — ADR-003)
     pub balance: Din,
-    /// دیین قفل‌شده در اسکروهای خریدار
+    /// Din locked in buyer escrows
     pub escrow_locked: Din,
-    /// ۱۰ ردیف آخر دفتر من
+    /// Last 10 rows of my ledger
     pub recent_txs: Vec<WalletTxView>,
 }
 
-/// درخواست اتصال آدرس TON به هویت — از TON Connect می‌آید.
+/// Request to link a TON address to the identity — comes from TON Connect.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SetTonAddressRequest {
-    /// آدرس wallet TON (فرمت پایهٔ ۵۱ کاراکتری EQ/UQ یا فرندلی UQ..)
+    /// TON wallet address (51-character base EQ/UQ format or friendly UQ..)
     pub address: String,
 }
 
-/// درخواست ورود دمو/توسعه‌دهنده — فقط در حالت dev (`POST /auth/dev-login`).
+/// Demo/developer login request — dev mode only (`POST /auth/dev-login`).
 ///
-/// جایگزین تلگرام نیست؛ فقط برای تستِ محلیِ حلقهٔ کامل (سازنده → انتشار →
-/// رفرال → خرید → اسکرو → برداشت) در مرورگر بدون تلگرام. همهٔ فیلدها غیر از
-/// `tgUserId` اختیاری‌اند با پیش‌فرض‌های معقول؛ `firstName` فقط نمایشی است و
-/// ذخیره نمی‌شود (هویت = `citizen:{tgUserId}`).
+/// Not a replacement for Telegram; only for locally testing the full loop (builder → publish →
+/// referral → purchase → escrow → withdrawal) in a browser without Telegram. All fields except
+/// `tgUserId` are optional with sensible defaults; `firstName` is display-only and
+/// is not stored (identity = `citizen:{tgUserId}`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DevLoginRequest {
-    /// شناسهٔ عددی تلگرام آزمایشی — فقط ارقام (۱..=۲۰ رقم)؛ پیش‌فرض پرسونای سازنده
+    /// Fake Telegram numeric ID — digits only (1..=20 digits); defaults to the builder persona
     pub tg_user_id: String,
-    /// یوزرنیم آزمایشی اختیاری — بدون `@`
+    /// Optional fake username — without `@`
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
-    /// نام نمایشی اختیاری — فقط برای نمایش؛ روی هویت ذخیره نمی‌شود
+    /// Optional display name — for display only; not stored on the identity
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub first_name: Option<String>,
-    /// پارامتر شروع وایرال اختیاری (`p_<productId>_r_<referrer>`)
+    /// Optional viral start parameter (`p_<productId>_r_<referrer>`)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub start_param: Option<String>,
 }
 
-/// پیش‌فرض `DevLoginRequest` — پرسونای سازندهٔ دمو (۱۰۰۱).
+/// Default `DevLoginRequest` — the demo builder persona (1001).
 impl Default for DevLoginRequest {
     fn default() -> Self {
         Self {
@@ -118,58 +118,58 @@ impl Default for DevLoginRequest {
     }
 }
 
-/// مقدار پیش‌فرض شیرِ اعتبار آزمایشی — ۵٬۰۰۰ KIAN به micro.
+/// Default faucet amount — 5,000 KIAN in micro.
 pub const FAUCET_DEFAULT_MICRO: i64 = 5_000_000_000;
 
-/// سقف هر برداشت از شیر آزمایشی — ۵۰٬۰۰۰ KIAN به micro.
+/// Per-draw faucet cap — 50,000 KIAN in micro.
 pub const FAUCET_MAX_MICRO: i64 = 50_000_000_000;
 
-/// درخواست شیرِ اعتبار آزمایشی (`POST /wallet/faucet`) — فقط حالت dev.
+/// Faucet request (`POST /wallet/faucet`) — dev mode only.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", default)]
 pub struct FaucetRequest {
-    /// مبلغ به micro-KIAN — پیش‌فرض ۵٬۰۰۰ KIAN؛ سقف ۵۰٬۰۰۰ KIAN
+    /// Amount in micro-KIAN — default 5,000 KIAN; cap 50,000 KIAN
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub amount_micro: Option<i64>,
 }
 
-/// درخواست ثبت واریز TON — اثبات انتقال از سمت کاربر.
+/// TON deposit registration request — user-side proof of transfer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TonDepositCreateRequest {
-    /// هش تراکنش TON (۶۴ hex یا base64 — طول ۸..=۱۲۸)
+    /// TON transaction hash (64 hex or base64 — length 8..=128)
     pub tx_hash: String,
-    /// آدرس فرستنده — همان ولت TON Connect
+    /// Sender address — the same TON Connect wallet
     pub wallet_address: String,
-    /// مبلغ TON به‌صورت رشتهٔ دهدهی (مثل "0.50") — هرگز float روی سیم
+    /// TON amount as a decimal string (e.g. "0.50") — never a float on the wire
     pub amount_ton: String,
 }
 
-/// نمای واریز TON — وضعیت رفت‌وبرگشت کامل.
+/// TON deposit view — full round-trip status.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TonDepositView {
-    /// شناسه (`dep:{uuid}`)
+    /// ID (`dep:{uuid}`)
     pub id: String,
-    /// هش تراکنش زنجیره
+    /// On-chain transaction hash
     pub tx_hash: String,
-    /// آدرس فرستنده
+    /// Sender address
     pub wallet_address: String,
-    /// مبلغ TON رشتهٔ دهدهی
+    /// TON amount as a decimal string
     pub amount_ton: String,
     /// `PENDING` / `CONFIRMED` / `REJECTED`
     pub status: String,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
-    /// زمان تصمیم ISO — `null` صریح تا وقتی ادمین تعیین تکلیف کند
+    /// Decision time (ISO) — explicit `null` until an admin resolves it
     pub confirmed_at: Option<String>,
 }
 
-/// فهرست واریزهای من.
+/// List my deposits.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TonDepositListResponse {
-    /// ردیف‌ها — جدیدترین اول
+    /// Rows — newest first
     pub items: Vec<TonDepositView>,
 }
 
@@ -200,15 +200,15 @@ mod tests {
 
     #[test]
     fn dev_login_request_defaults_and_camel_case() {
-        // بدنهٔ خالی → پرسونای پیش‌فرض سازنده
+        // empty body → the default builder persona
         let req: DevLoginRequest = from_str("{}").unwrap();
         assert_eq!(req.tg_user_id, "1001");
         assert_eq!(req.username, None);
-        // شکل سیمی camelCase + فیلدهای غایب
+        // camelCase wire shape + absent fields
         let full = DevLoginRequest {
             tg_user_id: "2002".into(),
             username: Some("buyer_demo".into()),
-            first_name: Some("خریدار (Buyer)".into()),
+            first_name: Some("\u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631} (Buyer)".into()),
             start_param: Some("p_prod1_r_3003".into()),
         };
         let json = to_string(&full).unwrap();

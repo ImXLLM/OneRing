@@ -1,80 +1,80 @@
-//! `approvals` — حکمرانی HITL شش‌طبقه‌ای با صدای دوگانه + گاردهای ساب‌ایجنت و روتین.
+//! `approvals` — six-class HITL governance with dual voice + subagent and routine guards.
 //!
-//! پورت Wave 2 از گنجینهٔ CopilotKit/OpenBot:
-//! - `shared/approval-outcomes.ts` → [`ApprovalOutcome`]: هر تصمیم دو صدا دارد —
-//!   جمله‌ای برای مدل (`outcome_for_model`) که صادق گزارش کند و دنبال دور زدن
-//!   نرود، و جمله‌ای برای انسان (`outcome_for_person_fa`) که رک و کوتاه است.
-//!   تغییر یکی هرگز دیگری را پشت سر نمی‌گذارد چون هر دو کنار هم تعریف و تست‌اند.
+//! A Wave 2 port from the CopilotKit/OpenBot treasure trove:
+//! - `shared/approval-outcomes.ts` → [`ApprovalOutcome`]: every decision has two voices —
+//!   a sentence for the model (`outcome_for_model`) so it reports honestly and does not hunt
+//!   for a workaround, and a sentence for the human (`outcome_for_person_fa`) that is blunt and short.
+//!   Changing one never leaves the other behind, because both are defined side by side and both are tested.
 //! - `docs/approvals.md` + `shared/what-if.ts` → [`simulate_approval_policy`]:
-//!   شبیه‌ساز سیاستِ قطعی «چه می‌شد اگر…» — همان ترتیب لایه‌ها که محصول اعمال
-//!   می‌کند، بدون شبکه و بدون شانس.
+//!   The deterministic "what if…" policy simulator — the same layer order the product
+//!   enforces, with no network and no randomness.
 //! - `shared/subagent.ts` → [`deterministic_subagent_thread_id`]: thread
-//!   ساب‌ایجنت «مشتق» است نه «ضرب‌شده» — از والد + فراخوانی، به‌صورت `UUIDv8`، تا
-//!   رونوشت ساب‌ایجنت بعد از ری‌استارت هم پیدا شود و هرگز تولد دوباره رخ ندهد.
-//! - `docs/routines.md` → [`RoutineFatigueGuard`]: ضد اسپم روتین — کف ۱۵ دقیقه،
-//!   سقف ۲۰ روتین فعال، مدارشکن پس از ۱۰ شکست پیاپی، و پرش از پنجره‌های از دست
-//!   رفتهٔ کرون بعد از ری‌استارت (به‌جای شلیک انبوه).
+//!   The subagent is "derived", not "multiplied" — from parent + tool call, as a `UUIDv8`, so
+//!   the subagent transcript is findable even after a restart and rebirth never occurs.
+//! - `docs/routines.md` → [`RoutineFatigueGuard`]: routine anti-spam — a 15-minute floor,
+//!   a cap of 20 active routines, a circuit breaker after 10 consecutive failures, and
+//!   skipping cron windows missed after a restart (instead of a firing burst).
 //!
-//! الگوی «جعبهٔ راز» (secret box) هم همین‌جا لایه‌بندی شده: مدیریت اعتبارنامه و
-//! دسترسی هرگز خودکار تأیید نمی‌شود — کار خود انسان است.
+//! The "secret box" pattern is layered here as well: credential and access management is
+//! never auto-approved — it is the human's own job.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use sha2::{Digest, Sha256};
 
-/// آستانهٔ تأیید انسانی از منشور کیان (مادهٔ ۷) — ۵۰٬۰۰۰ دینار.
+/// Human-approval threshold from the Kian charter (Article 7) — 50,000 dinar.
 pub use kian_domain::charter::Charter;
 
-/// شش طبقهٔ اقدامی که طبق `docs/approvals.md` «در هر نسخه می‌پرسند» — ترتیب
-/// نمایش، همان ترتیب اولویت سیاست است.
+/// The six action classes that, per `docs/approvals.md`, "get asked in every release" — the
+/// display order is the same as the policy priority order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApprovalCategory {
-    /// فرستادن پیام/میل/دعوت به دیگران.
+    /// Sending a message/email/invitation to others.
     SendMessages,
-    /// خرید، پرداخت یا جابه‌جایی پول.
+    /// Buying, paying, or moving money.
     MakePurchasesOrTransfers,
-    /// حذف یا تغییر دادهٔ موجود.
+    /// Deleting or altering existing data.
     DeleteOrModifyData,
-    /// انتشار محتوای عمومی (پست، توییت، انتشار محصول).
+    /// Publishing public content (a post, a tweet, a product launch).
     PublishPublicContent,
-    /// مدیریت اعتبارنامه یا دسترسی (رمز، توکن، مجوز) — جعبهٔ راز.
+    /// Managing credentials or access (password, token, permission) — the secret box.
     ManageCredentialsOrPermissions,
-    /// ثبت فرم یا درخواست رسمی.
+    /// Submitting a form or a formal request.
     SubmitFormsOrApplications,
 }
 
 impl ApprovalCategory {
-    /// برچسب فارسی برای کارت تأیید و صفحهٔ سیاست.
+    /// Persian label for the approval card and the policy page.
     #[must_use]
     pub const fn label_fa(self) -> &'static str {
         match self {
-            Self::SendMessages => "ارسال پیام به دیگران",
-            Self::MakePurchasesOrTransfers => "خرید یا جابه‌جایی پول",
-            Self::DeleteOrModifyData => "حذف یا تغییر داده",
-            Self::PublishPublicContent => "انتشار محتوای عمومی",
-            Self::ManageCredentialsOrPermissions => "مدیریت اعتبارنامه یا دسترسی",
-            Self::SubmitFormsOrApplications => "ثبت فرم یا درخواست",
+            Self::SendMessages => "\u{627}\u{631}\u{633}\u{627}\u{644} \u{67e}\u{6cc}\u{627}\u{645} \u{628}\u{647} \u{62f}\u{6cc}\u{6af}\u{631}\u{627}\u{646}",
+            Self::MakePurchasesOrTransfers => "\u{62e}\u{631}\u{6cc}\u{62f} \u{6cc}\u{627} \u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{67e}\u{648}\u{644}",
+            Self::DeleteOrModifyData => "\u{62d}\u{630}\u{641} \u{6cc}\u{627} \u{62a}\u{63a}\u{6cc}\u{6cc}\u{631} \u{62f}\u{627}\u{62f}\u{647}",
+            Self::PublishPublicContent => "\u{627}\u{646}\u{62a}\u{634}\u{627}\u{631} \u{645}\u{62d}\u{62a}\u{648}\u{627}\u{6cc} \u{639}\u{645}\u{648}\u{645}\u{6cc}",
+            Self::ManageCredentialsOrPermissions => "\u{645}\u{62f}\u{6cc}\u{631}\u{6cc}\u{62a} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{646}\u{627}\u{645}\u{647} \u{6cc}\u{627} \u{62f}\u{633}\u{62a}\u{631}\u{633}\u{6cc}",
+            Self::SubmitFormsOrApplications => "\u{62b}\u{628}\u{62a} \u{641}\u{631}\u{645} \u{6cc}\u{627} \u{62f}\u{631}\u{62e}\u{648}\u{627}\u{633}\u{62a}",
         }
     }
 }
 
-/// نتیجهٔ دوزبانهٔ یک کارت تأیید — صدای مدل و صدای انسان کنار هم.
+/// The bilingual outcome of an approval card — the model voice and the human voice side by side.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApprovalOutcome {
-    /// انسان اجازه داد.
+    /// The human allowed it.
     Approved,
-    /// انسان صریحاً رد کرد — مدل حق تلاش دوباره، پیرایه یا دور زدن ندارد.
+    /// The human explicitly denied it — the model may not retry, amend, or bypass.
     DeclinedByPerson,
-    /// مهلت تصمیم تمام شد و کاری انجام نشد.
+    /// The decision deadline expired and nothing was done.
     TimedOut,
 }
 
 impl ApprovalOutcome {
-    /// جمله‌ای که مدل می‌خواند — می‌گوید چه کسی تصمیم گرفت و بعد چه کند،
-    /// تا گزارشش صادق باشد و دنبال راه دور نگردد (پورت `OpenBot`).
+    /// The sentence the model reads — it states who decided and what to do next,
+    /// so its report stays honest and seeks no workaround (a port of `OpenBot`).
     #[must_use]
     pub const fn outcome_for_model(self) -> &'static str {
         match self {
@@ -90,91 +90,91 @@ impl ApprovalOutcome {
         }
     }
 
-    /// جمله‌ای که انسان می‌خواند — رک، کوتاه، بدون کلمه‌نویسی برای مدل.
+    /// The sentence the human reads — blunt, short, no model-facing wordiness.
     #[must_use]
     pub const fn outcome_for_person_fa(self) -> &'static str {
         match self {
-            Self::Approved => "انجام شد.",
-            Self::DeclinedByPerson => "درخواست توسط شما رد شد.",
-            Self::TimedOut => "زمان تأیید به پایان رسید و کاری انجام نشد.",
+            Self::Approved => "\u{627}\u{646}\u{62c}\u{627}\u{645} \u{634}\u{62f}.",
+            Self::DeclinedByPerson => "\u{62f}\u{631}\u{62e}\u{648}\u{627}\u{633}\u{62a} \u{62a}\u{648}\u{633}\u{637} \u{634}\u{645}\u{627} \u{631}\u{62f} \u{634}\u{62f}.",
+            Self::TimedOut => "\u{632}\u{645}\u{627}\u{646} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{628}\u{647} \u{67e}\u{627}\u{6cc}\u{627}\u{646} \u{631}\u{633}\u{6cc}\u{62f} \u{648} \u{6a9}\u{627}\u{631}\u{6cc} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{646}\u{634}\u{62f}.",
         }
     }
 }
 
-/// زمینهٔ یک اقدام فرضی برای شبیه‌ساز سیاست — همان چیپ‌های صفحهٔ what-if.
+/// The context of a hypothetical action for the policy simulator — the same chips as the what-if page.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApprovalContext {
-    /// مبلغ مالی به دینار (None یعنی اقدام بی‌مبلغ).
+    /// A monetary amount in dinar (None means a non-monetary action).
     pub amount_din: Option<i64>,
-    /// ابزار مخرب برچسب‌خورده توسط اپ — مستقل از نام ابزار می‌پرسد.
+    /// An app-labeled destructive tool — prompts regardless of the tool name.
     pub destructive: bool,
-    /// توضیح کوتاه اقدام برای کارت (مثلاً «انتقال ۲ میلیون دیناری به کیف X»).
+    /// A short action description for the card (e.g. "a 2-million-dinar transfer to wallet X").
     pub detail: String,
 }
 
 impl ApprovalContext {
-    /// زمینهٔ سادهٔ بی‌مبلغ و غیرمخرب.
+    /// A plain non-monetary, non-destructive context.
     #[must_use]
     pub fn plain(detail: impl Into<String>) -> Self {
         Self { amount_din: None, destructive: false, detail: detail.into() }
     }
 }
 
-/// حکم سیاست برای یک اقدام فرضی — سه‌گانهٔ قطعی.
+/// The policy verdict for a hypothetical action — a deterministic tri-state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PolicyVerdict {
-    /// بدون کارت اجرا می‌شود.
+    /// Runs without a card.
     AutoApprove,
-    /// کارت تأیید انسانی می‌خواهد (دو صدا).
+    /// Needs a human approval card (dual voice).
     RequiresHumanConfirmation,
-    /// سیاست به‌کلی رد می‌کند — حتی انسان هم از این مسیر پاس نمی‌دهد.
+    /// The policy rejects outright — even a human cannot pass this route.
     Blocked,
 }
 
 impl PolicyVerdict {
-    /// دلیل یک‌جمله‌ای فارسی برای کارت what-if و لاگ ممیزی.
+    /// A one-sentence Persian rationale for the what-if card and the audit log.
     #[must_use]
     pub const fn reason_fa(self) -> &'static str {
         match self {
-            Self::AutoApprove => "سیاست این اقدام را بدون کارت تأیید اجرا می‌کند.",
-            Self::RequiresHumanConfirmation => "این اقدام کارت تأیید انسانی می‌خواهد.",
-            Self::Blocked => "سیاست این اقدام را به‌کلی می‌بندد — کارِ خود انسان است.",
+            Self::AutoApprove => "\u{633}\u{6cc}\u{627}\u{633}\u{62a} \u{627}\u{6cc}\u{646} \u{627}\u{642}\u{62f}\u{627}\u{645} \u{631}\u{627} \u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{627}\u{631}\u{62a} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}.",
+            Self::RequiresHumanConfirmation => "\u{627}\u{6cc}\u{646} \u{627}\u{642}\u{62f}\u{627}\u{645} \u{6a9}\u{627}\u{631}\u{62a} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{62f}.",
+            Self::Blocked => "\u{633}\u{6cc}\u{627}\u{633}\u{62a} \u{627}\u{6cc}\u{646} \u{627}\u{642}\u{62f}\u{627}\u{645} \u{631}\u{627} \u{628}\u{647}‌\u{6a9}\u{644}\u{6cc} \u{645}\u{6cc}‌\u{628}\u{646}\u{62f}\u{62f} — \u{6a9}\u{627}\u{631}\u{650} \u{62e}\u{648}\u{62f} \u{627}\u{646}\u{633}\u{627}\u{646} \u{627}\u{633}\u{62a}.",
         }
     }
 }
 
-/// شبیه‌ساز سیاست «چه می‌شد اگر…» — تابعِ خالص و قطعی (پورت what-if-check).
+/// The "what if…" policy simulator — a pure, deterministic function (a port of what-if-check).
 ///
-/// ترتیب لایه‌ها همان ترتیبی است که محصول اعمال می‌کند؛ اولین جوابِ قطعی برنده است:
-/// 1. **جعبهٔ راز:** `ManageCredentialsOrPermissions` همیشه [`PolicyVerdict::Blocked`]
-///    است — رمز/توکن را فقط خود انسان وارد می‌کند و هیچ پاسخی از طرف او
-///    نمی‌تواند بنشیند (الگوی «خودم انجامش می‌دهم» در `OpenBot`).
-/// 2. **مخرب برچسب‌خورده:** `destructive` بدون توجه به نام ابزار کارت می‌خواهد.
-/// 3. **دروازهٔ منشور کیان:** خرید/انتقال بالای آستانهٔ HITL منشور (۵۰٬۰۰۰ Đ)
-///    تأیید انسانی می‌خواهد؛ زیر آستانه، لِین اسکروی خودکار آزاد می‌شود
-///    ([`PolicyVerdict::AutoApprove`]) و مبلغِ منفی به‌کلی بسته است.
-/// 4. بقیهٔ طبقه‌ها همیشه کارت می‌خواهند — ارسال، حذف، انتشار و ثبت فرم.
+/// The layer order is the same order the product enforces; the first deterministic answer wins:
+/// 1. **Secret box:** `ManageCredentialsOrPermissions` is always [`PolicyVerdict::Blocked`]
+///    — only the human ever enters the password/token, and no answer may sit in on
+///    their behalf (the "I'll do it myself" pattern in `OpenBot`).
+/// 2. **Destructive-labeled:** `destructive` wants a card regardless of the tool name.
+/// 3. **Kian charter gate:** purchases/transfers above the charter HITL threshold (50,000 Đ)
+///    need human approval; below the threshold, the automated escrow lane releases
+///    ([`PolicyVerdict::AutoApprove`]) and a negative amount is fully blocked.
+/// 4. The remaining classes always want a card — send, delete, publish, and form submission.
 ///
-/// هیچ ورودی‌ای باعث I/O یا شانس نمی‌شود؛ همین تابع هم برای دکمهٔ «چه می‌شد
-/// اگر…» و هم برای گیت واقعی اجرا می‌شود تا شبیه‌ساز و واقعیت هرگز اختلاف
-/// نظر نداشته باشند.
+/// No input causes I/O or randomness; the same function runs both for the "what
+/// if…" button and for the real gate, so the simulator and reality can never
+/// disagree.
 #[must_use]
 pub fn simulate_approval_policy(category: ApprovalCategory, context: &ApprovalContext) -> PolicyVerdict {
-    // ۱. جعبهٔ راز — حتی انسان هم از این گیت پاس نمی‌شود.
+    // 1. Secret box — even a human does not pass this gate.
     if matches!(category, ApprovalCategory::ManageCredentialsOrPermissions) {
         return PolicyVerdict::Blocked;
     }
-    // ۲. ابزار مخربِ برچسب‌خورده — کارت می‌خواهد، هر اسمی که داشته باشد.
+    // 2. A destructive-labeled tool — wants a card whatever its name.
     if context.destructive {
         return PolicyVerdict::RequiresHumanConfirmation;
     }
-    // ۳. دروازهٔ پول — آستانهٔ منشور کیان.
+    // 3. The money gate — the Kian charter threshold.
     if matches!(category, ApprovalCategory::MakePurchasesOrTransfers) {
         return match context.amount_din {
             None => PolicyVerdict::RequiresHumanConfirmation,
-            // مبلغ نامعتبر (منفی یا بیرون از مرز امن 2^53−1) به‌کلی بسته است.
+            // an invalid amount (negative or beyond the safe 2^53−1 bound) is fully blocked.
             Some(amount) => match kian_domain::Din::new(amount) {
                 Ok(din) if kian_domain::requires_hitl(din) => PolicyVerdict::RequiresHumanConfirmation,
                 Ok(_) => PolicyVerdict::AutoApprove,
@@ -182,11 +182,11 @@ pub fn simulate_approval_policy(category: ApprovalCategory, context: &ApprovalCo
             },
         };
     }
-    // ۴. بقیهٔ طبقه‌ها همیشه کارت انسانی می‌خواهند.
+    // 4. The remaining classes always want a human card.
     PolicyVerdict::RequiresHumanConfirmation
 }
 
-/// آیا رشتهٔ شکلِ استاندارد UUID است (۳۶ نویسه، خط‌تیره در ۸/۱۳/۱۸/۲۳)؟
+/// Is the string in standard UUID shape (36 characters, hyphens at 8/13/18/23)?
 fn looks_like_uuid(value: &str) -> bool {
     let bytes = value.as_bytes();
     if bytes.len() != 36 {
@@ -209,18 +209,18 @@ fn looks_like_uuid(value: &str) -> bool {
     true
 }
 
-/// thread قطعی ساب‌ایجنت — مشتق، نه ضرب‌شده (پورت `subagentThreadId`).
+/// The subagent's deterministic thread — derived, not multiplied (a port of `subagentThreadId`).
 ///
-/// هش SHA-256 روی `subagent\n{parent_thread_id}\n{tool_call_id}`؛ اگر والد
-/// UUID است، ۶ بایت اول با بایت‌های والد جایگزین می‌شود تا ساب‌ایجنت همان
-/// اثر انگشت استقرار گفتگوی خودش را حمل کند. نسخه روی ۸ قفل می‌شود (`UUIDv8`:
-/// این بیت‌ها تصادفی نیستند) و واریانت RFC هم رعایت می‌شود.
+/// A SHA-256 hash over `subagent\n{parent_thread_id}\n{tool_call_id}`; if the parent
+/// is a UUID, the first 6 bytes are replaced with the parent's bytes so the subagent carries
+/// the conversation's own deployment fingerprint. The version locks to 8 (`UUIDv8`:
+/// these bits are not random) and the RFC variant is honored too.
 ///
-/// هر دو سمت (سرور و کلاینت) همین derivation را می‌دانند، پس کلاینت می‌تواند
-/// رونوشت ساب‌ایجنت را «قبل از رسیدن نتیجه» پیدا کند و بعد از ری‌استارت هم
-/// همان thread بازیابی می‌شود — تولد دوباره و spawning تکراری ممکن نیست.
+/// Both sides (server and client) know the same derivation, so the client can locate
+/// the subagent transcript "before the result arrives", and after a restart the
+/// same thread is recovered — rebirth and duplicate spawning are impossible.
 ///
-/// هیچ‌چیز اینجا راز نیست؛ دانستن شناسه به هیچ‌چیز نمی‌رسد.
+/// Nothing here is a secret; knowing the ID grants nothing.
 #[must_use]
 pub fn deterministic_subagent_thread_id(parent_thread_id: &str, tool_call_id: &str) -> String {
     use std::fmt::Write as _;
@@ -236,8 +236,8 @@ pub fn deterministic_subagent_thread_id(parent_thread_id: &str, tool_call_id: &s
             *byte = u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).unwrap_or(0);
         }
     }
-    bytes[6] = (bytes[6] & 0x0f) | 0x80; // نسخه ۸
-    bytes[8] = (bytes[8] & 0x3f) | 0x80; // واریانت RFC
+    bytes[6] = (bytes[6] & 0x0f) | 0x80; // version 8
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // RFC variant
     let mut hex = String::with_capacity(bytes.len() * 2);
     for b in &bytes {
         let _ = write!(hex, "{b:02x}");
@@ -252,82 +252,82 @@ pub fn deterministic_subagent_thread_id(parent_thread_id: &str, tool_call_id: &s
     )
 }
 
-/// حکم گارد خستگی روتین برای یک پنجرهٔ زمان‌بندی.
+/// The routine fatigue guard's verdict for one scheduling window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum FireDecision {
-    /// شلیک مجاز است.
+    /// Firing is allowed.
     Fire,
-    /// کف ۱۵ دقیقه هنوز تمام نشده — به نوبت بعد موکول شود.
+    /// The 15-minute floor has not elapsed yet — defer to the next turn.
     Throttled,
-    /// سقف روتین‌های فعال پر است.
+    /// The active-routine cap is full.
     CapReached,
-    /// مدارشکن باز است — روتین پس از شکست‌های پیاپی خودکار خاموش شده.
+    /// The circuit breaker is open — the routine was auto-disabled after consecutive failures.
     DisabledAfterFailures,
-    /// پنجرهٔ کرون بعد از ری‌استارت از دست رفته — پرش، نه شلیک انبوه.
+    /// The cron window was missed after a restart — skip, no firing burst.
     SkippedMissedWindow,
 }
 
 impl FireDecision {
-    /// توضیح فارسی برای لاگ و صفحهٔ روتین‌ها.
+    /// Persian explanation for the log and the routines page.
     #[must_use]
     pub const fn reason_fa(self) -> &'static str {
         match self {
-            Self::Fire => "روتین در پنجرهٔ خودش شلیک می‌کند.",
-            Self::Throttled => "فاصلهٔ حداقلی ۱۵ دقیقه هنوز تمام نشده است.",
-            Self::CapReached => "سقف ۲۰ روتین فعال پر است؛ تا خالی شدن صبر کن.",
-            Self::DisabledAfterFailures => "روتین پس از ۱۰ شکست پیاپی خودکار خاموش شد.",
-            Self::SkippedMissedWindow => "پنجرهٔ از دست رفته پس از ری‌استارت پرش می‌شود، نه شلیک انبوه.",
+            Self::Fire => "\u{631}\u{648}\u{62a}\u{6cc}\u{646} \u{62f}\u{631} \u{67e}\u{646}\u{62c}\u{631}\u{647}\u{654} \u{62e}\u{648}\u{62f}\u{634} \u{634}\u{644}\u{6cc}\u{6a9} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}.",
+            Self::Throttled => "\u{641}\u{627}\u{635}\u{644}\u{647}\u{654} \u{62d}\u{62f}\u{627}\u{642}\u{644}\u{6cc} \u{6f1}\u{6f5} \u{62f}\u{642}\u{6cc}\u{642}\u{647} \u{647}\u{646}\u{648}\u{632} \u{62a}\u{645}\u{627}\u{645} \u{646}\u{634}\u{62f}\u{647} \u{627}\u{633}\u{62a}.",
+            Self::CapReached => "\u{633}\u{642}\u{641} \u{6f2}\u{6f0} \u{631}\u{648}\u{62a}\u{6cc}\u{646} \u{641}\u{639}\u{627}\u{644} \u{67e}\u{631} \u{627}\u{633}\u{62a}\u{61b} \u{62a}\u{627} \u{62e}\u{627}\u{644}\u{6cc} \u{634}\u{62f}\u{646} \u{635}\u{628}\u{631} \u{6a9}\u{646}.",
+            Self::DisabledAfterFailures => "\u{631}\u{648}\u{62a}\u{6cc}\u{646} \u{67e}\u{633} \u{627}\u{632} \u{6f1}\u{6f0} \u{634}\u{6a9}\u{633}\u{62a} \u{67e}\u{6cc}\u{627}\u{67e}\u{6cc} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631} \u{62e}\u{627}\u{645}\u{648}\u{634} \u{634}\u{62f}.",
+            Self::SkippedMissedWindow => "\u{67e}\u{646}\u{62c}\u{631}\u{647}\u{654} \u{627}\u{632} \u{62f}\u{633}\u{62a} \u{631}\u{641}\u{62a}\u{647} \u{67e}\u{633} \u{627}\u{632} \u{631}\u{6cc}‌\u{627}\u{633}\u{62a}\u{627}\u{631}\u{62a} \u{67e}\u{631}\u{634} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{60c} \u{646}\u{647} \u{634}\u{644}\u{6cc}\u{6a9} \u{627}\u{646}\u{628}\u{648}\u{647}.",
         }
     }
 }
 
-/// گارد ضد اسپم روتین — پورت سیاست روتین‌های `OpenBot` با ثابت‌های مأموریت:
-/// - [`Self::MIN_INTERVAL_SECS`] = ۹۰۰ (کف ۱۵ دقیقه بین دو شلیک یک روتین)؛
-/// - [`Self::MAX_ACTIVE_ROUTINES`] = ۲۰ (سقف روتین‌های فعال)؛
-/// - [`Self::MAX_CONSECUTIVE_FAILURES`] = ۱۰ (مدارشکن: خاموشی خودکار).
+/// The routine anti-spam guard — a port of the `OpenBot` routines policy with mission constants:
+/// - [`Self::MIN_INTERVAL_SECS`] = 900 (a 15-minute floor between two firings of one routine);
+/// - [`Self::MAX_ACTIVE_ROUTINES`] = 20 (the active-routine cap);
+/// - [`Self::MAX_CONSECUTIVE_FAILURES`] = 10 (circuit breaker: auto-disable).
 ///
-/// گارد کاملاً قطعی است: زمان را مصرف‌کننده می‌فرستد (تست‌پذیری بدون خواب)،
-/// و پرش پنجرهٔ از دست رفته بعد از ری‌استارت به‌جای شلیک انبوهِ همهٔ
-/// پنجره‌های عقب‌افتاده انجام می‌شود.
+/// The guard is fully deterministic: the caller supplies time (testability without sleeps),
+/// and windows missed after a restart are skipped instead of bursting every
+/// backlogged window.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RoutineFatigueGuard {
-    /// وضعیت هر روتین به شناسه‌اش.
+    /// Each routine's state keyed by its ID.
     state: BTreeMap<String, RoutineState>,
 }
 
-/// وضعیت داخلی یک روتین.
+/// A routine's internal state.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 struct RoutineState {
-    /// آخرین شلیک مجاز (ثانیهٔ epoch).
+    /// The last permitted firing (epoch seconds).
     last_fired_secs: Option<u64>,
-    /// شمارش شکست پیاپی بدون موفقیت.
+    /// The consecutive-failure count without a success.
     consecutive_failures: u32,
 }
 
 impl RoutineFatigueGuard {
-    /// کف فاصلهٔ دو شلیک یک روتین: ۱۵ دقیقه.
+    /// The floor between two firings of one routine: 15 minutes.
     pub const MIN_INTERVAL_SECS: u64 = 900;
-    /// سقف روتین‌های فعال هم‌زمان.
+    /// The cap on concurrently active routines.
     pub const MAX_ACTIVE_ROUTINES: usize = 20;
-    /// آستانهٔ مدارشکن: خاموشی خودکار پس از این تعداد شکست پیاپی.
+    /// The circuit-breaker threshold: auto-disable after this many consecutive failures.
     pub const MAX_CONSECUTIVE_FAILURES: u32 = 10;
 
-    /// گارد تازه و خالی.
+    /// A fresh, empty guard.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// حکم این پنجرهٔ زمان‌بندی برای روتین داده‌شده.
+    /// This scheduling window's verdict for the given routine.
     ///
-    /// ترتیب لایه‌ها (اولین جواب قطعی برنده است):
-    /// 1. مدارشکن باز → [`FireDecision::DisabledAfterFailures`]؛
-    /// 2. پنجرهٔ از دست رفته (زمان‌بندیِ گذشته از الان، بعد از ری‌استارت) →
-    ///    [`FireDecision::SkippedMissedWindow`] — پرش، نه شلیک انبوه؛
-    /// 3. سقف روتین‌های فعال → [`FireDecision::CapReached`]؛
-    /// 4. کف ۱۵ دقیقه → [`FireDecision::Throttled`]؛
-    /// 5. وگرنه [`FireDecision::Fire`] و ثبت زمان شلیک.
+    /// The layer order (the first deterministic answer wins):
+    /// 1. Circuit breaker open → [`FireDecision::DisabledAfterFailures`];
+    /// 2. Missed window (scheduled before now, after a restart) →
+    ///    [`FireDecision::SkippedMissedWindow`] — skip, no firing burst;
+    /// 3. Active-routine cap → [`FireDecision::CapReached`];
+    /// 4. 15-minute floor → [`FireDecision::Throttled`];
+    /// 5. Otherwise [`FireDecision::Fire`] and record the firing time.
     pub fn evaluate(
         &mut self,
         routine_id: &str,
@@ -340,8 +340,8 @@ impl RoutineFatigueGuard {
             return FireDecision::DisabledAfterFailures;
         }
         if scheduled_for_secs < now_secs {
-            // بعد از ری‌استارت، همهٔ پنجره‌های عقب‌افتاده یک‌جا شلیک نمی‌شوند؛
-            // روتین منتظر پنجرهٔ بعدی زمان‌بندی‌شده می‌ماند.
+            // after a restart, all backlogged windows do not fire at once;
+            // the routine waits for the next scheduled window.
             return FireDecision::SkippedMissedWindow;
         }
         if active_count >= Self::MAX_ACTIVE_ROUTINES {
@@ -356,19 +356,19 @@ impl RoutineFatigueGuard {
         FireDecision::Fire
     }
 
-    /// ثبت موفقیت — شمارش شکست پیاپی صفر می‌شود.
+    /// Record a success — the consecutive-failure count resets to zero.
     pub fn record_success(&mut self, routine_id: &str) {
         let state = self.state.entry(routine_id.to_owned()).or_default();
         state.consecutive_failures = 0;
     }
 
-    /// ثبت شکست — با رسیدن به آستانه، مدارشکن باز می‌شود (خاموشی خودکار).
+    /// Record a failure — at the threshold, the circuit breaker opens (auto-disable).
     pub fn record_failure(&mut self, routine_id: &str) {
         let state = self.state.entry(routine_id.to_owned()).or_default();
         state.consecutive_failures = state.consecutive_failures.saturating_add(1);
     }
 
-    /// آیا مدارشکن این روتین باز است؟
+    /// Is this routine's circuit breaker open?
     #[must_use]
     pub fn is_disabled(&self, routine_id: &str) -> bool {
         self.state
@@ -376,7 +376,7 @@ impl RoutineFatigueGuard {
             .is_some_and(|s| s.consecutive_failures >= Self::MAX_CONSECUTIVE_FAILURES)
     }
 
-    /// شمارش شکست پیاپی فعلی (برای صفحهٔ روتین‌ها).
+    /// The current consecutive-failure count (for the routines page).
     #[must_use]
     pub fn consecutive_failures(&self, routine_id: &str) -> u32 {
         self.state
@@ -389,8 +389,8 @@ impl RoutineFatigueGuard {
 mod tests {
     use super::*;
 
-    /// صدای مدل و صدای انسان کنار هم تعریف شده‌اند — ردِ انسان برای مدل صریح
-    /// «دور نزن» است و برای انسان یک جملهٔ کوتاه فارسی.
+    /// The model voice and the human voice are defined side by side — a human denial is an
+    /// explicit "do not bypass" for the model and a short Persian sentence for the human.
     #[test]
     fn dual_voice_outcomes_never_leak_model_voice_to_person() {
         let declined = ApprovalOutcome::DeclinedByPerson;
@@ -398,52 +398,52 @@ mod tests {
             declined.outcome_for_model(),
             "DECLINED_BY_PERSON: The user explicitly declined this action. Do not retry, rephrase, or work around it."
         );
-        assert_eq!(declined.outcome_for_person_fa(), "درخواست توسط شما رد شد.");
+        assert_eq!(declined.outcome_for_person_fa(), "\u{62f}\u{631}\u{62e}\u{648}\u{627}\u{633}\u{62a} \u{62a}\u{648}\u{633}\u{637} \u{634}\u{645}\u{627} \u{631}\u{62f} \u{634}\u{62f}.");
         assert!(declined.outcome_for_model().starts_with("DECLINED_BY_PERSON"));
         assert!(!declined.outcome_for_person_fa().contains("DECLINED"));
 
         assert!(ApprovalOutcome::Approved.outcome_for_model().starts_with("APPROVED"));
         assert!(ApprovalOutcome::TimedOut.outcome_for_model().starts_with("TIMED_OUT"));
-        assert_eq!(ApprovalOutcome::TimedOut.outcome_for_person_fa(), "زمان تأیید به پایان رسید و کاری انجام نشد.");
+        assert_eq!(ApprovalOutcome::TimedOut.outcome_for_person_fa(), "\u{632}\u{645}\u{627}\u{646} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{628}\u{647} \u{67e}\u{627}\u{6cc}\u{627}\u{646} \u{631}\u{633}\u{6cc}\u{62f} \u{648} \u{6a9}\u{627}\u{631}\u{6cc} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{646}\u{634}\u{62f}.");
     }
 
-    /// ترتیب لایه‌های شبیه‌ساز: جعبهٔ راز می‌بندد، مخرب کارت می‌خواهد، پول از
-    /// دروازهٔ منشور می‌گذرد و بقیه همیشه کارت انسانی می‌گیرند.
+    /// The simulator's layer order: the secret box blocks, the destructive tool wants a card,
+    /// money passes the charter gate, and the rest always get a human card.
     #[test]
     fn what_if_policy_layers_match_the_product_order() {
-        // جعبهٔ راز — حتی مبلغ صفر و غیرمخرب هم بسته است.
+        // secret box — even a zero, non-destructive amount is blocked.
         assert_eq!(
-            simulate_approval_policy(ApprovalCategory::ManageCredentialsOrPermissions, &ApprovalContext::plain("تغییر رمز کیف")),
+            simulate_approval_policy(ApprovalCategory::ManageCredentialsOrPermissions, &ApprovalContext::plain("\u{62a}\u{63a}\u{6cc}\u{6cc}\u{631} \u{631}\u{645}\u{632} \u{6a9}\u{6cc}\u{641}")),
             PolicyVerdict::Blocked
         );
-        // مخرب برچسب‌خورده — هر طبقه‌ای که باشد کارت می‌خواهد.
-        let destructive = ApprovalContext { amount_din: Some(100), destructive: true, detail: "پاک‌سازی آرشیو".into() };
+        // destructive-labeled — wants a card in any class.
+        let destructive = ApprovalContext { amount_din: Some(100), destructive: true, detail: "\u{67e}\u{627}\u{6a9}‌\u{633}\u{627}\u{632}\u{6cc} \u{622}\u{631}\u{634}\u{6cc}\u{648}".into() };
         assert_eq!(
             simulate_approval_policy(ApprovalCategory::DeleteOrModifyData, &destructive),
             PolicyVerdict::RequiresHumanConfirmation
         );
-        // پول: زیر آستانهٔ منشور خودکار، روی آستانه انسانی، منفی بسته.
-        let buy_small = ApprovalContext { amount_din: Some(Charter::HITL_THRESHOLD_DIN.as_i64() - 1), destructive: false, detail: "خرید محصول".into() };
+        // money: below the charter threshold auto-approve, at the threshold human, negative blocked.
+        let buy_small = ApprovalContext { amount_din: Some(Charter::HITL_THRESHOLD_DIN.as_i64() - 1), destructive: false, detail: "\u{62e}\u{631}\u{6cc}\u{62f} \u{645}\u{62d}\u{635}\u{648}\u{644}".into() };
         assert_eq!(
             simulate_approval_policy(ApprovalCategory::MakePurchasesOrTransfers, &buy_small),
             PolicyVerdict::AutoApprove
         );
-        let buy_big = ApprovalContext { amount_din: Some(Charter::HITL_THRESHOLD_DIN.as_i64()), destructive: false, detail: "انتقال بزرگ".into() };
+        let buy_big = ApprovalContext { amount_din: Some(Charter::HITL_THRESHOLD_DIN.as_i64()), destructive: false, detail: "\u{627}\u{646}\u{62a}\u{642}\u{627}\u{644} \u{628}\u{632}\u{631}\u{6af}".into() };
         assert_eq!(
             simulate_approval_policy(ApprovalCategory::MakePurchasesOrTransfers, &buy_big),
             PolicyVerdict::RequiresHumanConfirmation
         );
-        let buy_negative = ApprovalContext { amount_din: Some(-1), destructive: false, detail: "مبلغ نامعتبر".into() };
+        let buy_negative = ApprovalContext { amount_din: Some(-1), destructive: false, detail: "\u{645}\u{628}\u{644}\u{63a} \u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631}".into() };
         assert_eq!(
             simulate_approval_policy(ApprovalCategory::MakePurchasesOrTransfers, &buy_negative),
             PolicyVerdict::Blocked
         );
-        let buy_unknown = ApprovalContext { amount_din: None, destructive: false, detail: "مبلغ نامعلوم".into() };
+        let buy_unknown = ApprovalContext { amount_din: None, destructive: false, detail: "\u{645}\u{628}\u{644}\u{63a} \u{646}\u{627}\u{645}\u{639}\u{644}\u{648}\u{645}".into() };
         assert_eq!(
             simulate_approval_policy(ApprovalCategory::MakePurchasesOrTransfers, &buy_unknown),
             PolicyVerdict::RequiresHumanConfirmation
         );
-        // بقیهٔ طبقه‌ها همیشه کارت انسانی می‌خواهند.
+        // the remaining classes always want a human card.
         for category in [
             ApprovalCategory::SendMessages,
             ApprovalCategory::DeleteOrModifyData,
@@ -451,14 +451,14 @@ mod tests {
             ApprovalCategory::SubmitFormsOrApplications,
         ] {
             assert_eq!(
-                simulate_approval_policy(category, &ApprovalContext::plain("اقدام فرضی")),
+                simulate_approval_policy(category, &ApprovalContext::plain("\u{627}\u{642}\u{62f}\u{627}\u{645} \u{641}\u{631}\u{636}\u{6cc}")),
                 PolicyVerdict::RequiresHumanConfirmation,
                 "{category:?}"
             );
         }
     }
 
-    /// `UUIDv8` ساب‌ایجنت: قطعی، شکل درست، اثر انگشت والد، و حساس به فراخوانی.
+    /// The subagent `UUIDv8`: deterministic, well-formed, parent-fingerprinted, and tool-call sensitive.
     #[test]
     fn subagent_thread_id_is_deterministic_uuidv8_with_parent_fingerprint() {
         let parent = "11111111-2222-3333-4444-555555555555";
@@ -466,7 +466,7 @@ mod tests {
         let b = deterministic_subagent_thread_id(parent, "call-1");
         assert_eq!(a, b, "same parent + call → same thread, no duplicate spawn");
 
-        // شکل UUIDv8: نسخه روی ۸ و واریانت RFC.
+        // UUIDv8 shape: version on the high 8 bits and the RFC variant.
         assert_eq!(a.len(), 36);
         assert_eq!(a.chars().nth(14), Some('8'), "version nibble must be 8: {a}");
         assert!(
@@ -476,18 +476,18 @@ mod tests {
         let c = deterministic_subagent_thread_id(parent, "call-2");
         assert_ne!(a, c, "different tool call → different thread");
 
-        // ۶ بایت اول از والد به ارث می‌رسد (اثر انگشت استقرار)؛ نیم‌نویسهٔ
-        // نسخهٔ ۸ روی گروه سوم قفل می‌شود (۸ در نیم‌نویسهٔ بالا).
+        // the first 6 bytes are inherited from the parent (deployment fingerprint); the
+        // version-8 nibble is locked in the third group (8 in the high nibble).
         assert!(a.starts_with("11111111-2222-8"), "parent fingerprint + version 8: {a}");
 
-        // والدهای غیر UUID هم کار می‌کنند و قطعی می‌مانند.
+        // non-UUID parents work too and stay deterministic.
         let d1 = deterministic_subagent_thread_id("chat:fa:900", "c1");
         let d2 = deterministic_subagent_thread_id("chat:fa:900", "c1");
         assert_eq!(d1, d2);
         assert_eq!(d1.chars().nth(14), Some('8'));
     }
 
-    /// کف ۱۵ دقیقه: ۸۹۹ ثانیه بعد خفه می‌شود، ۹۰۰ ثانیه بعد شلیک می‌کند.
+    /// The 15-minute floor: throttled at 899 s, fires at 900 s.
     #[test]
     fn routine_fatigue_enforces_fifteen_minute_floor() {
         let mut guard = RoutineFatigueGuard::new();
@@ -495,14 +495,14 @@ mod tests {
         assert_eq!(guard.evaluate("r1", 1_000 + 899, 1_899, 0), FireDecision::Throttled);
         let fired = guard.evaluate("r1", 1_000 + 900, 1_900, 0);
         assert_eq!(fired, FireDecision::Fire);
-        assert_eq!(fired.reason_fa(), "روتین در پنجرهٔ خودش شلیک می‌کند.");
-        // همان لحظه دوباره؟ خفه — کف ۱۵ دقیقه از شلیکِ تازه می‌شمارد.
+        assert_eq!(fired.reason_fa(), "\u{631}\u{648}\u{62a}\u{6cc}\u{646} \u{62f}\u{631} \u{67e}\u{646}\u{62c}\u{631}\u{647}\u{654} \u{62e}\u{648}\u{62f}\u{634} \u{634}\u{644}\u{6cc}\u{6a9} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}.");
+        // again immediately? throttled — the 15-minute floor counts from the fresh firing.
         assert_eq!(guard.evaluate("r1", 1_900, 1_900, 0), FireDecision::Throttled);
-        // روتین دوم مستقل است.
+        // the second routine is independent.
         assert_eq!(guard.evaluate("r2", 1_001, 1_001, 0), FireDecision::Fire);
     }
 
-    /// سقف ۲۰ روتین فعال و پرش پنجرهٔ از دست رفته بعد از ری‌استارت.
+    /// The 20-active-routine cap and skipping windows missed after a restart.
     #[test]
     fn routine_cap_and_missed_window_skip_work() {
         let mut guard = RoutineFatigueGuard::new();
@@ -512,11 +512,11 @@ mod tests {
             FireDecision::Fire,
             "19 active leaves one seat"
         );
-        // پنجرهٔ عقب‌افتاده بعد از ری‌استارت: پرش، حتی اگر کف فاصله هم گذشته باشد.
+        // the backlogged window after a restart: skipped, even if the interval floor has elapsed.
         assert_eq!(guard.evaluate("fresh", 100_000, 90_000, 0), FireDecision::SkippedMissedWindow);
     }
 
-    /// مدارشکن: پس از ۱۰ شکست پیاپی خاموش می‌شود؛ یک موفقیت شمارش را صفر می‌کند.
+    /// Circuit breaker: disabled after 10 consecutive failures; one success resets the count.
     #[test]
     fn circuit_breaker_auto_disables_after_ten_failures() {
         let mut guard = RoutineFatigueGuard::new();
@@ -528,13 +528,13 @@ mod tests {
         guard.record_failure("r1");
         assert!(guard.is_disabled("r1"), "10th failure opens the breaker");
         assert_eq!(guard.evaluate("r1", 50_000, 50_000, 0), FireDecision::DisabledAfterFailures);
-        // موفقیت مدار را می‌بندد و روتین دوباره شلیک می‌کند.
+        // success closes the circuit and the routine fires again.
         guard.record_success("r1");
         assert!(!guard.is_disabled("r1"));
         assert_eq!(guard.evaluate("r1", 50_000, 50_000, 0), FireDecision::Fire);
     }
 
-    /// شش طبقه و سه حکم — سری‌شدن قرارداد `SCREAMING_SNAKE` را رعایت می‌کند.
+    /// Six classes and three verdicts — honors the `SCREAMING_SNAKE` serialization contract.
     #[test]
     fn categories_and_verdicts_serialize_stable() {
         let json = serde_json::to_string(&ApprovalCategory::MakePurchasesOrTransfers).expect("serialize");
@@ -543,6 +543,6 @@ mod tests {
         assert_eq!(json, "\"REQUIRES_HUMAN_CONFIRMATION\"");
         let json = serde_json::to_string(&ApprovalOutcome::DeclinedByPerson).expect("serialize");
         assert_eq!(json, "\"DECLINED_BY_PERSON\"");
-        assert_eq!(ApprovalCategory::ManageCredentialsOrPermissions.label_fa(), "مدیریت اعتبارنامه یا دسترسی");
+        assert_eq!(ApprovalCategory::ManageCredentialsOrPermissions.label_fa(), "\u{645}\u{62f}\u{6cc}\u{631}\u{6cc}\u{62a} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{646}\u{627}\u{645}\u{647} \u{6cc}\u{627} \u{62f}\u{633}\u{62a}\u{631}\u{633}\u{6cc}");
     }
 }

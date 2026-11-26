@@ -1,9 +1,9 @@
 /**
- * KIAN M3 — کلاینت API کرنل با نشست bearer.
+ * KIAN M3 — the kernel API client with a bearer session.
  *
- * توکن در localStorage با کلید `kian.session` ذخیره می‌شود؛ هر درخواست
- * نشست‌دار `Authorization: Bearer` می‌فرستد. پاکت خطا همیشه
- * `{ error: { code, message, meta? } }` است — دقیقاً مثل قرارداد کرنل.
+ * The token is stored in localStorage under the `kian.session` key; every
+ * sessioned request sends `Authorization: Bearer`. The error envelope is always
+ * `{ error: { code, message, meta? } }` — exactly like the kernel contract.
  */
 
 const API_BASE =
@@ -11,7 +11,7 @@ const API_BASE =
 
 export const SESSION_KEY = "kian.session";
 
-// ── تایپ‌های وایر (قرینهٔ crates/contracts) ──────────────────────────────
+// ── Wire types (mirror of crates/contracts) ──────────────────────────────
 
 export type UserView = {
   id: string;
@@ -30,7 +30,7 @@ export type AuthResponse = {
 
 export type WalletTxView = {
   txId: string;
-  amount: number; // Din به‌صورت عدد صحیح
+  amount: number; // Din as an integer
   memo?: string;
   at: string;
 };
@@ -84,7 +84,7 @@ export type TonDepositView = {
   confirmedAt: string | null;
 };
 
-// ── خطا ────────────────────────────────────────────────────────────────────
+// ── Errors ────────────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
   readonly status: number;
@@ -114,13 +114,13 @@ async function request<T>(
     throw new ApiError(
       res.status,
       envelope?.code ?? "UNKNOWN",
-      envelope?.message ?? "پاسخ ناشناخته از کرنل",
+      envelope?.message ?? "\u067e\u0627\u0633\u062e \u0646\u0627\u0634\u0646\u0627\u062e\u062a\u0647 \u0627\u0632 \u06a9\u0631\u0646\u0644",
     );
   }
   return body as T;
 }
 
-// ── توکن ───────────────────────────────────────────────────────────────────
+// ── Token ───────────────────────────────────────────────────────────────────
 
 export function loadToken(): string | null {
   try {
@@ -134,7 +134,7 @@ export function saveToken(token: string): void {
   try {
     window.localStorage.setItem(SESSION_KEY, token);
   } catch {
-    /* حالت incognito — نشست فقط در حافظه */
+    /* Incognito mode — session in memory only */
   }
 }
 
@@ -142,11 +142,11 @@ export function clearToken(): void {
   try {
     window.localStorage.removeItem(SESSION_KEY);
   } catch {
-    /* بی‌اهمیت */
+    /* Irrelevant */
   }
 }
 
-// ── اندپوینت‌های M3 ────────────────────────────────────────────────────────
+// ── M3 endpoints ────────────────────────────────────────────────────────
 
 export const api = {
   authTelegram: (initData: string) =>

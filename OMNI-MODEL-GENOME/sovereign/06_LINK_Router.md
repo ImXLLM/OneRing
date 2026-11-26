@@ -37,7 +37,7 @@ text
 
 ---
 
-### فایل هفتم (پل ارتباطی ۲): `07_LINK_Protocol.md` (کامپایلر پرامپت و پروتکل ارتباط بین ایجنت‌ها)
+### Seventh File (Communication Bridge 2): `07_LINK_Protocol.md` (Prompt Compiler & Inter-Agent Communication Protocol)
 
 ```markdown
 # 📡 `07_LINK_Protocol.md` — INTER-AGENT HANDSHAKE & MASTER PROMPT COMPILER

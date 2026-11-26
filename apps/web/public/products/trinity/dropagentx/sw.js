@@ -1,5 +1,5 @@
 /* DropAgentX Service Worker — v4.2.0
-   استاتیک: stale-while-revalidate · API: همیشه شبکه · ناوبری: شبکه، فالبک آفلاین */
+   static: stale-while-revalidate · API: network always · navigation: network, offline fallback */
 const CACHE = "dax-v1.0.0";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icon.svg", "/vendor/three.min.js"];
@@ -19,8 +19,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
-  if (url.pathname.startsWith("/api/")) return;            // API همیشه زنده
-  if (e.request.mode === "navigate") {                      // صفحه‌ها: شبکه→کش→آفلاین
+  if (url.pathname.startsWith("/api/")) return;            // API always live
+  if (e.request.mode === "navigate") {                      // pages: network→cache→offline
     e.respondWith(
       fetch(e.request)
         .then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, cp)); return r; })
@@ -28,7 +28,7 @@ self.addEventListener("fetch", (e) => {
     );
     return;
   }
-  e.respondWith(                                            // استاتیک: کش اول + به‌روزرسانی پس‌زمینه
+  e.respondWith(                                            // static: cache first + background update
     caches.match(e.request).then((cached) => {
       const fresh = fetch(e.request).then((r) => {
         if (r.ok) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, cp)); }

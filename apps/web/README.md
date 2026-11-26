@@ -1,9 +1,9 @@
-# @kian/web — اولویت ۱ (M1)
+# @kian/web — Priority 1 (M1)
 
-لندینگ سلطنتی RTL + PWA نصب‌پذیر.
+Royal RTL landing + installable PWA.
 
 - Next.js 16 App Router + React 19 + Tailwind 4 + shadcn/ui + framer-motion
-- PWA: manifest + service worker آفلاین‌اول + آیکون‌های سلطنتی (PIL-generated)
-- REA step-1: بدون سورس‌مپ مرورگر، هدرهای امن، بدون کریدنشال (گیت: tools/rea)
+- PWA: manifest + offline-first service worker + royal icons (PIL-generated)
+- REA step-1: no browser source maps, secure headers, no credentials (gate: tools/rea)
 
-نکته: کامپوننت‌های shadcn/ui اینجا موقتاً از پروژه لایو کپی می‌شوند؛ در M1.5 به packages/ui منتقل می‌شوند.
+Note: the shadcn/ui components here are temporarily copied from the live project; they move to packages/ui in M1.5.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>بازار سنتی سه‌بعدی</title>
+<title>&#x628;&#x627;&#x632;&#x627;&#x631; &#x633;&#x646;&#x62a;&#x6cc; &#x633;&#x647;‌&#x628;&#x639;&#x62f;&#x6cc;</title>
 <style>
   :root {
     --gold: #e6b85c;
@@ -156,17 +156,17 @@
 
 <div id="overlay">
   <div class="card">
-    <h1>بازار سنتی</h1>
-    <p class="sub">شبیه‌ساز اول‌شخص بازار ایرانی — سه‌بعدی</p>
+    <h1>&#x628;&#x627;&#x632;&#x627;&#x631; &#x633;&#x646;&#x62a;&#x6cc;</h1>
+    <p class="sub">&#x634;&#x628;&#x6cc;&#x647;‌&#x633;&#x627;&#x632; &#x627;&#x648;&#x644;‌&#x634;&#x62e;&#x635; &#x628;&#x627;&#x632;&#x627;&#x631; &#x627;&#x6cc;&#x631;&#x627;&#x646;&#x6cc; — &#x633;&#x647;‌&#x628;&#x639;&#x62f;&#x6cc;</p>
     <div class="keys">
-      <div><kbd>W A S D</kbd> حرکت</div>
-      <div><kbd>ماوس</kbd> نگاه کردن</div>
-      <div><kbd>Shift</kbd> دویدن</div>
-      <div><kbd>کلیک چپ</kbd> افزودن به سبد</div>
-      <div><kbd>Q</kbd> حذف آخرین کالا</div>
-      <div><kbd>Esc</kbd> توقف / مدیریت سبد</div>
+      <div><kbd>W A S D</kbd> &#x62d;&#x631;&#x6a9;&#x62a;</div>
+      <div><kbd>&#x645;&#x627;&#x648;&#x633;</kbd> &#x646;&#x6af;&#x627;&#x647; &#x6a9;&#x631;&#x62f;&#x646;</div>
+      <div><kbd>Shift</kbd> &#x62f;&#x648;&#x6cc;&#x62f;&#x646;</div>
+      <div><kbd>&#x6a9;&#x644;&#x6cc;&#x6a9; &#x686;&#x67e;</kbd> &#x627;&#x641;&#x632;&#x648;&#x62f;&#x646; &#x628;&#x647; &#x633;&#x628;&#x62f;</div>
+      <div><kbd>Q</kbd> &#x62d;&#x630;&#x641; &#x622;&#x62e;&#x631;&#x6cc;&#x646; &#x6a9;&#x627;&#x644;&#x627;</div>
+      <div><kbd>Esc</kbd> &#x62a;&#x648;&#x642;&#x641; / &#x645;&#x62f;&#x6cc;&#x631;&#x6cc;&#x62a; &#x633;&#x628;&#x62f;</div>
     </div>
-    <button id="startBtn" disabled>در حال بارگذاری…</button>
+    <button id="startBtn" disabled>&#x62f;&#x631; &#x62d;&#x627;&#x644; &#x628;&#x627;&#x631;&#x6af;&#x630;&#x627;&#x631;&#x6cc;…</button>
     <div id="status"></div>
   </div>
 </div>
@@ -176,21 +176,21 @@
 <div id="tooltip">
   <div class="t-name"></div>
   <div class="t-price"></div>
-  <div class="t-hint">کلیک چپ: افزودن به سبد</div>
+  <div class="t-hint">&#x6a9;&#x644;&#x6cc;&#x6a9; &#x686;&#x67e;: &#x627;&#x641;&#x632;&#x648;&#x62f;&#x646; &#x628;&#x647; &#x633;&#x628;&#x62f;</div>
 </div>
 
 <div id="basket">
-  <header><span>🧺 سبد خرید</span><span class="count" id="basketCount"></span></header>
+  <header><span>🧺 &#x633;&#x628;&#x62f; &#x62e;&#x631;&#x6cc;&#x62f;</span><span class="count" id="basketCount"></span></header>
   <ul id="basketList"></ul>
   <footer>
-    <div class="total">جمع: <b id="basketTotal">۰</b> تومان</div>
-    <button id="clearBtn">خالی کردن</button>
+    <div class="total">&#x62c;&#x645;&#x639;: <b id="basketTotal">&#x6f0;</b> &#x62a;&#x648;&#x645;&#x627;&#x646;</div>
+    <button id="clearBtn">&#x62e;&#x627;&#x644;&#x6cc; &#x6a9;&#x631;&#x62f;&#x646;</button>
   </footer>
-  <div id="basketTip">برای مدیریت سبد <kbd>Esc</kbd> را بزنید</div>
+  <div id="basketTip">&#x628;&#x631;&#x627;&#x6cc; &#x645;&#x62f;&#x6cc;&#x631;&#x6cc;&#x62a; &#x633;&#x628;&#x62f; <kbd>Esc</kbd> &#x631;&#x627; &#x628;&#x632;&#x646;&#x6cc;&#x62f;</div>
 </div>
 
 <div id="toast"></div>
-<div id="hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> حرکت &nbsp;·&nbsp; <kbd>Shift</kbd> دویدن &nbsp;·&nbsp; کلیک: افزودن &nbsp;·&nbsp; <kbd>Q</kbd> حذف آخرین &nbsp;·&nbsp; <kbd>F</kbd> نمایش FPS</div>
+<div id="hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &#x62d;&#x631;&#x6a9;&#x62a; &nbsp;·&nbsp; <kbd>Shift</kbd> &#x62f;&#x648;&#x6cc;&#x62f;&#x646; &nbsp;·&nbsp; &#x6a9;&#x644;&#x6cc;&#x6a9;: &#x627;&#x641;&#x632;&#x648;&#x62f;&#x646; &nbsp;·&nbsp; <kbd>Q</kbd> &#x62d;&#x630;&#x641; &#x622;&#x62e;&#x631;&#x6cc;&#x646; &nbsp;·&nbsp; <kbd>F</kbd> &#x646;&#x645;&#x627;&#x6cc;&#x634; FPS</div>
 <div id="fps">60 fps</div>
 
 <script type="importmap">
@@ -208,12 +208,12 @@
   window.addEventListener('error', function (e) {
     if (window.__bazaarStarted) return;
     var s = document.getElementById('status');
-    if (s) { s.textContent = 'خطا در اجرا: ' + (e.message || 'نامشخص'); s.className = 'err'; }
+    if (s) { s.textContent = '\u062e\u0637\u0627 \u062f\u0631 \u0627\u062c\u0631\u0627: ' + (e.message || '\u0646\u0627\u0645\u0634\u062e\u0635'); s.className = 'err'; }
     var b = document.getElementById('startBtn'); if (b) b.style.display = 'none';
   });
 </script>
 <script nomodule>
-  document.getElementById('status').textContent = 'مرورگر شما از ماژول‌های جاوااسکریپت پشتیبانی نمی‌کند. لطفاً از Chrome، Edge یا Firefox جدید استفاده کنید.';
+  document.getElementById('status').textContent = '\u0645\u0631\u0648\u0631\u06af\u0631 \u0634\u0645\u0627 \u0627\u0632 \u0645\u0627\u0698\u0648\u0644‌\u0647\u0627\u06cc \u062c\u0627\u0648\u0627\u0627\u0633\u06a9\u0631\u06cc\u067e\u062a \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u0646\u0645\u06cc‌\u06a9\u0646\u062f. \u0644\u0637\u0641\u0627\u064b \u0627\u0632 Chrome\u060c Edge \u06cc\u0627 Firefox \u062c\u062f\u06cc\u062f \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u06a9\u0646\u06cc\u062f.';
   document.getElementById('status').className = 'err';
   document.getElementById('startBtn').style.display = 'none';
 </script>
@@ -235,17 +235,17 @@ function fail(msg) {
 (() => {
   const c = document.createElement('canvas');
   const gl = c.getContext('webgl2') || c.getContext('webgl');
-  if (!gl) { fail('مرورگر یا کارت گرافیک شما از WebGL پشتیبانی نمی‌کند.'); throw new Error('WebGL unavailable'); }
+  if (!gl) { fail('\u0645\u0631\u0648\u0631\u06af\u0631 \u06cc\u0627 \u06a9\u0627\u0631\u062a \u06af\u0631\u0627\u0641\u06cc\u06a9 \u0634\u0645\u0627 \u0627\u0632 WebGL \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u0646\u0645\u06cc‌\u06a9\u0646\u062f.'); throw new Error('WebGL unavailable'); }
 })();
 
 let THREE, PointerLockControls, mergeGeometries;
 try {
-  statusEl.textContent = 'دریافت موتور سه‌بعدی…';
+  statusEl.textContent = '\u062f\u0631\u06cc\u0627\u0641\u062a \u0645\u0648\u062a\u0648\u0631 \u0633\u0647‌\u0628\u0639\u062f\u06cc…';
   THREE = await import('three');
   ({ PointerLockControls } = await import('three/addons/controls/PointerLockControls.js'));
   ({ mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js'));
 } catch (e) {
-  fail('بارگذاری Three.js از CDN ناموفق بود. اتصال اینترنت را بررسی کنید و صفحه را دوباره باز کنید.');
+  fail('\u0628\u0627\u0631\u06af\u0630\u0627\u0631\u06cc Three.js \u0627\u0632 CDN \u0646\u0627\u0645\u0648\u0641\u0642 \u0628\u0648\u062f. \u0627\u062a\u0635\u0627\u0644 \u0627\u06cc\u0646\u062a\u0631\u0646\u062a \u0631\u0627 \u0628\u0631\u0631\u0633\u06cc \u06a9\u0646\u06cc\u062f \u0648 \u0635\u0641\u062d\u0647 \u0631\u0627 \u062f\u0648\u0628\u0627\u0631\u0647 \u0628\u0627\u0632 \u06a9\u0646\u06cc\u062f.');
   throw e;
 }
 
@@ -459,7 +459,7 @@ function signTexture(text) {
   }, { aniso: true });
 }
 
-statusEl.textContent = 'ساخت بافت‌ها…';
+statusEl.textContent = '\u0633\u0627\u062e\u062a \u0628\u0627\u0641\u062a‌\u0647\u0627…';
 const cobble = cobbleTextures();
 const woodTex = woodTexture();
 const woodDarkTex = woodTexture('#4f2f16', 'rgba(20,8,2,0.45)');
@@ -512,7 +512,7 @@ const addCollider = (minX, maxX, minZ, maxZ) => colliders.push({ minX, maxX, min
 // ============================================================================
 //  Environment: ground, walls, awnings, sky, lanterns, dust
 // ============================================================================
-statusEl.textContent = 'ساخت محیط بازار…';
+statusEl.textContent = '\u0633\u0627\u062e\u062a \u0645\u062d\u06cc\u0637 \u0628\u0627\u0632\u0627\u0631…';
 const ALLEY_HALF = 4.5, ALLEY_LEN = 68;
 
 const ground = mesh(new THREE.PlaneGeometry(12, ALLEY_LEN), groundMat, 0, 0, 0, false, true);
@@ -632,27 +632,27 @@ dust.raycast = () => {}; scene.add(dust);
 //  Item catalogue (Persian names & prices in Toman)
 // ============================================================================
 const ITEMS = {
-  apple: { name: 'سیب قرمز (سبد)', price: 85000 }, orange: { name: 'پرتقال (سبد)', price: 70000 },
-  pomegranate: { name: 'انار ساوه (سبد)', price: 120000 }, lemon: { name: 'لیمو شیرین (سبد)', price: 65000 },
-  plum: { name: 'آلو سیاه (سبد)', price: 95000 }, melon: { name: 'هندوانه', price: 60000 },
-  turmeric: { name: 'زردچوبه', price: 45000 }, pepper: { name: 'فلفل قرمز', price: 50000 },
-  cinnamon: { name: 'دارچین', price: 65000 }, sumac: { name: 'سماق', price: 55000 },
-  cumin: { name: 'زیره سبز', price: 72000 }, limeDry: { name: 'لیمو عمانی', price: 48000 },
-  saffron: { name: 'زعفران قائنات', price: 900000 }, rosewater: { name: 'گلاب کاشان', price: 60000 },
-  mint: { name: 'عرق نعناع', price: 42000 },
-  shirt1: { name: 'پیراهن سنتی', price: 320000 }, shirt2: { name: 'پیراهن گلدار', price: 350000 },
-  scarf1: { name: 'شال ابریشمی', price: 180000 }, scarf2: { name: 'روسری ترمه', price: 210000 }, scarf3: { name: 'شال پشمی', price: 160000 },
-  dress: { name: 'لباس محلی', price: 780000 }, fabric: { name: 'پارچه ترمه', price: 240000 },
-  rug: { name: 'قالیچه دستباف', price: 1200000 }, carpet: { name: 'فرش دستباف', price: 4500000 },
-  jugBig: { name: 'کوزه سفالی بزرگ', price: 250000 }, jugSmall: { name: 'کوزه سفالی کوچک', price: 140000 },
-  copperBowl: { name: 'کاسه مسی', price: 380000 }, copperLantern: { name: 'فانوس مسی', price: 400000 },
-  plates: { name: 'بشقاب سفالی (دست)', price: 190000 }, vase: { name: 'گلدان لعابی', price: 330000 },
-  tray: { name: 'سینی مسی', price: 520000 }, samovar: { name: 'سماور برنجی', price: 1800000 },
-  pistachio: { name: 'پسته اکبری', price: 650000 }, walnut: { name: 'گردو', price: 220000 }, almond: { name: 'بادام', price: 410000 },
-  dates: { name: 'خرمای مضافتی', price: 95000 }, gaz: { name: 'گز اصفهان', price: 130000 },
-  figs: { name: 'انجیر خشک', price: 175000 }, raisins: { name: 'کشمش', price: 88000 }, honey: { name: 'عسل طبیعی', price: 290000 },
-  sangak: { name: 'نان سنگک', price: 15000 }, barbari: { name: 'نان بربری', price: 12000 },
-  sweets: { name: 'شیرینی سنتی (جعبه)', price: 160000 }, riceCookie: { name: 'نان برنجی', price: 110000 }, koloocheh: { name: 'کلوچه', price: 70000 },
+  apple: { name: '\u0633\u06cc\u0628 \u0642\u0631\u0645\u0632 (\u0633\u0628\u062f)', price: 85000 }, orange: { name: '\u067e\u0631\u062a\u0642\u0627\u0644 (\u0633\u0628\u062f)', price: 70000 },
+  pomegranate: { name: '\u0627\u0646\u0627\u0631 \u0633\u0627\u0648\u0647 (\u0633\u0628\u062f)', price: 120000 }, lemon: { name: '\u0644\u06cc\u0645\u0648 \u0634\u06cc\u0631\u06cc\u0646 (\u0633\u0628\u062f)', price: 65000 },
+  plum: { name: '\u0622\u0644\u0648 \u0633\u06cc\u0627\u0647 (\u0633\u0628\u062f)', price: 95000 }, melon: { name: '\u0647\u0646\u062f\u0648\u0627\u0646\u0647', price: 60000 },
+  turmeric: { name: '\u0632\u0631\u062f\u0686\u0648\u0628\u0647', price: 45000 }, pepper: { name: '\u0641\u0644\u0641\u0644 \u0642\u0631\u0645\u0632', price: 50000 },
+  cinnamon: { name: '\u062f\u0627\u0631\u0686\u06cc\u0646', price: 65000 }, sumac: { name: '\u0633\u0645\u0627\u0642', price: 55000 },
+  cumin: { name: '\u0632\u06cc\u0631\u0647 \u0633\u0628\u0632', price: 72000 }, limeDry: { name: '\u0644\u06cc\u0645\u0648 \u0639\u0645\u0627\u0646\u06cc', price: 48000 },
+  saffron: { name: '\u0632\u0639\u0641\u0631\u0627\u0646 \u0642\u0627\u0626\u0646\u0627\u062a', price: 900000 }, rosewater: { name: '\u06af\u0644\u0627\u0628 \u06a9\u0627\u0634\u0627\u0646', price: 60000 },
+  mint: { name: '\u0639\u0631\u0642 \u0646\u0639\u0646\u0627\u0639', price: 42000 },
+  shirt1: { name: '\u067e\u06cc\u0631\u0627\u0647\u0646 \u0633\u0646\u062a\u06cc', price: 320000 }, shirt2: { name: '\u067e\u06cc\u0631\u0627\u0647\u0646 \u06af\u0644\u062f\u0627\u0631', price: 350000 },
+  scarf1: { name: '\u0634\u0627\u0644 \u0627\u0628\u0631\u06cc\u0634\u0645\u06cc', price: 180000 }, scarf2: { name: '\u0631\u0648\u0633\u0631\u06cc \u062a\u0631\u0645\u0647', price: 210000 }, scarf3: { name: '\u0634\u0627\u0644 \u067e\u0634\u0645\u06cc', price: 160000 },
+  dress: { name: '\u0644\u0628\u0627\u0633 \u0645\u062d\u0644\u06cc', price: 780000 }, fabric: { name: '\u067e\u0627\u0631\u0686\u0647 \u062a\u0631\u0645\u0647', price: 240000 },
+  rug: { name: '\u0642\u0627\u0644\u06cc\u0686\u0647 \u062f\u0633\u062a\u0628\u0627\u0641', price: 1200000 }, carpet: { name: '\u0641\u0631\u0634 \u062f\u0633\u062a\u0628\u0627\u0641', price: 4500000 },
+  jugBig: { name: '\u06a9\u0648\u0632\u0647 \u0633\u0641\u0627\u0644\u06cc \u0628\u0632\u0631\u06af', price: 250000 }, jugSmall: { name: '\u06a9\u0648\u0632\u0647 \u0633\u0641\u0627\u0644\u06cc \u06a9\u0648\u0686\u06a9', price: 140000 },
+  copperBowl: { name: '\u06a9\u0627\u0633\u0647 \u0645\u0633\u06cc', price: 380000 }, copperLantern: { name: '\u0641\u0627\u0646\u0648\u0633 \u0645\u0633\u06cc', price: 400000 },
+  plates: { name: '\u0628\u0634\u0642\u0627\u0628 \u0633\u0641\u0627\u0644\u06cc (\u062f\u0633\u062a)', price: 190000 }, vase: { name: '\u06af\u0644\u062f\u0627\u0646 \u0644\u0639\u0627\u0628\u06cc', price: 330000 },
+  tray: { name: '\u0633\u06cc\u0646\u06cc \u0645\u0633\u06cc', price: 520000 }, samovar: { name: '\u0633\u0645\u0627\u0648\u0631 \u0628\u0631\u0646\u062c\u06cc', price: 1800000 },
+  pistachio: { name: '\u067e\u0633\u062a\u0647 \u0627\u06a9\u0628\u0631\u06cc', price: 650000 }, walnut: { name: '\u06af\u0631\u062f\u0648', price: 220000 }, almond: { name: '\u0628\u0627\u062f\u0627\u0645', price: 410000 },
+  dates: { name: '\u062e\u0631\u0645\u0627\u06cc \u0645\u0636\u0627\u0641\u062a\u06cc', price: 95000 }, gaz: { name: '\u06af\u0632 \u0627\u0635\u0641\u0647\u0627\u0646', price: 130000 },
+  figs: { name: '\u0627\u0646\u062c\u06cc\u0631 \u062e\u0634\u06a9', price: 175000 }, raisins: { name: '\u06a9\u0634\u0645\u0634', price: 88000 }, honey: { name: '\u0639\u0633\u0644 \u0637\u0628\u06cc\u0639\u06cc', price: 290000 },
+  sangak: { name: '\u0646\u0627\u0646 \u0633\u0646\u06af\u06a9', price: 15000 }, barbari: { name: '\u0646\u0627\u0646 \u0628\u0631\u0628\u0631\u06cc', price: 12000 },
+  sweets: { name: '\u0634\u06cc\u0631\u06cc\u0646\u06cc \u0633\u0646\u062a\u06cc (\u062c\u0639\u0628\u0647)', price: 160000 }, riceCookie: { name: '\u0646\u0627\u0646 \u0628\u0631\u0646\u062c\u06cc', price: 110000 }, koloocheh: { name: '\u06a9\u0644\u0648\u0686\u0647', price: 70000 },
 };
 
 // ============================================================================
@@ -884,12 +884,12 @@ function wallCarpet(id, tex) {
 // ============================================================================
 const pickables = [];       // item groups (for raycast lookup)
 const stallDefs = {
-  fruit:   { sign: 'میوه‌فروشی حاج‌قاسم', stripe: 0 },
-  spice:   { sign: 'عطاری و ادویه', stripe: 2 },
-  cloth:   { sign: 'پارچه و شال', stripe: 3 },
-  pottery: { sign: 'سفال و مسگری', stripe: 1 },
-  nuts:    { sign: 'آجیل و خشکبار', stripe: 4 },
-  bakery:  { sign: 'نانوایی سنگک', stripe: 5 },
+  fruit:   { sign: '\u0645\u06cc\u0648\u0647‌\u0641\u0631\u0648\u0634\u06cc \u062d\u0627\u062c‌\u0642\u0627\u0633\u0645', stripe: 0 },
+  spice:   { sign: '\u0639\u0637\u0627\u0631\u06cc \u0648 \u0627\u062f\u0648\u06cc\u0647', stripe: 2 },
+  cloth:   { sign: '\u067e\u0627\u0631\u0686\u0647 \u0648 \u0634\u0627\u0644', stripe: 3 },
+  pottery: { sign: '\u0633\u0641\u0627\u0644 \u0648 \u0645\u0633\u06af\u0631\u06cc', stripe: 1 },
+  nuts:    { sign: '\u0622\u062c\u06cc\u0644 \u0648 \u062e\u0634\u06a9\u0628\u0627\u0631', stripe: 4 },
+  bakery:  { sign: '\u0646\u0627\u0646\u0648\u0627\u06cc\u06cc \u0633\u0646\u06af\u06a9', stripe: 5 },
 };
 const SHELF1 = 1.38, SHELF2 = 1.88, SHELF_Z = -1.05, COUNTER_Y = 0.96;
 
@@ -1104,7 +1104,7 @@ function setHover(item) {
     for (const m of collectMaterials(item)) { m.userData._em = m.emissive.getHex(); m.userData._emi = m.emissiveIntensity; m.emissive.setHex(0xffb347); m.emissiveIntensity = Math.max(0.28, m.userData._emi * 1.15); }
     (item.userData.glowGroup || buildGlow(item)).visible = true;
     tooltip.querySelector('.t-name').textContent = item.userData.item.name;
-    tooltip.querySelector('.t-price').textContent = `${fa(item.userData.item.price)} تومان`;
+    tooltip.querySelector('.t-price').textContent = `${fa(item.userData.item.price)} \u062a\u0648\u0645\u0627\u0646`;
   }
   crosshair.classList.toggle('active', !!item);
   tooltip.classList.toggle('show', !!item);
@@ -1121,16 +1121,16 @@ function renderBasket() {
   const list = $('#basketList'); list.innerHTML = '';
   const ids = Object.keys(basket);
   let total = 0, count = 0;
-  if (!ids.length) list.innerHTML = '<li class="empty">سبد شما خالی است — روی کالاها کلیک کنید</li>';
+  if (!ids.length) list.innerHTML = '<li class="empty">\u0633\u0628\u062f \u0634\u0645\u0627 \u062e\u0627\u0644\u06cc \u0627\u0633\u062a — \u0631\u0648\u06cc \u06a9\u0627\u0644\u0627\u0647\u0627 \u06a9\u0644\u06cc\u06a9 \u06a9\u0646\u06cc\u062f</li>';
   for (const id of ids) {
     const it = basket[id]; total += it.price * it.qty; count += it.qty;
     const li = document.createElement('li');
     li.innerHTML = `<span class="q">×${fa(it.qty)}</span><span class="n">${it.name}</span><span class="p">${fa(it.price * it.qty)}</span>`;
-    const btn = document.createElement('button'); btn.textContent = '−'; btn.title = 'حذف یکی'; btn.addEventListener('click', () => removeOne(id)); li.appendChild(btn);
+    const btn = document.createElement('button'); btn.textContent = '−'; btn.title = '\u062d\u0630\u0641 \u06cc\u06a9\u06cc'; btn.addEventListener('click', () => removeOne(id)); li.appendChild(btn);
     list.appendChild(li);
   }
   $('#basketTotal').textContent = fa(total);
-  $('#basketCount').textContent = count ? `${fa(count)} کالا` : '';
+  $('#basketCount').textContent = count ? `${fa(count)} \u06a9\u0627\u0644\u0627` : '';
 }
 let toastTimer = 0;
 function toast(html) { toastEl.innerHTML = html; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600); }
@@ -1139,17 +1139,17 @@ function addToBasket(item) {
   const { id, name, price } = item;
   if (!basket[id]) basket[id] = { name, price, qty: 0 };
   basket[id].qty++; addOrder.push(id);
-  saveBasket(); renderBasket(); bumpBasket(); toast(`<b>${name}</b> به سبد اضافه شد`); blip(880, 0.08);
+  saveBasket(); renderBasket(); bumpBasket(); toast(`<b>${name}</b> \u0628\u0647 \u0633\u0628\u062f \u0627\u0636\u0627\u0641\u0647 \u0634\u062f`); blip(880, 0.08);
 }
 function removeOne(id) {
   if (!basket[id]) return;
   basket[id].qty--; const name = basket[id].name;
   if (basket[id].qty <= 0) delete basket[id];
   const idx = addOrder.lastIndexOf(id); if (idx >= 0) addOrder.splice(idx, 1);
-  saveBasket(); renderBasket(); toast(`<b>${name}</b> از سبد حذف شد`); blip(440, 0.06);
+  saveBasket(); renderBasket(); toast(`<b>${name}</b> \u0627\u0632 \u0633\u0628\u062f \u062d\u0630\u0641 \u0634\u062f`); blip(440, 0.06);
 }
-function removeLast() { if (addOrder.length) removeOne(addOrder[addOrder.length - 1]); else toast('سبد خالی است'); }
-$('#clearBtn').addEventListener('click', () => { basket = {}; addOrder = []; saveBasket(); renderBasket(); toast('سبد خالی شد'); });
+function removeLast() { if (addOrder.length) removeOne(addOrder[addOrder.length - 1]); else toast('\u0633\u0628\u062f \u062e\u0627\u0644\u06cc \u0627\u0633\u062a'); }
+$('#clearBtn').addEventListener('click', () => { basket = {}; addOrder = []; saveBasket(); renderBasket(); toast('\u0633\u0628\u062f \u062e\u0627\u0644\u06cc \u0634\u062f'); });
 renderBasket();
 
 // tiny WebAudio blips (no assets)
@@ -1192,11 +1192,11 @@ document.addEventListener('mousedown', (e) => { if (controls.isLocked && e.butto
 
 let paused = true;
 startBtn.addEventListener('click', () => { blip(660, 0.05); controls.lock(); });
-document.addEventListener('pointerlockerror', () => { statusEl.textContent = 'قفل ماوس انجام نشد — یک لحظه صبر کنید و دوباره روی دکمه کلیک کنید.'; });
+document.addEventListener('pointerlockerror', () => { statusEl.textContent = '\u0642\u0641\u0644 \u0645\u0627\u0648\u0633 \u0627\u0646\u062c\u0627\u0645 \u0646\u0634\u062f — \u06cc\u06a9 \u0644\u062d\u0638\u0647 \u0635\u0628\u0631 \u06a9\u0646\u06cc\u062f \u0648 \u062f\u0648\u0628\u0627\u0631\u0647 \u0631\u0648\u06cc \u062f\u06a9\u0645\u0647 \u06a9\u0644\u06cc\u06a9 \u06a9\u0646\u06cc\u062f.'; });
 controls.addEventListener('lock', () => { paused = false; overlay.classList.add('hidden'); document.body.classList.add('locked'); });
 controls.addEventListener('unlock', () => {
   paused = true; overlay.classList.remove('hidden'); document.body.classList.remove('locked');
-  startBtn.textContent = 'ادامه گشت‌وگذار'; statusEl.textContent = 'در حالت توقف می‌توانید سبد خرید را ویرایش کنید.';
+  startBtn.textContent = '\u0627\u062f\u0627\u0645\u0647 \u06af\u0634\u062a‌\u0648\u06af\u0630\u0627\u0631'; statusEl.textContent = '\u062f\u0631 \u062d\u0627\u0644\u062a \u062a\u0648\u0642\u0641 \u0645\u06cc‌\u062a\u0648\u0627\u0646\u06cc\u062f \u0633\u0628\u062f \u062e\u0631\u06cc\u062f \u0631\u0627 \u0648\u06cc\u0631\u0627\u06cc\u0634 \u06a9\u0646\u06cc\u062f.';
   for (const k in keys) keys[k] = false; setHover(null);
 });
 
@@ -1294,15 +1294,15 @@ window.addEventListener('resize', () => {
 
 // Compile shaders up-front so the first frames don't hitch, then go
 try {
-  statusEl.textContent = 'کامپایل شیدرها…';
+  statusEl.textContent = '\u06a9\u0627\u0645\u067e\u0627\u06cc\u0644 \u0634\u06cc\u062f\u0631\u0647\u0627…';
   renderer.compile(scene, camera);
   animate();
   window.__bazaarStarted = true;
   window.__bazaarDebug = { camera, playerPos, pickables, renderer, setPaused: (v) => { paused = v; }, getHovered: () => hovered, addHovered: () => { if (hovered) addToBasket(hovered.userData.item); }, removeLast };
-  statusEl.textContent = 'برای ورود، دکمه را بزنید و سپس با ماوس نگاه کنید.';
-  startBtn.disabled = false; startBtn.textContent = 'ورود به بازار';
+  statusEl.textContent = '\u0628\u0631\u0627\u06cc \u0648\u0631\u0648\u062f\u060c \u062f\u06a9\u0645\u0647 \u0631\u0627 \u0628\u0632\u0646\u06cc\u062f \u0648 \u0633\u067e\u0633 \u0628\u0627 \u0645\u0627\u0648\u0633 \u0646\u06af\u0627\u0647 \u06a9\u0646\u06cc\u062f.';
+  startBtn.disabled = false; startBtn.textContent = '\u0648\u0631\u0648\u062f \u0628\u0647 \u0628\u0627\u0632\u0627\u0631';
 } catch (e) {
-  fail('راه‌اندازی صحنه ناموفق بود: ' + (e.message || e));
+  fail('\u0631\u0627\u0647‌\u0627\u0646\u062f\u0627\u0632\u06cc \u0635\u062d\u0646\u0647 \u0646\u0627\u0645\u0648\u0641\u0642 \u0628\u0648\u062f: ' + (e.message || e));
   throw e;
 }
 </script>

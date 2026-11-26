@@ -1,17 +1,17 @@
-//! `agent_reach` — اتصال‌دهندهٔ وبِ صفر-هزینهٔ ناوگان + هندلر امنیت نگهبان.
+//! `agent_reach` — the fleet's zero-cost web connector + the guardian security handler.
 //!
-//! پورت‌های این ماژول:
-//! - [`Panniantong/Agent-Reach`] (`agent_reach/channels/web.py`) — خوانندهٔ
-//!   Jina Reader و جست‌وجوی Exa hosted MCP بدون کلید، با تشخیص دیوار چالش
-//!   antِibot روی ۴٬۰۹۶ بایت اول؛ کاوشگر (`scout`) با این بک‌اندها اینترنت
-//!   را بدون هیچ هزینهٔ API می‌خواند.
+//! This module's ports:
+//! - [`Panniantong/Agent-Reach`] (`agent_reach/channels/web.py`) — the Jina Reader
+//!   reader and keyless Exa hosted MCP search, with antibot challenge-wall detection
+//!   over the first 4,096 bytes; the `scout` reads the internet with these backends
+//!   at zero API cost.
 //! - [`androoAGI/starnet`] (`sidecar/subagents.js` + `capability/capGate.js`)
-//!   — تماشاگر توقف ساب‌ایجنت (`StallWatcher`: سکوت ۴۵۰ ثانیه بیرون ابزار /
-//!   ۱٬۲۰۰ ثانیه درون ابزار) و تضعیف یکنواخت قابلیت‌ها برای فرزند
-//!   (`attenuate`: فرزند = والد ∩ زیرمجموعه، هرگز اجتماع).
+//!   — the subagent stall watcher (`StallWatcher`: 450 seconds of silence outside tools /
+//!   1,200 seconds inside tools) and uniform capability attenuation for the
+//!   child (`attenuate`: child = parent ∩ subset, never a union).
 //!
-//! و هندلر امنیت/راستی‌آزمایی نگهبان ([`GuardianSecurityHandler`]) روی همین
-//! دو قطعه سیم می‌شود — ناوگان کیان با این، **۷/۷ فعال** است.
+//! And the guardian security/verification handler ([`GuardianSecurityHandler`]) wires onto these
+//! same two pieces — with this, the Kian fleet is **7/7 active**.
 //!
 //! [`Panniantong/Agent-Reach`]: https://github.com/Panniantong/Agent-Reach
 //! [`androoAGI/starnet`]: https://github.com/androoAGI/starnet
@@ -19,31 +19,31 @@
 
 use serde_json::Value;
 
-// ── ۱) بک‌اندهای صفر-هزینه (پورت Agent-Reach) ────────────────────────────────
+// ── 1) Zero-cost backends (port of Agent-Reach) ────────────────────────────────
 
-/// پیشوند خوانندهٔ Jina — «تمیزترین متن وب» بدون کلید.
+/// The Jina reader prefix — "the cleanest web text" without a key.
 pub const JINA_READER_PREFIX: &str = "https://r.jina.ai/";
 
-/// Exa hosted MCP — جست‌وجوی معنایی/خواندن صفحهٔ رایگان (JSON-RPC 2.0).
+/// Exa hosted MCP — free semantic search/page reading (JSON-RPC 2.0).
 pub const EXA_MCP_URL: &str = "https://mcp.exa.ai/mcp";
 
-/// سقف نویسه‌های `web_fetch_exa` — عین `web.py::_exa_read`.
+/// `web_fetch_exa` character cap — identical to `web.py::_exa_read`.
 pub const EXA_MAX_FETCH_CHARS: u64 = 20_000;
 
-/// بایت‌های اسکن antِibot — عین `_ANTIBOT_SCAN_BYTES = 4096`.
+/// Antibot scan bytes — identical to `_ANTIBOT_SCAN_BYTES = 4096`.
 pub const ANTIBOT_SCAN_BYTES: usize = 4_096;
 
-/// سقف بدنهٔ Jina Reader — عین `_MAX_RESPONSE_BYTES = 5MB`.
+/// Jina Reader body cap — identical to `_MAX_RESPONSE_BYTES = 5MB`.
 pub const JINA_MAX_RESPONSE_BYTES: usize = 5 * 1024 * 1024;
 
-/// ساخت نشانی Jina Reader برای هر URL عمومی — `https://r.jina.ai/{url}`.
+/// Builds the Jina Reader address for any public URL — `https://r.jina.ai/{url}`.
 #[must_use]
 pub fn jina_reader_url(target: &str) -> String {
     format!("{JINA_READER_PREFIX}{target}")
 }
 
-/// بار JSON-RPC جست‌وجوی معنایی Exa (`web_search_exa`) — عین `_exa_search`:
-/// آرگومان‌ها `query` + `objective` + `numResults`.
+/// The Exa semantic-search JSON-RPC payload (`web_search_exa`) — identical to `_exa_search`:
+/// arguments `query` + `objective` + `numResults`.
 #[must_use]
 pub fn exa_search_payload(query: &str, num_results: usize) -> Value {
     serde_json::json!({
@@ -61,8 +61,8 @@ pub fn exa_search_payload(query: &str, num_results: usize) -> Value {
     })
 }
 
-/// بار JSON-RPC خواندن صفحه با Exa (`web_fetch_exa`) — عین `_exa_read`:
-/// آرگومان‌ها `urls` تک‌عضوی + `maxCharacters: 20000`.
+/// The Exa page-read JSON-RPC payload (`web_fetch_exa`) — identical to `_exa_read`:
+/// a single-element `urls` argument + `maxCharacters: 20000`.
 #[must_use]
 pub fn exa_fetch_payload(url: &str) -> Value {
     serde_json::json!({
@@ -79,18 +79,18 @@ pub fn exa_fetch_payload(url: &str) -> Value {
     })
 }
 
-/// دیوار چالش antِibot؟ — پورت `_is_antibot_page` + گسترش قرارداد کیان.
+/// Antibot challenge wall? — port of `_is_antibot_page` + the Kian contract extension.
 ///
-/// چهار خانوادهٔ چالش (پورت upstream + Turnstile + دیوار ۴۰۳/۵۰۳):
-/// 1. **Cloudflare** — «Just a moment…»، «Attention Required! | Cloudflare»،
-///    `cf-chl` و مسیر `/cdn-cgi/challenge-platform/`.
-/// 2. **Turnstile** — ویجت چالش `challenges.cloudflare.com/turnstile`.
-/// 3. **Captcha** — «captcha»، هشدار Jina «requiring captcha»، «prove your
-///    humanity»، «performing/checking security verification».
-/// 4. **دیوار وضعیت HTTP** — «403 Forbidden» / «503 Service Unavailable».
+/// Four challenge families (upstream port + Turnstile + the 403/503 wall):
+/// 1. **Cloudflare** — "Just a moment…", "Attention Required! | Cloudflare",
+///    `cf-chl` and the `/cdn-cgi/challenge-platform/` path.
+/// 2. **Turnstile** — the `challenges.cloudflare.com/turnstile` challenge widget.
+/// 3. **Captcha** — "captcha", the Jina "requiring captcha" warning, "prove your
+///    humanity", "performing/checking security verification".
+/// 4. **HTTP status wall** — "403 Forbidden" / "503 Service Unavailable".
 ///
-/// فقط `ANTIBOT_SCAN_BYTES` بایت اول بدنه اسکن می‌شود (عین upstream) —
-/// چالش‌ها همیشه سرِ پاسخ‌اند. مرز نویسهٔ UTF-8 حفظ می‌شود.
+/// Only the body's first `ANTIBOT_SCAN_BYTES` bytes are scanned (identical to upstream) —
+/// challenges always sit at the head of the response. The UTF-8 character boundary is preserved.
 #[must_use]
 pub fn is_antibot_challenge_page(title: &str, body: &str) -> bool {
     let mut end = ANTIBOT_SCAN_BYTES.min(body.len());
@@ -115,32 +115,32 @@ pub fn is_antibot_challenge_page(title: &str, body: &str) -> bool {
     cloudflare || turnstile || captcha || verification_wall || http_wall
 }
 
-// ── ۲) تماشاگر توقف ساب‌ایجنت (پورت starnet/subagents.js) ────────────────────
+// ── 2) Subagent stall watcher (port of starnet/subagents.js) ────────────────────
 
-/// سقف سکوت بیرون ابزار — `DEFAULT_STALL_MS = 450000` (۴۵۰ ثانیه).
+/// Outside-tool silence cap — `DEFAULT_STALL_MS = 450000` (450 seconds).
 pub const DEFAULT_IDLE_TIMEOUT_SECS: u64 = 450;
 
-/// سقف سکوت درون ابزار — `DEFAULT_IN_TOOL_STALL_MS = 1200000` (۱٬۲۰۰ ثانیه)؛
-/// یک build/تست واقعی سکوت طولانیِ مشروع دارد.
+/// Inside-tool silence cap — `DEFAULT_IN_TOOL_STALL_MS = 1200000` (1,200 seconds);
+/// a real build/test legitimately stays silent for a long time.
 pub const DEFAULT_HARD_WALL_SECS: u64 = 1_200;
 
-/// تصمیم تماشاگر برای یک ساب‌ایجنت.
+/// The watcher's decision for one subagent.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StallDecision {
-    /// زنده — نویزِ پیشرفت (توکن/ابزار/heartbeat) دیده می‌شود یا زیر سقف است.
+    /// Alive — progress noise (tokens/tools/heartbeat) is seen, or it is under the cap.
     Alive,
-    /// متوقف — سکوت از سقف گذشت؛ host ران را «stale» علامت می‌زند و
-    /// فرزندانش به‌صورت آبشاری لغو می‌شوند (عین `checkStalls` استارنت).
+    /// Stalled — silence passed the cap; the host marks the run "stale" and
+    /// cancels its children in a cascade (identical to starnet's `checkStalls`).
     Stalled {
-        /// ثانیه‌های سکوت در لحظهٔ حکم.
+        /// Seconds of silence at verdict time.
         quiet_secs: u64,
-        /// آیا سکوت «درون ابزار» بود (سقف سخت به‌جای سقف idle)؟
+        /// Was the silence "inside a tool" (the hard cap instead of the idle cap)?
         in_tool: bool,
     },
 }
 
-/// تماشاگر توقف — پورت سیاست `checkStalls` استارنت با ساعت تزریقی
-/// (قطعی و آفلاین‌تست‌پذیر؛ هیچ `Instant::now()` پنهانی نیست).
+/// Stall watcher — port of starnet's `checkStalls` policy with an injected clock
+/// (deterministic and offline-testable; no hidden `Instant::now()`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SubagentStallWatchdog {
     idle_timeout_secs: u64,
@@ -154,8 +154,8 @@ impl Default for SubagentStallWatchdog {
 }
 
 impl SubagentStallWatchdog {
-    /// ساخت با سقف‌ها؛ سقف سخت هرگز زیر سقف idle نمی‌رود
-    /// (عین `inToolStallMs = Math.max(stallMs, knob)` سطر ۸۰).
+    /// Build with the caps; the hard cap never drops below the idle cap
+    /// (identical to `inToolStallMs = Math.max(stallMs, knob)` at line 80).
     #[must_use]
     pub fn new(idle_timeout_secs: u64, hard_wall_secs: u64) -> Self {
         Self {
@@ -164,14 +164,14 @@ impl SubagentStallWatchdog {
         }
     }
 
-    /// سقف‌ها (idle, hard) — برای گزارش نگهبان.
+    /// The caps (idle, hard) — for the guardian's report.
     #[must_use]
     pub const fn limits(&self) -> (u64, u64) {
         (self.idle_timeout_secs, self.hard_wall_secs)
     }
 
-    /// حکم: ثانیه‌های سکوت `quiet_secs` با سقفِ متناسب مقایسه می‌شود —
-    /// درون ابزار سقف سخت، بیرون ابزار سقف idle (عین `checkStalls`).
+    /// Verdict: the `quiet_secs` silence seconds are compared against the matching cap —
+    /// inside tools the hard cap, outside tools the idle cap (identical to `checkStalls`).
     #[must_use]
     pub fn evaluate(&self, quiet_secs: u64, in_tool: bool) -> StallDecision {
         let limit = if in_tool {
@@ -187,13 +187,13 @@ impl SubagentStallWatchdog {
     }
 }
 
-// ── ۳) تضعیف یکنواخت قابلیت‌ها (پورت starnet/capGate.js) ─────────────────────
+// ── 3) Uniform capability attenuation (port of starnet/capGate.js) ─────────────────────
 
-/// تضعیف یکنواخت — قابلیت‌های فرزند = والد ∩ زیرمجموعهٔ مجاز.
+/// Uniform attenuation — child capabilities = parent ∩ allowed subset.
 ///
-/// قانون capGate: «هرگز اجتماع؛ تضعیف یکنواخت، چیدمان اتاق را سقفِ سخت
-/// اقتدار می‌کند» — فرزند هرگز ابزاری که والد نداشت نمی‌گیرد و زنجیرهٔ
-/// فرزند-از-فرزند فقط کوچک‌تر می‌شود. ترتیب خروجی = ترتیب والد؛ تکرار ندارد.
+/// The capGate rule: "never a union; uniform attenuation makes the room layout a hard
+/// ceiling" — a child never gains a tool the parent lacked, and the
+/// child-of-child chain only shrinks. Output order = parent order; no duplicates.
 #[must_use]
 pub fn attenuate_capabilities(parent: &[String], allowed_subset: &[String]) -> Vec<String> {
     let mut out: Vec<String> = Vec::with_capacity(parent.len());
@@ -205,32 +205,32 @@ pub fn attenuate_capabilities(parent: &[String], allowed_subset: &[String]) -> V
     out
 }
 
-// ── ۴) هندلر امنیت/راستی‌آزمایی نگهبان (فعال‌سازی ناوگان ۷/۷) ─────────────────
+// ── 4) Guardian security/verification handler (7/7 fleet activation) ─────────────────
 
-/// حکم راستی‌آزمایی سطح ابزار توسط نگهبان.
+/// The guardian's tool-level verification verdict.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SurfaceVerdict {
-    /// سطح تمیز — محتوا واقعی است.
+    /// Clean level — the content is real.
     Clean,
-    /// دیوار چالش — antِibot؛ ابزار باید به بک‌اند بعدی (Exa) بیفتد،
-    /// هرگز محتوا را به‌جای پاسخ جعل نکند (اصل صادق‌بودن).
+    /// Challenge wall — antibot; the tool must fall through to the next backend (Exa),
+    /// never fake content as an answer (the honesty principle).
     ChallengeWall,
 }
 
-/// هندلر امنیت/راستی‌آزمایی نگهبان — نقطهٔ سیم‌کشی نقش `guardian`.
+/// The guardian security/verification handler — the wiring point of the `guardian` role.
 ///
-/// سه وظیفهٔ نگهبان، همه قطعی و تست‌شده:
-/// 1. راستی‌آزمایی سطحِ خروجی ابزار وب (چالش antِibot → `ChallengeWall`)؛
-/// 2. حکم توقف ساب‌ایجنت با تماشاگر استارنت؛
-/// 3. صدور قابلیت فرزند با تضعیف یکنواخت (هیچ ارتقایی ممکن نیست).
+/// The guardian's three duties, all deterministic and tested:
+/// 1. Tool-output-level verification of the web (an antibot challenge → `ChallengeWall`);
+/// 2. Subagent stall verdict via the starnet watcher;
+/// 3. Child capability issuance with uniform attenuation (no elevation is possible).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GuardianSecurityHandler {
     _private: (),
 }
 
 impl GuardianSecurityHandler {
-    /// راستی‌آزمایی سطح صفحهٔ خوانده‌شده — نگهبان محتوای جعلیِ دیوار چالش را
-    /// رد می‌کند تا کاوشگر به‌جای «پاسخ»، چالش Cloudflare را فروخته نکند.
+    /// Read-page-level verification — the guardian rejects challenge-wall fake content
+    /// so the scout never sells a Cloudflare challenge as an "answer".
     #[must_use]
     pub fn verify_surface(&self, title: &str, body: &str) -> SurfaceVerdict {
         if is_antibot_challenge_page(title, body) {
@@ -240,7 +240,7 @@ impl GuardianSecurityHandler {
         }
     }
 
-    /// حکم توقف ساب‌ایجنت — همان [`SubagentStallWatchdog::evaluate`].
+    /// Subagent stall verdict — the same [`SubagentStallWatchdog::evaluate`].
     #[must_use]
     pub fn evaluate_liveness(
         &self,
@@ -251,7 +251,7 @@ impl GuardianSecurityHandler {
         watchdog.evaluate(quiet_secs, in_tool)
     }
 
-    /// صدور قابلیت برای فرزند — همیشه تضعیف، هرگز ارتقا.
+    /// Child capability issuance — always attenuation, never elevation.
     #[must_use]
     pub fn issue_child_capabilities(
         &self,
@@ -266,7 +266,7 @@ impl GuardianSecurityHandler {
 mod tests {
     use super::*;
 
-    // ── بک‌اندها ──
+    // ── backends ──
 
     #[test]
     fn jina_reader_url_builds_correct_prefix() {
@@ -304,7 +304,7 @@ mod tests {
             "Just a moment...",
             "<html><head><title>Just a moment...</title></head></html>"
         ));
-        // دیوار Attention Required + مسیر challenge-platform
+        // The Attention Required wall + the challenge-platform path
         assert!(is_antibot_challenge_page(
             "Attention Required! | Cloudflare",
             "ray id: 8f0b · /cdn-cgi/challenge-platform/h/b/orchestrate"
@@ -316,15 +316,15 @@ mod tests {
         ));
         // Captcha
         assert!(is_antibot_challenge_page("Security Check", "Please complete the CAPTCHA below"));
-        // هشدار Jina
+        // The Jina warning
         assert!(is_antibot_challenge_page(
             "target",
             "warning: target page requires captcha\nMarkdown Content:"
         ));
-        // دیوار ۴۰۳/۵۰۳
+        // The 403/503 wall
         assert!(is_antibot_challenge_page("Error", "<h1>403 Forbidden</h1>"));
         assert!(is_antibot_challenge_page("Error", "<h1>503 Service Unavailable</h1>"));
-        // اثبات انسانیت
+        // The humanity proof
         assert!(is_antibot_challenge_page("Gate", "Prove your humanity to continue"));
     }
 
@@ -332,33 +332,33 @@ mod tests {
     fn antibot_lets_clean_content_through() {
         assert!(!is_antibot_challenge_page(
             "KIAN Documentation",
-            "# KIAN\n\nمحتوای تمیز دربارهٔ طراحی بازار و اسکرو..."
+            "# KIAN\n\n\u{645}\u{62d}\u{62a}\u{648}\u{627}\u{6cc} \u{62a}\u{645}\u{6cc}\u{632} \u{62f}\u{631}\u{628}\u{627}\u{631}\u{647}\u{654} \u{637}\u{631}\u{627}\u{62d}\u{6cc} \u{628}\u{627}\u{632}\u{627}\u{631} \u{648} \u{627}\u{633}\u{6a9}\u{631}\u{648}..."
         ));
-        // متن درون‌محتوایی دربارهٔ ۴۰۳ هنوز صفحهٔ ۴۰۳ نیست — اما سیاستِ ما
-        // محافظه‌کار است: هر ذکر «403 forbidden» در ۴۰۹۶ بایت اول = دیوار.
-        // (fail-closed: بهتر است به Exa بیفتد تا محتوای جعلی بخواند)
+        // In-content text about 403 is not yet a 403 page — but our
+        // policy is conservative: any mention of "403 forbidden" in the first 4,096 bytes = a wall.
+        // (fail-closed: better to fall through to Exa than to read fake content)
         assert!(is_antibot_challenge_page("x", "403 forbidden"));
     }
 
     #[test]
     fn antibot_scan_is_bounded_and_char_boundary_safe() {
-        // چالش پس از ۴۰۹۶ بایت — دیده نمی‌شود (سر پاسخ است که مهم است)
+        // A challenge after 4,096 bytes — not seen (the response head is what matters)
         let padding = "a".repeat(ANTIBOT_SCAN_BYTES + 64);
         assert!(!is_antibot_challenge_page(
             "clean",
             &format!("{padding}just a moment")
         ));
-        // محتوای چندبایتی داخل پنجره — تطبیق همچنان کار می‌کند
-        let fa = "سلام ".repeat(100); // ≈ ۹۰۰ بایت چندبایتی
+        // Multi-byte content inside the window — matching still works
+        let fa = "\u{633}\u{644}\u{627}\u{645} ".repeat(100); // ≈ 900 bytes of multi-byte content
         assert!(is_antibot_challenge_page("x", &format!("{fa}just a moment")));
-        // مرز ۴۰۹۶ وسط نویسهٔ ۴بایتی: برش به مرز نویسه پس‌نشینی می‌شود —
-        // نه پانیک، نه تطبیقِ ناقص بیرون پنجره
+        // The 4,096 boundary mid-4-byte-character: the cut retreats to a character boundary —
+        // no panic, no partial match outside the window
         let prefix = "a".repeat(ANTIBOT_SCAN_BYTES - 3);
         let body = format!("{prefix}🦊just a moment");
         assert!(!is_antibot_challenge_page("clean", &body));
     }
 
-    // ── تماشاگر توقف ──
+    // ── stall watcher ──
 
     #[test]
     fn watchdog_defaults_match_starnet_constants() {
@@ -374,7 +374,7 @@ mod tests {
             w.evaluate(450, false),
             StallDecision::Stalled { quiet_secs: 450, in_tool: false }
         );
-        // درون ابزار سقف سخت ۱٬۲۰۰ است — ۴۵۰ ثانیه سکوتِ درون build مشروع است.
+        // Inside a tool the hard cap is 1,200 — 450 seconds of silence inside a build is legitimate.
         assert_eq!(w.evaluate(450, true), StallDecision::Alive);
         assert_eq!(w.evaluate(1_199, true), StallDecision::Alive);
         assert_eq!(
@@ -389,7 +389,7 @@ mod tests {
         assert_eq!(w.limits(), (600, 600), "hard wall clamps to idle floor");
     }
 
-    // ── تضعیف قابلیت ──
+    // ── capability attenuation ──
 
     #[test]
     fn attenuate_is_intersection_never_union() {
@@ -397,11 +397,11 @@ mod tests {
         let subset = vec!["web.read".to_owned(), "db.admin".to_owned()];
         let child = attenuate_capabilities(&parent, &subset);
         assert_eq!(child, vec!["web.read".to_owned()], "db.admin must never leak in");
-        // ترتیب والد حفظ می‌شود حتی اگر زیرمجموعه به‌هم‌ریخته باشد.
+        // Parent order is preserved even if the subset is scrambled.
         let subset = vec!["shell.exec".to_owned(), "web.read".to_owned()];
         let child = attenuate_capabilities(&parent, &subset);
         assert_eq!(child, vec!["web.read".to_owned(), "shell.exec".to_owned()]);
-        // زیرمجموعهٔ خالی → هیچ.
+        // An empty subset → nothing.
         assert_eq!(attenuate_capabilities(&parent, &[]), [] as [std::string::String; 0]);
     }
 
@@ -411,24 +411,24 @@ mod tests {
         let child = attenuate_capabilities(&root, &["a".to_owned(), "b".to_owned(), "c".to_owned()]);
         let grandchild = attenuate_capabilities(&child, &["b".to_owned(), "c".to_owned(), "e".to_owned()]);
         assert_eq!(grandchild, vec!["b".to_owned(), "c".to_owned()]);
-        // هر فرزند زیرمجموعهٔ والد — هیچ زنجیره‌ای بزرگ نمی‌شود.
+        // Every child is a subset of its parent — no chain ever grows.
         for cap in &grandchild {
             assert!(child.contains(cap));
             assert!(root.contains(cap));
         }
-        // تکرار در زیرمجموعه، تکرار در خروجی نمی‌سازد.
+        // Duplicates in the subset do not create duplicates in the output.
         let dup = attenuate_capabilities(&root, &["a".to_owned(), "a".to_owned()]);
         assert_eq!(dup, vec!["a".to_owned()]);
     }
 
-    // ── هندلر نگهبان ──
+    // ── guardian handler ──
 
     #[test]
     fn guardian_handler_wires_all_three_duties() {
         let guardian = GuardianSecurityHandler::default();
         let watchdog = SubagentStallWatchdog::default();
 
-        // ۱) سطح چالش → رد؛ سطح تمیز → پذیرش.
+        // 1) Challenge level → reject; clean level → accept.
         assert_eq!(
             guardian.verify_surface("Just a moment...", "<title>Just a moment...</title>"),
             SurfaceVerdict::ChallengeWall
@@ -438,7 +438,7 @@ mod tests {
             SurfaceVerdict::Clean
         );
 
-        // ۲) حکم توقف — مدارشکن در سقف.
+        // 2) Stall verdict — the circuit breaker trips at the cap.
         assert_eq!(
             guardian.evaluate_liveness(&watchdog, 900, true),
             StallDecision::Alive
@@ -448,7 +448,7 @@ mod tests {
             StallDecision::Stalled { .. }
         ));
 
-        // ۳) صدور فرزند — فقط تضعیف.
+        // 3) Child issuance — attenuation only.
         let parent = vec!["shield.audit".to_owned(), "ledger.write".to_owned()];
         assert_eq!(
             guardian.issue_child_capabilities(&parent, &["shield.audit".to_owned()]),

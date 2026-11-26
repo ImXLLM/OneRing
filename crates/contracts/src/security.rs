@@ -1,11 +1,11 @@
-//! اولیه‌های احراز (خالص، بدون وبرام) — پورت `server/src/auth.ts` + `guards.ts`.
+//! Auth primitives (pure, no web framework) — port of `server/src/auth.ts` + `guards.ts`.
 //!
-//! قواعد fail-closed:
-//! * بررسی کلید ادمین با مقایسهٔ زمان‌ثابت (`subtle`)؛ کلیدِ تنظیم‌نشدهٔ سرور =
-//!   ادمین **غیرفعال**، هرگز باز.
-//! * Telegram initData طبق طرح رسمی `WebApp` `HMAC-SHA256`.
-//! * rate-limit پنجرهٔ لغزان درون‌حافظه‌ای — همان معناشناسی TS (توزیع فاز ۴
-//!   به‌عنوان middleware آکسوم، با همان بدنهٔ 429).
+//! Fail-closed rules:
+//! * Admin key check via constant-time comparison (`subtle`); an unset server key
+//!   means admin is **disabled**, never open.
+//! * Telegram initData per the official `WebApp` `HMAC-SHA256` scheme.
+//! * In-memory sliding-window rate limit — same semantics as TS (Phase 4 distribution
+//!   as Axum middleware, with the same 429 body).
 
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -19,18 +19,18 @@ use subtle::ConstantTimeEq;
 
 // ── X-KIAN-Key ───────────────────────────────────────────────────────────────
 
-/// بررسی کلید ادمین — مقایسهٔ زمان‌ثابت.
+/// Admin key check — constant-time comparison.
 ///
-/// * کلید سرور `None` یا کوتاه‌تر از حداقل (۱۶ کاراکتر؛ ۸ برای کلیدهای
-///   دمو با پیشوند صریح `dev-`) → `false` (ادمین غیرفعال).
-/// * هدر غایب/خالی → `false`.
-/// * طول‌های متفاوت → `false` (بدون مقایسهٔ بایت‌به‌بایت — نشت زمانی ندارد).
+/// * Server key `None` or shorter than the minimum (16 characters; 8 for demo keys
+///   with the explicit `dev-` prefix) → `false` (admin disabled).
+/// * Missing/empty header → `false`.
+/// * Different lengths → `false` (no byte-by-byte comparison — no timing leak).
 #[must_use]
 pub fn verify_kian_key(header_value: Option<&str>, server_key: Option<&str>) -> bool {
     let Some(server_key) = server_key else { return false };
-    // کلید ادمین تولیدی حداقل ۱۶ کاراکتر؛ پیشوند `dev-` صریحاً کلید دمو/توسعه
-    // اعلام می‌کند (مثل `dev-admin-key`) و با حداقل ۸ کاراکتر پذیرفته می‌شود —
-    // فقط برای تستِ محلی؛ در استقرار واقعی کلید بلند تولید کنید.
+    // A generated admin key is at least 16 characters; the explicit `dev-` prefix declares
+    // a demo/development key (e.g. `dev-admin-key`) accepted at a minimum of 8 characters —
+    // local testing only; generate a long key for real deployments.
     let min_len = if server_key.starts_with("dev-") { 8 } else { 16 };
     if server_key.len() < min_len {
         return false;
@@ -47,33 +47,33 @@ pub fn verify_kian_key(header_value: Option<&str>, server_key: Option<&str>) -> 
     a.ct_eq(b).into()
 }
 
-// ── Telegram initData (طرح رسمی WebApp) ─────────────────────────────────────
+// ── Telegram initData (official WebApp scheme) ─────────────────────────────────────
 
-/// حداکثر عمر مجاز `auth_date` در `initData` (۲۴ ساعت = ۸۶٬۴۰۰ ثانیه).
+/// Maximum allowed age of `auth_date` in `initData` (24 hours = 86,400 seconds).
 pub const INIT_DATA_MAX_AGE_SECS: i64 = 86_400;
 
-/// حداکثر انحراف مجاز ساعت به آینده برای `auth_date` (۵ دقیقه = ۳۰۰ ثانیه).
+/// Maximum allowed future clock skew for `auth_date` (5 minutes = 300 seconds).
 pub const INIT_DATA_MAX_FUTURE_SECS: i64 = 300;
 
-/// هویت مشتق‌شده از initData.
+/// Identity derived from initData.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TelegramIdentity {
-    /// شناسهٔ عددی تلگرام به‌صورت رشته (`"123"`)
+    /// Telegram numeric ID as a string (`"123"`)
     pub user_id: String,
-    /// یوزرنیم اختیاری
+    /// Optional username
     pub username: Option<String>,
-    /// پارامتر اختیاری `start_param` از لینک مستقیم مینی‌اپ (برای محصول/رفرال)
+    /// Optional `start_param` from the mini-app direct link (for product/referral)
     pub start_param: Option<String>,
 }
 
-/// رکورد کاربر داخل initData (`user` = JSON کدشده در فرم).
+/// User record inside initData (`user` = form-encoded JSON).
 #[derive(Debug, Deserialize)]
 struct RawTelegramUser {
     id: Option<f64>,
     username: Option<String>,
 }
 
-/// اشتقاق کلید رسمی `Telegram MiniApp`: `HMAC-SHA256(key = "WebAppData", data = bot_token)`.
+/// Official `Telegram MiniApp` key derivation: `HMAC-SHA256(key = "WebAppData", data = bot_token)`.
 fn webapp_secret_key(bot_token: &str) -> [u8; 32] {
     let mut mac = Hmac::<Sha256>::new_from_slice(b"WebAppData")
         .unwrap_or_else(|_| unreachable!("WebAppData is a valid HMAC key"));
@@ -84,32 +84,32 @@ fn webapp_secret_key(bot_token: &str) -> [u8; 32] {
     out
 }
 
-/// زمان فعلی Unix بر حسب ثانیه.
+/// Current Unix time in seconds.
 fn current_unix_secs() -> Option<i64> {
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs();
     i64::try_from(secs).ok()
 }
 
-/// اعتبارسنجی رسمی Telegram `WebApp` initData (HMAC-SHA256) با ساعت فعلی سیستم.
+/// Official Telegram `WebApp` initData validation (HMAC-SHA256) against the current system clock.
 ///
-/// برای تست‌های قطعی با ساعت تزریقی از [`verify_telegram_init_data_at`] استفاده کنید.
+/// For deterministic tests with an injected clock, use [`verify_telegram_init_data_at`].
 #[must_use]
 pub fn verify_telegram_init_data(init_data: &str, bot_token: &str) -> Option<TelegramIdentity> {
     let now_secs = current_unix_secs()?;
     verify_telegram_init_data_at(init_data, bot_token, now_secs)
 }
 
-/// اعتبارسنجی رسمی Telegram `WebApp` initData (HMAC-SHA256) در زمان `now_secs`:
+/// Official Telegram `WebApp` initData validation (HMAC-SHA256) at time `now_secs`:
 ///
-/// 1. `hash` را از پارامترها جدا کن.
-/// 2. بقیهٔ پارامترها (از جمله `start_param` در صورت وجود) را به ترتیب حروف الفبا
-///    sort کن و با `\n` بچسبان.
-/// 3. `secret = HMAC-SHA256("WebAppData", bot_token)`،
+/// 1. Separate `hash` from the parameters.
+/// 2. Sort the remaining parameters (including `start_param` if present) alphabetically
+///    and join them with `\n`.
+/// 3. `secret = HMAC-SHA256("WebAppData", bot_token)`,
 ///    `computed = HMAC-SHA256(secret, data_check_string)`.
-/// 4. مقایسهٔ زمان‌ثابت با `hash` (hex).
-/// 5. بررسی تازگی `auth_date` (حداکثر ۲۴ ساعت گذشته و ۵ دقیقه آینده — ضد Replay).
+/// 4. Constant-time comparison against `hash` (hex).
+/// 5. Check `auth_date` freshness (at most 24 hours in the past and 5 minutes in the future — anti-replay).
 ///
-/// هر گام شکست → `None` (fail-closed).
+/// Any step failing → `None` (fail-closed).
 #[must_use]
 pub fn verify_telegram_init_data_at(
     init_data: &str,
@@ -125,16 +125,16 @@ pub fn verify_telegram_init_data_at(
         params.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("\n");
 
     let mut secret = webapp_secret_key(bot_token);
-    // خروجی HMAC-SHA256 همیشه ۳۲ بایت است — کلید معتبر HMAC
+    // the HMAC-SHA256 output is always 32 bytes — a valid HMAC key
     let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(&secret) else {
         secret.fill(0);
         return None;
     };
     mac.update(data_check_string.as_bytes());
     let computed = mac.finalize().into_bytes();
-    secret.fill(0); // پاک‌سازی کلید مشتق‌شده از حافظه
+    secret.fill(0); // wipe the derived key from memory
 
-    // مقایسهٔ زمان‌ثابت روی بایت‌های hex‌گشایی‌شده
+    // constant-time comparison on the decoded hex bytes
     let expected = hex::decode(&hash).ok()?;
     if expected.len() != computed.len() {
         return None;
@@ -143,7 +143,7 @@ pub fn verify_telegram_init_data_at(
         return None;
     }
 
-    // بررسی تازگی auth_date — جلوگیری از Replay Attack
+    // auth_date freshness check — Replay Attack prevention
     let auth_date_raw = params.iter().find(|(k, _)| k == "auth_date").map(|(_, v)| v.as_str())?;
     let auth_date: i64 = auth_date_raw.parse().ok()?;
     let age = now_secs.checked_sub(auth_date)?;
@@ -151,7 +151,7 @@ pub fn verify_telegram_init_data_at(
         return None;
     }
 
-    // کاربر: JSON داخل پارامتر user — id باید صحیح امن باشد
+    // user: JSON inside the user parameter — id must be a safe integer
     let user_raw = params.iter().find(|(k, _)| k == "user").map(|(_, v)| v.clone())?;
     let user: RawTelegramUser = serde_json::from_str(&user_raw).ok()?;
     let id = user.id?;
@@ -164,11 +164,11 @@ pub fn verify_telegram_init_data_at(
         .find(|(k, _)| k == "start_param")
         .map(|(_, v)| v.trim().to_owned())
         .filter(|v| !v.is_empty());
-    #[allow(clippy::cast_possible_truncation)] // id پیش‌تر: is_finite، fract==0، ≤2^53−1
+    #[allow(clippy::cast_possible_truncation)] // id first: is_finite, fract==0, ≤2^53−1
     Some(TelegramIdentity { user_id: format!("{}", id as i64), username, start_param })
 }
 
-/// ساخت initData معتبر برای تست‌ها — پورت `makeTestInitData` با `auth_date` زنده.
+/// Build valid initData for the tests — port of `makeTestInitData` with a live `auth_date`.
 #[must_use]
 pub fn make_test_init_data(bot_token: &str, user: &str, username: Option<&str>) -> String {
     let id: i64 = user.parse().unwrap_or(42);
@@ -176,14 +176,14 @@ pub fn make_test_init_data(bot_token: &str, user: &str, username: Option<&str>) 
     build_bot_init_data(bot_token, id, username, now)
 }
 
-/// ضرب initData معتبر از سمت بات (M6) — نقطهٔ تنها ضرب هویت تلگرام.
+/// Mint valid initData on the bot side (M6) — the single identity-minting point for Telegram.
 ///
-/// باتِ طول‌کشی/وبهوک، دارندهٔ `KIAN_BOT_TOKEN` است؛ آپدیت‌ها مستقیم از کانال
-/// معتمد تلگرام می‌آیند. برای نشست شهروند، بات همان مسیر رسمی مینی‌اپ را
-/// طی می‌کند: initData با همین الگوریتم رسمی `WebAppData` HMAC ضرب می‌شود و
-/// `POST /auth/telegram` آن را مثل مینی‌اپ تأیید می‌کند — **هیچ مسیر جانبی برای هویت وجود ندارد**.
+/// The long-polling/webhook bot holds `KIAN_BOT_TOKEN`; updates come straight from the
+/// trusted Telegram channel. For the citizen session, the bot follows the same official
+/// mini-app path: initData is minted with the same official `WebAppData` HMAC and
+/// `POST /auth/telegram` verifies it like the mini-app — **there is no side channel for identity**.
 ///
-/// `auth_date` (Unix epoch بر حسب ثانیه) از ساعت تزریقی شِل می‌آید — آفلاین‌تست‌پذیر.
+/// `auth_date` (Unix epoch seconds) comes from the injected shell clock — offline-testable.
 #[must_use]
 pub fn build_bot_init_data(
     bot_token: &str,
@@ -213,15 +213,15 @@ pub fn build_bot_init_data(
     format!("{pairs}&hash={hash}")
 }
 
-/// گریز JSON برای username — نقل‌قول و بک‌اسلش خطرناک را خنثی می‌کند تا
-/// خروجی همیشه JSON-safe بماند (هویت هرگز از رشتهٔ خام کاربر عبور نمی‌کند).
+/// JSON escaping for the username — neutralizes dangerous quotes and backslashes so
+/// the output is always JSON-safe (identity never flows through the raw user string).
 fn escape_json(s: &str) -> String {
     s.chars().filter(|c| *c != '"' && *c != '\\').collect()
 }
 
-/// کدگذاری فرم ساده — مثل `URLSearchParams.toString()` واقعی تلگرام:
-/// فقط unreserved (`A-Za-z0-9-_.`) خام می‌ماند؛ `{}`, `"`, `:` و بقیه
-/// percent-encoded می‌شوند — خروجی همیشه در JSON امن است (مثل initData واقعی).
+/// Simple form encoding — like Telegram's real `URLSearchParams.toString()`:
+/// only unreserved characters (`A-Za-z0-9-_.`) stay raw; `{}`, `"`, `:`, and the rest
+/// are percent-encoded — the output is always JSON-safe (like real initData).
 fn urlencode(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for b in s.bytes() {
@@ -237,7 +237,7 @@ fn urlencode(s: &str) -> String {
     out
 }
 
-/// تجزیهٔ فرم‌encoded — بدون وابستگی؛ + به فاصلهٔ `URLSearchParams` نگاشت نمی‌شود مگر در query.
+/// Form-encoded parsing — no dependencies; `+` does not map to space per `URLSearchParams` except in query.
 fn parse_urlencoded(s: &str) -> Vec<(String, String)> {
     s.split('&')
         .filter(|p| !p.is_empty())
@@ -248,7 +248,7 @@ fn parse_urlencoded(s: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-/// کدگشایی درصدی.
+/// Percent decoding.
 fn urldecode(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -268,16 +268,16 @@ fn urldecode(s: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-// ── Rate limit — پنجرهٔ لغزان درون‌حافظه‌ای ──────────────────────────────────
+// ── Rate limit — in-memory sliding window ──────────────────────────────────
 
-/// اندازهٔ پنجره (۶۰ ثانیه) — مثل TS.
+/// Window size (60 seconds) — like TS.
 pub const RATE_WINDOW_SECS: u64 = 60;
 
-/// limiter پنجرهٔ لغزان — یکی به ازای سرور (درون Mutex فاز ۴).
+/// Sliding-window limiter — one per server (inside the Phase 4 Mutex).
 ///
-/// * تماس‌گیرندگان معتمد (بات/داشبورد — دارای کلید ادمین) باکت مشترک `admin` می‌گیرند.
-/// * بقیه با ip واقعی کلید می‌خورند (X-Forwarded-For در فاز ۴).
-/// * نگه‌داشت حافظه: بیش از ۱۰٬۰۰۰ کلید → پاک‌سازی (مثل TS).
+/// * Trusted callers (bot/dashboard — holding the admin key) share the `admin` bucket.
+/// * Everyone else is keyed by their real IP (X-Forwarded-For in Phase 4).
+/// * Memory retention: more than 10,000 keys → sweep (like TS).
 #[derive(Debug, Default)]
 pub struct RateLimiter {
     windows: HashMap<String, Vec<Instant>>,
@@ -285,16 +285,16 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
-    /// limiter جدید با سقف درخواست در دقیقه.
+    /// New limiter with a requests-per-minute cap.
     #[must_use]
     pub fn new(limit: usize) -> Self {
         Self { windows: HashMap::new(), limit }
     }
 
-    /// ثبت hit و تصمیم — `Ok(())` مجاز، `Err(HttpFailure)` یعنی 429 آماده.
+    /// Record a hit and decide — `Ok(())` allowed, `Err(HttpFailure)` means a ready 429.
     ///
     /// # Errors
-    /// [`HttpFailure::rate_limited`] وقتی تعداد hits در پنجرهٔ ۶۰ثانیه‌ای به سقف برسد.
+    /// [`HttpFailure::rate_limited`] when the hits in the 60-second window reach the cap.
     pub fn check(&mut self, key: &str) -> Result<(), crate::error::HttpFailure> {
         let now = Instant::now();
         let window = std::time::Duration::from_secs(RATE_WINDOW_SECS);
@@ -306,13 +306,13 @@ impl RateLimiter {
             ));
         }
         hits.push(now);
-        // اصلاح صحت (تست بار ۲۰۲۵-۱۱): پیش‌تر بیش از ۱۰٬۰۰۰ کلید →
-        // `windows.clear()` که سقف نرخِ *همهٔ* کاربران را یک‌باره می‌ریخت
-        // (روز شلوغ = دورزدن دسته‌جمعی قواعد). حالا فقط باکت‌های خاموش —
-        // که آخرین hit‌شان بیرون پنجره است — تخلیه می‌شوند: کاربر فعال هرگز
-        // ریست نمی‌شود و حافظه به اندازهٔ مجموعهٔ فعال باقی می‌ماند.
+        // Correctness fix (2025-11 load test): previously, more than 10,000 keys triggered
+        // `windows.clear()`, wiping the rate cap of *every* user at once
+        // (a busy day = wholesale bypass of the rules). Now only idle buckets —
+        // those whose last hit is outside the window — are evicted: an active user is never
+        // reset, and memory stays proportional to the active set.
         if self.windows.len() > 10_000 {
-            // پنجرهٔ کامل سپری نشده باشد، تخلیه‌ای رخ نمی‌دهد (بدون پانیک) —
+            // the full window has not elapsed, no eviction happens (no panic) —
             if let Some(cutoff) = now.checked_sub(window) {
                 self.windows.retain(|_, h| h.last().is_some_and(|t| *t > cutoff));
             }
@@ -320,26 +320,26 @@ impl RateLimiter {
         Ok(())
     }
 
-    /// ریست کامل (تست‌ها).
+    /// Full reset (tests).
     pub fn reset(&mut self) {
         self.windows.clear();
     }
 }
 
-/// تعداد شاردها — تقسیم قفل با FNV-1a؛ در RPS بالا contention را ~۱۶ برابر
-/// می‌کاهد (اصلاح تست بار ۲۰۲۵-۱۱: Mutex سراسری تک‌نقطهٔ داغ بود).
+/// Shard count — lock partitioning with FNV-1a; at high RPS it cuts contention
+/// by ~16x (2025-11 load-test fix: the global Mutex was a single hot spot).
 pub const RATE_SHARD_COUNT: usize = 16;
 
-/// limiter نرخ شاردشده — `RATE_SHARD_COUNT` پنجرهٔ لغزان مستقل، هرکدام با
-/// Mutex خودش؛ کلید با hash به shard ثابت می‌رود (همان کلید = همان shard،
-/// پس سقف per-key دقیقاً مثل قبل است). `&self` — Sync و بدون قفل بیرونی.
+/// Sharded rate limiter — `RATE_SHARD_COUNT` independent sliding windows, each with
+/// its own Mutex; a key is hashed to a fixed shard (same key = same shard,
+/// so the per-key cap is exactly as before). `&self` — Sync with no outer lock.
 #[derive(Debug)]
 pub struct ShardedLimiter {
     shards: Vec<Mutex<RateLimiter>>,
 }
 
 impl ShardedLimiter {
-    /// limiter شاردشده — هر shard همان سقف را دارد.
+    /// Sharded limiter — every shard has the same cap.
     #[must_use]
     pub fn new(limit: usize) -> Self {
         Self {
@@ -349,7 +349,7 @@ impl ShardedLimiter {
         }
     }
 
-    /// شارد ثابت برای کلید — FNV-1a: سریع، بدون وابستگی، توزیع یکنواخت.
+    /// Fixed shard for a key — FNV-1a: fast, dependency-free, uniform distribution.
     fn shard_for(&self, key: &str) -> &Mutex<RateLimiter> {
         let mut h: u64 = 0xcbf2_9ce4_8422_2325; // FNV offset basis
         for b in key.as_bytes() {
@@ -360,10 +360,10 @@ impl ShardedLimiter {
         &self.shards[idx]
     }
 
-    /// ثبت hit و تصمیم — همان قرارداد [`RateLimiter::check`].
+    /// Record a hit and decide — same contract as [`RateLimiter::check`].
     ///
     /// # Errors
-    /// [`HttpFailure::rate_limited`] وقتی سقف shardِ کلید پر شود.
+    /// [`HttpFailure::rate_limited`] when the key's shard cap fills.
     pub fn check(&self, key: &str) -> Result<(), crate::error::HttpFailure> {
         let mut shard = self.shard_for(key)
             .lock()
@@ -371,7 +371,7 @@ impl ShardedLimiter {
         shard.check(key)
     }
 
-    /// ریست همهٔ شاردها (تست‌ها).
+    /// Reset all shards (tests).
     pub fn reset(&self) {
         for s in &self.shards {
             s.lock().unwrap_or_else(PoisonError::into_inner).reset();
@@ -395,37 +395,37 @@ mod tests {
         assert_eq!(identity.user_id, "777001");
         assert_eq!(identity.username.as_deref(), Some("kia_agent"));
         assert!(identity.start_param.is_none());
-        // توکن دیگر → fail-closed (امضا فقط با توکن دارنده معتبر است)
+        // a different token → fail-closed (the signature is valid only with the holder's token)
         assert!(verify_telegram_init_data_at(&data, "7000000000:OTHER", now).is_none());
-        // بدون username → هویت بدون نام، همچنان معتبر
+        // no username → nameless identity, still valid
         let bare = build_bot_init_data(bot, 8, None, now);
         let id2 = verify_telegram_init_data_at(&bare, bot, now).expect("bare initData verifies");
         assert_eq!(id2.user_id, "8");
         assert!(id2.username.is_none());
-        // username خطرناک — نقل‌قول/بک‌اسلش هرگز به JSON عبور نمی‌کند (فقط حذف می‌شوند)
+        // dangerous username — quotes/backslashes never reach the JSON (they are only stripped)
         let evil = build_bot_init_data(bot, 9, Some("a\"},\"is_bot\":true"), now);
         let id3 =
             verify_telegram_init_data_at(&evil, bot, now).expect("escaped username verifies");
         assert_eq!(id3.username.as_deref(), Some("a},is_bot:true"));
-        // خروجی همیشه JSON-safe: بدون {، }، " خام (همان قواعد make_test_init_data)
+        // output always JSON-safe: no raw {, }, " (same rules as make_test_init_data)
         assert!(!evil.contains('{') && !evil.contains('"') && !evil.contains('}'));
     }
 
     #[test]
     fn kia_key_fail_closed_on_missing_or_short_server_key() {
-        assert!(!verify_kian_key(Some(KEY), None)); // سرور بدون کلید → هرگز باز
-        assert!(!verify_kian_key(Some(KEY), Some("short"))); // < ۱۶ کاراکتر
-        assert!(!verify_kian_key(None, Some(KEY))); // هدر غایب
-        assert!(!verify_kian_key(Some(""), Some(KEY))); // هدر خالی
+        assert!(!verify_kian_key(Some(KEY), None)); // server without a key → never open
+        assert!(!verify_kian_key(Some(KEY), Some("short"))); // < 16 characters
+        assert!(!verify_kian_key(None, Some(KEY))); // missing header
+        assert!(!verify_kian_key(Some(""), Some(KEY))); // empty header
         assert!(verify_kian_key(Some(KEY), Some(KEY)));
         assert!(!verify_kian_key(Some("kia-admin-key-0123456788"), Some(KEY)));
         assert!(!verify_kian_key(Some(KEY), Some(&KEY[..15])));
 
-        // کلید دمو با پیشوند صریح `dev-` — حداقل ۸ کاراکتر (تست محلی امشب)
-        let dev: &str = "dev-admin-key"; // ۱۳ کاراکتر
+        // demo key with the explicit `dev-` prefix — minimum 8 characters (local test tonight)
+        let dev: &str = "dev-admin-key"; // 13 characters
         assert!(verify_kian_key(Some(dev), Some(dev)));
-        assert!(!verify_kian_key(Some("dev-admin-keY"), Some(dev))); // هم‌طول اما متفاوت
-        assert!(!verify_kian_key(Some(dev), Some("dev-adm"))); // < ۸ کاراکتر دمو
+        assert!(!verify_kian_key(Some("dev-admin-keY"), Some(dev))); // same length but different
+        assert!(!verify_kian_key(Some(dev), Some("dev-adm"))); // < 8 demo characters
     }
 
     #[test]
@@ -438,9 +438,9 @@ mod tests {
         assert!(identity.start_param.is_none());
     }
 
-    /// خروجی helper باید مثل initData واقعی تلگرام باشد: بدون هیچ کاراکتر خام
-    /// `{`, `}`, `"` (JSON-safe) و کاملاً percent-encoded — تا داخل بدنهٔ JSON
-    /// بدون شکست جا شود و با `URLSearchParams` واقعی سازگار باشد.
+    /// The helper's output must look like real Telegram initData: no raw
+    /// `{`, `}`, `"` characters (JSON-safe) and fully percent-encoded — so it fits inside a JSON
+    /// body without breaking and stays compatible with real `URLSearchParams`.
     #[test]
     fn make_test_init_data_output_is_urlencoded_and_json_safe() {
         let data = make_test_init_data("123:tok", "42", Some("sara"));
@@ -448,7 +448,7 @@ mod tests {
         assert!(!data.contains('"'), "raw quotes break JSON bodies");
         assert!(data.contains("user=%7B"), "user field must be percent-encoded like real Telegram");
         assert!(verify_telegram_init_data(&data, "123:tok").is_some(), "still verifies");
-        // طرح رسمی WebAppData — initData کاملاً کدنویسی‌شده با start_param هم verify می‌شود
+        // official WebAppData scheme — fully encoded initData with start_param verifies too
         let auth_date = 1_760_000_000i64;
         let fully_encoded = format!(
             "auth_date={auth_date}&start_param=p_prod1_r_999&user=%7B%22id%22%3A77%2C%22username%22%3A%22ok%22%7D"
@@ -476,20 +476,20 @@ mod tests {
 
         let bot = "7000000000:TEST-TOKEN-abc";
         let now = 1_760_100_000i64;
-        // منقضی (> ۸۶٬۴۰۰ ثانیه قبل)
+        // expired (> 86,400 seconds ago)
         let expired = build_bot_init_data(bot, 10, Some("old"), now - INIT_DATA_MAX_AGE_SECS - 1);
         assert!(verify_telegram_init_data_at(&expired, bot, now).is_none());
-        // روی مرز ۲۴ ساعت — هنوز معتبر
+        // on the 24-hour boundary — still valid
         let on_edge = build_bot_init_data(bot, 10, Some("edge"), now - INIT_DATA_MAX_AGE_SECS);
         assert!(verify_telegram_init_data_at(&on_edge, bot, now).is_some());
-        // بیش از ۵ دقیقه در آینده (> ۳۰۰ ثانیه)
+        // more than 5 minutes in the future (> 300 seconds)
         let future = build_bot_init_data(bot, 10, Some("fut"), now + INIT_DATA_MAX_FUTURE_SECS + 1);
         assert!(verify_telegram_init_data_at(&future, bot, now).is_none());
-        // روی مرز ۵ دقیقه آینده — معتبر
+        // on the 5-minute future boundary — valid
         let skew_ok = build_bot_init_data(bot, 10, Some("skew"), now + INIT_DATA_MAX_FUTURE_SECS);
         assert!(verify_telegram_init_data_at(&skew_ok, bot, now).is_some());
 
-        // فرمول قدیمی Login Widget (SHA256(bot_token)) باید رد شود
+        // the old Login Widget formula (SHA256(bot_token)) must be rejected
         let raw = format!("auth_date={now}&user=%7B%22id%22%3A55%7D");
         let old_secret = Sha256::digest(bot.as_bytes());
         let mut mac = Hmac::<Sha256>::new_from_slice(&old_secret).unwrap();
@@ -505,17 +505,17 @@ mod tests {
     fn telegram_init_data_rejects_tampering() {
         let bot = "7000000000:TEST-TOKEN-abc";
         let mut data = make_test_init_data(bot, "12345", None);
-        // دستکاری hash
+        // tampered hash
         let len = data.len();
         data.replace_range(len - 2..len, if data.ends_with("aa") { "bb" } else { "aa" });
         assert!(verify_telegram_init_data(&data, bot).is_none());
-        // توکن اشتباه
+        // wrong token
         let data2 = make_test_init_data(bot, "99", None);
         assert!(verify_telegram_init_data(&data2, "7000000000:OTHER").is_none());
-        // hash غایب
+        // missing hash
         let data3 = data2.split("&hash=").next().unwrap_or("").to_string();
         assert!(verify_telegram_init_data(&data3, bot).is_none());
-        // user بدون id (با امضای معتبر WebAppData و auth_date تازه)
+        // user without id (with a valid WebAppData signature and a fresh auth_date)
         let now = 1_760_000_000i64;
         let secret = webapp_secret_key(bot);
         let mut mac = Hmac::<Sha256>::new_from_slice(&secret).unwrap();
@@ -534,16 +534,16 @@ mod tests {
         let err = lim.check("1.2.3.4").unwrap_err();
         assert_eq!(err.status, 429);
         assert_eq!(err.code, "RATE_LIMITED");
-        // ادمین باکت خودش را دارد — تماس معتمد متأثر از ip عمومی نیست
+        // the admin has its own bucket — a trusted caller is unaffected by the public IP
         assert!(lim.check("admin").is_ok());
         lim.reset();
     }
 
-    /// اصلاح تست بار: تخلیهٔ فقط باکت‌های خاموش — کاربرِ فعال هرگز ریست نمی‌شود.
+    /// Load-test fix: evict only idle buckets — an active user is never reset.
     #[test]
     fn rate_limiter_eviction_never_resets_active_buckets() {
         let mut lim = RateLimiter::new(5);
-        // کاربر فعال تا سقف پر می‌شود؛ بعد طوفان کلیدها، sweep را فعال می‌کند
+        // an active user fills up to the cap; the subsequent key storm triggers the sweep
         for _ in 0..5 {
             assert!(lim.check("active-user").is_ok());
         }
@@ -552,15 +552,15 @@ mod tests {
             assert!(lim.check(&k).is_ok());
         }
         assert!(lim.windows.len() > 10_000, "sweep must have been triggered");
-        // رفتار قدیمی (windows.clear()) اینجا سقف را ریست می‌کرد و is_ok می‌داد؛
-        // رفتار اصلاح‌شده: کاربر فعال همچنان سقف‌خورده است
+        // the old behavior (windows.clear()) reset the cap here and returned is_ok;
+        // the fixed behavior: the active user remains capped
         assert!(lim.check("active-user").is_err(), "active bucket must never be reset");
-        // باکت‌های فعال نگه داشته شدند (اینجا همه فعال‌اند — فقط خاموش‌ها می‌رفتند)
+        // active buckets retained (here all are active — only idle ones would have been evicted)
         assert!(lim.windows.len() > 10_000);
         lim.reset();
     }
 
-    /// limiter شارد: همان کلید به همان shard می‌رود (سقف per-key حفظ می‌شود).
+    /// Sharded limiter: the same key goes to the same shard (the per-key cap is preserved).
     #[test]
     fn sharded_limiter_keeps_per_key_limit() {
         let lim = ShardedLimiter::new(3);
@@ -569,14 +569,14 @@ mod tests {
         assert!(lim.check("user-A").is_ok());
         let err = lim.check("user-A").unwrap_err();
         assert_eq!(err.status, 429);
-        // کلید دیگر در shard دیگر یا همان — در هر حال سقف مستقل دارد
+        // another key in another or the same shard — either way it has its own independent cap
         assert!(lim.check("user-B").is_ok());
         lim.reset();
-        // بعد از reset، کلید A از نو شمرده می‌شود
+        // after reset, key A is counted again
         assert!(lim.check("user-A").is_ok());
     }
 
-    /// توزیع FNV — کلیدهای متفاوت روی چند shard پخش می‌شوند (نباید همه به یکی بروند).
+    /// FNV distribution — different keys spread across shards (they must not all land on one).
     #[test]
     fn sharded_limiter_distributes_keys_across_shards() {
         let _lim = ShardedLimiter::new(10);

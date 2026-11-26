@@ -1,5 +1,5 @@
 #![no_main]
-//! fuzz هدف ۳ — پارسر `AiChatRequest` (قراردادهای AI — حداقل ADR-009).
+//! Fuzz target 3 — the `AiChatRequest` parser (AI contracts — the ADR-009 minimum).
 use libfuzzer_sys::fuzz_target;
 use dropagentx_contracts::AiChatRequest;
 

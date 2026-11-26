@@ -1,50 +1,50 @@
-//! مغز مسیریابی dual-run فاز ۸ — پل بازگشت همیشه بالاست (ADR-009 §۱۲).
+//! Phase 8 dual-run routing brain — the rollback bridge is always on top (ADR-009 §12).
 //!
-//! سه گام گذار:
-//! * **Shadow** — ۱۰۰٪ ترافیک به TS؛ Rust همان ورودی‌ها را سایه‌وار اجرا و
-//!   فقط ثبت می‌کند (پاسخ Rust هرگز به مشتری نمی‌رود).
-//! * **درصدی** — `RUST_TRAFFIC_PCT` = ۱٪ → ۱۰٪ → ۵۰٪ → ۱۰۰٪؛ هر پله ۴۸ ساعت
-//!   پایداری + parity + p95. تخصیص **دترمینیستیک** است (هش پایدار ورودی) تا
-//!   retry با همان کلید یکسان‌سازی همیشه به همان موتور برود.
-//! * **تثبیت** — ۲ هفته ۱۰۰٪ سبز → تگ `rust-core-1.0.0` → خاموشی Node.
+//! Three transition steps:
+//! * **Shadow** — 100% of traffic to TS; Rust runs the same inputs in shadow mode and
+//!   only records them (the Rust response never reaches the client).
+//! * **Percentage** — `RUST_TRAFFIC_PCT` = 1% → 10% → 50% → 100%; each step needs 48 hours
+//!   of stability + parity + p95. Allocation is **deterministic** (stable input hash) so
+//!   a retry with the same idempotency key always lands on the same engine.
+//! * **Stabilization** — 2 weeks at 100% green → tag `rust-core-1.0.0` → decommission Node.
 //!
-//! سپر انسانی: مسیرهای پولی ≥ ۵۰٬۰۰۰ Đ (HITL — مادهٔ ۷) تا ۳ روزِ پایداریِ
-//! کامل فقط به TS می‌روند — «آخرین لایه‌ای که سوییچ می‌شود، اولین چیزی که
-//! آدیت می‌شود».
+//! Human shield: money paths ≥ 50,000 Đ (HITL — Article 7) go only to TS until 3 days of full
+//! stability — "the last layer switched over is the first thing
+//! audited".
 //!
-//! برگشت: `RUST_TRAFFIC_PCT=0` → فوراً همه‌چیز به TS — چون هر دو موتور روی
-//! **همان** SQLite با همان invariantها کار می‌کنند، برگشتِ داده‌ای لازم نیست.
+//! Rollback: `RUST_TRAFFIC_PCT=0` → everything goes to TS immediately — because both engines work
+//! on the **same** SQLite with the same invariants, no data rollback is needed.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-/// آستانهٔ سپر انسانی — مادهٔ ۷ منشور (HITL).
+/// Human shield threshold — charter Article 7 (HITL).
 pub const HITL_SHIELD_DIN: i64 = 50_000;
 
-/// روزهای پایداری لازم برای برداشتن سپر HITL.
+/// Stability days required to lift the HITL shield.
 pub const SHIELD_STABILITY_DAYS: u32 = 3;
 
-/// تصمیم مسیریابی برای یک درخواست.
+/// Routing decision for one request.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Decision {
-    /// به Rust برود (درصد یا shadow-سنجش)
+    /// Go to Rust (percentage or shadow measurement)
     ToRust,
-    /// به TS برود (پاسخ‌دهندهٔ واقعی)
+    /// Go to TS (the real responder)
     ToTs,
-    /// حالت سایه: پاسخ از TS، اجرای سایه روی Rust + مقایسهٔ parity
+    /// Shadow mode: response from TS, shadow execution on Rust + parity comparison
     Shadow,
 }
 
-/// پیکربندی کامل dual-run — از محیط خوانده می‌شود (`DualRunConfig::from_env`).
+/// Full dual-run configuration — read from the environment (`DualRunConfig::from_env`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DualRunConfig {
-    /// درصد ترافیک Rust (۰ تا ۱۰۰) — تک‌متغیرِ سوییچ
+    /// Rust traffic percentage (0 to 100) — the single switch variable
     pub rust_traffic_pct: u8,
-    /// حالت سایه فعال؟ (مستقل از درصد — در shadow، درصد باید ۰ باشد)
+    /// Shadow mode enabled? (independent of the percentage — in shadow, the percentage must be 0)
     pub shadow: bool,
-    /// روزهای پایداری ثبت‌شده — سپر HITL روی آن سوار است
+    /// Recorded stability days — the HITL shield rides on them
     pub stability_days: u32,
-    /// آستانهٔ سپر (پیش‌فرض ۵۰٬۰۰۰ Đ — مادهٔ ۷)
+    /// Shield threshold (default 50,000 Đ — Article 7)
     pub hitl_shield_din: i64,
 }
 
@@ -60,10 +60,10 @@ impl Default for DualRunConfig {
 }
 
 impl DualRunConfig {
-    /// اعتبارسنجی — درصد > ۱۰۰ یا shadow همراه ترافیک رد می‌شود.
+    /// Validation — percentage > 100 or shadow together with traffic is rejected.
     ///
     /// # Errors
-    /// `pct > 100` یا `shadow && pct > 0` — کانفیگ متناقض.
+    /// `pct > 100` or `shadow && pct > 0` — contradictory config.
     pub fn validate(&self) -> Result<(), String> {
         if self.rust_traffic_pct > 100 {
             return Err(format!("rust_traffic_pct {} > 100", self.rust_traffic_pct));
@@ -78,18 +78,18 @@ impl DualRunConfig {
     }
 }
 
-/// فرادادهٔ یک درخواست برای تصمیم مسیریابی — حداقلِ چیزی که پایدار هش می‌شود.
+/// Metadata of one request for the routing decision — the minimum that hashes stably.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RequestMeta<'a> {
-    /// متد HTTP
+    /// HTTP method
     pub method: &'a str,
-    /// مسیر کامل
+    /// Full path
     pub path: &'a str,
-    /// بدنهٔ خام (برای هش؛ خواندن مبلغ از آن جداگانه است)
+    /// Raw body (for hashing; reading the amount is separate)
     pub body: &'a [u8],
 }
 
-/// هش پایدار ۶۴بیتی ورودی — FNV-1a روی SHA-256 (دو لایه، پایدار بین پروسه‌ها).
+/// Stable 64-bit input hash — FNV-1a over SHA-256 (two layers, stable across processes).
 #[must_use]
 pub fn stable_bucket(meta: &RequestMeta<'_>) -> u64 {
     let mut hasher = Sha256::new();
@@ -106,13 +106,13 @@ pub fn stable_bucket(meta: &RequestMeta<'_>) -> u64 {
     out
 }
 
-/// آیا مسیر، تراکنشِ مشمول سپر انسانی (مسیر HITL) است؟
+/// Is the path a transaction covered by the human shield (HITL path)?
 ///
-/// طبق ADR-009 §۱۲: «تراکنش‌های ≥ ۵۰٬۰۰۰ Đ (مسیر HITL) فقط بعد از ۳ روز
-/// پایداری کامل به Rust می‌روند». مسیرِ HITL دقیقاً همین‌هاست:
-/// * `POST …/hitl*` — صف و تصمیم‌های انسان-در-حلقه (مبلغش همان اسکرو ≥ آستانه است)
-/// * `POST …/escrows/{id}/release` و `…/refund` — تسویه/بازپرداخت امانت
-///   (تنها جاهایی که پول از اسکرو خارج می‌شود؛ مبلغ در دیتابیس مشترک است نه بدنه)
+/// Per ADR-009 §12: "transactions ≥ 50,000 Đ (HITL path) go to Rust only after 3 days
+/// of full stability". The HITL paths are exactly these:
+/// * `POST …/hitl*` — human-in-the-loop queue and decisions (its amount is the same escrow ≥ threshold)
+/// * `POST …/escrows/{id}/release` and `…/refund` — escrow settlement/refund
+///   (the only places money leaves the escrow; the amount lives in the shared database, not the body)
 #[must_use]
 pub fn hitl_shielded(meta: &RequestMeta<'_>) -> bool {
     if meta.method != "POST" {
@@ -126,16 +126,16 @@ pub fn hitl_shielded(meta: &RequestMeta<'_>) -> bool {
 }
 
 impl DualRunConfig {
-    /// تصمیم مسیریابی برای یک درخواست — قلب پراکسی.
+    /// Routing decision for one request — the heart of the proxy.
     ///
-    /// قواعد به ترتیب:
-    /// ۱. سپر HITL — تراکنش ≥ آستانه تا ۳ روز پایداری به TS می‌رود
-    /// ۲. حالت سایه — همه به TS، Rust سایه‌وار
-    /// ۳. درصد — bucket پایدار `< pct` → Rust
+    /// Rules in order:
+    /// 1. HITL shield — transactions ≥ threshold go to TS until 3 days of stability
+    /// 2. Shadow mode — everything to TS, Rust in shadow
+    /// 3. Percentage — stable bucket `< pct` → Rust
     #[must_use]
     pub fn decide(&self, meta: &RequestMeta<'_>) -> Decision {
         if self.stability_days < SHIELD_STABILITY_DAYS && hitl_shielded(meta) {
-            // سپر — حتی در ۱۰۰٪ Rust؛ برداشتنش با stability_days است نه درصد
+            // shield — even at 100% Rust; lifting it is governed by stability_days, not the percentage
             return Decision::ToTs;
         }
         if self.shadow {
@@ -149,17 +149,17 @@ impl DualRunConfig {
     }
 }
 
-/// گیت ارتقای پله — بر اساس گزارش parity.
+/// Step promotion gate — based on the parity report.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GateVerdict {
-    /// سبز — مجاز به ارتقای پله بعدی
+    /// Green — allowed to promote to the next step
     Advance,
-    /// قرمز — بمان و برگرد (pct → ۰ در parity-fail مالی)
+    /// Red — stay and roll back (pct → 0 on a financial parity-fail)
     HoldOrRollback,
 }
 
-/// بررسی گیت parity — گزارش باید کامل سبز باشد (ADR: «هر parity-fail =
-/// برگشت»).
+/// Parity gate check — the report must be fully green (ADR: "every parity-fail =
+/// rollback").
 #[must_use]
 pub fn parity_gate(green: usize, total: usize, has_financial_diff: bool) -> GateVerdict {
     if has_financial_diff || green < total {
@@ -169,26 +169,26 @@ pub fn parity_gate(green: usize, total: usize, has_financial_diff: bool) -> Gate
     }
 }
 
-/// برنامهٔ پله‌های گذار — برای نمایش وضعیت فعلی در status پراکسی.
+/// Transition step plan — for showing the current status in the proxy status.
 #[must_use]
 pub fn rollout_plan() -> [(u8, &'static str); 5] {
     [
-        (0, "shadow — پاسخ فقط از TS، Rust ثبت می‌کند"),
-        (1, "۱٪ — آغاز ترافیک واقعی (۴۸ ساعت پایداری)"),
-        (10, "۱۰٪ — پس از سبزی parity و p95 پلهٔ قبل"),
-        (50, "۵۰٪ — همان گیت"),
-        (100, "۱۰۰٪ — سپر HITL تا ۳ روز پایداری باقی است"),
+        (0, "shadow — \u{67e}\u{627}\u{633}\u{62e} \u{641}\u{642}\u{637} \u{627}\u{632} TS\u{60c} Rust \u{62b}\u{628}\u{62a} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}"),
+        (1, "\u{6f1}\u{66a} — \u{622}\u{63a}\u{627}\u{632} \u{62a}\u{631}\u{627}\u{641}\u{6cc}\u{6a9} \u{648}\u{627}\u{642}\u{639}\u{6cc} (\u{6f4}\u{6f8} \u{633}\u{627}\u{639}\u{62a} \u{67e}\u{627}\u{6cc}\u{62f}\u{627}\u{631}\u{6cc})"),
+        (10, "\u{6f1}\u{6f0}\u{66a} — \u{67e}\u{633} \u{627}\u{632} \u{633}\u{628}\u{632}\u{6cc} parity \u{648} p95 \u{67e}\u{644}\u{647}\u{654} \u{642}\u{628}\u{644}"),
+        (50, "\u{6f5}\u{6f0}\u{66a} — \u{647}\u{645}\u{627}\u{646} \u{6af}\u{6cc}\u{62a}"),
+        (100, "\u{6f1}\u{6f0}\u{6f0}\u{66a} — \u{633}\u{67e}\u{631} HITL \u{62a}\u{627} \u{6f3} \u{631}\u{648}\u{632} \u{67e}\u{627}\u{6cc}\u{62f}\u{627}\u{631}\u{6cc} \u{628}\u{627}\u{642}\u{6cc} \u{627}\u{633}\u{62a}"),
     ]
 }
 
-/// خط وضعیت dual-run — برای `GET /_dualrun/status` و لاگ.
+/// Dual-run status line — for `GET /_dualrun/status` and logging.
 #[derive(Debug, Clone, Serialize)]
 pub struct DualRunStatus {
-    /// پیکربندی جاری
+    /// Current configuration
     pub config: DualRunConfig,
-    /// برنامهٔ پله‌ها
+    /// Step plan
     pub plan: Vec<(u8, &'static str)>,
-    /// برگشت اضطراری فعال؟
+    /// Emergency rollback active?
     pub rollback: bool,
 }
 
@@ -208,7 +208,7 @@ mod tests {
         let a = stable_bucket(&m);
         let b = stable_bucket(&m);
         assert_eq!(a, b);
-        // بدنهٔ متفاوت → bucket متفاوت (احتمال برابری ۲⁻⁶۴ — عملاً ناممکن)
+        // a different body → a different bucket (equal probability 2⁻⁶⁴ — practically impossible)
         assert_ne!(stable_bucket(&meta("POST", "/api/v1/escrows", br#"{"amount":11}"#)), a);
     }
 
@@ -244,7 +244,7 @@ mod tests {
     fn hitl_shield_keeps_big_money_on_ts_until_three_days() {
         let body = br#"{"escrowId":"e1"}"#;
         let m = meta("POST", "/api/v1/hitl", body);
-        // روز صفر — سپر کامل
+        // day zero — shield fully on
         let cfg = DualRunConfig {
             rust_traffic_pct: 100,
             shadow: false,
@@ -252,10 +252,10 @@ mod tests {
             ..DualRunConfig::default()
         };
         assert_eq!(cfg.decide(&m), Decision::ToTs);
-        // روز ۲ — هنوز سپر
+        // day 2 — shield still on
         let cfg2 = DualRunConfig { stability_days: 2, ..cfg };
         assert_eq!(cfg2.decide(&m), Decision::ToTs);
-        // روز ۳ — سپر برداشته شد → ۱۰۰٪ Rust
+        // day 3 — shield lifted → 100% Rust
         let cfg3 = DualRunConfig { stability_days: 3, ..cfg };
         assert_eq!(cfg3.decide(&m), Decision::ToRust);
     }
@@ -265,7 +265,7 @@ mod tests {
         let cfg =
             DualRunConfig { rust_traffic_pct: 100, shadow: false, ..DualRunConfig::default() };
         let m = meta("POST", "/api/v1/escrows/e9/release", br#"{"approvedByAdmin":true}"#);
-        // تسویهٔ اسکرو — مسیر HITL؛ تا روز ۳ به TS می‌رود حتی در ۱۰۰٪
+        // escrow settlement — HITL path; goes to TS until day 3 even at 100%
         assert_eq!(cfg.decide(&m), Decision::ToTs);
         let cfg3 = DualRunConfig { stability_days: 3, ..cfg };
         assert_eq!(cfg3.decide(&m), Decision::ToRust);
@@ -276,7 +276,7 @@ mod tests {
         let cfg =
             DualRunConfig { rust_traffic_pct: 100, shadow: false, ..DualRunConfig::default() };
         let m = meta("POST", "/api/v1/wallet/mint", br#"{"amount":50000}"#);
-        // mint مسیر سپر نیست (فقط hitl و release/refund)
+        // mint is not a shielded path (only hitl and release/refund are)
         assert_eq!(cfg.decide(&m), Decision::ToRust);
         let m2 = meta("POST", "/api/v1/escrows/e1/refund", br#"{}"#);
         assert_eq!(cfg.decide(&m2), Decision::ToTs);

@@ -6,37 +6,37 @@ kb_table: "KbEntry"
 language: "fa-IR + en-US"
 ---
 
-# 05 — DNAskills: ماتریس مهارت‌های کیان
+# 05 — DNAskills: The Kian Skills Matrix
 
-## 1. طبقه‌بندی اصلی (خانواده‌ها)
+## 1. Primary Classification (Families)
 
-| خانواده | نمونه‌های پرچم‌دار | پورت کرنل |
+| Family | Flagship examples | Kernel port |
 |---|---|---|
-| زبان و بند Rust | async runtime، lock-free/CAS، `#![forbid(unsafe_code)]` | همهٔ کریت‌ها |
-| پروتکل ایجنت | AG-UI 1.0، HITL دوبل‌صدا، history repair | `crates/hermes/src/ag_ui.rs` |
-| تلگرام | Bot API 9.0، TMA bridge، Deep link `p_<id>_r_<tg>`، Stars XTR | `crates/bot/src/telegram_api9.rs` |
-| رشد ویروسی | x-algorithm 2026 (کپی‌لینک +20.0، report −234.0)، cold-start Beta(0.75,49.25) | `crates/domain/src/viral_ranker.rs` |
-| طراحی | UI/UX Pro Max سه‌اهرم (variance/motion/density)، RTL خودکار، دروازهٔ Astra | `crates/hermes/src/studio_design_contract.rs` |
-| امنیت وب | Firecrawl گارد SSRF، دیوار چالش antibot، Jina/Exa صفر-هزینه | `crates/agents/src/agent_reach.rs` |
-| فشرده‌سازی | starnet verbatim ۵٪ بودجه، watchdog 450s/1200s | `crates/hermes` + `crates/agents` |
-| هرمس | پرامپت ۳لایه، کمپرسور دومرحله‌ای، redaction آموخته | `crates/ai/src/*` |
-| گیت‌وی صفر-کارت | OpenCode Zen `Bearer public`، 9Router ضد-429 جعلی، آبشار ۳لایهٔ ۵۲ پلتفرم | `crates/ai/src/opencode_zen.rs` + `free_llm_registry.rs` |
-| ویرایش جراحی | پچر ۵گذر fuzzy، exec policy کدکس | `crates/hermes/src/fuzzy_patch.rs` |
-| ژنوم شناختی | KIA-BRAIN-OS DNA + کامپایلر پرامپت ۹فایلی مدل‌ها | `crates/hermes/src/creator_dna_contract.rs` + `crates/ai/src/omni_genome_router.rs` |
+| Rust language mastery | async runtime, lock-free/CAS, `#![forbid(unsafe_code)]` | all crates |
+| Agent protocol | AG-UI 1.0, dual-voice HITL, history repair | `crates/hermes/src/ag_ui.rs` |
+| Telegram | Bot API 9.0, TMA bridge, deep link `p_<id>_r_<tg>`, Stars XTR | `crates/bot/src/telegram_api9.rs` |
+| Viral growth | x-algorithm 2026 (copy-link +20.0, report −234.0), cold-start Beta(0.75,49.25) | `crates/domain/src/viral_ranker.rs` |
+| Design | UI/UX Pro Max three-dial (variance/motion/density), automatic RTL, the Astra gate | `crates/hermes/src/studio_design_contract.rs` |
+| Web security | Firecrawl SSRF guard, antibot challenge wall, zero-cost Jina/Exa | `crates/agents/src/agent_reach.rs` |
+| Compression | starnet verbatim at a 5% budget, watchdog 450s/1200s | `crates/hermes` + `crates/agents` |
+| Hermes | 3-layer prompt, two-stage compressor, learned redaction | `crates/ai/src/*` |
+| Zero-card gateway | OpenCode Zen `Bearer public`, fake-429-proof 9Router, 3-layer cascade over 52 platforms | `crates/ai/src/opencode_zen.rs` + `free_llm_registry.rs` |
+| Surgical editing | 5-pass fuzzy patcher, codex exec policy | `crates/hermes/src/fuzzy_patch.rs` |
+| Cognitive genome | KIA-BRAIN-OS DNA + the 9-file model prompt compiler | `crates/hermes/src/creator_dna_contract.rs` + `crates/ai/src/omni_genome_router.rs` |
 
-## 2. دفتر مهارت‌ها (SQLite `KbEntry`)
+## 2. The Skills Ledger (SQLite `KbEntry`)
 
-- جدول حقیقت: `seed/kian-production.db` → `"KbEntry"` (Wave 2 Step 4: **۶۲ ردیف**).
-- شناسه‌گذاری: `kb:skill-*`، `kb:arch-*`، `kb:registry-*`، `kb:dna-*`.
-- تزریق فقط idempotent؛ تراز آزمایشی و ۲۰ محصول فعال دست‌نخورده.
+- Table of truth: `seed/kian-production.db` → `"KbEntry"` (Wave 2 Step 4: **62 rows**).
+- Identification: `kb:skill-*`, `kb:arch-*`, `kb:registry-*`, `kb:dna-*`.
+- Injection is idempotent only; the trial balance and the 20 active products remain untouched.
 
-## 3. زبان‌های Tier-1
+## 3. Tier-1 Languages
 
-Rust (بند مرجع)، TypeScript/React (استودیو و TMA)، Python (ابزار و ممیزی)،
-SQL/SQLite (دفتر)، HTML5/CSS تک‌فایل (خروجی Astra).
+Rust (reference mastery), TypeScript/React (studio and TMA), Python (tooling and audit),
+SQL/SQLite (ledger), single-file HTML5/CSS (Astra output).
 
-## 4. الگوی Deep Module برای هر مهارت جدید
+## 4. The Deep-Module Pattern for Every New Skill
 
-1. منبع: ریپوی مرجع + فایل دقیق؛ 2. استخراج: فقط الگوریتم، نه boilerplate؛
-3. پورت: Rust خالص + تست قطعی؛ 4. ثبت: ردیف `KbEntry` با منبع و مسیر پورت؛
-5. ضدعفونی: صفر راز قبل از commit.
+1. Source: reference repo + exact file; 2. Extraction: algorithm only, no boilerplate;
+3. Port: pure Rust + deterministic tests; 4. Registration: a `KbEntry` row with source and port path;
+5. Sanitization: zero secrets before commit.

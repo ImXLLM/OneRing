@@ -1,34 +1,34 @@
-//! پورت `back/server/scripts/genesis-proof.ts` — ممیزی خارجی genesis.
+//! Port of `back/server/scripts/genesis-proof.ts` — the external genesis audit.
 //!
-//! SQL خام و فقط‌خواندنی، «عمداً» نه از طریق دامنه و نه از طریق store — تا
-//! اعداد نتوانند باگ کدی که ممیزی می‌کنند را به ارث ببرند. همان روح
-//! `nation-genesis-proof.py` نسخهٔ لگاسی.
+//! Raw, read-only SQL, deliberately neither through the domain nor through the store — so
+//! the numbers cannot inherit bugs from the code they audit. The same spirit
+//! as the legacy `nation-genesis-proof.py`.
 //!
-//! چاپ می‌کند: Σ کیف کاربران (باید ۱۸۷٬۶۷۲ Đ باشد)، Σ همهٔ ردیف‌ها (باید ۰
-//! باشد — بستن دوطرفه)، ترازهای mint/burn/خزانه و اسکرو. `ok == false`
-//! یعنی یکی از انتظارات نقض شده (exit 1 در باینری).
+//! Prints: Σ of user wallets (must be 187,672 Đ), Σ of all rows (must be 0
+//! — double-entry closure), the mint/burn/treasury balances, and escrow. `ok == false`
+//! means one of the expectations was violated (exit 1 in the binary).
 
 use crate::error::DbResult;
 use crate::genesis::GENESIS_KEY;
 use kian_domain::{BURN_ACCOUNT_ID, MINT_ACCOUNT_ID, TREASURY_ACCOUNT_ID};
 use sqlx::Row;
 
-/// گزارش ممیزی — خطوط قابل چاپ + مشکلات یافت‌شده.
+/// Audit report — printable lines + the problems found.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProofReport {
-    /// خطوط گزارش (قالب یکسان با TS)
+    /// Report lines (same format as TS)
     pub lines: Vec<String>,
-    /// انتظارات نقض‌شده — خالی یعنی سالم
+    /// Violated expectations — empty means healthy
     pub problems: Vec<String>,
     /// `problems.is_empty()`
     pub ok: bool,
 }
 
-/// اجرای ممیزی روی فایل دیتابیس هدف — فقط‌خواندنی، SQL خام.
+/// Run the audit on the target database file — read-only, raw SQL.
 ///
 /// # Errors
-/// فایل نبود یا SQLite باز نشد (خودِ انتظارهای نقض‌شده، خطا نیستند —
-/// در `problems` برمی‌گردند).
+/// The file was missing or SQLite failed to open (the violated expectations themselves are not errors —
+/// they come back in `problems`).
 pub async fn genesis_proof(db_path: &str) -> DbResult<ProofReport> {
     let file = db_path.strip_prefix("file:").unwrap_or(db_path);
     let store = crate::store::V3Store::connect_read_only(file).await?;

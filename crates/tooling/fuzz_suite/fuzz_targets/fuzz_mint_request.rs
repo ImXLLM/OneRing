@@ -1,5 +1,5 @@
 #![no_main]
-//! fuzz هدف ۱ — پارسر `MintRequest` — هر panic یک باگ مرزی است.
+//! Fuzz target 1 — the `MintRequest` parser — every panic is a boundary bug.
 use libfuzzer_sys::fuzz_target;
 use dropagentx_contracts::MintRequest;
 

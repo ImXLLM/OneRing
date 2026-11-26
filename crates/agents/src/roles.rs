@@ -1,99 +1,99 @@
-//! نقش‌های ۷گانهٔ ناوگان — منبع حقیقت ردیف‌های بذر جدول `Agent`.
+//! The fleet’s 7 roles — the source of truth for the `Agent` table seed rows.
 //!
-//! فعال‌سازی کامل ناوگان ۷عاملی (گنجینهٔ strategic-5repos — پوشهٔ ۰۵
-//! `Agent-Reach` + `starnet`): پنج نقش متخصص (بازرگان، خزانه‌دار، پشتیبان،
-//! تحلیل‌گر، کاوشگر) به‌همراه مغز هرمس و **نگهبان** فعال‌اند؛ نگهبان با
-//! هندلر امنیت/راستی‌آزمایی واقعی ([`crate::agent_reach::GuardianSecurityHandler`])
-//! سیم شده — دیوار چالش antِibot را رد می‌کند، مدارشکن توقف ساب‌ایجنت را
-//! اعمال می‌کند و صدور قابلیت فرزند را همیشه تضعیف یکنواخت نگه می‌دارد.
-//! وضعیت هر نقش همچنان صادقانه است: `active` فقط برای نقش‌هایی که کرنل
-//! واقعاً از آن‌ها استفاده می‌کند — و اینک هر هفت نقش استفادهٔ واقعی دارند.
+//! Full activation of the 7-agent fleet (strategic-5repos treasury — folder 05
+//! `Agent-Reach` + `starnet`): the five specialist roles (merchant, treasurer, support,
+//! analyst, scout) together with the Hermes brain and the **Guardian** are active; the Guardian with
+//! the real security/verification handler ([`crate::agent_reach::GuardianSecurityHandler`]) is
+//! wired — passes the antibot challenge wall, applies the sub-agent stop circuit
+//! breaker, and keeps child capability issuance uniformly attenuated at all times.
+//! Every role’s status stays honest: `active` only for roles the kernel
+//! actually uses them — and now all seven roles have real usage.
 
-/// یک نقش ناوگان.
+/// One fleet role.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AgentRole {
-    /// شناسه (`agent:{role}`)
+    /// id (`agent:{role}`)
     pub id: &'static str,
-    /// نقش (کلید یکتا)
+    /// role (unique key)
     pub role: &'static str,
-    /// نام نمایشی
+    /// display name
     pub name: &'static str,
-    /// وضعیت صادقانه — `active` فقط برای نقش‌هایی که کرنل واقعاً استفاده می‌کند
+    /// honest status — `active` only for roles the kernel actually uses
     pub status: &'static str,
-    /// توضیح نقش
+    /// role description
     pub description: &'static str,
 }
 
-/// ۷ نقش ناوگان — همگی فعال (ناوگان ۷/۷).
+/// The 7 fleet roles — all active (fleet 7/7).
 ///
-/// توصیف‌ها از پورتال `AgentX` (پوشهٔ ۰۵ — `src/agents/base.ts`) غنی‌تر شده‌اند:
-/// ارکستراتور = مسیریابِ اصلی؛ بازرگان = فروش مشاوره‌ای؛ خزانه‌دار = ولت و
-/// آشتی دفتر؛ پشتیبان = میز کمک و داوری؛ تحلیل‌گر = BI فقط-کارمند؛ کاوشگر =
-/// رشد و کوئست؛ نگهبان = امنیت و راستی‌آزمایی (پورت `Agent-Reach` + `starnet`).
+/// Descriptions enriched from the `AgentX` portal (folder 05 — `src/agents/base.ts`):
+/// orchestrator = the primary router; merchant = consultative sales; treasurer = wallet and
+/// ledger reconciliation; support = help desk and adjudication; analyst = staff-only BI; scout =
+/// growth and quests; guardian = security and verification (port of `Agent-Reach` + `starnet`).
 pub const ROLES: [AgentRole; 7] = [
     AgentRole {
         id: "agent:orchestrator",
         role: "orchestrator",
-        name: "هرمس",
+        name: "\u{647}\u{631}\u{645}\u{633}",
         status: "active",
-        description: "مغز ناوگان — طبقه‌بندی هدف و واگذاری به متخصص؛ مهارت‌ها را خودش هم اجرا می‌کند",
+        description: "\u{645}\u{63a}\u{632} \u{646}\u{627}\u{648}\u{6af}\u{627}\u{646} — \u{637}\u{628}\u{642}\u{647}‌\u{628}\u{646}\u{62f}\u{6cc} \u{647}\u{62f}\u{641} \u{648} \u{648}\u{627}\u{6af}\u{630}\u{627}\u{631}\u{6cc} \u{628}\u{647} \u{645}\u{62a}\u{62e}\u{635}\u{635}\u{61b} \u{645}\u{647}\u{627}\u{631}\u{62a}‌\u{647}\u{627} \u{631}\u{627} \u{62e}\u{648}\u{62f}\u{634} \u{647}\u{645} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}",
     },
     AgentRole {
         id: "agent:merchant",
         role: "merchant",
-        name: "بازرگان",
+        name: "\u{628}\u{627}\u{632}\u{631}\u{6af}\u{627}\u{646}",
         status: "active",
-        description: "ایجنت بازار — فروش مشاوره‌ای، ساخت لیسینگ محصول و مذاکرهٔ قیمت (پورت AgentX sales)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{628}\u{627}\u{632}\u{627}\u{631} — \u{641}\u{631}\u{648}\u{634} \u{645}\u{634}\u{627}\u{648}\u{631}\u{647}‌\u{627}\u{6cc}\u{60c} \u{633}\u{627}\u{62e}\u{62a} \u{644}\u{6cc}\u{633}\u{6cc}\u{646}\u{6af} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{648} \u{645}\u{630}\u{627}\u{6a9}\u{631}\u{647}\u{654} \u{642}\u{6cc}\u{645}\u{62a} (\u{67e}\u{648}\u{631}\u{62a} AgentX sales)",
     },
     AgentRole {
         id: "agent:finance",
         role: "finance",
-        name: "خزانه‌دار",
+        name: "\u{62e}\u{632}\u{627}\u{646}\u{647}‌\u{62f}\u{627}\u{631}",
         status: "active",
-        description: "ایجنت خزانه — واریز/برداشت، اسکرو و آشتی دفتر با ترازِ صفر (پورت AgentX finance)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{62e}\u{632}\u{627}\u{646}\u{647} — \u{648}\u{627}\u{631}\u{6cc}\u{632}/\u{628}\u{631}\u{62f}\u{627}\u{634}\u{62a}\u{60c} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{648} \u{622}\u{634}\u{62a}\u{6cc} \u{62f}\u{641}\u{62a}\u{631} \u{628}\u{627} \u{62a}\u{631}\u{627}\u{632}\u{650} \u{635}\u{641}\u{631} (\u{67e}\u{648}\u{631}\u{62a} AgentX finance)",
     },
     AgentRole {
         id: "agent:support",
         role: "support",
-        name: "پشتیبان",
+        name: "\u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}",
         status: "active",
-        description: "ایجنت پشتیبانی — پاسخ شهروندان از پایگاه دانش و پذیرش پروندهٔ داوری (پورت AgentX support)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{67e}\u{634}\u{62a}\u{6cc}\u{628}\u{627}\u{646}\u{6cc} — \u{67e}\u{627}\u{633}\u{62e} \u{634}\u{647}\u{631}\u{648}\u{646}\u{62f}\u{627}\u{646} \u{627}\u{632} \u{67e}\u{627}\u{6cc}\u{6af}\u{627}\u{647} \u{62f}\u{627}\u{646}\u{634} \u{648} \u{67e}\u{630}\u{6cc}\u{631}\u{634} \u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{62f}\u{627}\u{648}\u{631}\u{6cc} (\u{67e}\u{648}\u{631}\u{62a} AgentX support)",
     },
     AgentRole {
         id: "agent:analyst",
         role: "analyst",
-        name: "تحلیل‌گر",
+        name: "\u{62a}\u{62d}\u{644}\u{6cc}\u{644}‌\u{6af}\u{631}",
         status: "active",
-        description: "ایجنت تحلیل — گزارش اقتصاد، رتبه‌بندی XP و روندها؛ فقط برای کارمندان (پورت AgentX analyst)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{62a}\u{62d}\u{644}\u{6cc}\u{644} — \u{6af}\u{632}\u{627}\u{631}\u{634} \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f}\u{60c} \u{631}\u{62a}\u{628}\u{647}‌\u{628}\u{646}\u{62f}\u{6cc} XP \u{648} \u{631}\u{648}\u{646}\u{62f}\u{647}\u{627}\u{61b} \u{641}\u{642}\u{637} \u{628}\u{631}\u{627}\u{6cc} \u{6a9}\u{627}\u{631}\u{645}\u{646}\u{62f}\u{627}\u{646} (\u{67e}\u{648}\u{631}\u{62a} AgentX analyst)",
     },
     AgentRole {
         id: "agent:scout",
         role: "scout",
-        name: "کاوشگر",
+        name: "\u{6a9}\u{627}\u{648}\u{634}\u{6af}\u{631}",
         status: "active",
-        description: "ایجنت رشد — کوئست، معرفی و کشف فرصت‌های فروش در کاتالوگ (پورت AgentX receptionist)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{631}\u{634}\u{62f} — \u{6a9}\u{648}\u{626}\u{633}\u{62a}\u{60c} \u{645}\u{639}\u{631}\u{641}\u{6cc} \u{648} \u{6a9}\u{634}\u{641} \u{641}\u{631}\u{635}\u{62a}‌\u{647}\u{627}\u{6cc} \u{641}\u{631}\u{648}\u{634} \u{62f}\u{631} \u{6a9}\u{627}\u{62a}\u{627}\u{644}\u{648}\u{6af} (\u{67e}\u{648}\u{631}\u{62a} AgentX receptionist)",
     },
     AgentRole {
         id: "agent:guardian",
         role: "guardian",
-        name: "نگهبان",
+        name: "\u{646}\u{6af}\u{647}\u{628}\u{627}\u{646}",
         status: "active",
-        description: "ایجنت امنیت — هندلر راستی‌آزمایی فعال: رد دیوار چالش antِibot، مدارشکن توقف ساب‌ایجنت، تضعیف یکنواخت قابلیت‌ها و داوری REA مایرون (`mairon.rea`/`product.rate`) روی محصولات بازار (پورت Agent-Reach + starnet + morluto/rea)",
+        description: "\u{627}\u{6cc}\u{62c}\u{646}\u{62a} \u{627}\u{645}\u{646}\u{6cc}\u{62a} — \u{647}\u{646}\u{62f}\u{644}\u{631} \u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc} \u{641}\u{639}\u{627}\u{644}: \u{631}\u{62f} \u{62f}\u{6cc}\u{648}\u{627}\u{631} \u{686}\u{627}\u{644}\u{634} ant\u{650}ibot\u{60c} \u{645}\u{62f}\u{627}\u{631}\u{634}\u{6a9}\u{646} \u{62a}\u{648}\u{642}\u{641} \u{633}\u{627}\u{628}‌\u{627}\u{6cc}\u{62c}\u{646}\u{62a}\u{60c} \u{62a}\u{636}\u{639}\u{6cc}\u{641} \u{6cc}\u{6a9}\u{646}\u{648}\u{627}\u{62e}\u{62a} \u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627} \u{648} \u{62f}\u{627}\u{648}\u{631}\u{6cc} REA \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} (`mairon.rea`/`product.rate`) \u{631}\u{648}\u{6cc} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{628}\u{627}\u{632}\u{627}\u{631} (\u{67e}\u{648}\u{631}\u{62a} Agent-Reach + starnet + morluto/rea)",
     },
 ];
 
-/// شمار نقش‌های فعال — ۷/۷ (مأموریت ناوگان ۷عاملی).
+/// Active role count — 7/7 (the 7-agent fleet mission).
 pub fn active_roles() -> impl Iterator<Item = &'static AgentRole> {
     ROLES.iter().filter(|r| r.status == "active")
 }
 
-/// نقش با شناسه.
+/// Role by id.
 #[must_use]
 pub fn role_of(id: &str) -> Option<&'static AgentRole> {
     ROLES.iter().find(|r| r.id == id)
 }
 
-/// ردیف‌های بذر برای جدول `Agent` — خروجی به‌صورت تاپل ساده (بدون وابستگی db).
+/// Seed rows for the `Agent` table — output as plain tuples (no db dependency).
 #[must_use]
 pub fn seed_agents() -> Vec<(&'static str, &'static str, &'static str, &'static str, &'static str)> {
     ROLES
@@ -106,15 +106,15 @@ pub fn seed_agents() -> Vec<(&'static str, &'static str, &'static str, &'static 
 mod tests {
     use super::*;
 
-    /// دقیقاً ۷ نقش، شناسه و نقش یکتا، وضعیت صادقانه — ناوگان ۷/۷ فعال.
+    /// Exactly 7 roles, unique id and role, honest status — fleet 7/7 active.
     #[test]
     fn roles_are_seven_unique_and_honest() {
         assert_eq!(ROLES.len(), 7);
         let mut ids: Vec<&str> = ROLES.iter().map(|r| r.id).collect();
         ids.sort_unstable();
         assert!(ids.windows(2).all(|w| w[0] != w[1]));
-        // هفت نقش فعال — مغز + پنج متخصص + نگهبانِ هندلر امنیت.
-        assert_eq!(active_roles().count(), 7, "ناوگان ۷/۷ باید فعال باشد");
+        // seven active roles — brain + five specialists + the security-handler guardian.
+        assert_eq!(active_roles().count(), 7, "\u{646}\u{627}\u{648}\u{6af}\u{627}\u{646} \u{6f7}/\u{6f7} \u{628}\u{627}\u{6cc}\u{62f} \u{641}\u{639}\u{627}\u{644} \u{628}\u{627}\u{634}\u{62f}");
         for r in &ROLES {
             assert_eq!(r.status, "active", "role {} must be active", r.role);
         }
@@ -122,7 +122,7 @@ mod tests {
         assert!(role_of("agent:nope").is_none());
     }
 
-    /// بذر — ۷ ردیف هم‌تراز با ROLES.
+    /// Seed — 7 rows aligned with ROLES.
     #[test]
     fn seed_matches_roles() {
         let seed = seed_agents();
@@ -133,17 +133,17 @@ mod tests {
         }
     }
 
-    /// توصیف‌های غنی‌شده از پورتال `AgentX` — هر نقش فعال توضیح پورت‌شده دارد.
+    /// Descriptions enriched from the `AgentX` portal — every active role has a ported description.
     #[test]
     fn active_roles_carry_agentx_enriched_descriptions() {
         let expectations: &[(&str, &str)] = &[
-            ("merchant", "فروش مشاوره‌ای"),
-            ("finance", "آشتی دفتر"),
-            ("support", "داوری"),
-            ("analyst", "رتبه‌بندی XP"),
-            ("scout", "کوئست"),
-            ("orchestrator", "واگذاری"),
-            ("guardian", "راستی‌آزمایی"),
+            ("merchant", "\u{641}\u{631}\u{648}\u{634} \u{645}\u{634}\u{627}\u{648}\u{631}\u{647}‌\u{627}\u{6cc}"),
+            ("finance", "\u{622}\u{634}\u{62a}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}"),
+            ("support", "\u{62f}\u{627}\u{648}\u{631}\u{6cc}"),
+            ("analyst", "\u{631}\u{62a}\u{628}\u{647}‌\u{628}\u{646}\u{62f}\u{6cc} XP"),
+            ("scout", "\u{6a9}\u{648}\u{626}\u{633}\u{62a}"),
+            ("orchestrator", "\u{648}\u{627}\u{6af}\u{630}\u{627}\u{631}\u{6cc}"),
+            ("guardian", "\u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc}"),
         ];
         for (role, marker) in expectations {
             let r = ROLES.iter().find(|r| r.role == *role).expect("role exists");

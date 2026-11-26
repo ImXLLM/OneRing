@@ -1,293 +1,293 @@
-//! قراردادهای وایر خط لولهٔ ترینیتی (Wave 3 — استودیوی حاکم `0xKIA`).
+//! Wire contracts of the Trinity pipeline (Wave 3 — the sovereign `0xKIA` studio).
 //!
-//! مسیرهای این ماژول با نشست Bearer شهروند کار می‌کنند:
-//! `POST /api/v1/builder/trinity/alpha` — کالبد ۱ (آلفا؛ کشف و قفل مستر پرامپت)
-//! و `POST /api/v1/builder/trinity/orchestrate` — کالبد ۲ (اتاق فرمان با
-//! ساب‌ایجنت‌های `OpenBot` الگوی `۳×۹`) + کالبد ۳ (داوری `مایرون-۱۵۰` و حلقهٔ
-//! خودترمیمی). شکل‌های وایر mirrorِ قطعیِ موتور `kian-hermes::trinity_pipeline`
-//! هستند — هیچ منطقی اینجا نوشته نمی‌شود (ADR-005).
+//! This module's routes operate on the citizen's Bearer session:
+//! `POST /api/v1/builder/trinity/alpha` — Body 1 (Alpha; discovery and locking of the master prompt)
+//! and `POST /api/v1/builder/trinity/orchestrate` — Body 2 (the command center with
+//! `OpenBot` subagents in the `3×9` pattern) + Body 3 (`Mairon-150` arbitration and the
+//! self-healing loop). The wire shapes mirror the deterministic `kian-hermes::trinity_pipeline`
+//! engine — no logic is written here (ADR-005).
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// حالت پنج اسلات کشف آلفا — بازگشتِ قطعی به کلاینت برای نوبت بعدی.
+/// State of the five Alpha discovery slots — returned deterministically to the client for the next turn.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinitySlotsState {
-    /// هدفِ هسته و هویت محصول.
+    /// Core purpose and product identity.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub core_objective: Option<String>,
-    /// مخاطب هدف و حس UX در ۳۹۰ پیکسل.
+    /// Target audience and UX feel in 390 pixels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target_audience_and_ux: Option<String>,
-    /// قابلیت‌های تعاملی فریمِ اول.
+    /// Interactive capabilities of the first frame.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interactive_features: Option<String>,
-    /// داده و APIهای بدون احراز.
+    /// Unauthenticated data and APIs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub data_and_zero_auth_apis: Option<String>,
-    /// درآمدزایی و حلقهٔ وایرال.
+    /// Monetization and the viral loop.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub monetization_and_viral_loop: Option<String>,
 }
 
-/// درخواست نوبت کشف آلفا.
+/// Alpha discovery turn request.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityAlphaRequest {
-    /// شناسهٔ نشست ترینیتی — اختیاری؛ در نبودش سرور `trn:{uuid}` می‌سازد.
+    /// Trinity session ID — optional; the server creates `trn:{uuid}` when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
-    /// پیام خام کاربر در این نوبت (`1..=4000` کاراکتر).
+    /// The user's raw message in this turn (`1..=4000` characters).
     pub user_message: String,
-    /// اسلات‌های پرشدهٔ نوبت‌های قبل — اختیاری.
+    /// Slots filled in previous turns — optional.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prior_slots: Option<TrinitySlotsState>,
 }
 
-/// نمای مستر پرامپت کامپایل‌شده روی وایر.
+/// Wire view of the compiled master prompt.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityMasterPromptView {
-    /// اثر انگشت SHA-256 متن کامپایل‌شده.
+    /// SHA-256 fingerprint of the compiled text.
     pub spec_hash: String,
-    /// دستور سیستمی دقیق.
+    /// The exact system directive.
     pub system_directive: String,
-    /// مشخصهٔ عملکردی از پنج اسلات.
+    /// Performance spec from the five slots.
     pub functional_spec: String,
-    /// قیدهای UX در ۳۹۰ پیکسل.
+    /// UX constraints in 390 pixels.
     pub ux_390_constraints: String,
-    /// معیارهای راستی‌آزمایی.
+    /// Verification criteria.
     pub verification_criteria: Vec<String>,
-    /// متن کامل مستر پرامپت.
+    /// Full master prompt text.
     pub compiled_prompt: String,
-    /// نام محصول مشتق‌شده.
+    /// Derived product name.
     pub project_name: String,
-    /// پیشنهاد قیمت مایرون به ستارهٔ تلگرام (`XTR`).
+    /// Mairon's price suggestion in Telegram Stars (`XTR`).
     pub price_stars_hint: u64,
 }
 
-/// نمای یک ماژول استراکچر پروژه روی وایر.
+/// Wire view of one project-structure module.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityBlueprintModuleView {
-    /// مسیر نسبی ماژول (`data-module` در آرتیفکت).
+    /// Module relative path (`data-module` in the artifact).
     pub path: String,
-    /// نقش کارکردی.
+    /// Functional role.
     pub role: String,
-    /// وابستگی‌ها.
+    /// Dependencies.
     pub dependencies: Vec<String>,
-    /// تخصص ساب‌ایجنت هدف (شناسهٔ وایر).
+    /// Target subagent specialty (wire ID).
     pub specialty: String,
-    /// برچسب فارسی تخصص.
+    /// Persian label of the specialty.
     pub specialty_fa: String,
 }
 
-/// نمای استراکچر پروژه روی وایر.
+/// Wire view of the project structure.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityBlueprintView {
-    /// نام محصول.
+    /// Product name.
     pub project_name: String,
-    /// نام لاتین امن (`slug`).
+    /// Safe Latin name (`slug`).
     pub project_slug: String,
-    /// ماژول‌ها به ترتیب قطعی.
+    /// Modules in deterministic order.
     pub modules: Vec<TrinityBlueprintModuleView>,
 }
 
-/// پاسخ یک نوبت کشف آلفا — یا ادامهٔ کشف یا قفلِ تحویل به اتاق فرمان.
+/// One Alpha discovery turn's response — either continue discovery or lock delivery to the command center.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityAlphaResponse {
-    /// وضعیت (`needs_more_discovery` | `locked_for_command_center`).
+    /// State (`needs_more_discovery` | `locked_for_command_center`).
     pub status: String,
-    /// شناسهٔ نشست ترینیتی.
+    /// Trinity session ID.
     pub session_id: String,
-    /// حساب شهروند سازنده.
+    /// The creator citizen's account.
     pub citizen_id: String,
-    /// پاسخ فارسی آلفا (جرقه یا تحویل).
+    /// Alpha's Persian reply (spark or delivery).
     pub alpha_reply_fa: String,
-    /// اسلات‌های خام به ترتیب قطعی (شناسه‌های وایر).
+    /// Raw slots in deterministic order (wire IDs).
     pub missing_slots: Vec<String>,
-    /// درصد آمادگی (`0..=100`).
+    /// Readiness percentage (`0..=100`).
     pub readiness_pct: u8,
-    /// وضعیت به‌روز اسلات‌ها — برای نوبت بعدی بازگردانده می‌شود.
+    /// Up-to-date slot states — returned for the next turn.
     pub updated_slots: TrinitySlotsState,
-    /// مستر پرامپت — فقط در وضعیت قفل.
+    /// Master prompt — only in the locked state.
     pub master_prompt: Option<TrinityMasterPromptView>,
-    /// استراکچر پروژه — فقط در وضعیت قفل.
+    /// Project structure — only in the locked state.
     pub blueprint: Option<TrinityBlueprintView>,
 }
 
-/// آلل‌های تصادفی قطعی ساب‌ایجنت روی وایر.
+/// Wire view of a subagent's deterministic random alleles.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityAlleleView {
-    /// چگالی جراحی.
+    /// Surgical density.
     pub surgical_density: f64,
-    /// مهارت صنعتگری UX.
+    /// UX craftsmanship skill.
     pub ux_craft: f64,
-    /// پارانویای لبه‌ها.
+    /// Edge-case paranoia.
     pub edge_case_paranoia: f64,
-    /// سرعت اجرا.
+    /// Execution speed.
     pub execution_velocity: f64,
-    /// بذر آلل (بازتولید قطعی).
+    /// Allele seed (deterministic reproduction).
     pub allele_seed: u64,
 }
 
-/// مانیفست DNA یک ساب‌ایجنت `OpenBot` (الگوی `۳×۹`) روی وایر.
+/// Wire view of an `OpenBot` subagent's DNA manifest (`3×9` pattern).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinitySubAgentDnaView {
-    /// شمار ردیفی ساب‌ایجنت.
+    /// Row number of the subagent.
     pub subagent_index: u32,
-    /// تخصص (شناسهٔ وایر).
+    /// Specialty (wire ID).
     pub specialty: String,
-    /// برچسب فارسی تخصص.
+    /// Persian label of the specialty.
     pub specialty_fa: String,
-    /// ماژول(های) محول‌شده.
+    /// Assigned module(s).
     pub assigned_modules: Vec<String>,
-    /// شناسهٔ نخ قطعی.
+    /// Deterministic thread ID.
     pub thread_id: String,
-    /// IQ مؤثر اتاق فرمان (`139`).
+    /// Effective command-center IQ (`139`).
     pub logic_iq: u16,
-    /// EQ مؤثر اتاق فرمان (`129`).
+    /// Effective command-center EQ (`129`).
     pub logic_eq: u16,
-    /// مرز استال نرم قلاب توقف (`450s`).
+    /// Stop-hook soft stall boundary (`450s`).
     pub watchdog_soft_secs: u64,
-    /// مرز تایم‌اوت سخت قلاب توقف (`1200s`).
+    /// Stop-hook hard timeout boundary (`1200s`).
     pub watchdog_hard_secs: u64,
-    /// حالت فشرده‌سازی `Caveman` (`off|lite|full|ultra`).
+    /// `Caveman` compression mode (`off|lite|full|ultra`).
     pub caveman: String,
-    /// آلل‌های تصادفی.
+    /// Random alleles.
     pub alleles: TrinityAlleleView,
-    /// طول لایهٔ ۱ (هستهٔ ثابت کش-پین).
+    /// Layer 1 length (pinned constant core).
     pub layer1_chars: usize,
-    /// طول لایهٔ ۲ (زمینهٔ نشست کش-پین).
+    /// Layer 2 length (pinned session context).
     pub layer2_chars: usize,
-    /// طول لایهٔ ۳ (محولهٔ پویا).
+    /// Layer 3 length (dynamic assignment).
     pub layer3_chars: usize,
-    /// پیش‌نمایش پرامپت رندرشده (حدود ۲۲۰ کاراکتر اول).
+    /// Preview of the rendered prompt (first ~220 characters).
     pub prompt_preview: String,
-    /// طول XML ژنوم کامپایل‌شده (`<openbot_subagent_dna>`).
+    /// Length of the compiled genome XML (`<openbot_subagent_dna>`).
     pub xml_prompt_chars: usize,
-    /// پروب‌های تجربیِ فاکتور f08.
+    /// Experimental probes of factor f08.
     pub empirical_probes: Vec<String>,
-    /// کارت تحویل فاکتور f09.
+    /// Delivery card of factor f09.
     pub handoff_card: String,
-    /// گیت پاک‌ساز f07 — صفر نشانگر ناتمام/راز/اسلوپ.
+    /// f07 cleanup gate — zero unfinished markers/secrets/slop.
     pub sanitizer_passed: bool,
 }
 
-/// چهار ستون REA روی وایر (`0..=25` هر ستون).
+/// The four REA pillars on the wire (`0..=25` each).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityPillarsView {
-    /// معماری.
+    /// Architecture.
     pub architecture: u8,
-    /// سخت‌سازی امنیت.
+    /// Security hardening.
     pub security_hardening: u8,
-    /// UX و ضد-اسلوپ.
+    /// UX and anti-slop.
     pub ux_and_anti_slop: u8,
-    /// شواهد راستی‌آزمایی.
+    /// Verification evidence.
     pub verification_proof: u8,
 }
 
-/// فرمان ترمیم مایرون روی وایر.
+/// Wire view of a Mairon repair command.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityRepairDirectiveView {
-    /// گذر ترمیم (`1..=3`).
+    /// Repair pass (`1..=3`).
     pub attempt: u32,
-    /// تخصص مقصر (شناسهٔ وایر).
+    /// Faulted specialty (wire ID).
     pub target_specialty: String,
-    /// ستون REA زیر آستانه.
+    /// REA pillar below threshold.
     pub pillar: String,
-    /// دستور اصلاح (انگلیسی).
+    /// Fix directive (English).
     pub directive_en: String,
-    /// دستور اصلاح (فارسی).
+    /// Fix directive (Persian).
     pub directive_fa: String,
 }
 
-/// یک دور ترمیم روی وایر.
+/// One repair round on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityRepairRoundView {
-    /// گذر ترمیم.
+    /// Repair pass.
     pub attempt: u32,
-    /// نمرهٔ پیش از ترمیم.
+    /// Score before repair.
     pub score_before: u8,
-    /// نمرهٔ پس از ترمیم.
+    /// Score after repair.
     pub score_after: u8,
-    /// عبور از گیت `>= 85`.
+    /// Gate pass at `>= 85`.
     pub approved: bool,
-    /// فرمان‌های همین گذر.
+    /// Directives of this pass.
     pub directives: Vec<TrinityRepairDirectiveView>,
 }
 
-/// مشاورهٔ استراتژیک مایرون `IQ=150 / EQ=145` روی وایر.
+/// Wire view of Mairon's `IQ=150 / EQ=145` strategic advisory.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityAdvisoryView {
-    /// IQ اورکلاک داور (`150`).
+    /// Judge overclock IQ (`150`).
     pub iq: u16,
-    /// EQ اورکلاک داور (`145`).
+    /// Judge overclock EQ (`145`).
     pub eq: u16,
-    /// افق نگاه بازی‌نظری (`8`).
+    /// Game-theoretic horizon (`8`).
     pub lookahead_horizon: u8,
-    /// مرتبهٔ نظریهٔ ذهن (`3`).
+    /// Theory-of-mind order (`3`).
     pub tom_order: u8,
-    /// بهرهٔ جاه‌طلبی (`0.99`).
+    /// Ambition factor (`0.99`).
     pub ambition_gain: f32,
-    /// خلاصهٔ نگاه هشت‌گامی.
+    /// Summary of the eight-step outlook.
     pub eight_step_lookahead_summary: String,
-    /// قلاب روان‌شناختی خریدار و قیمت/معرف (فارسی، ToM-3).
+    /// Buyer psychological hook and price/referral (Persian, ToM-3).
     pub third_order_tom_market_hook_fa: String,
 }
 
-/// درخواست اجرای اتاق فرمان + داوری مایرون — اسلات‌های قفل‌شدهٔ آلفا.
+/// Command-center execution request + Mairon arbitration — the locked Alpha slots.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityOrchestrateRequest {
-    /// شناسهٔ نشست ترینیتیِ قفل‌شده.
+    /// The locked Trinity session ID.
     pub session_id: String,
-    /// بذر قطعی نشست — اختیاری؛ پیش‌فرض از `SHA-256(session_id)` مشتق می‌شود.
+    /// Deterministic session seed — optional; by default derived from `SHA-256(session_id)`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_seed: Option<u64>,
-    /// پنج اسلات — آمادگی باید `>= 80` باشد.
+    /// Five slots — readiness must be `>= 80`.
     pub slots: TrinitySlotsState,
 }
 
-/// پاسخ کامل آهنگری ترینیتی — مانیفست DNA، آرتیفکت، حکم مایرون و تاریخچهٔ ترمیم.
+/// The full Trinity forging response — DNA manifest, artifact, Mairon verdict, and repair history.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TrinityOrchestrateResponse {
-    /// شناسهٔ نشست ترینیتی.
+    /// Trinity session ID.
     pub session_id: String,
-    /// نام محصول.
+    /// Product name.
     pub project_name: String,
-    /// آرتیفکت HTML کاملِ مونتاژشده.
+    /// The fully assembled HTML artifact.
     pub artifact_html: String,
-    /// حجم آرتیفکت بر حسب بایت.
+    /// Artifact size in bytes.
     pub artifact_bytes: usize,
-    /// شمار پروب‌های تجربی تزریق‌شده.
+    /// Number of injected experimental probes.
     pub probe_count: usize,
-    /// ماژول‌های یکپارچه‌شده (`data-module`).
+    /// Integrated modules (`data-module`).
     pub integrated_modules: Vec<String>,
-    /// مانیفست DNA ناوگان `OpenBot`.
+    /// DNA manifest of the `OpenBot` fleet.
     pub manifest: Vec<TrinitySubAgentDnaView>,
-    /// نمرهٔ نهایی مایرون (`0..=100`).
+    /// Mairon's final score (`0..=100`).
     pub final_score: u8,
-    /// عبور از گیت آهنگری (`>= 85` و صفر خط قرمز).
+    /// Forging gate pass (`>= 85` and zero red lines).
     pub approved_for_listing: bool,
-    /// نشان مرئی مایرون.
+    /// Mairon's visible badge.
     pub mairon_badge: String,
-    /// تفکیک چهار ستون.
+    /// Breakdown of the four pillars.
     pub pillars: TrinityPillarsView,
-    /// مشاورهٔ استراتژیک `IQ=150/EQ=145`.
+    /// Strategic advisory `IQ=150/EQ=145`.
     pub advisory: TrinityAdvisoryView,
-    /// شمار تلاش‌های ترمیم مصرف‌شده (`0..=3`).
+    /// Repair attempts consumed (`0..=3`).
     pub repair_attempts_used: u32,
-    /// تاریخچهٔ دورهای ترمیم.
+    /// History of repair rounds.
     pub repair_history: Vec<TrinityRepairRoundView>,
 }

@@ -4,13 +4,13 @@ DGX.pages = DGX.pages || {};
 DGX.pages.explore = async (view, params) => {
   view.innerHTML = `
     <div class="chips" id="exRange">
-      <button class="chip on" data-r="trend">${DGX.icon('flame','ic-s')} ترند</button>
-      <button class="chip" data-r="new">🆕 جدید</button>
-      <button class="chip" data-r="featured">⭐ ویژه</button>
-      <button class="chip" data-r="budget">${DGX.icon('wallet','ic-s')} ارزان‌ها (زیر ۱۰۰)</button>
+      <button class="chip on" data-r="trend">${DGX.icon('flame','ic-s')} \u062a\u0631\u0646\u062f</button>
+      <button class="chip" data-r="new">🆕 \u062c\u062f\u06cc\u062f</button>
+      <button class="chip" data-r="featured">⭐ \u0648\u06cc\u0698\u0647</button>
+      <button class="chip" data-r="budget">${DGX.icon('wallet','ic-s')} \u0627\u0631\u0632\u0627\u0646‌\u0647\u0627 (\u0632\u06cc\u0631 \u06f1\u06f0\u06f0)</button>
     </div>
     <div id="rankBox">${DGX.skelCards(3)}</div>
-    <h2 style="margin:18px 0 10px">🗂 دسته‌بندی‌ها</h2>
+    <h2 style="margin:18px 0 10px">🗂 \u062f\u0633\u062a\u0647‌\u0628\u0646\u062f\u06cc‌\u0647\u0627</h2>
     <div class="cat-grid" id="catGrid"></div>
     <div id="gridOut"></div>`;
 
@@ -34,7 +34,7 @@ DGX.pages.explore = async (view, params) => {
         items = (await DGX.api('/api/app/trending?limit=10')).items;
       }
       if (!items.length) { rankBox.innerHTML =
-        '<div class="empty"><div class="big">' + DGX.icon('box','big-ic') + '</div>فعلاً چیزی اینجا نیست</div>'; return; }
+        '<div class="empty"><div class="big">' + DGX.icon('box','big-ic') + '</div>\u0641\u0639\u0644\u0627\u064b \u0686\u06cc\u0632\u06cc \u0627\u06cc\u0646\u062c\u0627 \u0646\u06cc\u0633\u062a</div>'; return; }
       rankBox.innerHTML = items.map(p => `
         <a class="rank-row ${p.rank === 1 ? 'rank-1' : ''}" href="#/product?id=${+p.id}"
            style="text-decoration:none;color:inherit">
@@ -44,7 +44,7 @@ DGX.pages.explore = async (view, params) => {
           <div class="rank-info">
             <div class="rank-t">${DGX.esc(p.title)}</div>
             <div class="rank-s">@${DGX.esc(p.creator_username || p.creator_name || '')} ·
-              ${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} فروش</div>
+              ${DGX.icon('cart','ic-s')} ${DGX.kfmt(p.sales_count)} \u0641\u0631\u0648\u0634</div>
           </div>
           <span class="num" style="color:var(--em);font-weight:800;font-size:12px;white-space:nowrap">
             ${DGX.fmt(p.price_credits)}</span>

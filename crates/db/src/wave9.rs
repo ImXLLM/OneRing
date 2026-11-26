@@ -1,97 +1,97 @@
-//! ماندگاریِ Wave 9 (Commit #29) — سه عملیاتِ قطعی روی مهاجرتِ `0013`:
+//! Wave 9 persistence (Commit #29) — three deterministic operations on migration `0013`:
 //!
-//! - [`UserLabTelemetryLog`]: درج/فهرستِ لاگِ تلمتریِ آزمایشگاهِ ۱۰-DNA؛
-//! - [`LocalePatchRegistry`]: upsert/فهرستِ وضعیتِ ۲۰ لوکالِ `Arda`؛
-//! - [`NeuralHudRenderJob`]: درج/فهرستِ ران‌هایِ رندرِ HUD عصبی.
+//! - [`UserLabTelemetryLog`]: insert/list the 10-DNA lab telemetry log;
+//! - [`LocalePatchRegistry`]: upsert/list the status of the 20 `Arda` locales;
+//! - [`NeuralHudRenderJob`]: insert/list neural HUD render runs.
 //!
-//! هیچ جدولِ دفتریِ دوطرفه لمس نمی‌شود — این‌ها «دفترِ تجربهٔ کاربر» است نه
-//! خودِ پول؛ صفرجمعِ `Posting` دست‌نخورده می‌ماند.
+//! No double-entry ledger table is touched — these are the "user experience ledger", not
+//! money itself; the `Posting` zero-sum stays untouched.
 
 use sqlx::Row;
 
 use crate::error::DbResult;
 use crate::store::V3Store;
 
-/// ردیفِ لاگِ تلمتریِ آزمایشگاه — همان ستون‌هایِ `UserLabTelemetryLog`.
+/// Lab telemetry log row — the same columns as `UserLabTelemetryLog`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserLabTelemetryLogRow {
-    /// شناسهٔ قطعی — `lab:{dna}:{hour}:{turn}`.
+    /// Deterministic ID — `lab:{dna}:{hour}:{turn}`.
     pub id: String,
-    /// کدِ کوهورت — `DNA_01`..`DNA_10`.
+    /// Cohort code — `DNA_01`..`DNA_10`.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// ساعتِ ۰..۲۴.
+    /// Hour 0..24.
     pub hour_offset: i64,
-    /// لایهٔ UX.
+    /// UX layer.
     pub ux_tier: String,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// پرسونایِ Grok.
+    /// Grok persona.
     pub grok_persona: String,
-    /// مدلِ روت‌شده.
+    /// Routed model.
     pub model_slug: String,
-    /// حالتِ روتینگ.
+    /// Routing mode.
     pub routing_mode: String,
-    /// پرامپتِ کاربر.
+    /// User prompt.
     pub prompt_text: String,
-    /// ردِ تفکر به JSON.
+    /// Thinking trace as JSON.
     pub thinking_trace_json: String,
-    /// پاسخ.
+    /// Response.
     pub response_text: String,
-    /// امتیازِ REA.
+    /// REA score.
     pub rea_score: i64,
-    /// تأخیر بر حسبِ ms.
+    /// Latency in ms.
     pub latency_ms: i64,
-    /// قابلِ آموزش؟
+    /// Trainable?
     pub usable_for_training: bool,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// ردیفِ ثبتِ لوکال — همان ستون‌هایِ `LocalePatchRegistry`.
+/// Locale registry row — the same columns as `LocalePatchRegistry`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocalePatchRegistryRow {
-    /// کدِ لوکال — `fa`، `en`، `ar`، …
+    /// Locale code — `fa`, `en`, `ar`, …
     pub locale_code: String,
-    /// جهت — `rtl` | `ltr`.
+    /// Direction — `rtl` | `ltr`.
     pub direction: String,
-    /// وضعیت — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
+    /// Status — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
     pub activation_state: String,
-    /// تکمیل بر حسبِ bps.
+    /// Completion in bps.
     pub completion_bps: i64,
-    /// نسخهٔ پچ.
+    /// Patch version.
     pub patch_version: String,
-    /// مُهرِ آخرین به‌روزرسانی.
+    /// Last update stamp.
     pub updated_at: String,
 }
 
-/// ردیفِ رانِ رندرِ HUD — همان ستون‌هایِ `NeuralHudRenderJob`.
+/// HUD render run row — the same columns as `NeuralHudRenderJob`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NeuralHudRenderJobRow {
-    /// شناسهٔ ران (`hudjob:…`).
+    /// Run ID (`hudjob:…`).
     pub id: String,
-    /// شناسهٔ پیش‌تن.
+    /// Pre-tune ID.
     pub preset_slug: String,
-    /// نسبت — `9:16` | `16:9`.
+    /// Aspect — `9:16` | `16:9`.
     pub aspect_ratio: String,
-    /// رزولوشن — `720p` | `1080p`.
+    /// Resolution — `720p` | `1080p`.
     pub resolution: String,
-    /// فریم‌ریت — ۲۴ | ۶۰.
+    /// Frame rate — 24 | 60.
     pub fps: i64,
-    /// مدت بر حسبِ ثانیه.
+    /// Duration in seconds.
     pub duration_sec: i64,
-    /// وضعیت — `queued` | `rendered`.
+    /// Status — `queued` | `rendered`.
     pub status: String,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
 impl V3Store {
-    /// درجِ مدخلِ تلمتریِ آزمایشگاه — ایدمپوتنت روی `id`.
+    /// Insert a lab telemetry entry — idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_lab_telemetry_log(&self, row: &UserLabTelemetryLogRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "UserLabTelemetryLog"
@@ -122,10 +122,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ لاگ‌هایِ تلمتری — جدیدترین اول، سقفِ `limit`.
+    /// List telemetry logs — newest first, capped by `limit`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_lab_telemetry_logs(&self, limit: u32) -> DbResult<Vec<UserLabTelemetryLogRow>> {
         let cap = i64::from(limit.clamp(1, 1000));
         let rows = sqlx::query(
@@ -142,10 +142,10 @@ impl V3Store {
         Ok(rows.iter().map(lab_log_row_from).collect())
     }
 
-    /// upsertِ وضعیتِ لوکال — ایدمپوتنت روی `locale_code`.
+    /// Upsert a locale status — idempotent on `locale_code`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn upsert_locale_patch_registry(&self, row: &LocalePatchRegistryRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "LocalePatchRegistry"
@@ -170,10 +170,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ ثبتِ لوکال‌ها — مرتب بر کد.
+    /// List locale registry entries — sorted by code.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_locale_patch_registry(&self) -> DbResult<Vec<LocalePatchRegistryRow>> {
         let rows = sqlx::query(
             r#"SELECT "locale_code","direction","activation_state","completion_bps",
@@ -185,10 +185,10 @@ impl V3Store {
         Ok(rows.iter().map(locale_row_from).collect())
     }
 
-    /// درجِ رانِ رندرِ HUD — ایدمپوتنت روی `id`.
+    /// Insert a HUD render run — idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_hud_render_job(&self, row: &NeuralHudRenderJobRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "NeuralHudRenderJob"
@@ -209,10 +209,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ ران‌هایِ رندر — جدیدترین اول، سقفِ `limit`.
+    /// List render runs — newest first, capped by `limit`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_hud_render_jobs(&self, limit: u32) -> DbResult<Vec<NeuralHudRenderJobRow>> {
         let cap = i64::from(limit.clamp(1, 200));
         let rows = sqlx::query(
@@ -294,8 +294,8 @@ mod tests {
             grok_persona: "fun_witty".to_owned(),
             model_slug: "05-glm-5.3-flash-max".to_owned(),
             routing_mode: "agent_auto_decision".to_owned(),
-            prompt_text: "قصهٔ پاندای کوچک را با صدا بساز".to_owned(),
-            thinking_trace_json: r#"{"steps":["۱) تفکیکِ خواسته"],"thinking_duration_ms":900}"#
+            prompt_text: "\u{642}\u{635}\u{647}\u{654} \u{67e}\u{627}\u{646}\u{62f}\u{627}\u{6cc} \u{6a9}\u{648}\u{686}\u{6a9} \u{631}\u{627} \u{628}\u{627} \u{635}\u{62f}\u{627} \u{628}\u{633}\u{627}\u{632}".to_owned(),
+            thinking_trace_json: r#"{"steps":["1) Decompose the request"],"thinking_duration_ms":900}"#
                 .to_owned(),
             response_text: "Alright, let's make this fun".to_owned(),
             rea_score: 92,
@@ -309,7 +309,7 @@ mod tests {
     async fn lab_log_roundtrip_and_unique_id() {
         let store = fresh_store().await;
         store.insert_lab_telemetry_log(&log_row("lab:DNA_01:9:0")).await.unwrap();
-        // ایدمپوتنت روی id — INSERT دوم خطا می‌دهد (PRIMARY KEY)
+        // idempotent on id — a second INSERT fails (PRIMARY KEY)
         let second = store.insert_lab_telemetry_log(&log_row("lab:DNA_01:9:0")).await;
         assert!(second.is_err(), "duplicate id must be rejected");
         let listed = store.list_lab_telemetry_logs(50).await.unwrap();
@@ -330,7 +330,7 @@ mod tests {
             updated_at: "2026-11-24T00:00:00Z".to_owned(),
         };
         store.upsert_locale_patch_registry(&fa).await.unwrap();
-        // upsert دوم مقدار را به‌روز می‌کند
+        // the second upsert updates the value
         let fa_hot = LocalePatchRegistryRow {
             patch_version: "wave9.36".to_owned(),
             ..fa.clone()

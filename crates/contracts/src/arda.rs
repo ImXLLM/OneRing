@@ -1,142 +1,142 @@
-//! قراردادهای ARDA — بومی‌سازیِ سیاره‌ایِ ۲۴ساعته روی معماری اصیل `Fishkal`
-//! و فورجِ مهارتِ مایرون (Wave 4 — Step 1/4).
+//! ARDA contracts — round-the-clock planetary localization on the original `Fishkal` architecture
+//! and Mairon skill forging (Wave 4 — Step 1/4).
 //!
-//! سه DTO روی وایر:
-//! - [`ArdaLocalizeRequest`] / [`ArdaLocalizeResponse`] — اجرای زندهٔ ARDA روی
-//!   HTML خام یا شناسهٔ محصول، با باندلِ تزریقی، نوارِ پرچمِ دایره‌ای،
-//!   گزارشِ توازنِ کاتالوگ و مهرِ `sha256` محتوا؛
-//! - [`ArdaFlagsCatalogResponse`] — کاتالوگِ کاملِ ۲۰ زبانِ سیاره‌ای با SVG
-//!   وکتورِ حفظ‌شدهٔ حرف‌به‌حرف و نشانِ دایره‌ای؛
-//! - [`ProductSkillPackageResponse`] — بستهٔ `SKILL.md` + `skill.json` فورج‌شدهٔ
-//!   مایرون همراهِ نوارِ پرچمِ محصول.
+//! Three wire DTOs:
+//! - [`ArdaLocalizeRequest`] / [`ArdaLocalizeResponse`] — live ARDA execution on
+//!   raw HTML or a product ID, with the injected bundle, circular flag strip,
+//!   catalog balance report and a `sha256` content stamp;
+//! - [`ArdaFlagsCatalogResponse`] — the complete catalog of 20 planetary languages with
+//!   verbatim-preserved vector SVG and circular badges;
+//! - [`ProductSkillPackageResponse`] — Mairon's forged `SKILL.md` + `skill.json` package
+//!   together with the product flag strip.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// گزارشِ توازنِ یک زبان در کاتالوگِ یکپارچهٔ ۶-دامنه‌ای.
+/// Balance report for one language in the unified 6-domain catalog.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaLocaleParityView {
-    /// کد زبان (`fa`، `en`، …).
+    /// Language code (`fa`, `en`, …).
     pub locale: String,
-    /// کلیدهای غایب نسبت به زبانِ پایه (باید همیشه خالی باشد).
+    /// Keys missing relative to the base language (must always be empty).
     pub missing_keys: Vec<String>,
-    /// نمرهٔ پوششِ دقیق `0.0..=1.0`.
+    /// Exact coverage score `0.0..=1.0`.
     pub coverage_score: f64,
 }
 
-/// گزارشِ کاملِ توازنِ مکانیکیِ کاتالوگ — درمانِ نقصِ `unitFt` و `OPTSTR`.
+/// Full mechanical catalog balance report — the cure for the `unitFt` and `OPTSTR` gaps.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaParityReportView {
-    /// زبانِ پایهٔ توازن.
+    /// Balance base language.
     pub base_locale: String,
-    /// تعدادِ کلیدهای مرجع.
+    /// Number of reference keys.
     pub total_keys: u32,
-    /// بدترینِ پوشش بین ۲۰ زبان.
+    /// Worst coverage among the 20 languages.
     pub coverage_score: f64,
-    /// توازنِ کامل؟
+    /// Fully balanced?
     pub fully_parity: bool,
-    /// توازنِ هر زبان به ترتیبِ دیکشنری.
+    /// Balance of each language in lexicographic order.
     pub locales: Vec<ArdaLocaleParityView>,
 }
 
-/// یک زبان در کاتالوگِ پرچمِ وکتورِ فیشکال.
+/// One language in the Fishkal vector flag catalog.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaFlagView {
-    /// کد ISO کوتاه (`fa`، `en`، …).
+    /// Short ISO code (`fa`, `en`, …).
     pub code: String,
-    /// نام بومیِ کنونیکال (`'فارسی'`، `'English'`).
+    /// Canonical native name (`'\u{0641}\u{0627}\u{0631}\u{0633}\u{06CC}'`, `'English'`).
     pub native_name: String,
-    /// گلیفِ سوییچرِ اسکریپت‌اصیل (`STR.code`: `'فا'`، `'ع'`، `'اردو'`، `'עب'`).
+    /// Script-switcher glyph (`STR.code`: `'\u{0641}\u{0627}'`, `'\u{0639}'`, `'\u{0627}\u{0631}\u{062F}\u{0648}'`, `'\u{05E2}\u{0628}'`).
     pub str_code: String,
-    /// جهت متن (`rtl` | `ltr`).
+    /// Text direction (`rtl` | `ltr`).
     pub dir: String,
-    /// زیرتگ منطقه‌ایِ `Intl` (`fa-IR`، `ar-AE`، …).
+    /// `Intl` region subtag (`fa-IR`, `ar-AE`, …).
     pub intl_locale: String,
-    /// SVG وکتورِ حفظ‌شدهٔ حرف‌به‌حرف با `viewBox="0 0 20 14"`.
+    /// Verbatim-preserved vector SVG with `viewBox="0 0 20 14"`.
     pub svg: String,
-    /// نشانِ دایره‌ایِ مینی-پرچمِ آمادهٔ رندر.
+    /// Circular badge of a render-ready mini-flag.
     pub circular_badge_html: String,
 }
 
-/// پاسخ `GET /api/v1/arda/flags` — کاتالوگِ کاملِ ۲۰ زبانِ سیاره‌ای.
+/// `GET /api/v1/arda/flags` response — the complete catalog of 20 planetary languages.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaFlagsCatalogResponse {
-    /// ۲۰ زبان به ترتیبِ دیکشنریِ فیشکال.
+    /// 20 languages in Fishkal lexicographic order.
     pub locales: Vec<ArdaFlagView>,
-    /// تعدادِ کل — همیشه `20`.
+    /// Total count — always `20`.
     pub total: u32,
-    /// امضای باندل (`arda-fishkal-20`).
+    /// Bundle signature (`arda-fishkal-20`).
     pub signature: String,
 }
 
-/// درخواست `POST /api/v1/arda/localize-now` — HTML خام یا شناسهٔ محصول.
+/// `POST /api/v1/arda/localize-now` request — raw HTML or a product ID.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaLocalizeRequest {
-    /// شناسهٔ محصول (`prod:<uuid>`) — اگر داده شود، زبان‌ها روی محصول مُهر می‌شوند.
+    /// Product ID (`prod:<uuid>`) — when provided, the languages are stamped onto the product.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub product_id: Option<String>,
-    /// HTML خامِ ورودی (حداکثر ۵۰ کیلوبایت — همان سقفِ پیش‌نمایش بازار).
+    /// Raw input HTML (max 50 KB — the same cap as the market preview).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub html: Option<String>,
-    /// زبانِ مبدأ — پیش‌فرض: تشخیصِ قطعی از اسکریپتِ محتوا.
+    /// Source language — default: deterministic detection from the content script.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub origin_locale: Option<String>,
-    /// زبان‌های هدف — پیش‌فرض: هر ۲۰ زبانِ سیاره‌ای.
+    /// Target languages — default: all 20 planetary languages.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_locales: Option<Vec<String>>,
 }
 
-/// پاسخ localize — باندلِ تزریقی + نوارِ پرچم + توازن + مهرِ محتوا.
+/// Localize response — injected bundle + flag strip + balance + content stamp.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ArdaLocalizeResponse {
-    /// شناسهٔ محصول — فقط وقتی `product_id` داده شده بود.
+    /// Product ID — only when `product_id` was provided.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub product_id: Option<String>,
-    /// زبانِ مبدأیِ تشخیص‌شده/داده‌شده.
+    /// Detected/provided source language.
     pub origin_locale: String,
-    /// زبان‌های فعالِ باندل (مبدأ + هدف‌های معتبر).
+    /// The bundle's active languages (source + valid targets).
     pub supported_locales: Vec<String>,
-    /// HTML نهایی با باندلِ تزریقی (ایدمپوتنت).
+    /// Final HTML with the injected bundle (idempotent).
     pub localized_html: String,
-    /// نوارِ نشانِ دایره‌ایِ مبدأ + ترجمه‌ها برای کارتِ بازار.
+    /// Circular badge strip of source + translations for the market card.
     pub circular_flag_strip_html: String,
-    /// گزارشِ توازنِ مکانیکیِ کاتالوگِ ۶-دامنه‌ای.
+    /// Mechanical balance report of the 6-domain catalog.
     pub parity_report: ArdaParityReportView,
-    /// آیا باندل تزریق شد؟ (`false` = قبلاً تزریق شده بود)
+    /// Was the bundle injected? (`false` = it was already injected)
     pub injected: bool,
-    /// مهرِ `sha256` محتوای بومی‌سازی‌شده.
+    /// `sha256` stamp of the localized content.
     pub content_sha256: String,
-    /// مهرِ زمانِ بومی‌سازی (ISO-8601) — فقط برای محصول.
+    /// Localization timestamp (ISO-8601) — for products only.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_localized_at: Option<String>,
 }
 
-/// پاسخ `GET /api/v1/market/products/{id}/skill` — بستهٔ مهارتِ فورج‌شده.
+/// `GET /api/v1/market/products/{id}/skill` response — the forged skill package.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductSkillPackageResponse {
-    /// شناسهٔ محصول.
+    /// Product ID.
     pub product_id: String,
-    /// نمرهٔ REA مایرون (`0..=100`).
+    /// Mairon REA score (`0..=100`).
     pub rea_score: u8,
-    /// نشان مرئی مایرون مُهرشده.
+    /// The stamped Mairon visual badge.
     pub mairon_visible_badge: String,
-    /// زبانِ مبدأ.
+    /// Source language.
     pub origin_locale: String,
-    /// زبان‌های پشتیبانی‌شده (مبدأ + ترجمه‌ها).
+    /// Supported languages (source + translations).
     pub supported_locales: Vec<String>,
-    /// نوارِ پرچمِ دایره‌ایِ محصول.
+    /// Product circular flag strip.
     pub circular_flag_strip_html: String,
-    /// سند `SKILL.md` با پیش‌مادهٔ YAML.
+    /// `SKILL.md` document with YAML front matter.
     pub skill_md: String,
-    /// مانیفست `skill.json` سازگار با Hermes / MCP / `OpenCode`.
+    /// `skill.json` manifest compatible with Hermes / MCP / `OpenCode`.
     pub skill_json: String,
-    /// آیا بسته در همین فراخوانی به‌صورت خودکار فورج شد؟
+    /// Was the package forged automatically in this same call?
     pub forged_on_the_fly: bool,
 }

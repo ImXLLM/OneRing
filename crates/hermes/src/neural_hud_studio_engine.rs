@@ -1,87 +1,87 @@
-//! `neural_hud_studio_engine` — استودیوی ویدئوییِ HUD عصبی (Wave 9 — Commit #29).
+//! `neural_hud_studio_engine` — neural HUD video studio (Wave 9 — Commit #29).
 //!
-//! پورتِ قطعیِ `TM Neural HUD Video Studio` روی کرنلِ حاکمِ کیان — با درمانِ
-//! هر ۱۵ نقصِ بالادستی (`UPSTREAM_DEFECTS_CURED`) و سه خروجیِ تست‌پذیر:
+//! Deterministic port of `TM Neural HUD Video Studio` onto the Kian sovereign kernel — curing
+//! all 15 upstream defects (`UPSTREAM_DEFECTS_CURED`) with three testable outputs:
 //!
-//! ۱. **مولّدِ HTML5 سه‌بعدیِ `window.seekTo(t)` قطعی** — [`build_neural_hud_html_bundle`]:
-//!    مشِ کرویِ فیبوناچیِ دوپوسته با ۱۸۰ گره (`SPHERE_RADIUS = 160`،
-//!    `FOV = 340`، `camera_z = 420`، `rotY = t * 0.65`،
-//!    `rotX = sin(t * 0.4) * 0.4`)، یال‌هایِ مرتب‌شده با عمقِ Z، چهار
-//!    فراخوانِ HUD (`TRINITY_MAIRON: IQ_150`، `MCP_GATEWAY: SYNC`،
-//!    `BASE_8453: VERIFIED`، `CCXT_QUANT: CAUSAL`)، چهار فازِ صریحِ
-//!    خطِ زمانی، هندسهٔ کش‌شده (بدونِ `getBoundingClientRect` در هر فریم —
-//!    درمانِ layout thrashing)، تزریقِ امنِ JSON (ضد-XSS) و سینتِ زندهٔ
-//!    `WebAudio` (زیر-بیسِ `55Hz A1 + 82.41Hz E2 + 110Hz A2` + پینگِ رادارِ
-//!    `1046.5Hz C6 / 1567.98Hz G6`) برای پیش‌نمایشِ صدا‌دارِ مرورگر.
-//! ۲. **فیلترگرافِ الگوریتمیِ `lavfi` + محدودگرِ مستر** —
-//!    [`build_ffmpeg_hud_audio_command`] (`amix=inputs=4` + افیدِ ورود/خروج +
-//!    [`MASTER_LIMITER`] برای حذفِ کلیپینگ) و [`build_ffmpeg_mjpeg_pipe_command`]
-//!    (۷۲۰p و `FullHD` واقعیِ ۱۰۸۰p در `9:16` و `16:9` با ۲۴ و ۶۰fps و
-//!    `-movflags +faststart` برای استریم).
-//! ۳. **کاتالوگِ ۸ پیش‌تنِ تلمتری + سنتزِ پویا** — [`hud_preset_catalog`]
-//!    (۴ پیش‌تنِ بالادستیِ `mwie`، `sage-audit`، `geo-scope`،
-//!    `tm-second-brain` + ۴ پیش‌تنِ حاکمِ کیان: `kia-monopoly-core`،
-//!    `mairon-10gate-shield`، `quant-vibe-terminal`، `trinity-5model-genome`)
-//!    و [`synthesize_custom_repo_hud_preset`] برای تبدیلِ هر مخزنِ دلخواه به
-//!    پیش‌تنِ HUD قطعی.
+//! 1. **Deterministic 3D HTML5 `window.seekTo(t)` generator** — [`build_neural_hud_html_bundle`]:
+//!    a two-shell spherical Fibonacci mesh with 180 nodes (`SPHERE_RADIUS = 160`,
+//!    `FOV = 340`, `camera_z = 420`, `rotY = t * 0.65`,
+//!    `rotX = sin(t * 0.4) * 0.4`), edges sorted by Z depth, four
+//!    HUD callouts (`TRINITY_MAIRON: IQ_150`, `MCP_GATEWAY: SYNC`,
+//!    `BASE_8453: VERIFIED`, `CCXT_QUANT: CAUSAL`), four explicit
+//!    timeline phases, cached geometry (no `getBoundingClientRect` per frame —
+//!    the layout-thrashing cure), safe JSON injection (anti-XSS), and live
+//!    `WebAudio` synth (sub-bass `55Hz A1 + 82.41Hz E2 + 110Hz A2` + radar ping
+//!    `1046.5Hz C6 / 1567.98Hz G6`) for an audible browser preview.
+//! 2. **Algorithmic `lavfi` filtergraph + master limiter** —
+//!    [`build_ffmpeg_hud_audio_command`] (`amix=inputs=4` + fade-in/out filters +
+//!    [`MASTER_LIMITER`] to eliminate clipping) and [`build_ffmpeg_mjpeg_pipe_command`]
+//!    (720p and true `FullHD` 1080p in `9:16` and `16:9` at 24 and 60fps with
+//!    `-movflags +faststart` for streaming).
+//! 3. **Catalog of 8 telemetry presets + dynamic synthesis** — [`hud_preset_catalog`]
+//!    (4 upstream presets: `mwie`, `sage-audit`, `geo-scope`,
+//!    `tm-second-brain` + 4 Kian sovereign presets: `kia-monopoly-core`,
+//!    `mairon-10gate-shield`, `quant-vibe-terminal`, `trinity-5model-genome`)
+//!    and [`synthesize_custom_repo_hud_preset`] to turn any repo of choice into
+//!    a deterministic HUD preset.
 //!
-//! صفر unsafe، صفر IO شبکه، هندسهٔ یکتا و قطعی — هر بستهٔ تولیدشده با
-//! SHA-256 قابلِ ممیزی است.
+//! Zero unsafe, zero network IO, unique and deterministic geometry — every generated bundle is
+//! auditable via SHA-256.
 
 use std::fmt::Write as _;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-/// امضایِ استودیوی HUD عصبی — روی هر بستهٔ وایر حاضر است.
-pub const NEURAL_HUD_SIGNATURE: &str = "KIA-NEURAL-HUD-W9";
+/// Neural HUD studio signature — present on every wire bundle.
+pub const NEURAL_HUD_SIGNATURE: &str = "MAIRON-NEURAL-HUD";
 
-/// شعاعِ پوستهٔ بیرونیِ مشِ کروی — ثابتِ پورت‌شده از بالادستی.
+/// Outer shell radius of the spherical mesh — constant ported from upstream.
 pub const SPHERE_RADIUS: f64 = 160.0;
 
-/// فاصلهٔ کانونیِ دوربینِ پرسپکتیو.
+/// Focal length of the perspective camera.
 pub const FOV: f64 = 340.0;
 
-/// موقعیتِ Z دوربین — همهٔ گره‌ها با `FOV / (FOV + z + CAMERA_Z)` اسکیل می‌شوند.
+/// Camera Z position — all nodes scale by `FOV / (FOV + z + CAMERA_Z)`.
 pub const CAMERA_Z: f64 = 420.0;
 
-/// تعدادِ گرهٔ هر پوسته — دو پوسته × ۹۰ = ۱۸۰ گره.
+/// Node count per shell — two shells × 90 = 180 nodes.
 pub const SHELL_NODE_COUNT: usize = 90;
 
-/// نسبتِ شعاعِ پوستهٔ درونی به بیرونی.
+/// Inner shell radius relative to the outer.
 pub const INNER_SHELL_RADIUS_SCALE: f64 = 0.62;
 
-/// نرخِ چرخشِ Y بر حسبِ ثانیه — `rotY = t * 0.65`.
+/// Y rotation rate per second — `rotY = t * 0.65`.
 pub const ROT_Y_RATE: f64 = 0.65;
 
-/// نرخِ چرخشِ X — `rotX = sin(t * 0.4) * 0.4`.
+/// X rotation rate — `rotX = sin(t * 0.4) * 0.4`.
 pub const ROT_X_RATE: f64 = 0.4;
 
-/// دامنهٔ نوسانِ چرخشِ X.
+/// X rotation oscillation amplitude.
 pub const ROT_X_AMPLITUDE: f64 = 0.4;
 
-/// مدتِ پیش‌فرضِ ویدئو بر حسبِ ثانیه.
+/// Default video duration in seconds.
 pub const DEFAULT_DURATION_SEC: u32 = 60;
 
-/// بیشینهٔ مدتِ مجاز (سقفِ ایمنیِ CLI و API).
+/// Maximum allowed duration (CLI and API safety cap).
 pub const MAX_DURATION_SEC: u32 = 180;
 
-/// افیدِ ورودِ صدا — `afade=t=in:ss=0:d=0.6`.
+/// Audio fade-in filter — `afade=t=in:ss=0:d=0.6`.
 pub const FADE_IN_SEC: f64 = 0.6;
 
-/// افیدِ خروجِ صدا — `afade=t=out:st={fade_out}:d=1.2`.
+/// Audio fade-out filter — `afade=t=out:st={fade_out}:d=1.2`.
 pub const FADE_OUT_SEC: f64 = 1.2;
 
-/// محدودگرِ مستر — پس از `amix` + افیدها اضافه می‌شود تا کلیپینگ حذف شود.
+/// Master limiter — appended after `amix` + fade filters to eliminate clipping.
 pub const MASTER_LIMITER: &str = "alimiter=limit=0.95:attack=5:release=50";
 
-/// زیر-بیسِ سینتِ زنده — `A1` و `E2` و `A2`.
+/// Live synth sub-bass — `A1`, `E2`, and `A2`.
 pub const SUB_BASS_HZ: [f64; 3] = [55.0, 82.41, 110.0];
 
-/// پینگِ رادارِ سینتِ زنده — `C6` و `G6` (یکی‌درمیان هر ۴ ثانیه).
+/// Live synth radar ping — `C6` and `G6` (alternating every 4 seconds).
 pub const RADAR_PING_HZ: [f64; 2] = [1046.5, 1567.98];
 
-/// فراخوان‌هایِ ثابتِ HUD — چهار گرهِ نام‌دارِ مش.
+/// Fixed HUD callouts — the mesh's four named nodes.
 pub const HUD_CALLOUTS: [(&str, &str); 4] = [
     ("TRINITY_MAIRON", "IQ_150"),
     ("MCP_GATEWAY", "SYNC"),
@@ -89,7 +89,7 @@ pub const HUD_CALLOUTS: [(&str, &str); 4] = [
     ("CCXT_QUANT", "CAUSAL"),
 ];
 
-/// دفترِ درمانِ ۱۵ نقصِ بالادستی — هر مدخل: (شناسه، نقص، درمانِ اعمال‌شده).
+/// Registry of the 15 cured upstream defects — each entry: (identifier, defect, cure applied).
 pub const UPSTREAM_DEFECTS_CURED: [(&str, &str, &str); 15] = [
     (
         "D01",
@@ -168,37 +168,37 @@ pub const UPSTREAM_DEFECTS_CURED: [(&str, &str, &str); 15] = [
     ),
 ];
 
-// ══════════════════════ خطاها ══════════════════════
+// ══════════════════════ Errors ══════════════════════
 
-/// خطاهایِ مولّدِ HUD — تایپ‌شده و قطعی.
+/// HUD generator errors — typed and deterministic.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HudError {
-    /// نامِ مخزن برای سنتزِ پیش‌تن خالی است.
+    /// Repo name for preset synthesis is empty.
     EmptyRepoName,
-    /// پیش‌تنِ درخواستی در کاتالوگ نیست.
+    /// The requested preset is not in the catalog.
     UnknownPreset {
-        /// شناسهٔ پیش‌تنِ ناشناخته.
+        /// Unknown preset identifier.
         slug: String,
     },
-    /// مدتِ خارج از بازهٔ ۱..=۱۸۰ ثانیه.
+    /// Duration outside the 1..=180 second range.
     DurationOutOfRange {
-        /// مدتِ نامعتبر.
+        /// Invalid duration.
         duration_sec: u32,
     },
-    /// نقضِ ناورنیِ فریم — ابعاد با نسبت/رزولوشن سازگار نیستند.
+    /// Frame invariant violation — dimensions do not match the aspect/resolution.
     InvalidFrameGeometry {
-        /// عرضِ نامعتبر.
+        /// Invalid width.
         width: u32,
-        /// ارتفاعِ نامعتبر.
+        /// Invalid height.
         height: u32,
-        /// نسبتِ درخواستی.
+        /// Requested aspect.
         aspect: &'static str,
-        /// رزولوشنِ درخواستی.
+        /// Requested resolution.
         resolution: &'static str,
     },
-    /// رنگِ accent نامعتبر است (باید `#RGB` یا `#RRGGBB` هگز باشد).
+    /// Invalid accent color (must be `#RGB` or `#RRGGBB` hex).
     InvalidAccentHex {
-        /// مقدارِ نامعتبر.
+        /// Invalid value.
         value: String,
     },
 }
@@ -227,19 +227,19 @@ impl std::fmt::Display for HudError {
 
 impl std::error::Error for HudError {}
 
-// ══════════════════════ نسبت / رزولوشن / فریم‌ریت ══════════════════════
+// ══════════════════════ Aspect / Resolution / Framerate ══════════════════════
 
-/// نسبتِ تصویرِ ویدئو.
+/// Video aspect ratio.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HudAspect {
-    /// عمودیِ عمودی-ویدئو — `9:16`.
+    /// Vertical-video portrait — `9:16`.
     NineBySixteen,
-    /// افقیِ کلاسیک — `16:9`.
+    /// Classic horizontal — `16:9`.
     SixteenByNine,
 }
 
 impl HudAspect {
-    /// شناسهٔ وایر — `9:16` | `16:9`.
+    /// Wire identifier — `9:16` | `16:9`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -249,17 +249,17 @@ impl HudAspect {
     }
 }
 
-/// رزولوشنِ خروجی.
+/// Output resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HudResolution {
-    /// HD آمادهٔ شبکه — ۷۲۰p.
+    /// Stream-ready HD — 720p.
     Hd720,
-    /// `FullHD` واقعی — ۱۰۸۰p (درمانِ D06).
+    /// True `FullHD` — 1080p (D06 cure).
     FullHd1080,
 }
 
 impl HudResolution {
-    /// شناسهٔ وایر — `720p` | `1080p`.
+    /// Wire identifier — `720p` | `1080p`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -269,17 +269,17 @@ impl HudResolution {
     }
 }
 
-/// فریم‌ریتِ رندر.
+/// Render framerate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HudFps {
-    /// سینمایی — ۲۴.
+    /// Cinematic — 24.
     TwentyFour,
-    /// نرمِ پرنرخ — ۶۰ (درمانِ D08).
+    /// Smooth high-fps — 60 (D08 cure).
     Sixty,
 }
 
 impl HudFps {
-    /// مقدارِ عددی.
+    /// Numeric value.
     #[must_use]
     pub fn as_u32(self) -> u32 {
         match self {
@@ -288,7 +288,7 @@ impl HudFps {
         }
     }
 
-    /// شناسهٔ وایر — `24` | `60`.
+    /// Wire identifier — `24` | `60`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -298,16 +298,16 @@ impl HudFps {
     }
 }
 
-/// مشخصِ کاملِ رندر ویدئو — بدونِ حالتِ جهانی، همهٔ توابع خالص‌اند.
+/// Complete video render spec — no global state; all functions are pure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HudRenderSpec {
-    /// نسبتِ تصویر.
+    /// Aspect ratio.
     pub aspect: HudAspect,
-    /// رزولوشن.
+    /// Resolution.
     pub resolution: HudResolution,
-    /// فریم‌ریت.
+    /// Framerate.
     pub fps: HudFps,
-    /// مدت بر حسبِ ثانیه.
+    /// Duration in seconds.
     pub duration_sec: u32,
 }
 
@@ -323,9 +323,9 @@ impl Default for HudRenderSpec {
 }
 
 impl HudRenderSpec {
-    /// ابعادِ فریمِ موردانتظار برای این مشخص — `width` و `height`.
+    /// Expected frame dimensions for this spec — `width` and `height`.
     ///
-    /// (۹:۱۶ → ۷۲۰×۱۲۸۰ یا ۱۰۸۰×۱۹۲۰؛ ۱۶:۹ → ۱۲۸۰×۷۲۰ یا ۱۹۲۰×۱۰۸۰)
+    /// (9:16 → 720×1280 or 1080×1920; 16:9 → 1280×720 or 1920×1080)
     #[must_use]
     pub fn frame_size(&self) -> (u32, u32) {
         match (self.resolution, self.aspect) {
@@ -336,48 +336,48 @@ impl HudRenderSpec {
         }
     }
 
-    /// آغازِ افیدِ خروج — `duration − 1.2` (درمانِ D15).
+    /// Fade-out start — `duration − 1.2` (D15 cure).
     #[must_use]
     pub fn fade_out_start(&self) -> f64 {
         f64::from(self.duration_sec) - FADE_OUT_SEC
     }
 }
 
-// ══════════════════════ هندسهٔ قطعی ══════════════════════
+// ══════════════════════ Deterministic geometry ══════════════════════
 
-/// گرهٔ مش — مختصاتِ ۳بعدیِ بی‌واحد در فضایِ مدل (پیش از چرخش).
+/// Mesh node — unitless 3D coordinates in model space (before rotation).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HudNodeGeometry {
-    /// اندیسِ ۰-مبنا در کلِ ۱۸۰ گره.
+    /// 0-based index across all 180 nodes.
     pub index: u32,
-    /// پوسته — `0` بیرونی، `1` درونی.
+    /// Shell — `0` outer, `1` inner.
     pub shell: u32,
-    /// X مدل.
+    /// Model X.
     pub x: f64,
-    /// Y مدل.
+    /// Model Y.
     pub y: f64,
-    /// Z مدل.
+    /// Model Z.
     pub z: f64,
-    /// برچسبِ فراخوان — فقط برای ۴ گرهِ نام‌دار.
+    /// Callout label — only for the 4 named nodes.
     pub label: Option<String>,
-    /// مقدارِ فراخوان — فقط برای ۴ گرهِ نام‌دار.
+    /// Callout value — only for the 4 named nodes.
     pub value: Option<String>,
 }
 
-/// یالِ مش — جفتِ اندیسِ گره.
+/// Mesh edge — a pair of node indices.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HudEdgeGeometry {
-    /// سرِ اول.
+    /// First endpoint.
     pub a: u32,
-    /// سرِ دوم.
+    /// Second endpoint.
     pub b: u32,
 }
 
-/// تولیدِ `n` نقطهٔ فیبوناچی روی کره به شعاعِ `radius` — قطعی و بدونِ RNG.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)] // هندسهٔ مقادیرِ صحیحِ کوچک — دقتِ f64 کافی است
+/// Generates `n` Fibonacci points on a sphere of radius `radius` — deterministic, no RNG.
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)] // Small integer-valued geometry — f64 precision is sufficient
 #[must_use]
 pub fn fibonacci_shell(n: usize, radius: f64) -> Vec<(f64, f64, f64)> {
-    // زاویهٔ طلایی فیبوناچی — بازهٔ یکنواختِ کروی (محاسبهٔ درجا — sqrt ثابت نیست)
+    // Fibonacci golden angle — uniform spherical spacing (computed inline — the sqrt is not constant)
     let golden_angle = std::f64::consts::PI * (3.0 - 5.0_f64.sqrt());
     let mut out = Vec::with_capacity(n);
     for i in 0..n {
@@ -389,15 +389,15 @@ pub fn fibonacci_shell(n: usize, radius: f64) -> Vec<(f64, f64, f64)> {
     out
 }
 
-/// فراخوان‌ها را روی اندیس‌هایِ ثابتِ مش می‌نشانند (درمانِ D11).
+/// Pin the callouts to fixed mesh indices (D11 cure).
 const CALLOUT_BINDINGS: [(u32, u32); 4] = [
-    (0, 0),     // TRINITY_MAIRON — اولین گرهٔ پوستهٔ بیرونی
-    (0, 45),    // MCP_GATEWAY — پوستهٔ بیرونی
-    (1, 30),    // BASE_8453 — پوستهٔ درونی
-    (1, 60),    // CCXT_QUANT — پوستهٔ درونی
+    (0, 0),     // TRINITY_MAIRON — the first node of the outer shell
+    (0, 45),    // MCP_GATEWAY — outer shell
+    (1, 30),    // BASE_8453 — inner shell
+    (1, 60),    // CCXT_QUANT — inner shell
 ];
 
-/// مشِ کاملِ دوپوستهٔ ۱۸۰-گره‌ای + فراخوان‌هایِ متصل — همیشه همین خروجی.
+/// The complete two-shell 180-node mesh + connected callouts — always this exact output.
 #[allow(clippy::cast_precision_loss)]
 #[must_use]
 pub fn hud_mesh_nodes() -> Vec<HudNodeGeometry> {
@@ -436,8 +436,8 @@ pub fn hud_mesh_nodes() -> Vec<HudNodeGeometry> {
     nodes
 }
 
-/// یال‌هایِ مش — برای هر گره، ۳ همسایهٔ نزدیکِ همان پوسته + ۸ پلِ بین‌پوسته‌ایِ
-/// قطعی. جفت‌ها dedup می‌شوند (a < b). قطعی و بدونِ RNG.
+/// Mesh edges — for each node, 3 nearest same-shell neighbors + 8 deterministic
+/// inter-shell bridges. Pairs are deduped (a < b). Deterministic and RNG-free.
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
 #[must_use]
 pub fn hud_mesh_edges(nodes: &[HudNodeGeometry]) -> Vec<HudEdgeGeometry> {
@@ -453,7 +453,7 @@ pub fn hud_mesh_edges(nodes: &[HudNodeGeometry]) -> Vec<HudEdgeGeometry> {
         let base = shell * SHELL_NODE_COUNT as u32;
         for i in 0..SHELL_NODE_COUNT {
             let a = &nodes[(base + i as u32) as usize];
-            // سه همسایهٔ نزدیکِ همان پوسته — فاصلهٔ اقلیدسیِ فضایِ مدل
+            // Three nearest same-shell neighbors — Euclidean distance in model space
             let mut best: Vec<(f64, u32)> = Vec::with_capacity(SHELL_NODE_COUNT);
             for j in 0..SHELL_NODE_COUNT {
                 if i == j {
@@ -471,7 +471,7 @@ pub fn hud_mesh_edges(nodes: &[HudNodeGeometry]) -> Vec<HudEdgeGeometry> {
             }
         }
     }
-    // پل‌هایِ بین‌پوسته‌ای — هر ۱۵مین گرهٔ بیرونی به نزدیک‌ترین گرهٔ درونی
+    // Inter-shell bridges — every 15th outer node to its nearest inner node
     for i in (0..SHELL_NODE_COUNT).step_by(15) {
         let a = &nodes[i];
         let mut best: Option<(f64, u32)> = None;
@@ -492,22 +492,22 @@ pub fn hud_mesh_edges(nodes: &[HudNodeGeometry]) -> Vec<HudEdgeGeometry> {
     edges
 }
 
-// ══════════════════════ فازهایِ خطِ زمانی ══════════════════════
+// ══════════════════════ Timeline phases ══════════════════════
 
-/// یک فازِ خطِ زمانیِ HUD.
+/// One HUD timeline phase.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HudPhase {
-    /// شمارهٔ ۱-مبنای فاز.
+    /// 1-based phase number.
     pub index: u32,
-    /// عنوانِ صریح — مثلاً `PHASE 01 // NEURAL IGNITION`.
+    /// Explicit title — e.g. `PHASE 01 // NEURAL IGNITION`.
     pub title: String,
-    /// آغاز بر حسبِ ثانیه.
+    /// Start in seconds.
     pub start_sec: f64,
-    /// پایان بر حسبِ ثانیه.
+    /// End in seconds.
     pub end_sec: f64,
 }
 
-/// عنوان‌هایِ ثابتِ چهار فاز.
+/// Fixed titles of the four phases.
 pub const PHASE_TITLES: [&str; 4] = [
     "PHASE 01 // NEURAL IGNITION",
     "PHASE 02 // DETERMINISTIC SEEK_TO PIPE",
@@ -515,8 +515,8 @@ pub const PHASE_TITLES: [&str; 4] = [
     "PHASE 04 // MAIRON 100/100 SEALED",
 ];
 
-/// چهار فازِ صریحِ خطِ زمانی برای مدتِ `duration_sec` — مرزها متناسبِ
-/// ۱۴/۲۹/۴۴/۶۰ از ۶۰ ثانیه‌اند و همیشه کلِ بازه را می‌پوشانند.
+/// Four explicit timeline phases for duration `duration_sec` — boundaries are proportional to
+/// 14/29/44/60 of 60 seconds and always cover the full span.
 #[allow(clippy::cast_precision_loss)]
 #[must_use]
 pub fn hud_timeline_phases(duration_sec: u32) -> Vec<HudPhase> {
@@ -538,21 +538,21 @@ pub fn hud_timeline_phases(duration_sec: u32) -> Vec<HudPhase> {
         .collect()
 }
 
-// ══════════════════════ پیش‌تن‌ها ══════════════════════
+// ══════════════════════ Presets ══════════════════════
 
-/// خاستگاهِ پیش‌تن.
+/// Preset origin.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HudPresetSource {
-    /// چهار پیش‌تنِ بالادستیِ TM.
+    /// The four TM upstream presets.
     Upstream,
-    /// چهار پیش‌تنِ حاکمِ کیان.
+    /// The four Kian sovereign presets.
     KiaSovereign,
-    /// پیش‌تنِ سنتزشده از نامِ مخزن.
+    /// Preset synthesized from a repo name.
     Synthesized,
 }
 
 impl HudPresetSource {
-    /// شناسهٔ وایر — `upstream` | `kia_sovereign` | `synthesized`.
+    /// Wire identifier — `upstream` | `kia_sovereign` | `synthesized`.
     #[must_use]
     pub fn wire_id(self) -> &'static str {
         match self {
@@ -563,26 +563,26 @@ impl HudPresetSource {
     }
 }
 
-/// یک پیش‌تنِ تلمتریِ HUD.
+/// One HUD telemetry preset.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HudPreset {
-    /// شناسهٔ یکتا — `mwie`، `kia-monopoly-core`، …
+    /// Unique identifier — `mwie`, `kia-monopoly-core`, …
     pub slug: String,
-    /// عنوانِ نمایشی.
+    /// Display title.
     pub title: String,
-    /// شعارِ زیرِ عنوان.
+    /// Tagline under the title.
     pub tagline: String,
-    /// رنگِ accent به هگز — `#RRGGBB`.
+    /// Accent color as hex — `#RRGGBB`.
     pub accent_hex: String,
-    /// نشانِ گوشهٔ بالا-چپ.
+    /// Top-left corner badge.
     pub badge: String,
-    /// خاستگاه.
+    /// Origin.
     pub source: HudPresetSource,
-    /// برچسب‌هایِ چرخشیِ گره‌ها (حداکثر ۴).
+    /// Rotating node labels (at most 4).
     pub node_labels: Vec<String>,
 }
 
-/// کاتالوگِ ۸ پیش‌تنِ تلمتری — ۴ بالادستی + ۴ حاکمِ کیان (ترتیبِ ثابت).
+/// Catalog of 8 telemetry presets — 4 upstream + 4 Kian sovereign (fixed order).
 #[must_use]
 pub fn hud_preset_catalog() -> Vec<HudPreset> {
     vec![
@@ -661,10 +661,10 @@ pub fn hud_preset_catalog() -> Vec<HudPreset> {
     ]
 }
 
-/// پیش‌تن را از کاتالوگ با شناسه می‌یابد.
+/// Finds a preset in the catalog by identifier.
 ///
 /// # Errors
-/// پیش‌تنِ ناشناخته → [`HudError::UnknownPreset`].
+/// Unknown preset → [`HudError::UnknownPreset`].
 pub fn find_hud_preset(slug: &str) -> Result<HudPreset, HudError> {
     hud_preset_catalog()
         .into_iter()
@@ -674,7 +674,7 @@ pub fn find_hud_preset(slug: &str) -> Result<HudPreset, HudError> {
         })
 }
 
-/// رنگِ accent معتبر را می‌پذیرد یا از SHA-256 نامِ مخزن مشتق می‌کند.
+/// Accepts a valid accent color or derives one from the repo name's SHA-256.
 fn resolve_accent(repo_name: &str, accent: Option<&str>) -> Result<String, HudError> {
     let Some(raw) = accent.map(str::trim).filter(|v| !v.is_empty()) else {
         let digest = Sha256::digest(repo_name.as_bytes());
@@ -700,8 +700,8 @@ fn resolve_accent(repo_name: &str, accent: Option<&str>) -> Result<String, HudEr
     Ok(format!("#{hex}"))
 }
 
-/// برچسب‌هایِ گره را از متنِ مخزن مشتق می‌کند — حروف/اعداد، حداکثر ۸ نویسه،
-/// حداکثر ۴ برچسب، قطعی.
+/// Derives node labels from repo text — letters/digits, at most 8 characters,
+/// at most 4 labels, deterministic.
 fn derive_node_labels(text: &str) -> Vec<String> {
     text.split(|c: char| c.is_whitespace() || matches!(c, ',' | '-' | '/' | '|' | '.'))
         .filter(|w| w.chars().any(char::is_alphanumeric))
@@ -717,11 +717,11 @@ fn derive_node_labels(text: &str) -> Vec<String> {
         .collect()
 }
 
-/// سنتزِ پیش‌تنِ HUD از نامِ مخزنِ دلخواه — قطعی: همان ورودی، همان خروجی
-/// (رنگِ نشده از SHA-256 نامِ مخزن مشتق می‌شود؛ درمانِ D14).
+/// Synthesizes a HUD preset from any repo name — deterministic: same input, same output
+/// (an unstated color is derived from the repo name's SHA-256; D14 cure).
 ///
 /// # Errors
-/// نامِ خالی → [`HudError::EmptyRepoName`]؛ رنگِ نامعتبر →
+/// Empty name → [`HudError::EmptyRepoName`]; invalid color →
 /// [`HudError::InvalidAccentHex`].
 pub fn synthesize_custom_repo_hud_preset(
     repo_name: &str,
@@ -773,10 +773,10 @@ pub fn synthesize_custom_repo_hud_preset(
     })
 }
 
-// ══════════════════════ تزریقِ امنِ JSON ══════════════════════
+// ══════════════════════ Safe JSON injection ══════════════════════
 
-/// گریزِ HTML برای متن‌هایِ نمایشیِ قالب — همان قاعدهٔ استودیو
-/// (`&` و `<` و `>` و `"`)؛ به‌همراهِ تزریقِ JSONِ امن، سطحِ دومِ ضد-XSS.
+/// HTML escaping for the template's display strings — the studio's own rule
+/// (`&`, `<`, `>`, and `"`) — together with safe JSON injection, the second anti-XSS layer.
 #[must_use]
 pub fn html_attr_escape(input: &str) -> String {
     input
@@ -786,8 +786,8 @@ pub fn html_attr_escape(input: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// JSON امنِ درونِ `<script>` — درمانِ D03: `<` و `>` و `&` و U+2028/U+2029
-/// به گریزِ `\uXXXX` تبدیل می‌شوند تا هیچ `</script>` یا HTML تازه‌ای متولد نشود.
+/// JSON safe inside `<script>` — D03 cure: `<`, `>`, `&`, and U+2028/U+2029
+/// are converted to `\uXXXX` escapes so no fresh `</script>` or HTML can be born.
 #[must_use]
 pub fn json_for_script(value: &serde_json::Value) -> String {
     let raw = serde_json::to_string(value).unwrap_or_else(|_| "null".to_owned());
@@ -798,36 +798,36 @@ pub fn json_for_script(value: &serde_json::Value) -> String {
         .replace('\u{2029}', "\\u2029")
 }
 
-// ══════════════════════ بستهٔ HTML ══════════════════════
+// ══════════════════════ HTML bundle ══════════════════════
 
-/// بستهٔ HTML5 تولیدشده — همهٔ ارقامِ لازم برای ممیزی.
+/// The generated HTML5 bundle — all figures needed for audit.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NeuralHudHtmlBundle {
-    /// سندِ HTML مستقل — یک فایل، صفر وابستگیِ خارجی.
+    /// Self-contained HTML document — one file, zero external dependencies.
     pub html: String,
-    /// شناسهٔ پیش‌تن.
+    /// Preset identifier.
     pub preset_slug: String,
-    /// عرضِ فریم.
+    /// Frame width.
     pub frame_width: u32,
-    /// ارتفاعِ فریم.
+    /// Frame height.
     pub frame_height: u32,
-    /// فریم‌ریت.
+    /// Framerate.
     pub fps: u32,
-    /// مدت بر حسبِ ثانیه.
+    /// Duration in seconds.
     pub duration_sec: u32,
-    /// تعدادِ گره‌ها — همیشه ۱۸۰.
+    /// Node count — always 180.
     pub node_count: usize,
-    /// تعدادِ یال‌ها.
+    /// Edge count.
     pub edge_count: usize,
-    /// تعدادِ فراخوان‌ها — همیشه ۴.
+    /// Callout count — always 4.
     pub callout_count: usize,
-    /// تعدادِ فازها — همیشه ۴.
+    /// Phase count — always 4.
     pub phase_count: usize,
-    /// SHA-256 سندِ HTML.
+    /// SHA-256 of the HTML document.
     pub html_sha256: String,
-    /// سینتِ زندهٔ `WebAudio` فعال است.
+    /// Live `WebAudio` synth is enabled.
     pub webaudio_enabled: bool,
-    /// `window.seekTo(t)` قطعی حاضر است.
+    /// The deterministic `window.seekTo(t)` is present.
     pub seek_to_deterministic: bool,
 }
 
@@ -1014,13 +1014,13 @@ window.__KIA_HUD_SIGNATURE = "__SIGNATURE__";
 </html>
 "##;
 
-/// مولّدِ بستهٔ HTML5 سه‌بعدیِ HUD — هندسهٔ کش‌شده، تزریقِ امنِ JSON،
-/// چهار فاز، فراخوان‌هایِ متصل و `WebAudio` زنده. قطعی: دو فراخوانی با ورودیِ
-/// یکسان، بایت‌به‌بایت همان HTML را می‌دهند.
+/// HUD 3D HTML5 bundle generator — cached geometry, safe JSON injection,
+/// four phases, connected callouts, and live `WebAudio`. Deterministic: two calls with the same
+/// input produce byte-for-byte identical HTML.
 ///
 /// # Errors
-/// مدتِ خارج از ۱..=۱۸۰ → [`HudError::DurationOutOfRange`].
-#[allow(clippy::too_many_lines)] // قالبِ HTML — طولش ماهیتِ آرتیفکت است
+/// Duration outside 1..=180 → [`HudError::DurationOutOfRange`].
+#[allow(clippy::too_many_lines)] // HTML template — its length is part of the artifact's nature
 pub fn build_neural_hud_html_bundle(
     preset: &HudPreset,
     spec: &HudRenderSpec,
@@ -1103,22 +1103,22 @@ pub fn build_neural_hud_html_bundle(
     })
 }
 
-// ══════════════════════ فرمان‌هایِ FFmpeg ══════════════════════
+// ══════════════════════ FFmpeg commands ══════════════════════
 
-/// فرمانِ کاملِ صدا — argv آمادهٔ اجرا + فیلترگرافِ قابلِ بازرسی.
+/// Complete audio command — ready-to-run argv + an inspectable filtergraph.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HudAudioCommand {
-    /// argv قطعی — عنصرِ صفر `ffmpeg`.
+    /// Deterministic argv — element zero is `ffmpeg`.
     pub argv: Vec<String>,
-    /// فیلترگرافِ `lavfi` — شاملِ `amix=inputs=4` + افیدها + [`MASTER_LIMITER`].
+    /// `lavfi` filtergraph — contains `amix=inputs=4` + fade filters + [`MASTER_LIMITER`].
     pub filter_complex: String,
-    /// آغازِ افیدِ خروج.
+    /// Fade-out start.
     pub fade_out_start: f64,
 }
 
-/// فیلترگرافِ صدا — ۳ زیر-بیس + حاملِ رادارِ C6 (گیت‌شده هر ۸ ثانیه با
-/// `volume` قطعی) → `amix=inputs=4:duration=first` → افیدِ ورود/خروج →
-/// [`MASTER_LIMITER`] (درمانِ D05/D15).
+/// Audio filtergraph — 3 sub-basses + the C6 radar carrier (gated every 8 seconds with a
+/// deterministic `volume`) → `amix=inputs=4:duration=first` → fade-in/out →
+/// [`MASTER_LIMITER`] (D05/D15 cures).
 fn hud_audio_filter_complex(duration_sec: u32) -> String {
     let d = duration_sec;
     let fade_out = ((f64::from(d) - FADE_OUT_SEC) * 100.0).round() / 100.0;
@@ -1135,10 +1135,10 @@ afade=t=out:st={fade_out}:d={FADE_OUT_SEC},\
     )
 }
 
-/// فرمانِ `FFmpeg` صدا برای مدتِ داده‌شده — argv بدونِ شل (اجرایِ مستقیم).
+/// Audio `FFmpeg` command for the given duration — shell-free argv (direct execution).
 ///
 /// # Errors
-/// مدتِ خارج از ۱..=۱۸۰ → [`HudError::DurationOutOfRange`].
+/// Duration outside 1..=180 → [`HudError::DurationOutOfRange`].
 pub fn build_ffmpeg_hud_audio_command(duration_sec: u32) -> Result<HudAudioCommand, HudError> {
     if duration_sec == 0 || duration_sec > MAX_DURATION_SEC {
         return Err(HudError::DurationOutOfRange { duration_sec });
@@ -1168,11 +1168,11 @@ pub fn build_ffmpeg_hud_audio_command(duration_sec: u32) -> Result<HudAudioComma
     })
 }
 
-/// فرمانِ `FFmpeg` ویدئو از پایپِ `MJPEG` — رزولوشن/نسبت/فریم‌ریتِ درست،
-/// مکسِ صدا از `hud_audio.wav` و `-movflags +faststart` (درمانِ D06/D07/D08).
+/// Video `FFmpeg` command from the `MJPEG` pipe — correct resolution/aspect/framerate,
+/// audio mux from `hud_audio.wav`, and `-movflags +faststart` (D06/D07/D08 cures).
 ///
 /// # Errors
-/// مدتِ نامعتبر یا نقضِ ناورنیِ فریم → [`HudError`].
+/// Invalid duration or frame invariant violation → [`HudError`].
 pub fn build_ffmpeg_mjpeg_pipe_command(
     spec: &HudRenderSpec,
     audio_input: Option<&str>,
@@ -1239,7 +1239,7 @@ pub fn build_ffmpeg_mjpeg_pipe_command(
     Ok(argv)
 }
 
-// ══════════════════════ تست‌ها ══════════════════════
+// ══════════════════════ Tests ══════════════════════
 
 #[cfg(test)]
 mod tests {
@@ -1297,7 +1297,7 @@ mod tests {
         let unique: std::collections::BTreeSet<(u32, u32)> =
             edges.iter().map(|e| (e.a, e.b)).collect();
         assert_eq!(unique.len(), edges.len(), "no duplicate edges");
-        // هر گره حداقل یک یال دارد — مشِ هم‌بند
+        // Every node has at least one edge — a connected mesh
         let mut covered = std::collections::BTreeSet::new();
         for e in &edges {
             covered.insert(e.a);
@@ -1509,7 +1509,7 @@ mod tests {
         assert_eq!(a.accent_hex.len(), 7, "derived #RRGGBB");
         assert!(a.accent_hex.starts_with('#'));
         assert!(!a.node_labels.is_empty() && a.node_labels.len() <= 4);
-        // رنگِ صریحِ معتبر حفظ می‌شود؛ نامعتبر رد می‌شود
+        // A valid explicit color is kept; an invalid one is rejected
         let c =
             synthesize_custom_repo_hud_preset("repo-x", "", Some("#0Af")).expect("ok");
         assert_eq!(c.accent_hex, "#00AAFF", "3-digit hex expands");

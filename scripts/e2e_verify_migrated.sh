@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# e2e_verify_migrated.sh — راستی‌آزمایی زندهٔ کرنل روی دیتابیس مهاجرت‌شده (Mission 2)
-# یک اجرای foreground: boot → curl suite → kill → cleanup
+# e2e_verify_migrated.sh — live verification of the kernel against the migrated database (Mission 2)
+# One foreground run: boot → curl suite → kill → cleanup
 set -u
 export PATH="$HOME/.cargo/bin:$PATH"
 REPO=/home/z/my-project/kian-launch/kian
@@ -120,7 +120,7 @@ chkj "mintedThisYear = 63,700,200,000 < cap 500B" "$(printf '%s' "$E4" | python3
 
 say "8. Wave-10 public kernel surface (war-room / hud / grok / monopoly / i18n)"
 W10=$(curl -sf "$BASE/war-room/state" || true)
-chkj "war-room signature KIA-WAR-ROOM-W10" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(json.load(sys.stdin)["signature"])' 2>/dev/null)" "KIA-WAR-ROOM-W10" "$W10"
+chkj "war-room signature MAIRON-WAR-ROOM" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(json.load(sys.stdin)["signature"])' 2>/dev/null)" "MAIRON-WAR-ROOM" "$W10"
 chkj "war-room canonical 24-tick scenario" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["scenario"]))' 2>/dev/null)" "24" "$W10"
 chkj "war-room honest day-1 earned 9.55 USD" "$(printf '%s' "$W10" | python3 -c 'import json,sys;print(json.load(sys.stdin)["day1TotalEarnedMicros"])' 2>/dev/null)" "9550000" "$W10"
 chk "GET /hud/presets -> 200" "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/hud/presets" || true)" "200"

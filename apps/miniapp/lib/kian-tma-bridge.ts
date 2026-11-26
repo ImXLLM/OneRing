@@ -30,10 +30,10 @@ export interface TelegramWindowLike extends Window {
   Telegram?: { WebApp?: TelegramWebAppLike };
 }
 
-// نکته: `window.Telegram` سراسری از قبل در `@kian/sdk` با تایپ `TelegramWebApp`
-// اعلان شده؛ اینجا دوباره اعلان سراسری نمی‌کنیم تا TS2717 رخ ندهد — دسترسیِ
-// داخلی با cast امن به `TelegramWindowLike` انجام می‌شود و مصرف‌کننده‌ها برای
-// haptic/swipe/safe-area باید از همین پل استفاده کنند، نه `window` خام.
+// Note: the global `window.Telegram` is already declared in `@kian/sdk` with the `TelegramWebApp`
+// type; we do not declare it globally again here to avoid TS2717 — internal access
+// goes through a safe cast to `TelegramWindowLike`, and consumers must use this very bridge
+// for haptic/swipe/safe-area, not raw `window`.
 
 function getWebApp(): TelegramWebAppLike | null {
   if (typeof window === "undefined") return null;

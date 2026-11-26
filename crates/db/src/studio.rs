@@ -1,46 +1,46 @@
-//! استودیوی ادراک‌سیار — ماندگاریِ آفرینش‌های `studio_creations` (Wave 5 —
+//! Mobile-perception studio — persistence of `studio_creations` (Wave 5 —
 //! Step 2/4).
 //!
-//! سه عملیاتِ قطعی روی مهاجرت `0009`: درجِ آفرینش، خوانشِ تک‌ردیفی و
-//! شمارشِ کل — با ردیابیِ audit روی هر درج. هیچ جدولِ دفتری لمس نمی‌شود.
+//! Three deterministic operations on migration `0009`: insert a creation, single-row read, and
+//! total count — with audit tracing on every insert. No ledger table is touched.
 
 use sqlx::Row;
 
 use crate::error::DbResult;
 use crate::store::V3Store;
 
-/// ردیفِ آفرینش استودیو — همان ستون‌های `studio_creations` (مهاجرت 0009).
+/// Studio creation row — the exact columns of `studio_creations` (migration 0009).
 #[derive(Debug, Clone, PartialEq)]
 pub struct StudioCreationRow {
-    /// شناسهٔ آفرینش (`studio:<uuid>`).
+    /// Creation ID (`studio:<uuid>`).
     pub id: String,
-    /// شناسهٔ حسابِ سازنده.
+    /// Creator account ID.
     pub creator_user_id: String,
-    /// لایهٔ شناختیِ مورف‌شده (`ToySpark` | `CreatorStudio` | `ProTerminal`).
+    /// Morphed cognitive layer (`ToySpark` | `CreatorStudio` | `ProTerminal`).
     pub cognitive_tier: String,
-    /// مدالیتیِ مولد (`search` … `sfx`).
+    /// Generative modality (`search` … `sfx`).
     pub primary_modality: String,
-    /// پرامپتِ خامِ سازنده.
+    /// Creator's raw prompt.
     pub prompt_text: String,
-    /// عنوانِ قطعی.
+    /// Deterministic title.
     pub title: String,
-    /// کارتِ ویترینِ JSON (`StorefrontProjectCard`).
+    /// JSON storefront card (`StorefrontProjectCard`).
     pub storefront_card_json: String,
-    /// نمرهٔ REA (`88..=97`).
+    /// REA score (`88..=97`).
     pub rea_score: i64,
-    /// قیمت به میکرو-کیان.
+    /// Price in micro-Kian.
     pub price_ukian: i64,
-    /// قیمت به ستارهٔ تلگرام.
+    /// Price in Telegram Stars.
     pub price_xtr_stars: i64,
-    /// مُهرِ زمانِ تولید (ISO-8601).
+    /// Generation timestamp (ISO-8601).
     pub created_at: String,
 }
 
 impl V3Store {
-    /// درجِ آفرینش استودیو — قطعی و ایدمپوتنت روی `id`.
+    /// Insert a studio creation — deterministic and idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL یا خطای audit پس از درج.
+    /// SQL error or audit error after the insert.
     pub async fn create_studio_creation(&self, row: &StudioCreationRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "studio_creations"
@@ -66,10 +66,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// خوانشِ تک‌ردیفیِ آفرینش — ناشناخته → `None`.
+    /// Single-row creation read — unknown → `None`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_studio_creation(&self, id: &str) -> DbResult<Option<StudioCreationRow>> {
         let row = sqlx::query(
             r#"SELECT "id","creator_user_id","cognitive_tier","primary_modality","prompt_text",
@@ -82,10 +82,10 @@ impl V3Store {
         Ok(row.map(studio_row_from))
     }
 
-    /// شمارشِ کلِ آفرینش‌ها — گیتِ آزمونِ هندلر.
+    /// Total creation count — the handler test gate.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn count_studio_creations(&self) -> DbResult<i64> {
         let row =
             sqlx::query(r#"SELECT COUNT(*) AS "n" FROM "studio_creations""#)
@@ -95,8 +95,8 @@ impl V3Store {
     }
 }
 
-/// نگاشتِ ردیفِ SQL به ردیفِ دامنه — همان قراردادِ `users.rs`/`nation.rs`.
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx: مالکیت Row از نتیجهٔ fetch می‌آید و مصرف می‌شود
+/// Map an SQL row to a domain row — same contract as `users.rs`/`nation.rs`.
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern: Row ownership comes from the fetch result and is consumed
 fn studio_row_from(row: sqlx::sqlite::SqliteRow) -> StudioCreationRow {
     StudioCreationRow {
         id: row.get("id"),
@@ -129,8 +129,8 @@ mod tests {
             creator_user_id: "user:tg:777777".to_owned(),
             cognitive_tier: "ToySpark".to_owned(),
             primary_modality: "workspace".to_owned(),
-            prompt_text: "یه دایناسور آبی که توی فضا بستنی می‌فروشه".to_owned(),
-            title: "ماجرای یک‌کلیکی".to_owned(),
+            prompt_text: "\u{6cc}\u{647} \u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{6a9}\u{647} \u{62a}\u{648}\u{6cc} \u{641}\u{636}\u{627} \u{628}\u{633}\u{62a}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{647}".to_owned(),
+            title: "\u{645}\u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{6cc}\u{6a9}‌\u{6a9}\u{644}\u{6cc}\u{6a9}\u{6cc}".to_owned(),
             storefront_card_json: "{\"slug\":\"toyspark-1\"}".to_owned(),
             rea_score: 92,
             price_ukian: 1_000_000,

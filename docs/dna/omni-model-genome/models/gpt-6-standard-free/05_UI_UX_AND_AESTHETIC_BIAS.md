@@ -157,7 +157,7 @@ Do not call an artifact complete until:
   \<body>
     \<main class="app-shell">
       \<section class="financial-panel">
-        \<h2>گزارش مالی\</h2>
+        \<h2>Financial Report\</h2>
         \<bdi class="numeric" dir="ltr">−1,250.75 USD\</bdi>
         \<code class="code-block" dir="ltr">const total = 1250;\</code>
       \</section>

@@ -1,82 +1,82 @@
-//! ابزارهای MCP — allowlist بسته؛ ابزار ناشناخته هرگز invoke نمی‌شود.
+//! MCP tools — a closed allowlist; an unknown tool is never invoked.
 //!
-//! هر ابزار: نام، توضیح، آرگومان‌های لازم به ترتیب، و `admin_only`. اجرا سمت
-//! سرور با کوئری‌های خواندنِ ثبت‌شده انجام می‌شود — MCP هیچ SQL آزادی به
-//! فراخواننده نمی‌دهد (اصل sqlsafe لگاسی).
+//! Each tool: name, description, required arguments in order, and `admin_only`. Execution happens
+//! server-side with registered read queries — MCP grants no free-form SQL
+//! to the caller (the legacy sqlsafe principle).
 
-/// تعریف یک ابزار MCP.
+/// Definition of one MCP tool.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct McpToolDef {
-    /// نام ابزار (`kernel.economy`)
+    /// Tool name (`kernel.economy`)
     pub name: &'static str,
-    /// توضیح
+    /// Description
     pub description: &'static str,
-    /// آرگومان‌های لازم به ترتیب
+    /// Required arguments, in order
     pub args: &'static [&'static str],
-    /// فقط ادمین؟ (خوانش عمومی = false)
+    /// Admin only? (public read = false)
     pub admin_only: bool,
 }
 
-/// allowlist ابزارها — ۸ ابزار خواندنی؛ نوشتن روی MCP ممنوع (فقط API کرنل).
+/// Tool allowlist — 8 readable tools; writes over MCP are forbidden (kernel API only).
 pub const TOOLS: [McpToolDef; 8] = [
     McpToolDef {
         name: "kernel.economy",
-        description: "خلاصهٔ اقتصاد ملی (مادهٔ ۶) — عرضه، خزانه، قفل امانت",
+        description: "\u{62e}\u{644}\u{627}\u{635}\u{647}\u{654} \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f} \u{645}\u{644}\u{6cc} (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6}) — \u{639}\u{631}\u{636}\u{647}\u{60c} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{642}\u{641}\u{644} \u{627}\u{645}\u{627}\u{646}\u{62a}",
         args: &[],
         admin_only: false,
     },
     McpToolDef {
         name: "kernel.health",
-        description: "liveness عمیق — دفتر پاسخ می‌دهد؟",
+        description: "liveness \u{639}\u{645}\u{6cc}\u{642} — \u{62f}\u{641}\u{62a}\u{631} \u{67e}\u{627}\u{633}\u{62e} \u{645}\u{6cc}‌\u{62f}\u{647}\u{62f}\u{61f}",
         args: &[],
         admin_only: false,
     },
     McpToolDef {
         name: "market.products",
-        description: "محصولات فعال بازار",
+        description: "\u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{641}\u{639}\u{627}\u{644} \u{628}\u{627}\u{632}\u{627}\u{631}",
         args: &["limit"],
         admin_only: false,
     },
     McpToolDef {
         name: "escrow.get",
-        description: "وضعیت یک امانت با شناسه",
+        description: "\u{648}\u{636}\u{639}\u{6cc}\u{62a} \u{6cc}\u{6a9} \u{627}\u{645}\u{627}\u{646}\u{62a} \u{628}\u{627} \u{634}\u{646}\u{627}\u{633}\u{647}",
         args: &["id"],
         admin_only: false,
     },
     McpToolDef {
         name: "kb.search",
-        description: "جست‌وجوی پایگاه دانش",
+        description: "\u{62c}\u{633}\u{62a}‌\u{648}\u{62c}\u{648}\u{6cc} \u{67e}\u{627}\u{6cc}\u{6af}\u{627}\u{647} \u{62f}\u{627}\u{646}\u{634}",
         args: &["q"],
         admin_only: false,
     },
     McpToolDef {
         name: "audit.tail",
-        description: "آخرین ردیف‌های ممیزی — فقط ادمین",
+        description: "\u{622}\u{62e}\u{631}\u{6cc}\u{646} \u{631}\u{62f}\u{6cc}\u{641}‌\u{647}\u{627}\u{6cc} \u{645}\u{645}\u{6cc}\u{632}\u{6cc} — \u{641}\u{642}\u{637} \u{627}\u{62f}\u{645}\u{6cc}\u{646}",
         args: &["limit"],
         admin_only: true,
     },
     McpToolDef {
         name: "wallet.balance_of",
-        description: "تراز یک حساب دفتر — فقط ادمین",
+        description: "\u{62a}\u{631}\u{627}\u{632} \u{6cc}\u{6a9} \u{62d}\u{633}\u{627}\u{628} \u{62f}\u{641}\u{62a}\u{631} — \u{641}\u{642}\u{637} \u{627}\u{62f}\u{645}\u{6cc}\u{646}",
         args: &["account_id"],
         admin_only: true,
     },
     McpToolDef {
         name: "deposits.list",
-        description: "فهرست واریزهای TON با فیلتر وضعیت — فقط ادمین",
+        description: "\u{641}\u{647}\u{631}\u{633}\u{62a} \u{648}\u{627}\u{631}\u{6cc}\u{632}\u{647}\u{627}\u{6cc} TON \u{628}\u{627} \u{641}\u{6cc}\u{644}\u{62a}\u{631} \u{648}\u{636}\u{639}\u{6cc}\u{62a} — \u{641}\u{642}\u{637} \u{627}\u{62f}\u{645}\u{6cc}\u{646}",
         args: &["status"],
         admin_only: true,
     },
 ];
 
-/// ابزار با نام.
+/// Tool by name.
 #[must_use]
 pub fn tool_def(name: &str) -> Option<&'static McpToolDef> {
     TOOLS.iter().find(|t| t.name == name)
 }
 
-/// اعتبارسنجی آرگومان‌ها — همهٔ کلیدهای لازم باید رشتهٔ غیرخالی باشند.
-/// خروجی: دلیل نقص یا `None` برای درست.
+/// Argument validation — every required key must be a non-empty string.
+/// Output: the defect reason or `None` when valid.
 #[must_use]
 pub fn validate_args(tool: &McpToolDef, arguments: &serde_json::Value) -> Option<String> {
     let Some(obj) = arguments.as_object() else {
@@ -96,7 +96,7 @@ pub fn validate_args(tool: &McpToolDef, arguments: &serde_json::Value) -> Option
 mod tests {
     use super::*;
 
-    /// allowlist — ۸ ابزار، نام یکتا، ادمین‌ها دقیقاً مشخص.
+    /// Allowlist — 8 tools, unique names, admins exactly specified.
     #[test]
     fn tools_are_eight_unique_with_admin_flags() {
         assert_eq!(TOOLS.len(), 8);
@@ -109,7 +109,7 @@ mod tests {
         assert!(tool_def("drop tables").is_none(), "no free-form SQL tool");
     }
 
-    /// اعتبارسنجی آرگومان — نقص دقیق گزارش می‌شود.
+    /// Argument validation — the exact defect is reported.
     #[test]
     fn args_validation_reports_exact_missing() {
         let t = tool_def("escrow.get").expect("tool");

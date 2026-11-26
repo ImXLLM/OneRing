@@ -1,9 +1,9 @@
-//! خوانندهٔ دیتابیس لگاسی — SQL خام روی فایل بازیابی‌شدهٔ Railway.
+//! The legacy database reader — raw SQL over the recovered Railway file.
 //!
-//! جدول‌های لگاسی (`users`، `products`، `transactions`) مدل v3 نیستند؛ مثل
-//! `migrate-legacy.ts` با کوئری خام و `CAST(... AS TEXT)` می‌خوانیم چون
-//! شناسه‌های لگاسی از Int32 بزرگ‌ترند. اتصال فقط‌خواندنی است — مهاجرت
-//! هرگز روی منبع می‌نویسد.
+//! The legacy tables (`users`, `products`, `transactions`) are not the v3 model; like
+//! `migrate-legacy.ts` we read with raw queries and `CAST(... AS TEXT)` because
+//! legacy IDs exceed Int32. The connection is read-only — the migration
+//! never writes to the source.
 
 use crate::error::{DbError, DbResult};
 use crate::genesis::{LegacyProductRow, LegacyUserRow};
@@ -12,21 +12,21 @@ use sqlx::{
     Row,
 };
 
-/// تصویر کامل خوانده‌شده از لگاسی — ورودی مهاجرت و برنامهٔ genesis.
+/// The complete snapshot read from legacy — input to migration and the genesis plan.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LegacySnapshot {
-    /// همهٔ کاربران (مثل ۴۶۶ نفر روز-اول) مرتب بر اساس شناسه
+    /// All users (e.g. the 466 day-one users) sorted by ID
     pub users: Vec<LegacyUserRow>,
-    /// همهٔ محصولات (مثل ۳۰ محصول لگاسی) مرتب بر اساس شناسه
+    /// All products (e.g. 30 legacy products) sorted by ID
     pub products: Vec<LegacyProductRow>,
-    /// تعداد ردیف‌های تراکنش لگاسی (مثل ۱٬۵۵۴) — فقط برای گزارش
+    /// The legacy transaction row count (e.g. 1,554) — for reporting only
     pub tx_count: i64,
 }
 
-/// خواندن تصویر لگاسی از فایل SQLite — فقط‌خواندنی.
+/// Read the legacy snapshot from the SQLite file — read-only.
 ///
 /// # Errors
-/// فایل نبود، جدول‌ها نبودند، یا SQLite باز نشد.
+/// The file was missing, the tables were missing, or SQLite failed to open.
 pub async fn read_legacy(path: &str) -> DbResult<LegacySnapshot> {
     let file = path.strip_prefix("file:").unwrap_or(path);
     if !std::path::Path::new(file).is_file() {

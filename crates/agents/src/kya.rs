@@ -1,53 +1,53 @@
-//! متادیتای KYA و قیمت‌گذاری x402 — پورت `04_0xkiabot_security_x402_kya`
-//! (پوشهٔ ۰۴ گنجینه).
+//! KYA metadata and x402 pricing — port of `04_0xkiabot_security_x402_kya`
+//! (vault folder 04).
 //!
-//! * [`KyaMetadata`] — شناسنامهٔ Know-Your-Agent (سبک ERC-8004): هر ایجنت
-//!   فعال با توان‌نامهٔ امضای ES256 و نقش‌های مجازش روی سیم توصیف می‌شود؛
-//!   همین ساختار پایهٔ `/.well-known/agent-card.json` و رجیستری ERC-8004 است.
-//! * [`X402Pricing`] — دروازهٔ پرداخت HTTP-402 (نسخهٔ ۲): قیمت‌گذاری بر حسب
-//!   SBC روی شبکهٔ Radius تست‌نت، بدون خواندن هرگز کلید خصوصی — فقط
-//!   آدرس عمومی فروشنده (`payTo`).
+//! * [`KyaMetadata`] — the Know-Your-Agent identity card (ERC-8004 style): every
+//!   active agent is described on the wire with an ES256 capability document and its allowed roles;
+//!   this structure underlies `/.well-known/agent-card.json` and the ERC-8004 registry.
+//! * [`X402Pricing`] — the HTTP-402 payment gate (version 2): pricing in
+//!   SBC on the Radius testnet, never reading a private key — only the
+//!   seller's public address (`payTo`).
 //!
-//! هر دو ساختار فقط داده‌اند (serde) — امضادانی و شمارش روی مسیرهای واقعی
-//! بعدها سیم می‌شود؛ اینجا قراردادِ قطعی و تست‌شده.
+//! Both structures are data-only (serde) — signing and counting on real paths
+//! go on the wire later; here is the deterministic, tested contract.
 #![forbid(unsafe_code)]
 
 use serde::{Deserialize, Serialize};
 
-/// الگوریتم امضای پذیرفته‌شده — طبق مشخصهٔ KYA فقط ES256 (منحنی P-256).
+/// Accepted signature algorithm — per the KYA spec, ES256 only (the P-256 curve).
 pub const KYA_SUPPORTED_JWA: &str = "ES256";
 
-/// شناسهٔ شبکهٔ x402 — Radius Testnet (عین `NETWORK` پایتون).
+/// x402 network ID — Radius Testnet (the Python `NETWORK`).
 pub const X402_NETWORK: &str = "eip155:72344";
 
-/// نسخهٔ پروتکل x402 (عین `X402_VERSION` پایتون).
+/// x402 protocol version (the Python `X402_VERSION`).
 pub const X402_VERSION: u32 = 2;
 
-/// شناسنامهٔ Know-Your-Agent یک ایجنت ناوگان.
+/// The Know-Your-Agent identity card of a fleet agent.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KyaMetadata {
-    /// شناسهٔ ایجنت (`agent:merchant` …)
+    /// Agent ID (`agent:merchant` …)
     pub agent_id: String,
-    /// نقش ناوگان
+    /// Fleet role
     pub role: String,
-    /// مدل توان‌نامهٔ ERC-8004
+    /// ERC-8004 capability model
     pub registry: String,
-    /// الگوریتم امضا — فقط ES256
+    /// Signature algorithm — ES256 only
     pub algorithm: String,
-    /// مسیر JWKS عمومی ایجنت (روی سیم منتشر می‌شود؛ هرگز کلید خصوصی نیست)
+    /// The agent's public JWKS path (published on the wire; never a private key)
     pub jwks_path: String,
-    /// دامنه‌های مجاز ایجنت (اسکوپ عملیات)
+    /// Allowed agent domains (operation scopes)
     pub scopes: Vec<String>,
-    /// نسخهٔ شناسنامه
+    /// Identity-card version
     pub version: u32,
 }
 
 impl KyaMetadata {
-    /// شناسنامهٔ ایجنت فعال از نقش — اسکوپ‌ها از نقش مشتق می‌شوند.
+    /// The active agent identity card from a role — scopes derive from the role.
     ///
     /// # Errors
-    /// نقش `registered` (نه فعال) — ایجنت غیرفعال شناسنامهٔ KYA نمی‌گیرد.
+    /// The `registered` role (not active) — an inactive agent gets no KYA identity card.
     pub fn for_role(role: &crate::roles::AgentRole) -> Result<Self, String> {
         if role.status != "active" {
             return Err(format!("role {} is not active", role.role));
@@ -86,34 +86,34 @@ impl KyaMetadata {
         })
     }
 
-    /// شناسنامه‌های همهٔ ایجنت‌های فعال ناوگان — ترتیب پایدار [`crate::roles::ROLES`]
-    /// (نقش‌های `registered` شناسنامه نمی‌گیرند — fail-closed).
+    /// Identity cards of all active fleet agents — the stable [`crate::roles::ROLES`] order
+    /// (`registered` roles get no identity card — fail-closed).
     ///
     /// # Errors
-    /// هرگز در ترتیب فعلی (همهٔ ورودی‌ها فعال‌اند) — ولی امضا `Result` می‌ماند
-    /// تا افزودن نقشِ نیم‌فعال، کامپایل نشکند.
+    /// Never with the current order (all inputs are active) — but signing stays `Result`
+    /// so adding a semi-active role does not break compilation.
     pub fn for_fleet() -> Result<Vec<Self>, String> {
         crate::roles::active_roles().map(Self::for_role).collect()
     }
 }
 
-/// دروازهٔ پرداخت x402 v2 برای فراخوانی‌های A2A پول‌دار.
+/// The x402 v2 payment gate for monetized A2A calls.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct X402Pricing {
-    /// نسخهٔ پروتکل (همیشه ۲)
+    /// Protocol version (always 2)
     pub version: u32,
-    /// آدرس عمومی دریافت‌کننده (`payTo`) — کلید خصوصی هرگز اینجا نیست
+    /// Recipient public address (`payTo`) — a private key is never here
     pub pay_to: String,
-    /// شناسهٔ شبکهٔ EIP-155
+    /// EIP-155 chain ID
     pub network: String,
-    /// قرارداد دارایی (SBC روی Radius تست‌نت)
+    /// Asset contract (SBC on the Radius testnet)
     pub asset: String,
-    /// قیمت پیش‌فرض بر حسب واحدهای دارایی (۶ رقم اعشار — عین پایتون)
+    /// Default price in asset units (6 decimals — exactly like Python)
     pub price_sbc: String,
-    /// سقف قیمت مجاز برای جلوگیری از خرابی درگاه
+    /// The price cap, to keep the gateway from breaking
     pub max_price_sbc: String,
-    /// روش انتقال EIP-3009 (`transferWithAuthorization`)
+    /// EIP-3009 transfer method (`transferWithAuthorization`)
     pub asset_transfer_method: String,
 }
 
@@ -121,7 +121,7 @@ impl Default for X402Pricing {
     fn default() -> Self {
         Self {
             version: X402_VERSION,
-            pay_to: String::new(), // از env در بوت؛ هرگز کلید خصوصی
+            pay_to: String::new(), // From env at boot; never a private key
             network: X402_NETWORK.to_owned(),
             asset: "0x33ad9e4BD16B69B5BFdED37D8B5D9fF9aba014Fb".to_owned(),
             price_sbc: "0.001".to_owned(),
@@ -132,13 +132,13 @@ impl Default for X402Pricing {
 }
 
 impl X402Pricing {
-    /// قیمت‌گذاری با آدرس فروشنده — تنها ورودیِ لازم از ولت.
+    /// Pricing with the seller address — the only input needed from the wallet.
     #[must_use]
     pub fn new(pay_to: &str) -> Self {
         Self { pay_to: pay_to.to_owned(), ..Self::default() }
     }
 
-    /// قیمت مجاز؟ — بین صفر و سقف (مقایسهٔ اعشاریِ رشته‌ای ساده و قطعی).
+    /// Price allowed? — between zero and the cap (a simple, deterministic string-decimal comparison).
     #[must_use]
     pub fn accepts(&self, price_sbc: &str) -> bool {
         let p = parse_decimal(price_sbc);
@@ -147,7 +147,7 @@ impl X402Pricing {
     }
 }
 
-/// تجزیهٔ اعشاری قطعی به واحدهای ۶رقمی (بدون float) — عین `Decimal` پایتون.
+/// Deterministic decimal parsing into 6-decimal units (no float) — like the Python `Decimal`.
 fn parse_decimal(s: &str) -> u128 {
     let (int_part, frac_part) = s.trim().split_once('.').unwrap_or((s.trim(), ""));
     let int: u128 = int_part.parse().unwrap_or(0);
@@ -165,40 +165,40 @@ mod tests {
     use super::*;
     use crate::roles::{ROLES};
 
-    /// شناسنامهٔ KYA برای همهٔ ۷ ایجنت فعال ساخته می‌شود — ناوگان ۷/۷ فعال.
+    /// KYA identity cards are built for all 7 active agents — a 7/7 active fleet.
     #[test]
     fn kya_metadata_for_active_fleet_only() {
         let fleet = KyaMetadata::for_fleet().expect("fleet");
-        assert_eq!(fleet.len(), 7, "همهٔ ایجنت‌های فعال شناسنامه می‌گیرند");
+        assert_eq!(fleet.len(), 7, "\u{647}\u{645}\u{647}\u{654} \u{627}\u{6cc}\u{62c}\u{646}\u{62a}‌\u{647}\u{627}\u{6cc} \u{641}\u{639}\u{627}\u{644} \u{634}\u{646}\u{627}\u{633}\u{646}\u{627}\u{645}\u{647} \u{645}\u{6cc}‌\u{6af}\u{6cc}\u{631}\u{646}\u{62f}");
         for m in &fleet {
             assert_eq!(m.algorithm, "ES256");
             assert_eq!(m.registry, "erc8004");
             assert!(m.jwks_path.starts_with("/.well-known/agents/"));
             assert_ne!(m.scopes, [] as [std::string::String; 0]);
         }
-        // نگهبان حالا فعال است — اسکوپ‌های امنیت/راستی‌آزمایی دارد.
+        // The guardian is now active — it carries the security/verification scopes.
         let guardian = ROLES.iter().find(|r| r.role == "guardian").expect("guardian");
         let g = KyaMetadata::for_role(guardian).expect("guardian is now active");
         assert!(g.scopes.contains(&"security.audit".to_owned()));
         assert!(g.scopes.contains(&"surface.verify".to_owned()));
     }
 
-    /// یکتایی و گسست قابلیت‌های مایرون — `mairon.rea` / `product.rate` فقط
-    /// روی `guardian` است و ناوگان ۷/۷ دست‌نخورده می‌ماند (Wave 2 Step 6).
+    /// Uniqueness and separation of Mairon capabilities — `mairon.rea` / `product.rate` live
+    /// only on `guardian` and the 7/7 fleet stays intact (Wave 2 Step 6).
     #[test]
     fn guardian_dispatches_mairon_rea_capabilities_exclusively() {
         let fleet = KyaMetadata::for_fleet().expect("fleet");
-        assert_eq!(fleet.len(), 7, "ناوگان ۷/۷ باید حفظ شود");
+        assert_eq!(fleet.len(), 7, "\u{646}\u{627}\u{648}\u{6af}\u{627}\u{646} \u{6f7}/\u{6f7} \u{628}\u{627}\u{6cc}\u{62f} \u{62d}\u{641}\u{638} \u{634}\u{648}\u{62f}");
         let carriers = fleet
             .iter()
             .filter(|m| m.scopes.contains(&"mairon.rea".to_owned()))
             .map(|m| m.role.as_str())
             .collect::<Vec<_>>();
-        assert_eq!(carriers, vec!["guardian"], "داوری مایرون فقط از نگهبان گسسته می‌شود");
+        assert_eq!(carriers, vec!["guardian"], "\u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} \u{641}\u{642}\u{637} \u{627}\u{632} \u{646}\u{6af}\u{647}\u{628}\u{627}\u{646} \u{6af}\u{633}\u{633}\u{62a}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
         let g = fleet.iter().find(|m| m.role == "guardian").expect("guardian kya");
         assert!(g.scopes.contains(&"mairon.rea".to_owned()));
         assert!(g.scopes.contains(&"product.rate".to_owned()));
-        // هیچ اسکوپ مایرون‌ای جای دیگر نیست — گسست یکتا.
+        // No Mairon scope exists anywhere else — uniquely exclusive.
         for m in &fleet {
             if m.role != "guardian" {
                 assert!(!m.scopes.contains(&"mairon.rea".to_owned()));
@@ -207,7 +207,7 @@ mod tests {
         }
     }
 
-    /// اسکوپ‌ها از نقش مشتق می‌شوند و بدون کلید خصوصی‌اند.
+    /// Scopes derive from roles and carry no private keys.
     #[test]
     fn scopes_are_role_derived_and_secret_free() {
         let merchant = ROLES.iter().find(|r| r.role == "merchant").expect("merchant");
@@ -216,15 +216,15 @@ mod tests {
         let fin = ROLES.iter().find(|r| r.role == "finance").expect("finance");
         let f = KyaMetadata::for_role(fin).expect("finance kya");
         assert!(f.scopes.contains(&"ledger.reconcile".to_owned()));
-        // هیچ اسکوپی «key» یا «secret» ندارد — قرارداد کلید-محوری
+        // No scope contains "key" or "secret" — the key-centric contract
         for m in KyaMetadata::for_fleet().expect("fleet") {
             for s in &m.scopes {
-                assert!(!s.contains("key"), "scope با کلید ممنوع: {s}");
+                assert!(!s.contains("key"), "scope \u{628}\u{627} \u{6a9}\u{644}\u{6cc}\u{62f} \u{645}\u{645}\u{646}\u{648}\u{639}: {s}");
             }
         }
     }
 
-    /// دروازهٔ x402 — پیش‌فرض‌های پایتون و پذیرش سقف‌دار.
+    /// The x402 gate — Python defaults and capped acceptance.
     #[test]
     fn x402_pricing_defaults_and_gate() {
         let p = X402Pricing::new("0xVENDOR");
@@ -236,13 +236,13 @@ mod tests {
         assert!(p.accepts("0.001"));
         assert!(p.accepts("1"));
         assert!(p.accepts("0.999999"));
-        assert!(!p.accepts("0"), "صفر مجاز نیست");
-        assert!(!p.accepts("1.000001"), "بالای سقف رد می‌شود");
+        assert!(!p.accepts("0"), "\u{635}\u{641}\u{631} \u{645}\u{62c}\u{627}\u{632} \u{646}\u{6cc}\u{633}\u{62a}");
+        assert!(!p.accepts("1.000001"), "\u{628}\u{627}\u{644}\u{627}\u{6cc} \u{633}\u{642}\u{641} \u{631}\u{62f} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
         assert!(!p.accepts("2"));
-        assert!(!p.accepts("abc"), "ورودی خراب رد می‌شود");
+        assert!(!p.accepts("abc"), "\u{648}\u{631}\u{648}\u{62f}\u{6cc} \u{62e}\u{631}\u{627}\u{628} \u{631}\u{62f} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
     }
 
-    /// سریال‌سازی سیم — camelCase و بدون هیچ کلید خصوصی.
+    /// Wire serialization — camelCase and free of any private keys.
     #[test]
     fn wire_format_is_camel_case_and_secret_free() {
         let kya = KyaMetadata::for_fleet().expect("fleet").swap_remove(0);
@@ -255,7 +255,7 @@ mod tests {
         assert!(jp.contains("\"payTo\":\"0xABC\""));
         assert!(jp.contains("\"network\":\"eip155:72344\""));
         let all = format!("{j}{jp}");
-        assert!(!all.to_lowercase().contains("private"), "بدون کلید خصوصی");
-        assert!(!all.to_lowercase().contains("secret"), "بدون راز");
+        assert!(!all.to_lowercase().contains("private"), "\u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{644}\u{6cc}\u{62f} \u{62e}\u{635}\u{648}\u{635}\u{6cc}");
+        assert!(!all.to_lowercase().contains("secret"), "\u{628}\u{62f}\u{648}\u{646} \u{631}\u{627}\u{632}");
     }
 }

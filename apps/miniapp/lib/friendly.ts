@@ -1,41 +1,41 @@
 /**
- * ترجمهٔ کدهای خطای کرنل به فارسیِ انسانی، کوتاه و راهنما (UX لایهٔ نمایش).
+ * Translates kernel error codes into human, short, actionable Persian (presentation-layer UX).
  *
- * کدها از پاکت استاندارد `{ error: { code, message } }` کرنل Rust می‌آیند؛
- * اینجا فقط برای نمایش بازنویسی می‌شوند — هیچ منطق امنیتی اینجا نیست.
+ * Codes come from the Rust kernel's standard `{ error: { code, message } }` envelope;
+ * they are rewritten here for display only — no security logic lives here.
  */
 
 import { ApiError } from "@kian/sdk";
 
 const FRIENDLY_CODES: Record<string, string> = {
   ACCOUNT_OVERDRAFT:
-    "موجودی کیف‌پول کافی نیست — اول کیف را شارژ کن یا با لینک رفرال درآمد بساز.",
+    "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0648\u0644 \u06a9\u06cc\u0641 \u0631\u0627 \u0634\u0627\u0631\u0698 \u06a9\u0646 \u06cc\u0627 \u0628\u0627 \u0644\u06cc\u0646\u06a9 \u0631\u0641\u0631\u0627\u0644 \u062f\u0631\u0622\u0645\u062f \u0628\u0633\u0627\u0632.",
   INSUFFICIENT_BALANCE:
-    "موجودی کیف‌پول کافی نیست — اول کیف را شارژ کن یا با لینک رفرال درآمد بساز.",
-  UNKNOWN_ACCOUNT: "این حساب پیدا نشد — شاید نشست قدیمی است؛ یک‌بار دیگر تلاش کن.",
-  UNKNOWN_ESCROW: "این معامله پیدا نشد — شاید حذف شده یا نشست قدیمی است.",
-  INVALID_STATE: "این معامله الان در این وضعیت قابل انجام نیست — صفحه را تازه کن.",
+    "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u06cc\u0641‌\u067e\u0648\u0644 \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0648\u0644 \u06a9\u06cc\u0641 \u0631\u0627 \u0634\u0627\u0631\u0698 \u06a9\u0646 \u06cc\u0627 \u0628\u0627 \u0644\u06cc\u0646\u06a9 \u0631\u0641\u0631\u0627\u0644 \u062f\u0631\u0622\u0645\u062f \u0628\u0633\u0627\u0632.",
+  UNKNOWN_ACCOUNT: "\u0627\u06cc\u0646 \u062d\u0633\u0627\u0628 \u067e\u06cc\u062f\u0627 \u0646\u0634\u062f — \u0634\u0627\u06cc\u062f \u0646\u0634\u0633\u062a \u0642\u062f\u06cc\u0645\u06cc \u0627\u0633\u062a\u061b \u06cc\u06a9‌\u0628\u0627\u0631 \u062f\u06cc\u06af\u0631 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
+  UNKNOWN_ESCROW: "\u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u067e\u06cc\u062f\u0627 \u0646\u0634\u062f — \u0634\u0627\u06cc\u062f \u062d\u0630\u0641 \u0634\u062f\u0647 \u06cc\u0627 \u0646\u0634\u0633\u062a \u0642\u062f\u06cc\u0645\u06cc \u0627\u0633\u062a.",
+  INVALID_STATE: "\u0627\u06cc\u0646 \u0645\u0639\u0627\u0645\u0644\u0647 \u0627\u0644\u0627\u0646 \u062f\u0631 \u0627\u06cc\u0646 \u0648\u0636\u0639\u06cc\u062a \u0642\u0627\u0628\u0644 \u0627\u0646\u062c\u0627\u0645 \u0646\u06cc\u0633\u062a — \u0635\u0641\u062d\u0647 \u0631\u0627 \u062a\u0627\u0632\u0647 \u06a9\u0646.",
   REQUIRES_HUMAN_APPROVAL:
-    "این مبلغ بزرگ است و به تأیید ادمین نیاز دارد — درخواستت در صف بررسی قرار گرفت.",
-  SELF_PURCHASE: "نمی‌توانی محصول خودت را بخری.",
-  RATE_LIMITED: "کمی آرام‌تر — چند لحظه بعد دوباره تلاش کن.",
-  SESSION_REQUIRED: "نشستت منقضی شده — دوباره وارد شو.",
-  SESSION_EXPIRED: "نشستت منقضی شده — دوباره وارد شو.",
-  INVALID_INIT_DATA: "احراز هویت تلگرام پذیرفته نشد — مینی‌اپ را ببند و دوباره باز کن.",
+    "\u0627\u06cc\u0646 \u0645\u0628\u0644\u063a \u0628\u0632\u0631\u06af \u0627\u0633\u062a \u0648 \u0628\u0647 \u062a\u0623\u06cc\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646 \u0646\u06cc\u0627\u0632 \u062f\u0627\u0631\u062f — \u062f\u0631\u062e\u0648\u0627\u0633\u062a\u062a \u062f\u0631 \u0635\u0641 \u0628\u0631\u0631\u0633\u06cc \u0642\u0631\u0627\u0631 \u06af\u0631\u0641\u062a.",
+  SELF_PURCHASE: "\u0646\u0645\u06cc‌\u062a\u0648\u0627\u0646\u06cc \u0645\u062d\u0635\u0648\u0644 \u062e\u0648\u062f\u062a \u0631\u0627 \u0628\u062e\u0631\u06cc.",
+  RATE_LIMITED: "\u06a9\u0645\u06cc \u0622\u0631\u0627\u0645‌\u062a\u0631 — \u0686\u0646\u062f \u0644\u062d\u0638\u0647 \u0628\u0639\u062f \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
+  SESSION_REQUIRED: "\u0646\u0634\u0633\u062a\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f\u0647 — \u062f\u0648\u0628\u0627\u0631\u0647 \u0648\u0627\u0631\u062f \u0634\u0648.",
+  SESSION_EXPIRED: "\u0646\u0634\u0633\u062a\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f\u0647 — \u062f\u0648\u0628\u0627\u0631\u0647 \u0648\u0627\u0631\u062f \u0634\u0648.",
+  INVALID_INIT_DATA: "\u0627\u062d\u0631\u0627\u0632 \u0647\u0648\u06cc\u062a \u062a\u0644\u06af\u0631\u0627\u0645 \u067e\u0630\u06cc\u0631\u0641\u062a\u0647 \u0646\u0634\u062f — \u0645\u06cc\u0646\u06cc‌\u0627\u067e \u0631\u0627 \u0628\u0628\u0646\u062f \u0648 \u062f\u0648\u0628\u0627\u0631\u0647 \u0628\u0627\u0632 \u06a9\u0646.",
   IDENTITY_DISABLED:
-    "ورود با تلگرام فعلاً خاموش است — کمی بعد دوباره تلاش کن.",
+    "\u0648\u0631\u0648\u062f \u0628\u0627 \u062a\u0644\u06af\u0631\u0627\u0645 \u0641\u0639\u0644\u0627\u064b \u062e\u0627\u0645\u0648\u0634 \u0627\u0633\u062a — \u06a9\u0645\u06cc \u0628\u0639\u062f \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
   MINT_CAP_EXCEEDED:
-    "سقف ضرب سالانهٔ پول پر شده — این محدودیت منشور است، نه مشکل حساب تو.",
-  VALIDATION: "اطلاعات فرم کامل یا معتبر نیست — دوباره بررسی کن.",
-  BODY_TOO_LARGE: "حجم محتوای ارسالی بیش از حد مجاز است (سقف HTML: ۱۵۰ کیلوبایت).",
-  NETWORK: "اتصال به کرنل برقرار نشد — اینترنت یا VPN را چک کن و دوباره تلاش کن.",
-  UNKNOWN: "یک خطای پیش‌بینی‌نشده رخ داد — دوباره تلاش کن؛ اگر تکرار شد به پشتیبانی خبر بده.",
+    "\u0633\u0642\u0641 \u0636\u0631\u0628 \u0633\u0627\u0644\u0627\u0646\u0647\u0654 \u067e\u0648\u0644 \u067e\u0631 \u0634\u062f\u0647 — \u0627\u06cc\u0646 \u0645\u062d\u062f\u0648\u062f\u06cc\u062a \u0645\u0646\u0634\u0648\u0631 \u0627\u0633\u062a\u060c \u0646\u0647 \u0645\u0634\u06a9\u0644 \u062d\u0633\u0627\u0628 \u062a\u0648.",
+  VALIDATION: "\u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0641\u0631\u0645 \u06a9\u0627\u0645\u0644 \u06cc\u0627 \u0645\u0639\u062a\u0628\u0631 \u0646\u06cc\u0633\u062a — \u062f\u0648\u0628\u0627\u0631\u0647 \u0628\u0631\u0631\u0633\u06cc \u06a9\u0646.",
+  BODY_TOO_LARGE: "\u062d\u062c\u0645 \u0645\u062d\u062a\u0648\u0627\u06cc \u0627\u0631\u0633\u0627\u0644\u06cc \u0628\u06cc\u0634 \u0627\u0632 \u062d\u062f \u0645\u062c\u0627\u0632 \u0627\u0633\u062a (\u0633\u0642\u0641 HTML: \u06f1\u06f5\u06f0 \u06a9\u06cc\u0644\u0648\u0628\u0627\u06cc\u062a).",
+  NETWORK: "\u0627\u062a\u0635\u0627\u0644 \u0628\u0647 \u06a9\u0631\u0646\u0644 \u0628\u0631\u0642\u0631\u0627\u0631 \u0646\u0634\u062f — \u0627\u06cc\u0646\u062a\u0631\u0646\u062a \u06cc\u0627 VPN \u0631\u0627 \u0686\u06a9 \u06a9\u0646 \u0648 \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.",
+  UNKNOWN: "\u06cc\u06a9 \u062e\u0637\u0627\u06cc \u067e\u06cc\u0634‌\u0628\u06cc\u0646\u06cc‌\u0646\u0634\u062f\u0647 \u0631\u062e \u062f\u0627\u062f — \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646\u061b \u0627\u06af\u0631 \u062a\u06a9\u0631\u0627\u0631 \u0634\u062f \u0628\u0647 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u062e\u0628\u0631 \u0628\u062f\u0647.",
 };
 
-/** پیام دوستانه برای هر خطای API یا شبکه — همیشه فارسیِ قابل‌فهم کاربر. */
+/** Friendly message for any API or network error — always in user-comprehensible Persian. */
 export function friendlyError(err: unknown): string {
   if (err instanceof ApiError) {
-    return FRIENDLY_CODES[err.code] ?? `${err.message || "خطای کرنل"} — دوباره تلاش کن.`;
+    return FRIENDLY_CODES[err.code] ?? `${err.message || "\u062e\u0637\u0627\u06cc \u06a9\u0631\u0646\u0644"} — \u062f\u0648\u0628\u0627\u0631\u0647 \u062a\u0644\u0627\u0634 \u06a9\u0646.`;
   }
   if (err instanceof Error && err.message) {
     if (/fetch|network|Failed to fetch/i.test(err.message)) {
@@ -46,13 +46,13 @@ export function friendlyError(err: unknown): string {
   return FRIENDLY_CODES.UNKNOWN;
 }
 
-/** عنوان کوتاه برای توست خطا بر اساس نوع خطا. */
+/** Short title for the error toast, based on the error type. */
 export function friendlyErrorTitle(err: unknown): string {
   if (err instanceof ApiError && (err.code === "ACCOUNT_OVERDRAFT" || err.code === "INSUFFICIENT_BALANCE")) {
-    return "موجودی کافی نیست";
+    return "\u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u0627\u0641\u06cc \u0646\u06cc\u0633\u062a";
   }
   if (err instanceof ApiError && (err.code === "SESSION_REQUIRED" || err.code === "SESSION_EXPIRED")) {
-    return "نشست منقضی شد";
+    return "\u0646\u0634\u0633\u062a \u0645\u0646\u0642\u0636\u06cc \u0634\u062f";
   }
-  return "انجام نشد";
+  return "\u0627\u0646\u062c\u0627\u0645 \u0646\u0634\u062f";
 }

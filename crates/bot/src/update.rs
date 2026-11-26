@@ -1,34 +1,34 @@
-//! تجزیهٔ خالص آپدیت تلگرام — از `serde_json::Value` به [`BotUpdate`].
+//! Pure Telegram update parsing — from `serde_json::Value` to [`BotUpdate`].
 //!
-//! مسیر واحد تجزیه برای هر دو شِل (teloxide و وبهوک کرنل): شِل teloxide هر
-//! `Update` را با `serde_json::to_value` به Value می‌بَرد و همین‌جا تجزیه
-//! می‌شود — یک معنا، یک تست. هر چیز غیرپیام/غیرمتنی → `None` (fail-closed؛
-//! هرگز crash نمی‌کند).
+//! One parsing path for both shells (teloxide and the kernel webhook): the teloxide shell
+//! converts every `Update` to a `Value` via `serde_json::to_value` and parsing happens
+//! right here — one meaning, one test. Anything non-message/non-text → `None` (fail-closed;
+//! it never crashes).
 
 use serde_json::Value;
 
-/// آپدیت مینیمال تلگرام — فقط چیزی که orchestrator لازم دارد.
+/// Minimal Telegram update — only what the orchestrator needs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BotUpdate {
-    /// شناسهٔ آپدیت تلگرام — برای trace/log.
+    /// Telegram update id — for trace/log.
     pub update_id: i64,
-    /// شناسهٔ چت مقصد پاسخ (private chat).
+    /// Id of the chat to reply to (private chat).
     pub chat_id: i64,
-    /// شناسهٔ فرستندهٔ انسانی — هویت از کانال معتمد، هرگز از بدنهٔ کاربر.
+    /// Human sender id — identity from a trusted channel, never from the user body.
     pub from_id: i64,
-    /// username تلگرام — ممکن است غایب باشد (Option صریح).
+    /// Telegram username — may be absent (explicit Option).
     pub username: Option<String>,
-    /// فرمان بدون `/` و بدون پسوند `@BotBot` — حروف کوچک.
+    /// Command without `/` and without the `@BotBot` suffix — lower-case.
     pub command: Option<String>,
-    /// آرگومان‌های بعد از فرمان.
+    /// Arguments after the command.
     pub args: Vec<String>,
-    /// متن خام پیام (می‌تواند خالی باشد).
+    /// Raw message text (may be empty).
     pub text: String,
 }
 
 impl BotUpdate {
-    /// ساخت از اجزای خام — نقطهٔ واحد تجزیهٔ فرمان؛ از آن شِل‌ها هم استفاده
-    /// می‌کنند (teloxide Update نوع Serialize ندارد).
+    /// Build from raw parts — the single command-parsing point; the shells use it
+    /// too (the teloxide Update type is not Serialize).
     #[must_use]
     pub fn from_parts(
         update_id: i64,
@@ -49,9 +49,9 @@ impl BotUpdate {
         }
     }
 
-    /// تجزیهٔ خالص — فقط `message` **با متن** (پیام ویرایش‌شده/کپشن/کال‌بک
-    /// فعلاً نادیده — additive در فازهای بعد). پیام بدون متن (عکس و…) →
-    /// `None` — fail-closed؛ بات به چیزی که نمی‌فهمد پاسخ نمی‌دهد.
+    /// Pure parsing — only `message` **with text** (edited messages/captions/callbacks
+    /// are ignored for now — additive in later phases). A textless message (photo etc.) →
+    /// `None` — fail-closed; the bot never replies to what it does not understand.
     #[must_use]
     pub fn from_json(v: &Value) -> Option<Self> {
         let msg = v.get("message")?;
@@ -59,7 +59,7 @@ impl BotUpdate {
         let from = msg.get("from")?;
         let from_id = from.get("id")?.as_i64()?;
         if from_id <= 0 {
-            return None; // کانال/بات — پاسخ نمی‌دهیم
+            return None; // channel/bot — we do not reply
         }
         let username = from.get("username").and_then(Value::as_str);
         let text = msg.get("text").and_then(Value::as_str)?;
@@ -67,10 +67,10 @@ impl BotUpdate {
         Some(Self::from_parts(update_id, chat_id, from_id, username, text))
     }
 
-    /// فرمان با پیشوند نام بات (`/start@KiaBot`) → نرمال به `start`.
+    /// Command with a bot-name prefix (`/start@KiaBot`) → normalized to `start`.
     ///
-    /// هاست همسان → پایهٔ فرمان؛ ناهمسان → `None` (خطاب به بات دیگر است).
-    /// بدون نام باتِ شناخته‌شده → پسوند به‌صورت خوش‌بینانه حذف می‌شود.
+    /// Matching host → command base; mismatched → `None` (addressed to another bot).
+    /// No known bot name → the suffix is optimistically dropped.
     #[must_use]
     pub fn normalized_command(&self, bot_username: Option<&str>) -> Option<String> {
         let raw = self.command.as_deref()?;
@@ -79,7 +79,7 @@ impl BotUpdate {
                 Some((base, host)) if host.eq_ignore_ascii_case(bot) => {
                     return Some(base.to_ascii_lowercase());
                 }
-                Some(_) => return None, // خطاب به بات دیگر — پاسخ نمی‌دهیم
+                Some(_) => return None, // addressed to another bot — we do not reply
                 None => {}
             }
         }
@@ -88,7 +88,7 @@ impl BotUpdate {
     }
 }
 
-/// تجزیهٔ فرمان از متن — `/cmd arg1 arg2` → `("cmd", ["arg1","arg2"])`.
+/// Parse the command from text — `/cmd arg1 arg2` → `("cmd", ["arg1","arg2"])`.
 fn parse_command(text: &str) -> (Option<String>, Vec<String>) {
     let mut words = text.split_whitespace();
     let first = words.next().unwrap_or_default();
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn plain_text_has_no_command() {
-        let u = BotUpdate::from_json(&update("سلام")).expect("parses");
+        let u = BotUpdate::from_json(&update("\u{633}\u{644}\u{627}\u{645}")).expect("parses");
         assert!(u.command.is_none());
         assert_eq!(u.args, [] as [String; 0]);
     }
@@ -142,9 +142,9 @@ mod tests {
     fn bot_suffix_is_normalized() {
         let u = BotUpdate::from_json(&update("/Balance@KiaBot")).expect("parses");
         assert_eq!(u.normalized_command(Some("kiabot")).as_deref(), Some("balance"));
-        // هاست ناهمسان → خطاب به بات دیگر است — None
+        // host mismatch → addressed to another bot — None
         assert_eq!(u.normalized_command(Some("other")), None);
-        // نام بات ناشناخته → پسوند خوش‌بینانه حذف می‌شود
+        // unknown bot name → the suffix is optimistically dropped
         assert_eq!(u.normalized_command(None).as_deref(), Some("balance"));
     }
 
@@ -152,12 +152,12 @@ mod tests {
     fn non_message_and_hostile_shapes_fail_closed() {
         assert!(BotUpdate::from_json(&json!({ "update_id": 1 })).is_none());
         assert!(BotUpdate::from_json(&json!({ "edited_message": { "chat": { "id": 1 } } })).is_none());
-        // from بی‌شناسه یا کانال → رد
+        // from without an id or a channel → reject
         let hostile = json!({
             "message": { "chat": { "id": 1 }, "from": { "id": -5 }, "text": "x" }
         });
         assert!(BotUpdate::from_json(&hostile).is_none());
-        // پیام بدون متن (عکس و…) → None — fail-closed، بدون پاسخ
+        // textless message (photo etc.) → None — fail-closed, no reply
         let photo = json!({
             "update_id": 3,
             "message": { "chat": { "id": 100 }, "from": { "id": 777 }, "photo": [{}] }

@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KIAN — مینی‌اپ پادشاهی",
+  title: "KIAN — \u0645\u06cc\u0646\u06cc‌\u0627\u067e \u067e\u0627\u062f\u0634\u0627\u0647\u06cc",
   description:
-    "مینی‌اپ رسمی تلگرام KIAN — ولت دی (Đ)، بازار اسکرو مادهٔ ۸ و واریز TON با احراز initData کرنل.",
+    "\u0645\u06cc\u0646\u06cc‌\u0627\u067e \u0631\u0633\u0645\u06cc \u062a\u0644\u06af\u0631\u0627\u0645 KIAN — \u0648\u0644\u062a \u062f\u06cc (Đ)\u060c \u0628\u0627\u0632\u0627\u0631 \u0627\u0633\u06a9\u0631\u0648 \u0645\u0627\u062f\u0647\u0654 \u06f8 \u0648 \u0648\u0627\u0631\u06cc\u0632 TON \u0628\u0627 \u0627\u062d\u0631\u0627\u0632 initData \u06a9\u0631\u0646\u0644.",
   applicationName: "KIAN",
 };
 

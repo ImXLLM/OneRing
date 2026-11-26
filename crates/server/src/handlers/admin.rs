@@ -1,10 +1,10 @@
-//! هندلرهای پنل ادمین (M4) — overview، صف HITL، دنبالهٔ ممیزی، واریزهای TON
-//! و مدیریت محصولات.
+//! Admin panel handlers (M4) — overview, HITL queue, audit trail, TON deposits,
+//! and product management.
 //!
-//! امنیت: همهٔ مسیرها `require_admin` با `X-KIAN-Key` — fail-closed: بدون کلید
-//! سرور ۵۰۳، بدون هدر ۴۰۱، هدر نادرست ۴۰۱ (مقایسهٔ زمان‌ثابت از contracts).
-//! تصمیم HITL «تأیید ⇒ تسویه» اتمی است — پول ۹۰/۱۰ دقیقاً یک‌بار جابه‌جا
-//! می‌شود (`approve_hitl_and_settle`).
+//! Security: every route runs `require_admin` with `X-KIAN-Key` — fail-closed: no key
+//! yields server 503, missing header 401, wrong header 401 (constant-time comparison from contracts).
+//! The HITL "approve ⇒ settle" decision is atomic — the 90/10 funds move exactly once
+//! (`approve_hitl_and_settle`).
 
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
@@ -31,10 +31,10 @@ use kian_hermes::grok_ux_and_lab_engine::{
 };
 use crate::handlers::hermes::load_lab_telemetry_entries;
 
-/// `GET /admin/overview` — نمای کلی — همهٔ اعداد از کوئری‌های زندهٔ دفتر.
+/// `GET /admin/overview` — overview — every number comes from live ledger queries.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۵۰۰ db.
+/// 401/503 admin, 500 db.
 pub async fn overview(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -75,14 +75,14 @@ pub async fn overview(
     }))
 }
 
-/// `GET /admin/hitl?status=PENDING` — صف HITL؛ بدون فیلتر همهٔ وضعیت‌ها.
+/// `GET /admin/hitl?status=PENDING` — HITL queue; without a filter, all statuses.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۵۰۰ db.
+/// 401/503 admin, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
-#[allow(clippy::implicit_hasher)] // Query extractor axum — hasher در اینجا بی‌معناست
+/// Never on user input — `expect` only on wire-safe database IDs.
+#[allow(clippy::implicit_hasher)] // axum Query extractor — hashing is meaningless here
 pub async fn hitl_list(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -112,13 +112,13 @@ pub async fn hitl_list(
     }))
 }
 
-/// `POST /admin/hitl/{id}/approve` — تأیید + تسویهٔ اتمی در همان فرمان.
+/// `POST /admin/hitl/{id}/approve` — approve + atomic settle in the same command.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ناشناخته، ۴۲۲ قبلاً تصمیم‌گیری/منقضی، ۵۰۰ db.
+/// 401/503 admin, 404 unknown, 422 already decided/expired, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database IDs.
 pub async fn hitl_approve(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -143,13 +143,13 @@ pub async fn hitl_approve(
     }))
 }
 
-/// `POST /admin/hitl/{id}/reject` — رد — هیچ پولی جابه‌جا نمی‌شود.
+/// `POST /admin/hitl/{id}/reject` — reject — no funds move.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ناشناخته، ۴۲۲ قبلاً تصمیم‌گیری/منقضی، ۵۰۰ db.
+/// 401/503 admin, 404 unknown, 422 already decided/expired, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database IDs.
 pub async fn hitl_reject(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -170,14 +170,14 @@ pub async fn hitl_reject(
     }))
 }
 
-/// `GET /admin/audit?limit=50` — دنبالهٔ ممیزی؛ جدیدترین اول.
+/// `GET /admin/audit?limit=50` — audit trail; newest first.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۵۰۰ db.
+/// 401/503 admin, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
-#[allow(clippy::implicit_hasher)] // Query extractor axum — hasher در اینجا بی‌معناست
+/// Never on user input — `expect` only on wire-safe database IDs.
+#[allow(clippy::implicit_hasher)] // axum Query extractor — hashing is meaningless here
 pub async fn audit_tail(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -205,14 +205,14 @@ pub async fn audit_tail(
     }))
 }
 
-/// `GET /admin/deposits?status=PENDING` — واریزهای TON همهٔ کاربران.
+/// `GET /admin/deposits?status=PENDING` — TON deposits of all users.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۵۰۰ db.
+/// 401/503 admin, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
-#[allow(clippy::implicit_hasher)] // Query extractor axum — hasher در اینجا بی‌معناست
+/// Never on user input — `expect` only on wire-safe database IDs.
+#[allow(clippy::implicit_hasher)] // axum Query extractor — hashing is meaningless here
 pub async fn deposits_list(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -239,10 +239,10 @@ pub async fn deposits_list(
     }))
 }
 
-/// `GET /admin/products` — همهٔ محصولات شامل غیرفعال‌ها (مدیریت بازار).
+/// `GET /admin/products` — all products including inactive ones (market management).
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۵۰۰ db.
+/// 401/503 admin, 500 db.
 pub async fn products_list(State(state): State<Arc<AppState>>, headers: HeaderMap) -> ApiResult<Json<AdminProductListResponse>> {
     require_admin(&headers, state.config.admin_key.as_deref())?;
     let rows = state
@@ -272,10 +272,10 @@ pub async fn products_list(State(state): State<Arc<AppState>>, headers: HeaderMa
     }))
 }
 
-/// `DELETE /admin/products/{id}` — حذف محصول (مدیریت بازار).
+/// `DELETE /admin/products/{id}` — delete product (market management).
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ناشناخته، ۵۰۰ db.
+/// 401/503 admin, 404 unknown, 500 db.
 pub async fn product_delete(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -291,18 +291,18 @@ pub async fn product_delete(
 }
 
 
-// ── Wave 9 (Commit #29): رصدخانهٔ آزمایشگاهِ ۱۰-DNA + صادراتِ RLHF/SFT ─────
+// ── Wave 9 (Commit #29): 10-DNA lab observatory + RLHF/SFT export ─────
 //
-// دو اندپوینتِ ادمین روی تلمتریِ ماندگارِ `UserLabTelemetryLog`:
-// - [`lab_telemetry`] — لاگِ هر ۱۰ کوهورت + داشبوردِ تجمیعیِ قطعی؛
-// - [`export_training_dataset`] — صادراتِ SFT (ChatML/ShareGPT) و DPO
-//   (`prompt/chosen/rejected`) برای فاین‌تیونِ مدل‌ها روی تلمتریِ واقعی.
+// Two admin endpoints on the persistent `UserLabTelemetryLog` telemetry:
+// - [`lab_telemetry`] — logs all 10 cohorts + a deterministic aggregate dashboard;
+// - [`export_training_dataset`] — exports SFT (ChatML/ShareGPT) and DPO
+//   (`prompt/chosen/rejected`) datasets for fine-tuning models on real telemetry.
 
-/// `GET /admin/lab-telemetry` — رصدخانهٔ لاگِ آزمایشگاه + داشبوردِ سلامتِ
-/// کوهورت‌ها (X-KIAN-Key).
+/// `GET /admin/lab-telemetry` — lab log observatory + cohort health
+/// dashboard (X-KIAN-Key).
 ///
 /// # Errors
-/// ۴۰۱ کلیدِ ادمینِ غایب؛ ۵۰۰ db.
+/// 401 missing admin key; 500 db.
 pub async fn lab_telemetry(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -366,12 +366,12 @@ pub async fn lab_telemetry(
     }))
 }
 
-/// `POST /admin/export-training-dataset` — صادراتِ دیتاستِ RLHF از تلمتریِ
-/// واقعی؛ فقط مدخل‌هایِ قابلِ آموزش با `rea_score >= min_rea_score`
+/// `POST /admin/export-training-dataset` — exports an RLHF dataset from real
+/// telemetry; only trainable entries with `rea_score >= min_rea_score`
 /// (X-KIAN-Key).
 ///
 /// # Errors
-/// ۴۰۱ کلیدِ ادمینِ غایب؛ ۵۰۰ db.
+/// 401 missing admin key; 500 db.
 pub async fn export_training_dataset(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -423,7 +423,7 @@ mod tests {
 
     use std::sync::Arc;
 
-    /// ماتریس گارد ادمین — بدون کلید سرور ۵۰۳، بدون هدر ۴۰۱، هدر نادرست ۴۰۱.
+    /// Admin guard matrix — no key: server 503, missing header 401, wrong header 401.
     #[tokio::test]
     async fn admin_guard_matrix_over_the_wire() {
         let app_off = app(None).await;
@@ -468,7 +468,7 @@ mod tests {
         assert_eq!(res.status(), 401);
     }
 
-    /// overview با کلید — شمارنده‌های زندهٔ صفر + سری ۱۴ روزه خالی.
+    /// overview with key — zero live counters + an empty 14-day series.
     #[tokio::test]
     async fn overview_shape_is_live() {
         let app = app(Some(ADMIN)).await;
@@ -490,7 +490,7 @@ mod tests {
         assert!(body["revenueSeries"].is_array());
     }
 
-    /// تصمیم HITL روی درخواست ناشناخته → ۴۰۴ کد دامنه.
+    /// HITL decision on an unknown request → 404 domain code.
     #[tokio::test]
     async fn hitl_decision_on_unknown_is_404() {
         let app = app(Some(ADMIN)).await;
@@ -523,7 +523,7 @@ mod tests {
         assert_eq!(res.status(), 404);
     }
 
-    /// حذف محصول ناشناخته → ۴۰۴ `PRODUCT_NOT_FOUND`.
+    /// Delete unknown product → 404 `PRODUCT_NOT_FOUND`.
     #[tokio::test]
     async fn product_delete_unknown_is_404() {
         let app = app(Some(ADMIN)).await;
@@ -543,11 +543,11 @@ mod tests {
     }
 
 
-    /// رصدخانهٔ آزمایشگاه — بدونِ کلید ۴۰۱؛ با کلید: مدخل‌هایِ ۱۰ کوهورت +
-    /// داشبوردِ تجمیعی (fallbackِ شبیه‌سازی روی store خالی).
+    /// Lab observatory — 401 without key; with key: the 10-cohort entries +
+    /// aggregate dashboard (simulation fallback on an empty store).
     #[tokio::test]
     async fn lab_telemetry_requires_admin_and_serves_dashboard() {
-        // ادمینِ غیرفعال → ۵۰۳ fail-closed؛ کلیدِ اشتباه → ۴۰۱
+        // Disabled admin → 503 fail-closed; wrong key → 401
         let app_anon = app(None).await;
         let res = app_anon
             .oneshot(
@@ -600,8 +600,8 @@ mod tests {
         assert!(dashboard["avgReaScore"].as_u64().unwrap_or(0) >= 85, "REA gate >= 85");
     }
 
-    /// صادراتِ RLHF — بدونِ کلید ۴۰۱؛ با کلید: JSONLِ SFT/DPO معتبر با
-    /// آستانهٔ REA؛ آستانهٔ سخت‌گیرتر → رکوردهایِ کمتر.
+    /// RLHF export — 401 without key; with key: valid SFT/DPO JSONL with
+    /// the REA threshold; a stricter threshold → fewer records.
     #[tokio::test]
     async fn export_training_dataset_requires_admin_and_emits_jsonl() {
         let app_anon = app(None).await;
@@ -638,7 +638,7 @@ mod tests {
             assert!(value.get("chosen").is_some());
             assert!(value.get("rejected").is_some());
         }
-        // آستانهٔ ۹۹ → رکوردهایِ کمتر یا برابر
+        // Threshold 99 → fewer or equal records
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/admin/export-training-dataset")
@@ -653,7 +653,7 @@ mod tests {
         );
     }
 
-    /// واریزهای ادمین — فهرست خالی سالم.
+    /// Admin deposits — healthy empty list.
     #[tokio::test]
     async fn deposits_list_empty_is_ok() {
         let app = app(Some(ADMIN)).await;

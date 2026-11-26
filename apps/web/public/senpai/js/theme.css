@@ -1,6 +1,6 @@
-/* theme.css — شیم محلی تم SenPai (گزیده از تم کور app؛ ۱۰۰٪ آفلاین).
-   تم‌های واقعی توسط app.css و applyTheme در app.js مدیریت می‌شوند؛
-   این فایل فقط متغیرهای پایه و انتقال نرم را قبل از لود app.css تضمین می‌کند. */
+/* theme.css — local SenPai theme shim (excerpted from the app's core theme; 100% offline).
+   The real themes are managed by app.css and applyTheme in app.js;
+   this file only guarantees the base variables and smooth transitions before app.css loads. */
 :root {
   --bg: #0b0e14;
   --fg: #e6edf3;

@@ -5,7 +5,7 @@
   --color-foreground: var(--foreground);
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 
-  /* KIAN royal palette — همان دیزاین سیستم وب */
+  /* KIAN royal palette — same design system as the web app */
   --color-royal-400: oklch(0.65 0.16 285);
   --color-royal-500: oklch(0.55 0.19 285);
   --color-royal-600: oklch(0.45 0.19 285);
@@ -25,7 +25,7 @@
   --radius-lg: 0.625rem;
 }
 
-/* KIAN admin: dark-royal-first — همیشه تیره، بدون سوییچ تم */
+/* KIAN admin: dark-royal-first — always dark, no theme switch */
 :root {
   --background: oklch(0.13 0.02 285);
   --foreground: oklch(0.96 0.01 285);

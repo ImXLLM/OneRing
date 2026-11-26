@@ -1,16 +1,16 @@
-//! هندلرهای اتاقِ جنگِ بنیان‌گذار (Wave 10 — Commit #30).
+//! Founder war-room handlers (Wave 10 — Commit #30).
 //!
-//! پنج اندپوینتِ تازه:
-//! - [`war_room_state`] — عمومی؛ وضعیتِ روزِ صفر + سناریویِ کانونیِ ۲۴ تیک؛
-//! - [`war_room_step`] — نشستِ شهروند؛ پیشرویِ علّیِ تک‌گام + ماندگاریِ تیک؛
-//! - [`war_room_directive`] — نشستِ شهروند؛ دستورِ رئیس + سه پاسخِ
-//!   در-شخصیت + ماندگاریِ لاگ؛
-//! - [`war_room_reset`] — نشستِ شهروند؛ بازنشانیِ علایی به روزِ صفر
-//!   (پاک‌سازیِ تیک‌ها و دستورهایِ رئیس تا `step` از نو رانده شود)؛
-//! - [`war_room_explain_simple`] — عمومی؛ توضیحِ «۰ تا ۱۰۰» برای سوادِ صفر.
+//! Five new endpoints:
+//! - [`war_room_state`] — public; day-zero status + the canonical 24-tick scenario;
+//! - [`war_room_step`] — citizen session; single-step causal advance + tick persistence;
+//! - [`war_room_directive`] — citizen session; chairman directive + three
+//!   in-persona replies + log persistence;
+//! - [`war_room_reset`] — citizen session; causal reset to day zero
+//!   (ticks and chairman directives are cleared so `step` can be replayed);
+//! - [`war_room_explain_simple`] — public; the "0 to 100" explanation for zero literacy.
 //!
-//! همهٔ اعداد از [`kian_hermes::war_room_simulation_engine`] می‌آیند — هیچ
-//! هندلری عددی را خودش نمی‌سازد (منبعِ واحدِ حقیقت).
+//! All numbers come from [`kian_hermes::war_room_simulation_engine`] — no
+//! handler fabricates numbers on its own (single source of truth).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -40,17 +40,17 @@ use kian_contracts::HttpFailure;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// نگاشتِ مرحلهٔ خطِ لوله به شناسهٔ وایر — برایِ ماندگاری و DTO.
+/// Maps a pipeline stage to its wire ID — for persistence and DTO.
 const fn stage_id(stage: PipelineStage) -> &'static str {
     stage.stage_id()
 }
 
-/// نگاشتِ جریانِ درآمد به شناسهٔ وایر.
+/// Maps a revenue stream to its wire ID.
 const fn stream_id(stream: RevenueStream) -> &'static str {
     stream.stream_id()
 }
 
-/// ساختِ نمایِ دفترِ ولت از وضعیتِ موتور.
+/// Builds the wallet-ledger view from engine state.
 #[must_use]
 pub fn wallet_view(wallet: &OrganizationWalletLedger) -> WalletLedgerView {
     WalletLedgerView {
@@ -75,7 +75,7 @@ pub fn wallet_view(wallet: &OrganizationWalletLedger) -> WalletLedgerView {
     }
 }
 
-/// ساختِ نمایِ کاملِ یک رخدادِ تیک برایِ وایر.
+/// Builds the full wire view of one tick event.
 #[must_use]
 pub fn tick_view(
     event: &kian_hermes::war_room_simulation_engine::SimulationTickEvent,
@@ -101,7 +101,7 @@ pub fn tick_view(
     }
 }
 
-/// نگاشتِ خطایِ موتور به خطایِ وایر — همهٔ مسیرهایِ ناموفق تایپ‌شده‌اند.
+/// Maps an engine error to a wire error — every failure path is typed.
 fn wire_error(err: &WarRoomError) -> ApiFailure {
     match err {
         WarRoomError::EmptyDirective | WarRoomError::DirectiveTooLong(_) => {
@@ -113,7 +113,7 @@ fn wire_error(err: &WarRoomError) -> ApiFailure {
     }
 }
 
-/// پرسوناهایِ کاملِ اتاقِ جنگ — به ترتیبِ ثابتِ نمایش.
+/// The complete war-room personas — in fixed display order.
 #[must_use]
 pub fn founder_views() -> Vec<FounderView> {
     [
@@ -136,10 +136,10 @@ pub fn founder_views() -> Vec<FounderView> {
     .collect()
 }
 
-/// `GET /war-room/state` — عمومی؛ وضعیتِ کاملِ روزِ صفر + سناریویِ کانونی.
+/// `GET /war-room/state` — public; full day-zero status + the canonical scenario.
 ///
 /// # Errors
-/// ۵۰۰ db.
+/// 500 db.
 pub async fn war_room_state() -> ApiResult<Json<WarRoomStateResponse>> {
     let scenario = canonical_day0_scenario();
     let ticks: Vec<WarRoomTickView> = scenario
@@ -168,14 +168,14 @@ pub async fn war_room_state() -> ApiResult<Json<WarRoomStateResponse>> {
     }))
 }
 
-/// `POST /war-room/step` — نشستِ شهروند؛ پیشرویِ علّیِ تک‌گام.
+/// `POST /war-room/step` — citizen session; single-step causal advance.
 ///
-/// بدنه: `{ "tickCursor": 0..=23, "speedMultiplier": 1|2|5 }` — سرور وضعیت را
-/// از روزِ صفر تا نشانگر بازپخش می‌کند، دقیقاً یک تیک جلو می‌رود، ردیفِ تیک را
-/// ایدمپوتنت ذخیره می‌کند و وضعیتِ تازه را برمی‌گرداند.
+/// Body: `{ "tickCursor": 0..=23, "speedMultiplier": 1|2|5 }` — the server replays
+/// state from day zero to the cursor, advances exactly one tick, stores the tick row
+/// idempotently, and returns the fresh state.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ نشانگر/سرعتِ نامعتبر یا سناریویِ تمام؛ ۵۰۰ db.
+/// 401 missing session; 400 invalid cursor/speed or scenario finished; 500 db.
 pub async fn war_room_step(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -195,12 +195,12 @@ pub async fn war_room_step(
     {
         return Err(HttpFailure::invalid_request(1).into());
     }
-    // بازپخشِ علّی تا نشانگر — هر گام از همان منشورِ منشور عبور می‌کند.
+    // Causal replay to the cursor — every step passes through the same prisms.
     for _ in 0..cursor {
         room.advance_single_tick().map_err(|e| wire_error(&e))?;
     }
     let event = room.advance_single_tick().map_err(|e| wire_error(&e))?;
-    // ماندگاریِ ایدمپوتنتِ ردیفِ تیک.
+    // Idempotent persistence of the tick row.
     let row = FounderWarRoomTickRow {
         id: format!("warroom:{:04}", event.tick_index),
         tick_index: i64::from(event.tick_index),
@@ -228,14 +228,14 @@ pub async fn war_room_step(
     }))
 }
 
-/// `POST /war-room/directive` — نشستِ شهروند؛ دستورِ تاکتیکیِ رئیس.
+/// `POST /war-room/directive` — citizen session; the chairman's tactical directive.
 ///
-/// بدنه: `{ "directiveText": string, "locale": "fa"|"en", "triggeredTick": n }`
-/// — کلاسه‌بندیِ قطعیِ قصد، سه پاسخِ در-شخصیت، و ماندگاریِ لاگ با شناسهٔ
-/// قطعیِ هش‌مبنا (تکرارِ همان دستور روی همان تیک = بدونِ دوباره‌نویسی).
+/// Body: `{ "directiveText": string, "locale": "fa"|"en", "triggeredTick": n }`
+/// — deterministic intent classification, three in-persona replies, and log persistence with a
+/// hash-based deterministic ID (the same directive on the same tick = no re-write).
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ متنِ خالی یا فراتر از سقف؛ ۵۰۰ db.
+/// 401 missing session; 400 empty or over-cap text; 500 db.
 pub async fn war_room_directive(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -257,7 +257,7 @@ pub async fn war_room_directive(
         .inject_chairman_directive(&req.directive_text, locale)
         .map_err(|e| wire_error(&e))?;
     let intent = log.intent;
-    // شناسهٔ قطعیِ هش‌مبنا — ایدمپوتنت روی (متن، تیک).
+    // Hash-based deterministic ID — idempotent on (text, tick).
     let mut hasher = Sha256::new();
     hasher.update(log.directive_text.as_bytes());
     hasher.update(tick.to_le_bytes());
@@ -289,15 +289,15 @@ pub async fn war_room_directive(
     }))
 }
 
-/// `POST /war-room/reset` — نشستِ شهروند؛ بازنشانیِ علایی به روزِ صفر.
+/// `POST /war-room/reset` — citizen session; causal reset to day zero.
 ///
-/// همهٔ تیک‌هایِ ثبت‌شده و لاگِ دستورهایِ رئیس در یک تراکنش پاک می‌شوند تا
-/// `POST /war-room/step` بدونِ برخورد بهِ اتمامِ سناریو از نو رانده شود.
-/// خواندنِ وضعیتِ کانونی از [`kian_hermes::war_room_simulation_engine`] —
-/// بازنشانیِ دفترِ فرمان، وضعیتِ عمومیِ روزِ صفر را تغییر نمی‌دهد.
+/// All recorded ticks and the chairman-directive log are cleared in one transaction so that
+/// `POST /war-room/step` can be replayed without hitting scenario exhaustion.
+/// Canonical status is read from [`kian_hermes::war_room_simulation_engine`] —
+/// resetting the command ledger does not alter the public day-zero status.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۵۰۰ db.
+/// 401 missing session; 500 db.
 pub async fn war_room_reset(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -314,15 +314,15 @@ pub async fn war_room_reset(
         deleted_directives: i64::try_from(deleted_directives).unwrap_or(i64::MAX),
         tick_cursor: 0,
         progress_percent: 0,
-        message_fa: "اتاقِ جنگ به روزِ صفر بازنشانی شد — سناریویِ ۲۴تایی از نو قابلِ رانش است".to_owned(),
+        message_fa: "\u{627}\u{62a}\u{627}\u{642}\u{650} \u{62c}\u{646}\u{6af} \u{628}\u{647} \u{631}\u{648}\u{632}\u{650} \u{635}\u{641}\u{631} \u{628}\u{627}\u{632}\u{646}\u{634}\u{627}\u{646}\u{6cc} \u{634}\u{62f} — \u{633}\u{646}\u{627}\u{631}\u{6cc}\u{648}\u{6cc}\u{650} \u{6f2}\u{6f4}\u{62a}\u{627}\u{6cc}\u{6cc} \u{627}\u{632} \u{646}\u{648} \u{642}\u{627}\u{628}\u{644}\u{650} \u{631}\u{627}\u{646}\u{634} \u{627}\u{633}\u{62a}".to_owned(),
         message_en: "war-room reset to Day 0 — the 24-tick scenario can be re-driven".to_owned(),
     }))
 }
 
-/// `GET /war-room/explain-simple?locale=fa|en` — عمومی؛ توضیحِ «۰ تا ۱۰۰».
+/// `GET /war-room/explain-simple?locale=fa|en` — public; the "0 to 100" explanation.
 ///
 /// # Errors
-/// هرگز برایِ ورودیِ معمولی — هر لوکالِ ناشناخته به `en` می‌افتد.
+/// Never for ordinary input — any unknown locale falls back to `en`.
 pub async fn war_room_explain_simple(
     Query(q): Query<BTreeMap<String, String>>,
 ) -> ApiResult<Json<WarRoomExplainResponse>> {
@@ -363,7 +363,7 @@ pub async fn war_room_explain_simple(
     }))
 }
 
-/// شناسهٔ وایرِ قصد.
+/// Wire ID of the intent.
 fn intent_id(intent: ChairmanIntent) -> &'static str {
     match intent {
         ChairmanIntent::ViralHudLaunch => "viral_hud_launch",
@@ -376,14 +376,14 @@ fn intent_id(intent: ChairmanIntent) -> &'static str {
     }
 }
 
-/// پاسخِ دوزبانهٔ یک شریک — «فارسی --- انگلیسی» در یک ستون برایِ حسابرسی.
+/// A partner's bilingual reply — "Persian --- English" in one column for audit.
 fn bilingual(replies: &[kian_hermes::war_room_simulation_engine::FounderReply], index: usize) -> String {
     replies.get(index).map_or(String::new(), |r| {
         format!("{}\n---\n{}", r.message_fa, r.message_en)
     })
 }
 
-/// نگاشتِ پاسخ‌هایِ موتور به نمایِ وایر.
+/// Maps engine replies to the wire view.
 fn reply_views(
     replies: &[kian_hermes::war_room_simulation_engine::FounderReply],
 ) -> Vec<FounderReplyView> {
@@ -408,7 +408,7 @@ mod tests {
     use kian_db::V3Store;
     use tower::ServiceExt;
 
-    /// اپِ کامل با نشستِ dev — همان الگویِ تست‌هایِ routes.rs.
+    /// Full app with a dev session — same pattern as the routes.rs tests.
     async fn hardened_app() -> axum::Router {
         let mut cfg = crate::config::ServerConfig::base();
         cfg.admin_key = Some("test-admin-key-0123456789".to_owned());
@@ -421,7 +421,7 @@ mod tests {
         crate::routes::build_router(crate::state::AppState::new(store, cfg).shared())
     }
 
-    /// نشستِ رئیس از مسیرِ رسمیِ dev-login — توکنِ bearer برایِ اندپوینت‌هایِ نشست‌دار.
+    /// Chairman session via the official dev-login path — bearer token for session-protected endpoints.
     async fn chairman_session(app: &axum::Router) -> String {
         let req = axum::http::Request::builder()
             .method("POST")
@@ -441,7 +441,7 @@ mod tests {
         serde_json::from_slice(&bytes).expect("json body")
     }
 
-    /// `GET /war-room/state` — عمومی و کانونی: امضا + سناریویِ ۲۴ تیک + ولتِ صادقانهٔ روزِ صفر.
+    /// `GET /war-room/state` — public and canonical: signature + 24-tick scenario + honest day-zero wallet.
     #[tokio::test]
     async fn war_room_state_retrieval_is_public_and_canonical() {
         let app = hardened_app().await;
@@ -461,7 +461,7 @@ mod tests {
         assert_eq!(json["founders"].as_array().map(Vec::len), Some(4));
     }
 
-    /// `POST /war-room/directive` — کلاسه‌بندیِ قطعی + سه پاسخِ در-شخصیتِ دوزبانه.
+    /// `POST /war-room/directive` — deterministic classification + three bilingual in-persona replies.
     #[tokio::test]
     async fn war_room_directive_executes_with_three_in_character_replies() {
         let app = hardened_app().await;
@@ -472,7 +472,7 @@ mod tests {
             .header("content-type", "application/json")
             .header("authorization", format!("Bearer {token}"))
             .body(Body::from(
-                r#"{"directiveText":"گزارش ولت امروز چیست؟","locale":"fa","triggeredTick":3}"#,
+                r#"{"directiveText":"What is today's wallet report?","locale":"fa","triggeredTick":3}"#,
             ))
             .unwrap();
         let res = app.oneshot(req).await.unwrap();
@@ -488,13 +488,13 @@ mod tests {
         }
     }
 
-    /// `POST /war-room/reset` — بازگشتِ علایی به روزِ صفر؛ `step` از نو رانده می‌شود.
+    /// `POST /war-room/reset` — causal return to day zero; `step` can be replayed.
     #[tokio::test]
     async fn war_room_reset_restores_day0_and_step_can_be_redriven() {
         let app = hardened_app().await;
         let token = chairman_session(&app).await;
         let bearer = format!("Bearer {token}");
-        // دو گامِ علایی — تیک‌های ۰ و ۱ در دفترِ فرمان ماندگار می‌شوند.
+        // Two causal steps — ticks 0 and 1 persist in the command ledger.
         for cursor in [0, 1] {
             let req = axum::http::Request::builder()
                 .method("POST")
@@ -506,7 +506,7 @@ mod tests {
             let res = app.clone().oneshot(req).await.unwrap();
             assert_eq!(res.status().as_u16(), 200, "step must advance at cursor {cursor}");
         }
-        // یک دستورِ رئیس — در لاگِ فرمان ماندگار می‌شود.
+        // One chairman directive — persists in the command log.
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/war-room/directive")
@@ -516,7 +516,7 @@ mod tests {
             .unwrap();
         let res = app.clone().oneshot(req).await.unwrap();
         assert_eq!(res.status().as_u16(), 200);
-        // بازنشانی — شمارشِ دقیقِ پاک‌شده‌ها.
+        // Reset — exact count of cleared rows.
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/war-room/reset")
@@ -531,7 +531,7 @@ mod tests {
         assert_eq!(json["deletedDirectives"], 1, "exactly the one persisted directive");
         assert_eq!(json["tickCursor"], 0);
         assert_eq!(json["progressPercent"], 0);
-        // رانشِ دوباره — step بدونِ اتمامِ سناریو جواب می‌دهد.
+        // Re-run — step succeeds without scenario exhaustion.
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/war-room/step")

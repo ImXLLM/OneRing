@@ -1,100 +1,100 @@
-//! `mairon_rea_and_reviews` — دروازهٔ داوری زندهٔ محصول و موتور ستارهٔ ۵گانهٔ جامعه
+//! `mairon_rea_and_reviews` — the live product arbitration gate and the community five-star engine
 //! (Wave 2 — Step 6).
 //!
-//! پورت DNA [`Mairon`] (`مایرون` — معمارِ نظمِ مطلق و داورِ ارشدِ `REA`، از
-//! `KIA-BRAIN-OS/10_MAIRON_REA_SOVEREIGN.md`) و استاندارد `morluto/rea`
-//! نسخهٔ `6.10.1` برای بازار کیان:
+//! DNA port of [`Mairon`] (`Mairon` — the architect of absolute order and chief `REA` judge, from
+//! `KIA-BRAIN-OS/10_MAIRON_REA_SOVEREIGN.md`) and the `morluto/rea` standard
+//! version `6.10.1` for the Kian marketplace:
 //!
-//! - [`MaironReaPillarScores`] + [`MaironProductVerdict`] — حکم چهارستونیِ
-//!   آهنگری بازار (۴ ستون × ۲۵ = ۱۰۰؛ عبور فقط با `>= 85` و صفر خط قرمز)؛
-//! - [`evaluate_user_product_with_mairon`] — داوری قطعی محصول کاربر با
-//!   گزارش فارسی دوصدایی برای سازنده، پیش از هر انتشار؛
-//! - [`confirm_and_publish_product`] — دروازهٔ دو-کلیدی: انتشار فقط با
-//!   هم‌زمانیِ حکمِ مایرون **و** تأییدِ خودِ سازنده؛
-//! - [`ProductReview`] + [`submit_product_review`] — رأی واقعی شهروندان با
-//!   ستارهٔ سخت‌سنجی‌شدهٔ `1..=5`، نظر صحیح‌سنجی‌شده و قفلِ یک‌رأییِ
-//!   (شهروند، محصول) — سوریل نمی‌تواند امتیاز بسازد؛
-//! - [`summarize_product_ratings`] + [`ProductRatingSummary`] — میانگین
-//!   بیزی (پیشین `C = 5.0` و `m = 4.20`؛ خرید تاییدشده وزن `1.0`، بدون خرید
-//!   وزن `0.25`)، هیستوگرام دقیق، نمایش پنج‌ستاره و نمرهٔ رتبهٔ ترکیبی
+//! - [`MaironReaPillarScores`] + [`MaironProductVerdict`] — the four-pillar verdict of
+//!   marketplace forging (4 pillars × 25 = 100; passing only with `>= 85` and zero red lines);
+//! - [`evaluate_user_product_with_mairon`] — definitive arbitration of a user product with
+//!   a dual-voice Persian report for the creator, before any publication;
+//! - [`confirm_and_publish_product`] — the two-key gate: publication only with
+//!   concurrent Mairon approval **and** the creator's own confirmation;
+//! - [`ProductReview`] + [`submit_product_review`] — real citizen votes with
+//!   a strictly validated `1..=5` star, a sanitized comment, and the one-vote lock
+//!   per (citizen, product) — Sybil cannot farm ratings;
+//! - [`summarize_product_ratings`] + [`ProductRatingSummary`] — Bayesian
+//!   average (prior `C = 5.0` and `m = 4.20`; verified purchase weight `1.0`, no purchase
+//!   weight `0.25`), exact histogram, five-star display, and the composite rank score
 //!   (`0.60 * bayesian_stars * 20.0 + 0.40 * mairon_rea_score`).
 //!
-//! این ماژول هستهٔ خالص دامنه است: صفر IO، صفر وابستگی، صفر ساعت پنهان.
+//! This module is a pure domain core: zero IO, zero dependencies, zero hidden clocks.
 #![forbid(unsafe_code)]
 #![allow(clippy::module_name_repetitions)]
 
-/// سقف هر ستون داوری مایرون — ۴ ستون × ۲۵ = ۱۰۰.
+/// Cap of each Mairon arbitration pillar — 4 pillars × 25 = 100.
 pub const MAX_PILLAR_SCORE: u8 = 25;
 
-/// آستانهٔ پذیرش آهنگری بازار — زیرِ این نمره، محصول از forge بیرون نمی‌آید.
+/// Marketplace forging acceptance threshold — below this score the product never leaves the forge.
 pub const MARKETPLACE_APPROVAL_THRESHOLD: u8 = 85;
 
-// ── DNA اورکلاکِ مایرون — قفل‌شده در Trinity Studio Pipeline (Wave 3 — Avatar #3) ──
+// ── Mairon overclock DNA — locked in the Trinity Studio Pipeline (Wave 3 — Avatar #3) ──
 //
-// این ثابت‌ها DNAِ «مایرون-۱۵۰» را در سطح دامنه قفل می‌کنند: منبع واحد حقیقت،
-// بدون ساعت پنهان. ماژول `trinity_pipeline` در `kian-hermes` همین ثابت‌ها را با
-// `pub use` بازصادر می‌کند — هرگز نسخهٔ موازی تعریف نمی‌شود تا DNA هرگز از
-// حکمِ داور فاصله نگیرد.
+// These constants lock the "Mairon-150" DNA at the domain level: a single source of truth,
+// no hidden clocks. The `trinity_pipeline` module in `kian-hermes` re-exports these
+// same constants via `pub use` — a parallel copy is never defined, so the DNA never
+// drifts from the judge's verdict.
 
-/// IQ اورکلاکِ مایرون — داورِ حاکمِ `0xKIA` با کالیبراسیون `150`.
+/// Mairon overclock IQ — the sovereign judge of `0xKIA`, calibrated to `150`.
 pub const MAIRON_OVERCLOCK_IQ: u16 = 150;
 
-/// EQ اورکلاکِ مایرون — هوش هیجانیِ بازارِ `145` (کالیبراسیون قفل‌شده در DNA).
+/// Mairon overclock EQ — marketplace emotional intelligence of `145` (calibration locked in DNA).
 pub const MAIRON_OVERCLOCK_EQ: u16 = 145;
 
-/// افقِ نگاهِ بازی‌نظری و معماریِ مایرون — `۸` گام جلوتر از حال (8-step lookahead).
+/// Mairon's game-theoretic and architectural horizon — `8` steps ahead of the present (8-step lookahead).
 pub const MAIRON_LOOKAHEAD_HORIZON: u8 = 8;
 
-/// مرتبهٔ نظریهٔ ذهن مایرون — روان‌شناسیِ خریدار در `مرتبهٔ ۳` (ToM-3: «او فکر
-/// می‌کند که من فکر می‌کنم که بازار چه می‌خواهد») و جای‌گذاری بهینهٔ بازار.
+/// Mairon's theory-of-mind order — buyer psychology at `order 3` (ToM-3: "they think
+/// what I think the market wants") and optimal market positioning.
 pub const MAIRON_TOM_ORDER: u8 = 3;
 
-/// بهرهٔ جاه‌طلبیِ مایرون — ضریبِ اهرمِ جاه‌طلبیِ سنجیده در مشاورهٔ استراتژیک
-/// (`0.99`: سقفِ نزدیک به واحد، هرگز خودپسندِ بی‌قید — جاه‌طلبی با انضباط).
+/// Mairon's ambition factor — the leveraged coefficient of measured ambition in strategic
+/// advisory (`0.99`: a near-unity cap, never unchecked ego — ambition with discipline).
 pub const MAIRON_AMBITION_GAIN: f32 = 0.99;
 
-/// بیشینهٔ کاراکتر نظرِ رأی شهروند (پس از trim).
+/// Maximum characters of a citizen vote comment (after trim).
 pub const MAX_COMMENT_CHARS: usize = 2_000;
 
-/// وزن پیشین بیزی — `C` در فرمول `(C*m + Σw·s) / (C + Σw)`.
+/// Bayesian prior weight — `C` in the formula `(C*m + Σw·s) / (C + Σw)`.
 pub const BAYESIAN_PRIOR_WEIGHT: f64 = 5.0;
 
-/// میانگین پیشین بیزی — `m`؛ جهانِ بی‌رأی، محصولِ متوسطِ خوب دیده می‌شود.
+/// Bayesian prior mean — `m`; in a vote-less world the product is seen as decently average.
 pub const BAYESIAN_PRIOR_MEAN: f64 = 4.20;
 
-/// وزن رأیِ خریدِ تاییدشده (اتصال به امانتِ تسویه‌شده).
+/// Weight of a verified-purchase vote (linked to a settled escrow).
 pub const VERIFIED_REVIEW_WEIGHT: f64 = 1.0;
 
-/// وزن رأیِ بدون خرید تاییدشده — یک‌چهارمِ رأی واقعی.
+/// Weight of a vote without a verified purchase — one quarter of a real vote.
 pub const UNVERIFIED_REVIEW_WEIGHT: f64 = 0.25;
 
-/// سهم جامعه در نمرهٔ رتبهٔ ترکیبی (`bayesian_stars` نرمال‌شده به صد).
+/// Community share in the composite rank score (`bayesian_stars` normalized to 100).
 pub const RANK_STAR_WEIGHT: f64 = 0.60;
 
-/// سهم ممیزی فنی مایرون در نمرهٔ رتبهٔ ترکیبی.
+/// Mairon's technical audit share in the composite rank score.
 pub const RANK_REA_WEIGHT: f64 = 0.40;
 
-// ── ۱) داوری آهنگری بازار ────────────────────────────────────────────────
+// ── 1) Marketplace forging arbitration ────────────────────────────────────────────────
 
-/// چهار ستون داوری مایرون — هر ستون در بازهٔ `0..=25`.
+/// The four Mairon arbitration pillars — each in the range `0..=25`.
 ///
-/// ورودیِ سازنده آزاد است؛ [`MaironReaPillarScores::clamped`] هر مقدار
-/// سرکش را به بازهٔ قانونی می‌برد تا `total_score` هرگز از `100` فراتر
-/// نرود (قرارداد دفاعی داور).
+/// Creator input is free-form; [`MaironReaPillarScores::clamped`] pulls any
+/// runaway value back into the legal range so `total_score` never exceeds `100`
+/// (the judge's defensive contract).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MaironReaPillarScores {
-    /// معماری — مرز لایه‌ای، ماژول‌بندی، صفر نشانگر ناتمام.
+    /// Architecture — layered boundaries, modularization, zero unfinished markers.
     pub architecture: u8,
-    /// سخت‌سازی امنیت — `SSRF`، sandbox، صفر راز هاردکد.
+    /// Security hardening — `SSRF`, sandbox, zero hardcoded secrets.
     pub security_hardening: u8,
-    /// تجربهٔ کاربری و ضد-`AI-Slop` — پشتهٔ `Vazirmatn`، صفر سرریز `390px`.
+    /// User experience and anti-`AI-Slop` — the `Vazirmatn` stack, zero `390px` overflow.
     pub ux_and_anti_slop: u8,
-    /// شواهد راستی‌آزمایی — تست سبز واقعی و اجرای مشاهده‌شده.
+    /// Verification evidence — a genuinely green test and an observed run.
     pub verification_proof: u8,
 }
 
 impl MaironReaPillarScores {
-    /// هر ستون را به بازهٔ `0..=25` می‌بَرد — ورودی سرکش، حکم قانونی.
+    /// Clamps each pillar to the range `0..=25` — runaway input, legal verdict.
     #[must_use]
     pub fn clamped(&self) -> Self {
         Self {
@@ -105,7 +105,7 @@ impl MaironReaPillarScores {
         }
     }
 
-    /// مجموع چهار ستونِ بسته‌شده — همیشه در بازهٔ `0..=100`.
+    /// Sum of the four clamped pillars — always in the range `0..=100`.
     #[must_use]
     pub fn total(&self) -> u8 {
         let c = self.clamped();
@@ -117,7 +117,7 @@ impl MaironReaPillarScores {
 }
 
 impl Default for MaironReaPillarScores {
-    /// داوریِ خنثیِ صفر — سازنده باید امتیاز را بشناسد، نه هدیه بگیرد.
+    /// Zero neutral arbitration — the creator must know the score, not be gifted one.
     fn default() -> Self {
         Self {
             architecture: 0,
@@ -128,43 +128,43 @@ impl Default for MaironReaPillarScores {
     }
 }
 
-/// حکم نهایی مایرون روی یک محصول کاربر — پیش از هر انتشار.
+/// Mairon's final verdict on a user product — before any publication.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MaironProductVerdict {
-    /// شناسهٔ محصول داوری‌شده.
+    /// ID of the arbitrated product.
     pub product_id: String,
-    /// نمرهٔ کل `0..=100` (مجموع چهار ستونِ بسته‌شده).
+    /// Total score `0..=100` (sum of the four clamped pillars).
     pub total_score: u8,
-    /// تفکیک چهار ستون.
+    /// Breakdown of the four pillars.
     pub pillars: MaironReaPillarScores,
-    /// خطوط قرمز — هر یک، حتی با نمرهٔ بالا، آهنگری را رد می‌کند.
+    /// Red lines — any one of them rejects forging even at a high score.
     pub hard_failures: Vec<String>,
-    /// پذیرش لیستینگ — `total_score >= 85` **و** صفر خط قرمز.
+    /// Listing acceptance — `total_score >= 85` **and** zero red lines.
     pub approved_for_listing: bool,
-    /// نشان مرئی روی لیستینگ (پذیرفته: `⚒️ Mairon REA Certified: {n}/100
-    /// (Forge-Grade)`؛ ردشده: `⚠️ نیازمند بازنگری مایرون (REA < 85)`).
+    /// Visible badge on the listing (accepted: `⚒️ Mairon REA Certified: {n}/100
+    /// (Forge-Grade)`; rejected: `⚠️ Requires Mairon re-review (REA < 85)`).
     pub visible_badge: String,
-    /// گزارش فارسی دوصدایی (صدای مهندس + صدای داور) برای سازنده.
+    /// Dual-voice Persian report (engineer's voice + judge's voice) for the creator.
     pub feedback_fa: String,
 }
 
-/// لیستینگ منتشرشدهٔ محصول با مُهر مایرون — خروجی [`confirm_and_publish_product`].
+/// The product's published listing, sealed by Mairon — output of [`confirm_and_publish_product`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PublishedProductListing {
-    /// شناسهٔ محصول.
+    /// Product ID.
     pub product_id: String,
-    /// نمرهٔ `REA` مایرون روی لیستینگ (`0..=100`).
+    /// Mairon's `REA` score on the listing (`0..=100`).
     pub mairon_rea_score: u8,
-    /// نشان مرئیِ مُهرشده.
+    /// The sealed visible badge.
     pub mairon_visible_badge: String,
-    /// تأیید صریح سازنده — کلید دومِ دروازهٔ انتشار.
+    /// The creator's explicit confirmation — the second key of the publication gate.
     pub creator_confirmed: bool,
 }
 
-/// داوری قطعی محصول کاربر توسط مایرون — نمرهٔ دقیق + بازخورد فارسی دوصدایی.
+/// Definitive arbitration of a user product by Mairon — exact score + dual-voice Persian feedback.
 ///
-/// ستون‌ها پیش از جمع، بسته می‌شوند (`0..=25`) تا نمره از `100` نگذرد؛
-/// پذیرش یعنی نمرهٔ `>= 85` **و** `hard_failures` خالی.
+/// Pillars are clamped before summing (`0..=25`) so the score cannot pass `100`;
+/// acceptance means a score of `>= 85` **and** an empty `hard_failures`.
 #[must_use]
 pub fn evaluate_user_product_with_mairon(
     product_id: &str,
@@ -178,7 +178,7 @@ pub fn evaluate_user_product_with_mairon(
     let visible_badge = if approved_for_listing {
         format!("⚒️ Mairon REA Certified: {total_score}/100 (Forge-Grade)")
     } else {
-        "⚠️ نیازمند بازنگری مایرون (REA < 85)".to_owned()
+        "⚠️ \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{628}\u{627}\u{632}\u{646}\u{6af}\u{631}\u{6cc} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} (REA < 85)".to_owned()
     };
     let feedback_fa = build_dual_voice_feedback(clamped, total_score, &hard_failures, approved_for_listing);
     MaironProductVerdict {
@@ -192,8 +192,8 @@ pub fn evaluate_user_product_with_mairon(
     }
 }
 
-/// گزارش فارسی دوصدایی — صدای مهندس (تفکیک ستون‌ها + مسیر اصلاح) و
-/// صدای داور (حکم نهایی). امتیازِ دقیق هرگز پنهان نمی‌شود.
+/// Dual-voice Persian report — the engineer's voice (pillar breakdown + fix path) and
+/// the judge's voice (final verdict). The exact score is never hidden.
 fn build_dual_voice_feedback(
     pillars: MaironReaPillarScores,
     total_score: u8,
@@ -201,18 +201,18 @@ fn build_dual_voice_feedback(
     approved: bool,
 ) -> String {
     let weakest = [
-        ("معماری", pillars.architecture),
-        ("امنیت و سخت‌سازی", pillars.security_hardening),
-        ("UX و ضد-اسلوپ", pillars.ux_and_anti_slop),
-        ("راستی‌آزمایی", pillars.verification_proof),
+        ("\u{645}\u{639}\u{645}\u{627}\u{631}\u{6cc}", pillars.architecture),
+        ("\u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{648} \u{633}\u{62e}\u{62a}‌\u{633}\u{627}\u{632}\u{6cc}", pillars.security_hardening),
+        ("UX \u{648} \u{636}\u{62f}-\u{627}\u{633}\u{644}\u{648}\u{67e}", pillars.ux_and_anti_slop),
+        ("\u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc}", pillars.verification_proof),
     ]
     .into_iter()
     .min_by_key(|&(_, s)| s)
     .map_or("—", |(name, _)| name);
     let engineer = format!(
-        "🔊 صدای مهندس مایرون — معماری: {}/25، امنیت و سخت‌سازی: {}/25، \
-         UX و ضد-اسلوپ: {}/25، راستی‌آزمایی: {}/25. ضعیف‌ترین ستون: {weakest}؛ \
-         اصلاح را از همان‌جا شروع کن و هر ادعا را با شاهد اجرا بیاور.",
+        "🔊 \u{635}\u{62f}\u{627}\u{6cc} \u{645}\u{647}\u{646}\u{62f}\u{633} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} — \u{645}\u{639}\u{645}\u{627}\u{631}\u{6cc}: {}/25\u{60c} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{648} \u{633}\u{62e}\u{62a}‌\u{633}\u{627}\u{632}\u{6cc}: {}/25\u{60c} \
+         UX \u{648} \u{636}\u{62f}-\u{627}\u{633}\u{644}\u{648}\u{67e}: {}/25\u{60c} \u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc}: {}/25. \u{636}\u{639}\u{6cc}\u{641}‌\u{62a}\u{631}\u{6cc}\u{646} \u{633}\u{62a}\u{648}\u{646}: {weakest}\u{61b} \
+         \u{627}\u{635}\u{644}\u{627}\u{62d} \u{631}\u{627} \u{627}\u{632} \u{647}\u{645}\u{627}\u{646}‌\u{62c}\u{627} \u{634}\u{631}\u{648}\u{639} \u{6a9}\u{646} \u{648} \u{647}\u{631} \u{627}\u{62f}\u{639}\u{627} \u{631}\u{627} \u{628}\u{627} \u{634}\u{627}\u{647}\u{62f} \u{627}\u{62c}\u{631}\u{627} \u{628}\u{6cc}\u{627}\u{648}\u{631}.",
         pillars.architecture,
         pillars.security_hardening,
         pillars.ux_and_anti_slop,
@@ -220,37 +220,37 @@ fn build_dual_voice_feedback(
     );
     let judge = if approved {
         format!(
-            "⚖️ حکم داور مایرون: آهنگری پذیرفته شد — نمرهٔ نهایی {total_score}/100 \
-             با صفر خط قرمز. نشان «⚒️ Mairon REA Certified» پس از تأیید خودِ \
-             سازنده روی لیستینگ می‌نشیند."
+            "⚖️ \u{62d}\u{6a9}\u{645} \u{62f}\u{627}\u{648}\u{631} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}: \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{67e}\u{630}\u{6cc}\u{631}\u{641}\u{62a}\u{647} \u{634}\u{62f} — \u{646}\u{645}\u{631}\u{647}\u{654} \u{646}\u{647}\u{627}\u{6cc}\u{6cc} {total_score}/100 \
+             \u{628}\u{627} \u{635}\u{641}\u{631} \u{62e}\u{637} \u{642}\u{631}\u{645}\u{632}. \u{646}\u{634}\u{627}\u{646} «⚒️ Mairon REA Certified» \u{67e}\u{633} \u{627}\u{632} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{62e}\u{648}\u{62f}\u{650} \
+             \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647} \u{631}\u{648}\u{6cc} \u{644}\u{6cc}\u{633}\u{62a}\u{6cc}\u{646}\u{6af} \u{645}\u{6cc}‌\u{646}\u{634}\u{6cc}\u{646}\u{62f}."
         )
     } else if hard_failures.is_empty() {
         format!(
-            "⚖️ حکم داور مایرون: آهنگری رد شد — نمرهٔ نهایی {total_score}/100 زیر \
-             آستانهٔ {MARKETPLACE_APPROVAL_THRESHOLD}. محصول منتشر نمی‌شود؛ بازخورد \
-             بالا را اعمال کن و دوباره ارائه بده."
+            "⚖️ \u{62d}\u{6a9}\u{645} \u{62f}\u{627}\u{648}\u{631} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}: \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{631}\u{62f} \u{634}\u{62f} — \u{646}\u{645}\u{631}\u{647}\u{654} \u{646}\u{647}\u{627}\u{6cc}\u{6cc} {total_score}/100 \u{632}\u{6cc}\u{631} \
+             \u{622}\u{633}\u{62a}\u{627}\u{646}\u{647}\u{654} {MARKETPLACE_APPROVAL_THRESHOLD}. \u{645}\u{62d}\u{635}\u{648}\u{644} \u{645}\u{646}\u{62a}\u{634}\u{631} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{628}\u{627}\u{632}\u{62e}\u{648}\u{631}\u{62f} \
+             \u{628}\u{627}\u{644}\u{627} \u{631}\u{627} \u{627}\u{639}\u{645}\u{627}\u{644} \u{6a9}\u{646} \u{648} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{627}\u{631}\u{627}\u{626}\u{647} \u{628}\u{62f}\u{647}."
         )
     } else {
         format!(
-            "⚖️ حکم داور مایرون: آهنگری رد شد — {total_score}/100 با {} خط قرمز \
-             ({hard_failures_joined}). خط قرمز با نمره بخشیده نمی‌شود؛ ابتدا \
-             خطوط قرمز را صفر کن.",
+            "⚖️ \u{62d}\u{6a9}\u{645} \u{62f}\u{627}\u{648}\u{631} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}: \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{631}\u{62f} \u{634}\u{62f} — {total_score}/100 \u{628}\u{627} {} \u{62e}\u{637} \u{642}\u{631}\u{645}\u{632} \
+             ({hard_failures_joined}). \u{62e}\u{637} \u{642}\u{631}\u{645}\u{632} \u{628}\u{627} \u{646}\u{645}\u{631}\u{647} \u{628}\u{62e}\u{634}\u{6cc}\u{62f}\u{647} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{627}\u{628}\u{62a}\u{62f}\u{627} \
+             \u{62e}\u{637}\u{648}\u{637} \u{642}\u{631}\u{645}\u{632} \u{631}\u{627} \u{635}\u{641}\u{631} \u{6a9}\u{646}.",
             hard_failures.len(),
-            hard_failures_joined = hard_failures.join("؛ ")
+            hard_failures_joined = hard_failures.join("\u{61b} ")
         )
     };
     format!("{engineer}\n{judge}")
 }
 
-/// دروازهٔ دو-کلیدی انتشار به بازار کیان.
+/// The two-key gate for publication to the Kian marketplace.
 ///
-/// محصول **فقط** وقتی لیست می‌شود که هم حکم مایرون پذیرش باشد و هم سازنده
-/// صریحاً `creator_confirmed = true` داده باشد؛ نمره و نشان مایرون به
-/// لیستینگ می‌چسبند.
+/// The product is listed **only** when the Mairon verdict approves and the creator
+/// has explicitly set `creator_confirmed = true`; the Mairon score and badge
+/// are attached to the listing.
 ///
 /// # Errors
-/// - حکم مایرون پذیرش نیست → `Err("Mairon REA verdict has not approved this product for listing")`.
-/// - حکم پذیرش است اما سازنده تأیید نکرده → `Err("Creator confirmation is required before marketplace publication")`.
+/// - Mairon verdict not approved → `Err("Mairon REA verdict has not approved this product for listing")`.
+/// - Verdict approved but creator not confirmed → `Err("Creator confirmation is required before marketplace publication")`.
 pub fn confirm_and_publish_product(
     verdict: &MaironProductVerdict,
     creator_confirmed: bool,
@@ -269,62 +269,62 @@ pub fn confirm_and_publish_product(
     })
 }
 
-// ── ۲) ستارهٔ ۵گانهٔ جامعه ────────────────────────────────────────────────
+// ── 2) Community five-star rating ────────────────────────────────────────────────
 
-/// یک رأی واقعی شهروند روی محصول — سخت‌سنجی‌شده در [`submit_product_review`].
+/// A real citizen vote on a product — strictly validated in [`submit_product_review`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProductReview {
-    /// شناسهٔ یکتای رأی.
+    /// Unique vote ID.
     pub review_id: String,
-    /// شناسهٔ محصول.
+    /// Product ID.
     pub product_id: String,
-    /// شناسهٔ شهروند رأی‌دهنده — هر شهروند به‌ازای هر محصول فقط یک رأی.
+    /// Voting citizen ID — one vote per citizen per product.
     pub reviewer_citizen_id: String,
-    /// ستاره — فقط `1..=5`.
+    /// Star — `1..=5` only.
     pub stars: u8,
-    /// نظر — پس از `trim` غیرخالی و حداکثر ۲۰۰۰ کاراکتر.
+    /// Comment — non-empty after `trim` and at most 2000 characters.
     pub comment: String,
-    /// خرید تاییدشده — اتصال به امانتِ تسویه‌شده؛ ضد-سوریل.
+    /// Verified purchase — linked to a settled escrow; anti-Sybil.
     pub verified_purchase: bool,
-    /// عکسِ فوریِ نمرهٔ `REA` مایرون هنگام رأی.
+    /// Instant snapshot of Mairon's `REA` score at vote time.
     pub mairon_score_at_review: u8,
 }
 
-/// خلاصهٔ رتبهٔ یک محصول — دو لایهٔ فنی و اجتماعی کنار هم.
+/// A product's rank summary — the technical and social layers side by side.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductRatingSummary {
-    /// شناسهٔ محصول.
+    /// Product ID.
     pub product_id: String,
-    /// نمرهٔ فنی مایرون (`0..=100`).
+    /// Mairon's technical score (`0..=100`).
     pub mairon_rea_score: u8,
-    /// نشان مرئی مایرون.
+    /// Mairon's visible badge.
     pub mairon_visible_badge: String,
-    /// شمار همهٔ رأی‌ها.
+    /// Count of all votes.
     pub total_reviews: u32,
-    /// شمار رأی‌های خرید تاییدشده.
+    /// Count of verified-purchase votes.
     pub verified_reviews: u32,
-    /// میانگین حسابی ستاره‌ها (`0.0..=5.0`)؛ بی‌رأی = `0.0`.
+    /// Arithmetic mean of the stars (`0.0..=5.0`); no votes = `0.0`.
     pub average_stars: f64,
-    /// میانگین بیزی با پیشین `C = 5.0` و `m = 4.20`؛ خرید تاییدشده وزن `1.0`،
-    /// بدون خرید وزن `0.25`؛ بی‌رأی = پیشین `4.20`.
+    /// Bayesian mean with prior `C = 5.0` and `m = 4.20`; verified purchase weight `1.0`,
+    /// no purchase weight `0.25`; no votes = prior `4.20`.
     pub bayesian_stars: f64,
-    /// شمار دقیق `[1★, 2★, 3★, 4★, 5★]`.
+    /// Exact count of `[1★, 2★, 3★, 4★, 5★]`.
     pub star_histogram: [u32; 5],
-    /// نمایش پنج‌ستارهٔ دوزبانه — رأی جامعه و نمرهٔ مایرون کنار هم.
+    /// Bilingual five-star display — community vote and Mairon score side by side.
     pub five_star_display: String,
-    /// نمرهٔ رتبهٔ ترکیبی: `0.60 * (bayesian_stars * 20) + 0.40 * mairon_rea_score`.
+    /// Composite rank score: `0.60 * (bayesian_stars * 20) + 0.40 * mairon_rea_score`.
     pub combined_rank_score: f64,
 }
 
-/// ثبت رأی شهروند — سخت‌سنجی کامل پیش از پذیرش.
+/// Record a citizen vote — full validation before acceptance.
 ///
 /// # Errors
-/// - ستاره بیرون از `1..=5` → `Err("Star rating must be between 1 and 5")`.
-/// - نظر پس از `trim` خالی → `Err("Review comment must not be empty")`.
-/// - نظر بیش از ۲۰۰۰ کاراکتر → `Err("Review comment must not exceed 2000 characters")`.
-/// - رأی تکراری همان شهروند روی همان محصول →
+/// - Star outside `1..=5` → `Err("Star rating must be between 1 and 5")`.
+/// - Comment empty after `trim` → `Err("Review comment must not be empty")`.
+/// - Comment over 2000 characters → `Err("Review comment must not exceed 2000 characters")`.
+/// - Duplicate vote by the same citizen on the same product →
 ///   `Err("Citizen has already reviewed this product")`.
-#[allow(clippy::too_many_arguments)] // قرارداد مشخصهٔ رأی — هشت ورودیِ نام‌دارِ صریح
+#[allow(clippy::too_many_arguments)] // vote property contract — eight explicit named inputs
 pub fn submit_product_review(
     existing_reviews: &[ProductReview],
     review_id: &str,
@@ -362,8 +362,8 @@ pub fn submit_product_review(
     })
 }
 
-/// خلاصهٔ رتبهٔ محصول — رأی‌های همان محصول فیلتر و دو لایهٔ امتیاز با هم
-/// رندر می‌شوند. مایرون نمرهٔ خودش را از حکم (`verdict`) می‌گیرد.
+/// Product rank summary — votes for the same product are filtered and the two score
+/// layers are rendered together. Mairon takes its score from the verdict (`verdict`).
 #[must_use]
 pub fn summarize_product_ratings(
     product_id: &str,
@@ -404,8 +404,8 @@ pub fn summarize_product_ratings(
         .collect();
     let mairon_rea_score = mairon_verdict.total_score;
     let five_star_display = format!(
-        "{bar} {bayesian_stars:.1} / 5.0 ({verified_reviews} نظر تاییدشده) | \
-         ⚒️ نمره مایرون REA: {mairon_rea_score}/100"
+        "{bar} {bayesian_stars:.1} / 5.0 ({verified_reviews} \u{646}\u{638}\u{631} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f}\u{634}\u{62f}\u{647}) | \
+         ⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA: {mairon_rea_score}/100"
     );
     let combined_rank_score =
         RANK_STAR_WEIGHT * (bayesian_stars * 20.0) + RANK_REA_WEIGHT * f64::from(mairon_rea_score);
@@ -427,7 +427,7 @@ pub fn summarize_product_ratings(
 mod tests {
     use super::*;
 
-    /// DNA اورکلاک مایرون-۱۵۰ قفل است — هرگز drift نمی‌کند (قرارداد Trinity).
+    /// The Mairon-150 overclock DNA is locked — it never drifts (Trinity contract).
     #[test]
     fn mairon_overclock_dna_constants_are_locked() {
         let (iq, eq) = (MAIRON_OVERCLOCK_IQ, MAIRON_OVERCLOCK_EQ);
@@ -438,11 +438,11 @@ mod tests {
         assert_eq!(tom, 3);
         assert!((MAIRON_AMBITION_GAIN - 0.99).abs() < f32::EPSILON);
         assert!(iq > eq, "IQ dominant");
-        // اورکلاک داور بالاتر از هر دو Avatar پایین‌دستی Trinity است (Alpha 136/122، Logic 139/129)
+        // the judge overclock is higher than both downstream Trinity Avatars (Alpha 136/122, Logic 139/129)
         assert!(iq > 139 && eq > 129);
     }
 
-    /// ستون‌های forge-grade — نمرهٔ ۹۶، صفر خط قرمز.
+    /// forge-grade pillars — score 96, zero red lines.
     fn forge_pillars() -> MaironReaPillarScores {
         MaironReaPillarScores {
             architecture: 24,
@@ -452,7 +452,7 @@ mod tests {
         }
     }
 
-    /// پذیرش کامل: نمره >= 85 و صفر خط قرمز → لیستینگ با نشان forge و نمرهٔ شفاف.
+    /// Full acceptance: score >= 85 and zero red lines → listing with the forge badge and a transparent score.
     #[test]
     fn approved_product_publishes_with_forge_badge() {
         let verdict = evaluate_user_product_with_mairon("prod:forge-1", forge_pillars(), vec![]);
@@ -462,8 +462,8 @@ mod tests {
             verdict.visible_badge,
             "⚒️ Mairon REA Certified: 96/100 (Forge-Grade)"
         );
-        assert!(verdict.feedback_fa.contains("آهنگری پذیرفته شد"));
-        assert!(verdict.feedback_fa.contains("🔊 صدای مهندس مایرون"));
+        assert!(verdict.feedback_fa.contains("\u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{67e}\u{630}\u{6cc}\u{631}\u{641}\u{62a}\u{647} \u{634}\u{62f}"));
+        assert!(verdict.feedback_fa.contains("🔊 \u{635}\u{62f}\u{627}\u{6cc} \u{645}\u{647}\u{646}\u{62f}\u{633} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}"));
         let listing =
             confirm_and_publish_product(&verdict, true).expect("approved + confirmed");
         assert_eq!(listing.mairon_rea_score, 96);
@@ -471,7 +471,7 @@ mod tests {
         assert!(listing.creator_confirmed);
     }
 
-    /// رد کامل: نمره زیر ۸۵ → لیستینگ بسته با بازخورد فارسی قابل‌اقدام.
+    /// Full rejection: score below 85 → listing closed with actionable Persian feedback.
     #[test]
     fn rejected_product_blocked_with_actionable_persian_feedback() {
         let weak = MaironReaPillarScores {
@@ -483,16 +483,16 @@ mod tests {
         let verdict = evaluate_user_product_with_mairon("prod:weak-1", weak, vec![]);
         assert_eq!(verdict.total_score, 78);
         assert!(!verdict.approved_for_listing);
-        assert_eq!(verdict.visible_badge, "⚠️ نیازمند بازنگری مایرون (REA < 85)");
-        assert!(verdict.feedback_fa.contains("آهنگری رد شد"));
-        assert!(verdict.feedback_fa.contains("آستانهٔ 85"));
-        assert!(verdict.feedback_fa.contains("ضعیف‌ترین ستون: معماری"));
+        assert_eq!(verdict.visible_badge, "⚠️ \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{628}\u{627}\u{632}\u{646}\u{6af}\u{631}\u{6cc} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} (REA < 85)");
+        assert!(verdict.feedback_fa.contains("\u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{631}\u{62f} \u{634}\u{62f}"));
+        assert!(verdict.feedback_fa.contains("\u{622}\u{633}\u{62a}\u{627}\u{646}\u{647}\u{654} 85"));
+        assert!(verdict.feedback_fa.contains("\u{636}\u{639}\u{6cc}\u{641}‌\u{62a}\u{631}\u{6cc}\u{646} \u{633}\u{62a}\u{648}\u{646}: \u{645}\u{639}\u{645}\u{627}\u{631}\u{6cc}"));
         let err = confirm_and_publish_product(&verdict, true)
             .expect_err("rejected must not publish");
         assert!(err.contains("not approved"));
     }
 
-    /// خط قرمز با نمرهٔ بالا بخشیده نمی‌شود — حتی ۹۸/۱۰۰ هم رد است.
+    /// A red line is not forgiven at a high score — even 98/100 is rejected.
     #[test]
     fn hard_failure_blocks_even_with_high_score() {
         let verdict = evaluate_user_product_with_mairon(
@@ -506,12 +506,12 @@ mod tests {
             vec!["hardcoded secret detected in src/config.rs".to_owned()],
         );
         assert_eq!(verdict.total_score, 98);
-        assert!(!verdict.approved_for_listing, "خط قرمز امنیتی را رد می‌کند");
-        assert!(verdict.feedback_fa.contains("خط قرمز"));
+        assert!(!verdict.approved_for_listing, "\u{62e}\u{637} \u{642}\u{631}\u{645}\u{632} \u{627}\u{645}\u{646}\u{6cc}\u{62a}\u{6cc} \u{631}\u{627} \u{631}\u{62f} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}");
+        assert!(verdict.feedback_fa.contains("\u{62e}\u{637} \u{642}\u{631}\u{645}\u{632}"));
         assert!(verdict.feedback_fa.contains("hardcoded secret"));
     }
 
-    /// کلید دوم دروازهٔ انتشار: بدون تأیید سازنده، نمرهٔ ۹۵ هم منتشر نمی‌شود.
+    /// Second key of the publication gate: without creator confirmation, even a score of 95 is not published.
     #[test]
     fn creator_confirmation_is_mandatory_even_at_perfect_score() {
         let perfect = MaironReaPillarScores {
@@ -531,11 +531,11 @@ mod tests {
         );
     }
 
-    /// ستارهٔ سخت‌سنجی: `0` و `6` رد، `1` و `5` پذیرفته — پیام قراردادی دقیق.
+    /// Star validation: `0` and `6` rejected, `1` and `5` accepted — the exact contractual message.
     #[test]
     fn stars_outside_range_rejected_and_valid_range_accepted() {
         let base = |s: u8| {
-            submit_product_review(&[], "rv:x", "prod:1", "citizen:1", s, "سخت و تمیز", true, 96)
+            submit_product_review(&[], "rv:x", "prod:1", "citizen:1", s, "\u{633}\u{62e}\u{62a} \u{648} \u{62a}\u{645}\u{6cc}\u{632}", true, 96)
         };
         assert_eq!(base(0).expect_err("zero stars"), "Star rating must be between 1 and 5");
         assert_eq!(base(6).expect_err("six stars"), "Star rating must be between 1 and 5");
@@ -543,7 +543,7 @@ mod tests {
         assert!(base(5).is_ok());
     }
 
-    /// نظر خالی (حتی whitespace) رد می‌شود.
+    /// Empty comments (even whitespace) are rejected.
     #[test]
     fn empty_comment_rejected() {
         let err = submit_product_review(&[], "rv:e", "prod:1", "citizen:1", 5, "   ", false, 90)
@@ -551,18 +551,18 @@ mod tests {
         assert_eq!(err, "Review comment must not be empty");
     }
 
-    /// نظر بیش از ۲۰۰۰ کاراکتر رد می‌شود.
+    /// Comments over 2000 characters are rejected.
     #[test]
     fn oversized_comment_rejected() {
-        let huge = "د".repeat(2_001);
+        let huge = "\u{62f}".repeat(2_001);
         let err = submit_product_review(&[], "rv:h", "prod:1", "citizen:1", 5, &huge, false, 90)
             .expect_err("oversized comment");
         assert_eq!(err, "Review comment must not exceed 2000 characters");
-        let exact = "د".repeat(2_000);
+        let exact = "\u{62f}".repeat(2_000);
         assert!(submit_product_review(&[], "rv:ok", "prod:1", "citizen:1", 5, &exact, false, 90).is_ok());
     }
 
-    /// یک رأی به‌ازای هر (شهروند، محصول) — سوریل راهی ندارد.
+    /// One vote per (citizen, product) — Sybil has no way in.
     #[test]
     fn duplicate_review_per_citizen_per_product_rejected() {
         let first = submit_product_review(
@@ -571,7 +571,7 @@ mod tests {
             "prod:1",
             "citizen:ada",
             5,
-            "رویایی",
+            "\u{631}\u{648}\u{6cc}\u{627}\u{6cc}\u{6cc}",
             true,
             96,
         )
@@ -582,32 +582,32 @@ mod tests {
             "prod:1",
             "citizen:ada",
             1,
-            "عوضش دادم",
+            "\u{639}\u{648}\u{636}\u{634} \u{62f}\u{627}\u{62f}\u{645}",
             true,
             96,
         )
         .expect_err("duplicate (product, citizen)");
         assert_eq!(dup_same_product, "Citizen has already reviewed this product");
-        // همان شهروند روی محصولِ دیگر آزاد است.
+        // the same citizen on a different product is allowed.
         assert!(submit_product_review(
             std::slice::from_ref(&first),
             "rv:3",
             "prod:2",
             "citizen:ada",
             4,
-            "محصول دیگر",
+            "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{62f}\u{6cc}\u{6af}\u{631}",
             false,
             88,
         )
         .is_ok());
     }
 
-    /// هیستوگرام و میانگین حسابی دقیق‌اند.
+    /// The histogram and arithmetic mean are exact.
     #[test]
     fn histogram_and_average_are_exact() {
         let verdict = evaluate_user_product_with_mairon("prod:hist", forge_pillars(), vec![]);
         let mk = |rv: &str, s: u8, v: bool| {
-            submit_product_review(&[], rv, "prod:hist", rv, s, "رأی", v, 96).expect("review")
+            submit_product_review(&[], rv, "prod:hist", rv, s, "\u{631}\u{623}\u{6cc}", v, 96).expect("review")
         };
         let reviews = [mk("a", 5, true), mk("b", 1, false), mk("c", 4, true)];
         let sum = summarize_product_ratings("prod:hist", &verdict, &reviews);
@@ -617,13 +617,13 @@ mod tests {
         assert!((sum.average_stars - 10.0 / 3.0).abs() < 1e-9);
     }
 
-    /// اثبات بیزی: خریدِ تاییدشده وزن کامل `1.0` دارد و رأی بدون خرید فقط
-    /// `0.25` — همان ستاره‌ها با رأیِ بی‌خرید، نزدیکِ پیشینِ `4.20` می‌مانند.
+    /// Bayesian proof: a verified purchase carries full weight `1.0` while a no-purchase vote
+    /// carries only `0.25` — with the same stars, an unverified vote stays near the `4.20` prior.
     #[test]
     fn bayesian_weighting_proves_verified_beats_unverified() {
         let verdict = evaluate_user_product_with_mairon("prod:bayes", forge_pillars(), vec![]);
         let mk = |rv: &str, v: bool| {
-            submit_product_review(&[], rv, "prod:bayes", rv, 4, "چهار ستاره", v, 96)
+            submit_product_review(&[], rv, "prod:bayes", rv, 4, "\u{686}\u{647}\u{627}\u{631} \u{633}\u{62a}\u{627}\u{631}\u{647}", v, 96)
                 .expect("review")
         };
         let all_verified = [mk("v1", true)];
@@ -632,26 +632,26 @@ mod tests {
             summarize_product_ratings("prod:bayes", &verdict, &all_verified);
         let unverified_summary =
             summarize_product_ratings("prod:bayes", &verdict, &all_unverified);
-        // verified: (5*4.2 + 1.0*4) / (5 + 1) = 25/6 ≈ 4.1667 — به رأیِ واقعیِ ۴ می‌لغزد.
+        // verified: (5*4.2 + 1.0*4) / (5 + 1) = 25/6 ≈ 4.1667 — slides toward the real vote of 4.
         assert!((verified_summary.bayesian_stars - 25.0 / 6.0).abs() < 1e-9);
-        // unverified: (5*4.2 + 0.25*4) / (5 + 0.25) = 22/5.25 ≈ 4.1905 — به پیشینِ 4.2 می‌چسبد.
+        // unverified: (5*4.2 + 0.25*4) / (5 + 0.25) = 22/5.25 ≈ 4.1905 — sticks to the 4.2 prior.
         assert!((unverified_summary.bayesian_stars - 22.0 / 5.25).abs() < 1e-9);
         assert!(
             verified_summary.bayesian_stars < unverified_summary.bayesian_stars,
-            "وزن کاملِ خرید تاییدشده، میانگین را سریع‌تر به رأی واقعی می‌کشد"
+            "\u{648}\u{632}\u{646} \u{6a9}\u{627}\u{645}\u{644}\u{650} \u{62e}\u{631}\u{6cc}\u{62f} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f}\u{634}\u{62f}\u{647}\u{60c} \u{645}\u{6cc}\u{627}\u{646}\u{6af}\u{6cc}\u{646} \u{631}\u{627} \u{633}\u{631}\u{6cc}\u{639}‌\u{62a}\u{631} \u{628}\u{647} \u{631}\u{623}\u{6cc} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{645}\u{6cc}‌\u{6a9}\u{634}\u{62f}"
         );
-        // بی‌رأی — دقیقاً پیشین.
+        // no votes — exactly the prior.
         let empty = summarize_product_ratings("prod:bayes", &verdict, &[]);
         assert!((empty.bayesian_stars - BAYESIAN_PRIOR_MEAN).abs() < 1e-9);
         assert!((empty.average_stars).abs() < 1e-9);
         assert_eq!(empty.total_reviews, 0);
     }
 
-    /// نمایش پنج‌ستاره — رأی جامعه و نمرهٔ مایرون در یک رشته کنار هم.
+    /// Five-star display — community vote and Mairon score side by side in one string.
     #[test]
     fn five_star_display_shows_rating_and_mairon_score_side_by_side() {
         let verdict = evaluate_user_product_with_mairon("prod:disp", forge_pillars(), vec![]);
-        let r1 = submit_product_review(&[], "rv:1", "prod:disp", "c1", 5, "عالی", true, 96)
+        let r1 = submit_product_review(&[], "rv:1", "prod:disp", "c1", 5, "\u{639}\u{627}\u{644}\u{6cc}", true, 96)
             .expect("r1");
         let r2 = submit_product_review(
             std::slice::from_ref(&r1),
@@ -659,30 +659,30 @@ mod tests {
             "prod:disp",
             "c2",
             4,
-            "خوب",
+            "\u{62e}\u{648}\u{628}",
             true,
             96,
         )
         .expect("r2");
         let sum = summarize_product_ratings("prod:disp", &verdict, &[r1, r2]);
-        // (5*4.2 + 5 + 4) / 7 = 30/7 ≈ 4.2857 → گرد به ۴ ستارهٔ پر.
+        // (5*4.2 + 5 + 4) / 7 = 30/7 ≈ 4.2857 → rounds to 4 full stars.
         assert!(sum.five_star_display.starts_with("★★★★☆"));
         assert!(sum.five_star_display.contains("4.3 / 5.0"));
-        assert!(sum.five_star_display.contains("(2 نظر تاییدشده)"));
-        assert!(sum.five_star_display.contains("⚒️ نمره مایرون REA: 96/100"));
+        assert!(sum.five_star_display.contains("(2 \u{646}\u{638}\u{631} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f}\u{634}\u{62f}\u{647})"));
+        assert!(sum.five_star_display.contains("⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA: 96/100"));
     }
 
-    /// نمرهٔ رتبهٔ ترکیبی — فرمول دقیق `0.60 * (bayes*20) + 0.40 * REA`.
+    /// Composite rank score — exact formula `0.60 * (bayes*20) + 0.40 * REA`.
     #[test]
     fn combined_rank_score_blends_bayesian_and_rea() {
         let verdict = evaluate_user_product_with_mairon("prod:rank", forge_pillars(), vec![]);
         let empty = summarize_product_ratings("prod:rank", &verdict, &[]);
         let expected = 0.60 * (BAYESIAN_PRIOR_MEAN * 20.0) + 0.40 * f64::from(96_u8);
         assert!((empty.combined_rank_score - expected).abs() < 1e-9);
-        assert!(empty.combined_rank_score > 85.0, "محصول forge-grade صدر می‌ماند");
+        assert!(empty.combined_rank_score > 85.0, "\u{645}\u{62d}\u{635}\u{648}\u{644} forge-grade \u{635}\u{62f}\u{631} \u{645}\u{6cc}‌\u{645}\u{627}\u{646}\u{62f}");
     }
 
-    /// ستون‌های سرکش بسته می‌شوند — نمره هرگز از ۱۰۰ فراتر نمی‌رود.
+    /// Runaway pillars are clamped — the score never exceeds 100.
     #[test]
     fn pillar_scores_are_clamped_to_25() {
         let wild = MaironReaPillarScores {

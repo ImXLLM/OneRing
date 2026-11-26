@@ -1,71 +1,71 @@
-//! لایهٔ هویت M3 — کاربران تلگرام، نشست‌های bearer و واریزهای TON.
+//! M3 identity layer — Telegram users, bearer sessions and TON deposits.
 //!
-//! همهٔ کوئری‌ها از همان [`V3Store`] می‌گذرند (نقطهٔ تنها اتصال دامنه به
-//! SQLite). هویت «پول» نمی‌داند — تراز همیشه از `Posting` مشتق می‌شود
-//! (ADR-003)؛ اینجا فقط ردیف‌های هویت/نشست/اثبات واریز زندگی می‌کنند.
+//! All queries go through the same [`V3Store`] (the single point where the domain touches
+//! SQLite). Identity knows nothing about "money" — balance is always derived from `Posting`
+//! (ADR-003); only identity/session/deposit-proof rows live here.
 //!
-//! قراردادهای جدول‌ها: `crates/db/migrations/0002_m3_sessions.sql`.
+//! Table contracts: `crates/db/migrations/0002_m3_sessions.sql`.
 //!
-//! نکتهٔ sqlx 0.9 — «رشتهٔ SQL داینامیک باید حسابرسی شود»: در ۴ کوئریِ
-//! [`USER_SELECT`]/[`DEPOSIT_SELECT`] بخش داینامیک فقط پیشوند ثابت کامپایل‌تایم
-//! است (هیچ ورودی کاربری در رشته interpolate نمی‌شود؛ همهٔ مقادیر با `?`
-//! bind می‌شوند) — پس طبق راهنمای خود sqlx با `AssertSqlSafe` حسابرسی‌شده
-//! علامت خورده‌اند.
+//! sqlx 0.9 note — "dynamic SQL strings must be audited": in the 4 queries on
+//! [`USER_SELECT`]/[`DEPOSIT_SELECT`] the dynamic part is only the compile-time constant
+//! prefix (no user input is interpolated into the string; every value is bound
+//! with `?`) — so per sqlx's own guidance they are marked as audited with
+//! `AssertSqlSafe`.
 use crate::error::{DbError, DbResult};
 use crate::store::{now_iso, V3Store};
 
-/// پیشوند حساب شهروند — هویت تلگرام به این حساب دفتر گره می‌خورد.
+/// Citizen account prefix — the Telegram identity is tied to this ledger account.
 pub const CITIZEN_PREFIX: &str = "citizen:";
 
-/// حساب دفتر متناظر با هویت تلگرام — `citizen:{telegram_id}`.
+/// Ledger account corresponding to a Telegram identity — `citizen:{telegram_id}`.
 #[must_use]
 pub fn citizen_account_id(telegram_id: &str) -> String {
     format!("{CITIZEN_PREFIX}{telegram_id}")
 }
 
-/// ردیف کاربر مینی‌اپ — یک‌به‌یک با جدول `User`.
+/// Mini-app user row — one-to-one with the `User` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UserRow {
-    /// شناسه پایدار = حساب شهروند (`citizen:{telegramId}`)
+    /// Stable ID = citizen account (`citizen:{telegramId}`)
     pub id: String,
-    /// شناسهٔ عددی تلگرام به‌صورت رشته
+    /// Telegram numeric ID as a string
     pub telegram_id: String,
-    /// یوزرنیم بدون `@` — اختیاری
+    /// Username without `@` — optional
     pub username: Option<String>,
-    /// آدرس ولت TON متصل — اختیاری
+    /// Connected TON wallet address — optional
     pub ton_address: Option<String>,
-    /// حساب دفتر دوطرفهٔ متصل
+    /// Connected double-entry ledger account
     pub account_id: String,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
 }
 
-/// ردیف واریز TON — اثبات کاربر تا راستی‌آزمایی ادمین.
+/// TON deposit row — user proof until admin verification.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TonDepositRow {
-    /// شناسه (`dep:{uuid}`)
+    /// ID (`dep:{uuid}`)
     pub id: String,
-    /// کاربر ثبت‌کننده
+    /// Depositing user
     pub user_id: String,
-    /// هش تراکنش زنجیره — UNIQUE (درس replay)
+    /// On-chain transaction hash — UNIQUE (replay lesson)
     pub tx_hash: String,
-    /// آدرس فرستنده
+    /// Sender address
     pub wallet_address: String,
-    /// مبلغ TON رشتهٔ دهدهی
+    /// TON amount as a decimal string
     pub amount_ton: String,
     /// `PENDING` / `CONFIRMED` / `REJECTED`
     pub status: String,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
-    /// زمان تصمیم ISO — تا قبل از تکلیف `None`
+    /// Decision time (ISO) — `None` until resolved
     pub confirmed_at: Option<String>,
-    /// تصمیم‌گیرنده (ادمین) — تا قبل از تکلیف `None`
+    /// Deciding admin — `None` until resolved
     pub confirmed_by: Option<String>,
 }
 
 const USER_SELECT: &str = r#"SELECT "id","telegramId","username","tonAddress","accountId","createdAt" FROM "User""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx: مالکیت Row از نتیجهٔ fetch می‌آید و مصرف می‌شود
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern: Row ownership comes from the fetch result and is consumed
 fn user_row_from(row: sqlx::sqlite::SqliteRow) -> UserRow {
     use sqlx::Row as _;
     UserRow {
@@ -80,7 +80,7 @@ fn user_row_from(row: sqlx::sqlite::SqliteRow) -> UserRow {
 
 const DEPOSIT_SELECT: &str = r#"SELECT "id","userId","txHash","walletAddress","amountTon","status","createdAt","confirmedAt","confirmedBy" FROM "TonDeposit""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx: مالکیت Row از نتیجهٔ fetch می‌آید و مصرف می‌شود
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern: Row ownership comes from the fetch result and is consumed
 fn deposit_row_from(row: sqlx::sqlite::SqliteRow) -> TonDepositRow {
     use sqlx::Row as _;
     TonDepositRow {
@@ -97,13 +97,13 @@ fn deposit_row_from(row: sqlx::sqlite::SqliteRow) -> TonDepositRow {
 }
 
 impl V3Store {
-    /// ثبت‌نام/به‌روزرسانی شهروند تلگرام — idempotent روی `telegramId`.
+    /// Register/update a Telegram citizen — idempotent on `telegramId`.
     ///
-    /// حساب دفتر `citizen:{telegramId}` اگر نبود ساخته می‌شود (`kind=User`)؛
-    /// یوزرنیم جدیدتر جایگزین می‌شود تا تغییر نام تلگرام هم می‌آید.
+    /// The `citizen:{telegramId}` ledger account is created if missing (`kind=User`);
+    /// a newer username replaces the old one, so Telegram renames propagate too.
     ///
     /// # Errors
-    /// خطای SQL یا خطای ساخت حساب دفتر.
+    /// SQL error or ledger account creation error.
     pub async fn ensure_telegram_user(
         &self,
         telegram_id: &str,
@@ -130,12 +130,12 @@ impl V3Store {
             .ok_or_else(|| DbError::Config(format!("user {id} vanished after upsert")))
     }
 
-    /// خواندن کاربر با شناسه.
+    /// Read a user by ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_user(&self, id: &str) -> DbResult<Option<UserRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // audited: const prefix + bind — no user input in the string
         let sql = format!("{USER_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlx::AssertSqlSafe(sql))
             .bind(id)
@@ -144,10 +144,10 @@ impl V3Store {
         Ok(row.map(user_row_from))
     }
 
-    /// اتصال آدرس TON به هویت — پس از اتصال TON Connect.
+    /// Link a TON address to the identity — after TON Connect.
     ///
     /// # Errors
-    /// کاربر ناشناخته → `USER_NOT_FOUND`.
+    /// Unknown user → `USER_NOT_FOUND`.
     pub async fn set_user_ton_address(&self, user_id: &str, address: &str) -> DbResult<()> {
         let res = sqlx::query(r#"UPDATE "User" SET "tonAddress" = ? WHERE "id" = ?"#)
             .bind(address)
@@ -164,10 +164,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// باز کردن نشست — توکن اپاک با انقضای صریح.
+    /// Open a session — opaque token with an explicit expiry.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn create_session(&self, token: &str, user_id: &str, expires_at: &str) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "Session" ("token","userId","createdAt","expiresAt") VALUES (?,?,?,?)"#,
@@ -181,10 +181,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// کاربرِ نشست معتبر — `None` یعنی توکن ناشناخته یا منقضی (fail-closed).
+    /// User of a valid session — `None` means the token is unknown or expired (fail-closed).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn session_user(&self, token: &str) -> DbResult<Option<UserRow>> {
         let row = sqlx::query(
             r#"SELECT u."id",u."telegramId",u."username",u."tonAddress",u."accountId",u."createdAt"
@@ -198,10 +198,10 @@ impl V3Store {
         Ok(row.map(user_row_from))
     }
 
-    /// حذف نشست (خروج) — صدا زدن دوباره بی‌اثر و بی‌خطا.
+    /// Delete a session (logout) — calling again is a no-op with no error.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn delete_session(&self, token: &str) -> DbResult<()> {
         sqlx::query(r#"DELETE FROM "Session" WHERE "token" = ?"#)
             .bind(token)
@@ -210,10 +210,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// هرس نشست‌های منقضی — نگهداری جدول سبک (sweep دوره‌ای).
+    /// Prune expired sessions — keeps the table light (periodic sweep).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn sweep_expired_sessions(&self) -> DbResult<u64> {
         let res = sqlx::query(r#"DELETE FROM "Session" WHERE "expiresAt" <= ?"#)
             .bind(now_iso())
@@ -222,11 +222,11 @@ impl V3Store {
         Ok(res.rows_affected())
     }
 
-    /// ثبت واریز TON — همان `txHash` دوبار پذیرفته نمی‌شود (قید UNIQUE جدول؛
-    /// فراخواننده پیش‌چک `get_ton_deposit_by_hash` می‌کند تا پیام صادقانه بدهد).
+    /// Register a TON deposit — the same `txHash` is never accepted twice (table UNIQUE constraint;
+    /// the caller pre-checks `get_ton_deposit_by_hash` to return an honest message).
     ///
     /// # Errors
-    /// هش تکراری هم‌زمان → خطای UNIQUE sqlx؛ خطای SQL.
+    /// Concurrent duplicate hash → sqlx UNIQUE error; SQL error.
     pub async fn insert_ton_deposit(&self, d: &TonDepositRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "TonDeposit"
@@ -246,24 +246,24 @@ impl V3Store {
         Ok(())
     }
 
-    /// جست‌وجوی واریز با هش زنجیره — پیش‌چک replay ثبت دوباره.
+    /// Find a deposit by on-chain hash — replay pre-check for re-registration.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_ton_deposit_by_hash(&self, tx_hash: &str) -> DbResult<Option<TonDepositRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // audited: const prefix + bind — no user input in the string
         let sql = format!("{DEPOSIT_SELECT} WHERE \"txHash\" = ?");
         let row =
             sqlx::query(sqlx::AssertSqlSafe(sql)).bind(tx_hash).fetch_optional(self.pool_ref()).await?;
         Ok(row.map(deposit_row_from))
     }
 
-    /// واریزهای یک کاربر — جدیدترین اول.
+    /// A user's deposits — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_ton_deposits_for(&self, user_id: &str) -> DbResult<Vec<TonDepositRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // audited: const prefix + bind — no user input in the string
         let sql = format!(
             r#"{DEPOSIT_SELECT} WHERE "userId" = ? ORDER BY "createdAt" DESC LIMIT 50"#
         );
@@ -274,12 +274,12 @@ impl V3Store {
         Ok(rows.into_iter().map(deposit_row_from).collect())
     }
 
-    /// خواندن یک واریز.
+    /// Read one deposit.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_ton_deposit(&self, id: &str) -> DbResult<Option<TonDepositRow>> {
-        // حسابرسی‌شده: پیشوند const + bind — بدون ورودی کاربر در رشته
+        // audited: const prefix + bind — no user input in the string
         let sql = format!("{DEPOSIT_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlx::AssertSqlSafe(sql))
             .bind(id)
@@ -288,10 +288,10 @@ impl V3Store {
         Ok(row.map(deposit_row_from))
     }
 
-    /// تعیین تکلیف واریز — فقط از `PENDING` (گذار یک‌طرفه).
+    /// Resolve a deposit — only from `PENDING` (one-way transition).
     ///
     /// # Errors
-    /// واریز ناشناخته → `NOT_FOUND`؛ وضعیت غیر-PENDING → `INVALID_TRANSITION`.
+    /// Unknown deposit → `NOT_FOUND`; non-PENDING status → `INVALID_TRANSITION`.
     pub async fn set_ton_deposit_status(
         &self,
         id: &str,
@@ -347,10 +347,10 @@ mod tests {
         let again = store.ensure_telegram_user("123", Some("ali_new")).await.unwrap();
         assert_eq!(again.created_at, first.created_at, "same row — not duplicated");
         assert_eq!(again.username.as_deref(), Some("ali_new"), "username refreshed");
-        // لاگین بدون یوزرنیم (dev-login خام) هرگز یوزرنیم مهاجرت‌شده را پاک نمی‌کند
+        // a login without a username (raw dev-login) never wipes a migrated username
         let anonymous = store.ensure_telegram_user("123", None).await.unwrap();
         assert_eq!(anonymous.username.as_deref(), Some("ali_new"), "None preserves username");
-        // حساب دفتر واقعاً ساخته شده — تراز صفر
+        // the ledger account is actually created — zero balance
         assert_eq!(store.balance_of("citizen:123").await.unwrap(), Some(0));
     }
 
@@ -394,7 +394,7 @@ mod tests {
         };
         store.insert_ton_deposit(&row).await.unwrap();
 
-        // همان هش دوباره — replay رد می‌شود
+        // same hash again — replay rejected
         assert!(store.insert_ton_deposit(&row).await.is_err());
 
         let mine = store.list_ton_deposits_for(&user.id).await.unwrap();
@@ -408,7 +408,7 @@ mod tests {
         assert_eq!(confirmed.status, "CONFIRMED");
         assert_eq!(confirmed.confirmed_by.as_deref(), Some("admin"));
 
-        // گذار دوباره از PENDING ناممکن است
+        // a second transition from PENDING is impossible
         assert!(store.set_ton_deposit_status("dep:1", "REJECTED", "admin").await.is_err());
     }
 }

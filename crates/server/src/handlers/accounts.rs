@@ -1,4 +1,4 @@
-//! هندلرهای حساب‌ها — ثبت‌نام شهروند، فهرست ادمین و موجودی عمومی.
+//! Account handlers — citizen registration, the admin list, and public balance.
 
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
@@ -15,7 +15,7 @@ use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 use crate::views::{account_view, wire_din};
 
-/// احراز دسترسی به اطلاعات یک حساب: فقط ادمین (`X-KIAN-Key`) یا خودِ صاحب حساب (نشست Bearer).
+/// Authorizing access to one account's info: admin only (`X-KIAN-Key`) or the account owner themselves (Bearer session).
 async fn authorize_admin_or_owner(
     state: &AppState,
     headers: &HeaderMap,
@@ -31,13 +31,13 @@ async fn authorize_admin_or_owner(
     Err(ApiFailure::Http(kian_contracts::HttpFailure::forbidden_escrow_role()))
 }
 
-/// پیشوندهای سیستمی — هیچ حسابی این‌ها را نمی‌گیرد (حفاظت عرضه، مادهٔ ۴).
+/// System prefixes — no account may take these (supply protection, article 4).
 const RESERVED_PREFIXES: [&str; 4] = ["mint:", "treasury:", "burn:", "escrow:"];
 
-/// `POST /accounts` — ثبت حساب کاربر (موجودی از ۰ شروع می‌شود). ادمین.
+/// `POST /accounts` — register a user account (balance starts at 0). Admin.
 ///
 /// # Errors
-/// ۴۲۲ `RESERVED_ID` / `DUPLICATE_ACCOUNT`؛ ۴۰۰ بدنهٔ نامعتبر.
+/// 422 `RESERVED_ID` / `DUPLICATE_ACCOUNT`; 400 invalid body.
 pub async fn create_account(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -58,7 +58,7 @@ pub async fn create_account(
         .create_account_if_missing(id, kian_domain::AccountKind::User, req.label.as_deref())
         .await?;
 
-    // خواندن صادقانهٔ ردیف — createdAt واقعی دیتابیس، نه حدس پروسه
+    // honest row read — the database's real createdAt, not the process's guess
     let account = state
         .store
         .list_accounts_with_balances()
@@ -72,10 +72,10 @@ pub async fn create_account(
     Ok((StatusCode::CREATED, Json(account_view(&account))))
 }
 
-/// `GET /accounts` — فهرست همهٔ حساب‌ها با تراز مشتق‌شده. ادمین.
+/// `GET /accounts` — list all accounts with derived balances. Admin.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn list_accounts(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -85,10 +85,10 @@ pub async fn list_accounts(
     Ok(Json(AccountListResponse { items }))
 }
 
-/// `GET /accounts/{id}` — جزئیات حساب؛ فقط ادمین یا خودِ صاحب حساب.
+/// `GET /accounts/{id}` — account details; admin or the account owner only.
 ///
 /// # Errors
-/// ۴۰۱ بدون نشست/کلید ادمین؛ ۴۰۳ دسترسی به حساب دیگران؛ ۴۰۴ `UNKNOWN_ACCOUNT`.
+/// 401 without a session/admin key; 403 accessing someone else's account; 404 `UNKNOWN_ACCOUNT`.
 pub async fn get_account(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -108,10 +108,10 @@ pub async fn get_account(
     Ok(Json(account_view(&account)))
 }
 
-/// `GET /accounts/{id}/balance` — موجودی مشتق‌شده؛ فقط ادمین یا خودِ صاحب حساب.
+/// `GET /accounts/{id}/balance` — derived balance; admin or the account owner only.
 ///
 /// # Errors
-/// ۴۰۱ بدون نشست/کلید ادمین؛ ۴۰۳ دسترسی به موجودی دیگران؛ ۴۰۴ `UNKNOWN_ACCOUNT`.
+/// 401 without a session/admin key; 403 accessing someone else's balance; 404 `UNKNOWN_ACCOUNT`.
 pub async fn get_balance(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -175,7 +175,7 @@ mod privacy_tests {
         let alice = auth(&app, "910", "alice_p").await;
         let bob = auth(&app, "911", "bob_p").await;
 
-        // بدون توکن → ۴۰۱
+        // without a token → 401
         let res = app
             .clone()
             .oneshot(
@@ -188,7 +188,7 @@ mod privacy_tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // شهروند دیگر (Bob) روی حساب Alice → ۴۰۳
+        // another citizen (Bob) on Alice's account → 403
         let res = app
             .clone()
             .oneshot(
@@ -202,7 +202,7 @@ mod privacy_tests {
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // خودِ صاحب حساب (Alice) → ۲۰۰
+        // the account owner themselves (Alice) → 200
         let res = app
             .clone()
             .oneshot(
@@ -217,7 +217,7 @@ mod privacy_tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["id"], "citizen:910");
 
-        // ادمین با X-KIAN-Key → ۲۰۰
+        // admin with X-KIAN-Key → 200
         let res = app
             .oneshot(
                 axum::http::Request::builder()

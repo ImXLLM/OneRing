@@ -1,74 +1,74 @@
-//! ماندگاریِ Wave 10 (Commit #30) — اتاق جنگِ بنیان‌گذار روی مهاجرتِ `0014`:
+//! Wave 10 persistence (Commit #30) — the founder war room on migration `0014`:
 //!
-//! - [`FounderWarRoomTickRow`]: درج/فهرستِ گام‌هایِ عملیاتیِ روزِ صفر؛
-//! - [`ChairmanDirectiveLogRow`]: درج/فهرستِ دستورهایِ رئیس + پاسخِ سه شریک.
+//! - [`FounderWarRoomTickRow`]: insert/list day-zero operational steps;
+//! - [`ChairmanDirectiveLogRow`]: insert/list chairman directives + the three partners' replies.
 //!
-//! هیچ جدولِ دفتریِ دوطرفه لمس نمی‌شود — این‌ها «دفترِ فرمان و تلمتری» است نه
-//! خودِ پول؛ صفرجمعِ `Posting` دست‌نخورده می‌ماند.
+//! No double-entry ledger table is touched — these are the "command and telemetry ledger",
+//! not money itself; the `Posting` zero-sum stays intact.
 
 use sqlx::Row;
 
 use crate::error::DbResult;
 use crate::store::V3Store;
 
-/// ردیفِ گامِ عملیاتیِ اتاقِ جنگ — همان ستون‌هایِ `FounderWarRoomTick`.
+/// War-room operational step row — the `FounderWarRoomTick` columns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FounderWarRoomTickRow {
-    /// شناسهٔ قطعی — `warroom:{tick:04}`.
+    /// Deterministic ID — `warroom:{tick:04}`.
     pub id: String,
-    /// شمارهٔ تیک — `0..24`.
+    /// Tick number — `0..24`.
     pub tick_index: i64,
-    /// ثانیهٔ شبیه‌سازی از `Day 0, 00:00:00`.
+    /// Simulation seconds from `Day 0, 00:00:00`.
     pub simulation_second: i64,
-    /// شناسهٔ سخنران — `elon_musk` | `cz_binance` | `jeff_bezos`.
+    /// Speaker ID — `elon_musk` | `cz_binance` | `jeff_bezos`.
     pub speaker_id: String,
-    /// نامِ نمایشیِ سخنران.
+    /// Speaker display name.
     pub speaker_name: String,
-    /// پیامِ فارسی.
+    /// Persian message.
     pub message_fa: String,
-    /// پیامِ انگلیسی.
+    /// English message.
     pub message_en: String,
-    /// فرمانِ ترمینال — در صورتِ اجرا.
+    /// Terminal command — when executed.
     pub terminal_cmd: Option<String>,
-    /// پستِ اجتماعی به JSON — در صورتِ انتشار.
+    /// Social post as JSON — when published.
     pub social_post_json: Option<String>,
-    /// دلتایِ خزانه (`µUSDC`).
+    /// Treasury delta (`µUSDC`).
     pub wallet_delta_usdc_micros: i64,
-    /// جمعِ ولت پس از تیک (`µUSDC`).
+    /// Wallet total after the tick (`µUSDC`).
     pub wallet_total_usdc_micros: i64,
-    /// مرحلهٔ فعالِ خطِ لوله.
+    /// Active pipeline stage.
     pub active_pipeline_stage: String,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// ردیفِ دستورِ رئیس — همان ستون‌هایِ `ChairmanDirectiveLog`.
+/// Chairman directive row — the `ChairmanDirectiveLog` columns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChairmanDirectiveLogRow {
-    /// شناسهٔ قطعی — `directive:{ulid}`.
+    /// Deterministic ID — `directive:{ulid}`.
     pub id: String,
-    /// متنِ خامِ دستور.
+    /// Raw directive text.
     pub directive_text: String,
-    /// قصدِ طبقه‌بندی‌شده (ذخیره در ستونِ `target_founder` به‌عنوانِ برچسبِ
-    /// هدفِ تاکتیکی — `intent:{intent_id}`).
+    /// Classified intent (stored in the `target_founder` column as the
+    /// tactical-target label — `intent:{intent_id}`).
     pub target_founder: String,
-    /// پاسخِ ایلان — فارسی و انگلیسی جدا با `---`.
+    /// Elon's reply — Persian and English separated by `---`.
     pub elon_response: String,
-    /// پاسخِ CZ.
+    /// CZ's reply.
     pub cz_response: String,
-    /// پاسخِ جف.
+    /// Jeff's reply.
     pub bezos_response: String,
-    /// تیکِ فعالِ زمانِ تزریق.
+    /// Active tick at injection time.
     pub triggered_tick: i64,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
 impl V3Store {
-    /// درجِ یک گامِ عملیاتی — ایدمپوتنت روی `id`.
+    /// Insert one operational step — idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_war_room_tick(&self, row: &FounderWarRoomTickRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "FounderWarRoomTick"
@@ -97,10 +97,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ گام‌ها به ترتیبِ تیک — سقفِ `limit` ردیف.
+    /// List the steps in tick order — capped at `limit` rows.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_war_room_ticks(&self, limit: u32) -> DbResult<Vec<FounderWarRoomTickRow>> {
         let cap = i64::from(limit.clamp(1, 1000));
         let rows = sqlx::query(
@@ -135,10 +135,10 @@ impl V3Store {
             .collect())
     }
 
-    /// درجِ دستورِ رئیس — ایدمپوتنت روی `id`.
+    /// Insert a chairman directive — idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_chairman_directive(
         &self,
         row: &ChairmanDirectiveLogRow,
@@ -163,10 +163,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرستِ دستورهایِ رئیس — تازه‌ترین‌ها اول، سقفِ `limit` ردیف.
+    /// List chairman directives — newest first, capped at `limit` rows.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_chairman_directives(
         &self,
         limit: u32,
@@ -197,12 +197,12 @@ impl V3Store {
             .collect())
     }
 
-    /// بازنشانیِ علاییِ اتاقِ جنگ به روزِ صفر — پاک‌کردنِ همهٔ تیک‌هایِ ثبت‌شده
-    /// و لاگِ دستورهایِ رئیس در یک تراکنش؛ `POST /war-room/step` پس از آن
-    /// بدونِ برخورد بهِ اتمامِ سناریو از نو رانده می‌شود.
+    /// Admin war-room reset to day zero — clears all recorded ticks
+    /// and the chairman-directive log in one transaction; `POST /war-room/step` afterwards
+    /// can be replayed without hitting scenario exhaustion.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn reset_war_room_state(&self) -> DbResult<(u64, u64)> {
         let mut tx = self.pool_ref().begin().await?;
         let ticks = sqlx::query(r#"DELETE FROM "FounderWarRoomTick""#)
@@ -222,7 +222,7 @@ impl V3Store {
 mod tests {
     use super::*;
 
-    /// درج و فهرستِ کاملِ گام‌ها — ایدمپوتنت و مرتب.
+    /// Insert and fully list the steps — idempotent and ordered.
     #[tokio::test]
     async fn war_room_ticks_roundtrip_idempotent() {
         let store = V3Store::connect_in_memory().await.expect("store");
@@ -233,7 +233,7 @@ mod tests {
             simulation_second: 28_800,
             speaker_id: "jeff_bezos".to_owned(),
             speaker_name: "Jeff Bezos".to_owned(),
-            message_fa: "اولین فروش واقعی".to_owned(),
+            message_fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{641}\u{631}\u{648}\u{634} \u{648}\u{627}\u{642}\u{639}\u{6cc}".to_owned(),
             message_en: "first real sale".to_owned(),
             terminal_cmd: None,
             social_post_json: None,
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(rows[0], row);
     }
 
-    /// دستورِ رئیس — درج، مرتب‌سازیِ نزولی و گردشِ کامل.
+    /// Chairman directive — insert, descending sort, and a full round trip.
     #[tokio::test]
     async fn chairman_directives_roundtrip_newest_first() {
         let store = V3Store::connect_in_memory().await.expect("store");
@@ -261,7 +261,7 @@ mod tests {
             store
                 .insert_chairman_directive(&ChairmanDirectiveLogRow {
                     id: id.to_owned(),
-                    directive_text: "گزارش ولت".to_owned(),
+                    directive_text: "\u{6af}\u{632}\u{627}\u{631}\u{634} \u{648}\u{644}\u{62a}".to_owned(),
                     target_founder: "intent:status_report".to_owned(),
                     elon_response: "FA---EN".to_owned(),
                     cz_response: "FA---EN".to_owned(),

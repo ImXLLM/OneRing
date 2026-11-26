@@ -1,15 +1,15 @@
--- 0008_arda_locales_and_skill_forge — ARDA (آردا) بومی‌سازیِ سیاره‌ایِ ۲۴ساعته
--- روی معماری اصیل Fishkal + فورجِ مهارتِ مایرون (Wave 4 — Step 1/4).
+-- 0008_arda_locales_and_skill_forge — ARDA's 24-hour planetary localization
+-- on the authentic Fishkal architecture + the Mairon skill forge (Wave 4 — Step 1/4).
 --
--- قواعد (همان قرارداد 0005/0007):
---  * ستون‌های جدید روی "Product" مقدار پیش‌فرضِ ایمن دارند تا دیتابیس‌های
---    قدیمی و مسیر مهاجرت لگاسی بدون شکست ارتقا یابند؛ هر ۲۰ محصولِ موجود
---    با مبدأ پیش‌فرض 'en' و نوارِ پیش‌فرض ["en","fa","ar"] حفظ می‌شوند.
---  * "skillMd" / "skillJson" نال‌پذیرند — بستهٔ مهارتِ مایرون فقط پس از
---    عبور از گیتِ REA >= 85 فورج و مُهر می‌شود (دروازهٔ دو-کلیدی محفوظ).
---  * "ardaLastLocalizedAt" مُهرِ زمانِ تیکِ کرونِ ۲۴ساعتهٔ ARDA است.
+-- Rules (same convention as 0005/0007):
+--  * new columns on "Product" carry safe defaults so legacy databases and the
+--    legacy migration path upgrade without failure; all 20 existing products
+--    are preserved with the default origin 'en' and the default band ["en","fa","ar"].
+--  * "skillMd" / "skillJson" are nullable — the Mairon skill bundle is forged and
+--    sealed only after passing the REA >= 85 gate (two-key gate preserved).
+--  * "ardaLastLocalizedAt" is the timestamp of ARDA's 24-hour cron tick.
 
--- مُهر بومی‌سازی ARDA روی محصول
+-- the ARDA localization seal on the product
 ALTER TABLE "Product" ADD COLUMN "originLocale" TEXT NOT NULL DEFAULT 'en';
 ALTER TABLE "Product" ADD COLUMN "supportedLocalesJson" TEXT NOT NULL DEFAULT '["en","fa","ar"]';
 ALTER TABLE "Product" ADD COLUMN "skillMd" TEXT;

@@ -1,90 +1,90 @@
-//! `arda_fishkal_engine` — آردا (`آردا`) — عاملِ بومی‌سازیِ سیاره‌ایِ ۲۴ساعتهٔ
-//! `۰xKIA` روی معماری اصیل `Fishkal` (موتور HTML5 بدون وابستگیِ کیا، `3,616`
-//! خط، `667,241` بایت) با **درمانِ کاملِ ۲۵ نقصِ ممیزیِ قضایی** (Wave 4 —
+//! `arda_fishkal_engine` — Arda (`\u{0622}\u{0631}\u{062f}\u{0627}`) — the 24-hour planetary localization agent of
+//! `0xKIA` on the authentic `Fishkal` architecture (Kia's dependency-free HTML5 engine, `3,616`
+//! lines, `667,241` bytes) with **full remediation of the 25 forensic-audit defects** (Wave 4 —
 //! Step 1/4).
 //!
-//! این ماژول چهار قطعه دارد:
+//! This module has four pieces:
 //!
-//! 1. **دیکشنری پرچمِ وکتور `Fishkal`** — [`FISHKAL_VECTOR_FLAGS`] با
-//!    `viewBox="0 0 20 14"` حفظ‌شدهٔ حرف‌به‌حرف برای ۱۳ زبانِ اصلی
-//!    (`en`، `ar`، `fa`، `tr`، `fr`، `es`، `pt`، `nl`، `ja`، `hi`، `zh`،
-//!    `id`، `ko`) + ۷ زبانِ سیاره‌ایِ تازه (`de`، `ru`، `it`، `he`، `ur`،
-//!    `vi`، `th`) = **۲۰ زبانِ سیاره‌ای**؛ به‌همراه گلیفِ سوییچرِ
-//!    اسکریپت‌اصیل (`STR.code`: `'فا'`، `'ع'`، `'اردو'`، `'עב'` و کد ISO
-//!    بزرگ برای LTR) و [`render_circular_flag_badge`] /
-//!    [`render_product_flag_strip`] — نشانِ دایره‌ایِ مینی-پرچمِ محصولات.
-//! 2. **[`ArdaFishkalBundleGenerator`]** — تولید و تزریقِ باندلِ
-//!    `<style>` + `<script>` بومی‌سازیِ بدون وابستگی (drop-in) با درمانِ ۲۵
-//!    نقص: فلیپِ اتمیِ ۳-ویژگیِ ریشه، تایپوگرافیِ هر-اسکریپت، کاتالوگِ
-//!    یکپارچهٔ ۶-دامنه‌ای با اعتبارسنجِ توازنِ ۱۰۰٪، موتورِ فرمت‌بندیِ
-//!    `Intl` کش‌شده، جداسازیِ bidi در DOM و Canvas، و سوییچرِ لیست‌باکسِ
-//!    WAI-ARIA با اصلاحِ `D-1..D-8`.
-//! 3. **[`ArdaPlanetaryCronDaemon`]** — کارِ خودکارِ ۲۴ساعتهٔ
-//!    (`86_400` ثانیه) با گاردِ دلتای [`arda_content_sha256`] تا محصولِ
-//!    بیتغییر با ایدمپوتنس رد شود و محصولِ تازه/به‌روزشده روی ۲۰ زبان
-//!    بومی‌سازی و نشان‌گذاری شود.
-//! 4. **[`MaironSkillForge`]** — فورجِ خودکارِ `SKILL.md` + `skill.json`
-//!    هرگاه محصول از گیتِ REA مایرون (`>= 85`) بگذرد — سازگار با
-//!    رجیستری‌های Hermes / MCP / `OpenCode`.
+//! 1. **The `Fishkal` vector-flag dictionary** — [`FISHKAL_VECTOR_FLAGS`] with
+//!    the verbatim-preserved `viewBox="0 0 20 14"` for the 13 core languages
+//!    (`en`, `ar`, `fa`, `tr`, `fr`, `es`, `pt`, `nl`, `ja`, `hi`, `zh`,
+//!    `id`, `ko`) + 7 new planetary languages (`de`, `ru`, `it`, `he`, `ur`,
+//!    `vi`, `th`) = **20 planetary languages**; along with the authentic-script switcher
+//!    glyph (`STR.code`: `'\u{0641}\u{0627}'`, `'\u{0639}'`, `'\u{0627}\u{0631}\u{062f}\u{0648}'`, `'עב'`, or an uppercase ISO
+//!    code for LTR) and [`render_circular_flag_badge`] /
+//!    [`render_product_flag_strip`] — the circular mini-flag badge of products.
+//! 2. **[`ArdaFishkalBundleGenerator`]** — generates and injects the dependency-free
+//!    `<style>` + `<script>` localization bundle (drop-in) with the 25
+//!    defect fixes: the atomic 3-attribute root flip, per-script typography, the
+//!    unified 6-domain catalog with a 100% parity validator, the cached
+//!    `Intl` formatting engine, bidi isolation in DOM and Canvas, and the
+//!    WAI-ARIA listbox switcher with the `D-1..D-8` fixes.
+//! 3. **[`ArdaPlanetaryCronDaemon`]** — the automatic 24-hour job
+//!    (`86_400` seconds) with the [`arda_content_sha256`] delta guard so an unchanged product
+//!    is idempotently skipped and fresh/updated products are localized and flagged
+//!    across the 20 languages.
+//! 4. **[`MaironSkillForge`]** — auto-forges `SKILL.md` + `skill.json`
+//!    whenever a product passes Mairon's REA gate (`>= 85`) — compatible with
+//!    the Hermes / MCP / `OpenCode` registries.
 //!
-//! قانونِ کرنل: صفر `unsafe`، صفر IO، قطعیتِ کامل — همان ورودی، همان
-//! باندل، همان هش.
+//! Kernel rule: zero `unsafe`, zero IO, full determinism — same input, same
+//! bundle, same hash.
 #![forbid(unsafe_code)]
 #![allow(clippy::module_name_repetitions)]
 
 use sha2::{Digest, Sha256};
 
-// ── ثابت‌های معماری Fishkal (از ممیزیِ خط‌به‌خط) ────────────────────────────
+// ── Fishkal architecture constants (from the line-by-line audit) ────────────────────────────
 
-/// امضای باندل — برای تشخیصِ تزریقِ تکراری (ایدمپوتنسِ تزریق).
+/// Bundle signature — detects repeated injection (injection idempotency).
 pub const ARDA_RUNTIME_SIGNATURE: &str = "arda-fishkal-20";
 
-/// ویژگیِ نشانگرِ تزریق روی تگ `<html>` (گیتِ ایدمپوتنسِ [`inject_arda_runtime`]).
+/// Injection-marker attribute on the `<html>` tag (the [`inject_arda_runtime`] idempotency gate).
 pub const ARDA_RUNTIME_MARKUP_MARKER: &str = "data-arda-runtime=\"on\"";
 
-/// شعاع نشانِ دایره‌ای — ارتقای `.lf` فیشکال (L353–358) به دایرهٔ کامل.
+/// Circular-badge radius — the Fishkal `.lf` upgrade (L353–358) to a full circle.
 pub const FLAG_BADGE_RADIUS: &str = "50%";
 
-/// هالهٔ حلقهٔ نشان روی پس‌زمینهٔ تیرهٔ بازار — رنگ `--cream` فیشکال.
+/// Badge-ring halo on the marketplace's dark background — the Fishkal `--cream` color.
 pub const FLAG_BADGE_RING: &str = "0 0 0 1px rgba(239,230,214,.28)";
 
-/// فاصلهٔ نویسه‌ایِ بدنهٔ LTR فیشکال (L299).
+/// Fishkal LTR body letter-spacing (L299).
 pub const FISHKAL_TRACK_BODY_LTR: &str = ".34em";
 
-/// فاصلهٔ نویسه‌ایِ بدنهٔ RTL — درمانِ شکستِ پیوندِ حروفِ خطِ عربی/فارسی.
+/// RTL body letter-spacing — fixes Arabic/Persian letter-joining breakage.
 pub const ARDA_TRACK_BODY_RTL: &str = ".16em";
 
-/// فاصلهٔ نویسه‌ایِ نمایشیِ LTR فیشکال (L301–304).
+/// Fishkal LTR display letter-spacing (L301–304).
 pub const FISHKAL_TRACK_DISPLAY_LTR: &str = ".14em";
 
-/// فاصلهٔ نویسه‌ایِ نمایشیِ RTL + `text-indent` هم‌اندازه (L389–390 ارتقایافته).
+/// RTL display letter-spacing + a matching `text-indent` (upgraded from L389–390).
 pub const ARDA_TRACK_DISPLAY_RTL: &str = ".07em";
 
-/// شعاع گلاس-پییلِ سوییچر فیشکال (L2113).
+/// Fishkal switcher glass-pill radius (L2113).
 pub const FISHKAL_SWITCHER_PILL_PX: u32 = 40;
 
-/// هدف لمسیِ اشاره‌گرِ درشت (WCAG 2.5.5 — حفظِ فیشکال).
+/// Coarse-pointer touch target (WCAG 2.5.5 — Fishkal preserved).
 pub const FISHKAL_TOUCH_TARGET_PX: u32 = 44;
 
-/// بازهٔ کرونِ سیاره‌ای — دقیقاً ۲۴ ساعت به ثانیه.
+/// Planetary cron interval — exactly 24 hours in seconds.
 pub const ARDA_CRON_INTERVAL_SECS: u64 = 86_400;
 
-/// گیتِ REA فورجِ مهارت — همان آستانهٔ آهنگریِ بازار (`kian-domain`).
+/// Skill-forge REA gate — the same threshold as marketplace forging (`kian-domain`).
 pub const SKILL_FORGE_REA_GATE: u8 = kian_domain::mairon_rea_and_reviews::MARKETPLACE_APPROVAL_THRESHOLD;
 
-// ── 1A: دیکشنری پرچمِ وکتور Fishkal — ۲۰ زبانِ سیاره‌ای ────────────────────
+// ── 1A: the Fishkal vector-flag dictionary — 20 planetary languages ────────────────────
 
-/// جهت متن — قفلِ دو-مسیرهٔ فیشکال (`STR.dir`).
+/// Text direction — the Fishkal bidirectional lock (`STR.dir`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextDirection {
-    /// چپ‌به‌راست.
+    /// Left-to-right.
     Ltr,
-    /// راست‌به‌چپ — `ar`، `fa`، `ur`، `he`.
+    /// Right-to-left — `ar`, `fa`, `ur`, `he`.
     Rtl,
 }
 
 impl TextDirection {
-    /// مقدار ویژگی HTML (`dir`).
+    /// HTML attribute value (`dir`).
     #[must_use]
     pub fn as_attr(self) -> &'static str {
         match self {
@@ -93,40 +93,40 @@ impl TextDirection {
         }
     }
 
-    /// راست‌به‌چپ؟
+    /// Right-to-left?
     #[must_use]
     pub fn is_rtl(self) -> bool {
         self == Self::Rtl
     }
 }
 
-/// یک زبانِ سیاره‌ای — ردیفِ دیکشنری پرچمِ وکتورِ فیشکال.
+/// One planetary language — a Fishkal vector-flag dictionary row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FishkalLocale {
-    /// کد ISO کوتاه (`fa`، `en`، …) — کلیدِ `STR` و `root.lang`.
+    /// Short ISO code (`fa`, `en`, …) — the `STR` key and `root.lang`.
     pub code: &'static str,
-    /// نام بومیِ کنونیکال (`'فارسی'`، `'English'`، `'Bahasa Indonesia'`).
+    /// Canonical native name (`'\u{0641}\u{0627}\u{0631}\u{0633}\u{06cc}'`, `'English'`, `'Bahasa Indonesia'`).
     pub native_name: &'static str,
-    /// گلیفِ سوییچرِ اسکریپت‌اصیل (`STR.code`): `'فا'`، `'ع'`، `'اردو'`،
-    /// `'עב'` یا کد ISO بزرگ برای LTR.
+    /// Authentic-script switcher glyph (`STR.code`): `'\u{0641}\u{0627}'`, `'\u{0639}'`, `'\u{0627}\u{0631}\u{062f}\u{0648}'`,
+    /// `'עב'`, or an uppercase ISO code for LTR.
     pub str_code: &'static str,
-    /// جهت متنِ زبان.
+    /// The language's text direction.
     pub dir: TextDirection,
-    /// زیرتگ منطقه‌ایِ `Intl` (`fa-IR`، `ar-AE`، `hi-IN`، …) — کشِ فرمت‌بندی.
+    /// `Intl` regional subtag (`fa-IR`, `ar-AE`, `hi-IN`, …) — the formatting cache.
     pub intl_locale: &'static str,
-    /// SVG وکتورِ حفظ‌شدهٔ حرف‌به‌حرف با `viewBox="0 0 20 14"`.
+    /// Verbatim-preserved vector SVG with `viewBox="0 0 20 14"`.
     pub svg: &'static str,
 }
 
 impl FishkalLocale {
-    /// راست‌به‌چپ؟
+    /// Right-to-left?
     #[must_use]
     pub fn is_rtl(self) -> bool {
         self.dir.is_rtl()
     }
 }
 
-// پرچم‌های وکتورِ اصلیِ فیشکال — verbatim از L2690–2704 (۱۳ زبان).
+// the core Fishkal vector flags — verbatim from L2690–2704 (13 languages).
 const SVG_FA: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"4.7\" fill=\"#239f40\"/><rect y=\"4.7\" width=\"20\" height=\"4.7\" fill=\"#fff\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#da0000\"/><path d=\"M10 5.7c-.95 0-1.7.8-1.7 1.8S9.05 9.3 10 9.3s1.7-.8 1.7-1.8S10.95 5.7 10 5.7zm0 .9c.5 0 .8.4.8.9s-.3.9-.8.9-.8-.4-.8-.9.3-.9.8-.9z\" fill=\"#da0000\"/></svg>";
 const SVG_AR: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#fff\"/><rect width=\"20\" height=\"4.7\" fill=\"#00732F\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#000\"/><rect width=\"6\" height=\"14\" fill=\"#FF0000\"/></svg>";
 const SVG_EN: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#012169\"/><path d=\"M0 0l20 14M20 0L0 14\" stroke=\"#fff\" stroke-width=\"2.6\"/><path d=\"M0 0l20 14M20 0L0 14\" stroke=\"#C8102E\" stroke-width=\"1\"/><path d=\"M10 0v14M0 7h20\" stroke=\"#fff\" stroke-width=\"4\"/><path d=\"M10 0v14M0 7h20\" stroke=\"#C8102E\" stroke-width=\"2.2\"/></svg>";
@@ -141,7 +141,7 @@ const SVG_ZH: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\
 const SVG_ID: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"7\" fill=\"#CE1126\"/><rect y=\"7\" width=\"20\" height=\"7\" fill=\"#fff\"/></svg>";
 const SVG_KO: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#fff\"/><path d=\"M6.8 7a3.2 3.2 0 0 1 6.4 0z\" fill=\"#CD2E3A\"/><path d=\"M6.8 7a3.2 3.2 0 0 0 6.4 0z\" fill=\"#0047A0\"/><circle cx=\"8.4\" cy=\"7\" r=\"1.6\" fill=\"#CD2E3A\"/><circle cx=\"11.6\" cy=\"7\" r=\"1.6\" fill=\"#0047A0\"/></svg>";
 
-// پرچم‌های سیاره‌ایِ تازه — هم‌گرامرِ فیشکال (viewBox 20×14، مینیمالِ وکتور).
+// the new planetary flags — same Fishkal grammar (20×14 viewBox, minimal vector).
 const SVG_DE: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"4.7\" fill=\"#000\"/><rect y=\"4.7\" width=\"20\" height=\"4.7\" fill=\"#DD0000\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#FFCE00\"/></svg>";
 const SVG_RU: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"4.7\" fill=\"#fff\"/><rect y=\"4.7\" width=\"20\" height=\"4.7\" fill=\"#0039A6\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#D52B1E\"/></svg>";
 const SVG_IT: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"6.667\" height=\"14\" fill=\"#009246\"/><rect x=\"6.667\" width=\"6.666\" height=\"14\" fill=\"#fff\"/><rect x=\"13.333\" width=\"6.667\" height=\"14\" fill=\"#CE2B37\"/></svg>";
@@ -150,7 +150,7 @@ const SVG_UR: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\
 const SVG_VI: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#DA251D\"/><path d=\"M10 3.6L10.85 5.84L13.23 5.95L11.37 7.45L12 9.75L10 8.44L8 9.75L8.63 7.45L6.77 5.95L9.15 5.84Z\" fill=\"#FFFF00\"/></svg>";
 const SVG_TH: &str = "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"2.33\" fill=\"#A51931\"/><rect y=\"2.33\" width=\"20\" height=\"2.33\" fill=\"#F4F5F8\"/><rect y=\"4.66\" width=\"20\" height=\"4.67\" fill=\"#2D2A4A\"/><rect y=\"9.33\" width=\"20\" height=\"2.34\" fill=\"#F4F5F8\"/><rect y=\"11.67\" width=\"20\" height=\"2.33\" fill=\"#A51931\"/></svg>";
 
-/// دیکشنری کاملِ ۲۰ زبانِ سیاره‌ای — ترتیبِ فیشکال: ۱۳ اصلی + ۷ تازه.
+/// The complete 20-planetary-language dictionary — Fishkal order: 13 core + 7 new.
 pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     FishkalLocale {
         code: "en",
@@ -162,16 +162,16 @@ pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     },
     FishkalLocale {
         code: "ar",
-        native_name: "العربية",
-        str_code: "ع",
+        native_name: "\u{627}\u{644}\u{639}\u{631}\u{628}\u{64a}\u{629}",
+        str_code: "\u{639}",
         dir: TextDirection::Rtl,
         intl_locale: "ar-AE",
         svg: SVG_AR,
     },
     FishkalLocale {
         code: "fa",
-        native_name: "فارسی",
-        str_code: "فا",
+        native_name: "\u{641}\u{627}\u{631}\u{633}\u{6cc}",
+        str_code: "\u{641}\u{627}",
         dir: TextDirection::Rtl,
         intl_locale: "fa-IR",
         svg: SVG_FA,
@@ -290,8 +290,8 @@ pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     },
     FishkalLocale {
         code: "ur",
-        native_name: "اردو",
-        str_code: "اردو",
+        native_name: "\u{627}\u{631}\u{62f}\u{648}",
+        str_code: "\u{627}\u{631}\u{62f}\u{648}",
         dir: TextDirection::Rtl,
         intl_locale: "ur-PK",
         svg: SVG_UR,
@@ -314,37 +314,37 @@ pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     },
 ];
 
-/// تعداد زبان‌های سیاره‌ای — همیشه ۲۰ (قفلِ معماری).
+/// Planetary-language count — always 20 (architecture lock).
 pub const PLANETARY_LOCALE_COUNT: usize = FISHKAL_VECTOR_FLAGS.len();
 
-/// یافتنِ زبان با کد ISO.
+/// Finds a language by ISO code.
 #[must_use]
 pub fn fishkal_locale(code: &str) -> Option<&'static FishkalLocale> {
     FISHKAL_VECTOR_FLAGS.iter().find(|l| l.code == code)
 }
 
-/// شمارشِ رخدادِ یک الگوی مشتقِ حرف‌به‌حرف در همهٔ SVGها — گیتِ سلامتِ دیکشنری.
+/// Counts verbatim-derived pattern occurrences across all SVGs — the dictionary health gate.
 #[must_use]
 pub fn count_flags_with(pattern: &str) -> usize {
     FISHKAL_VECTOR_FLAGS.iter().filter(|l| l.svg.contains(pattern)).count()
 }
 
-/// همهٔ کدها به ترتیبِ دیکشنری — برای حلقهٔ کرون و پاسخ کاتالوگ.
+/// All codes in dictionary order — for the cron loop and the catalog response.
 #[must_use]
 pub fn all_locale_codes() -> Vec<&'static str> {
     FISHKAL_VECTOR_FLAGS.iter().map(|l| l.code).collect()
 }
 
-/// آیا کد جزو ۲۰ زبانِ سیاره‌ای است؟
+/// Is the code one of the 20 planetary languages?
 #[must_use]
 pub fn is_planetary_locale(code: &str) -> bool {
     fishkal_locale(code).is_some()
 }
 
-// ── نشانِ دایره‌ایِ مینی-پرچم ───────────────────────────────────────────────
+// ── The circular mini-flag badge ───────────────────────────────────────────────
 
-/// استایلِ درون‌خطیِ نشانِ دایره‌ای — ارتقای `.lf` فیشکال (L353–358):
-/// دایرهٔ ۲۰×۲۰ با هالهٔ `--cream` و بازچرخشِ دفاعیِ کِرت (`transform:none`).
+/// Circular-badge inline style — the Fishkal `.lf` upgrade (L353–358):
+/// a 20×20 circle with the `--cream` halo and the defensive counter-rotation quirk (`transform:none`).
 fn badge_style() -> String {
     format!(
         "--flag-badge-radius:{FLAG_BADGE_RADIUS};width:20px;height:20px;border-radius:50%;\
@@ -353,11 +353,11 @@ fn badge_style() -> String {
     )
 }
 
-/// رندرِ نشانِ دایره‌ایِ مینی-پرچم برای یک زبان — `None` اگر کد ناشناخته.
+/// Renders the circular mini-flag badge for one language — `None` for an unknown code.
 ///
-/// SVG با `preserveAspectRatio="xMidYMid slice"` داخل دایره برش می‌خورد و
-/// بازچرخشِ دفاعیِ کِرتِ فیشکال (`transform:none !important;transition:none;
-/// stroke:none;`) حفظ می‌شود تا هیچ قالبِ میزانی کِرتِ نشان را نچرخاند.
+/// The SVG is clipped inside the circle with `preserveAspectRatio="xMidYMid slice"` and
+/// the Fishkal defensive quirk rotation (`transform:none !important;transition:none;
+/// stroke:none;`) is preserved so no host theme can rotate the badge.
 #[must_use]
 pub fn render_circular_flag_badge(code: &str) -> Option<String> {
     let l = fishkal_locale(code)?;
@@ -379,10 +379,10 @@ pub fn render_circular_flag_badge(code: &str) -> Option<String> {
     ))
 }
 
-/// رندرِ نوارِ پرچمِ محصول — نشانِ دایره‌ایِ زبانِ مبدأ + نشانِ هر زبانِ
-/// ترجمه‌شده (ترتیبِ پایدار؛ تکرارِ مبدأ حذف می‌شود؛ ناشناخته‌ها رد می‌شوند).
+/// Renders the product flag strip — the origin language's circular badge + a badge for every
+/// translated language (stable order; origin duplicates removed; unknowns skipped).
 ///
-/// خروجی روی کارتِ بازار و درونِ سوییچرِ زبانِ خودِ محصول می‌نشیند.
+/// The output lands on the marketplace card and inside the product's own language switcher.
 #[must_use]
 pub fn render_product_flag_strip(origin: &str, translated: &[&str]) -> Option<String> {
     let origin_badge = render_circular_flag_badge(origin)?;
@@ -407,21 +407,21 @@ pub fn render_product_flag_strip(origin: &str, translated: &[&str]) -> Option<St
     ))
 }
 
-/// شمارشِ نشانِ داخلِ نوارِ پرچم — گیتِ آزمونِ ترکیب.
+/// Counts badges inside the flag strip — the composition test gate.
 #[must_use]
 pub fn count_flag_badges(strip_html: &str) -> usize {
     strip_html.matches("arda-flag-badge").count()
 }
 
-// ── تشخیصِ زبانِ مبدأ محصول ────────────────────────────────────────────────
+// ── Product origin-language detection ────────────────────────────────────────────────
 
-/// تشخیصِ قطعیِ زبانِ مبدأ از محتوای محصول.
+/// Deterministically detects the product's origin language from its content.
 ///
-/// ترتیبِ قطعی: (۱) ویژگیِ `lang=".."` / `data-lang` روی تگِ ریشه اگر جزو
-/// ۲۰ زبان باشد؛ (۲) شمارشِ اسکریپت (فارسی‌خاص، اردوخاص، عربی، عبری،
-/// دیواناگری، تایلندی، کانا/هیراگانا، هانگول، سیریلیک، CJK، ویتنامی‌خاص) —
-/// بیشترینِ قطعی برنده است و تساوی با ترتیبِ شمارشِ ثابت حل می‌شود؛
-/// (۳) برگشت به `'en'`.
+/// Deterministic order: (1) the `lang=".."` / `data-lang` attribute on the root tag, if it is one of
+/// the 20 languages; (2) script counting (Persian-specific, Urdu-specific, Arabic, Hebrew,
+/// Devanagari, Thai, Kana/Hiragana, Hangul, Cyrillic, CJK, Vietnamese-specific) —
+/// the highest deterministic count wins and ties resolve by the fixed counting order;
+/// (3) fall back to `'en'`.
 #[must_use]
 pub fn detect_origin_locale(html: &str) -> &'static str {
     if let Some(code) = detected_lang_attribute(html) {
@@ -436,7 +436,7 @@ pub fn detect_origin_locale(html: &str) -> &'static str {
     "en"
 }
 
-/// خوانشِ ویژگی `lang` / `data-lang` از تگِ ریشه — فقط کدهای سیاره‌ای.
+/// Reads the `lang` / `data-lang` attribute from the root tag — planetary codes only.
 fn detected_lang_attribute(html: &str) -> Option<&'static str> {
     for attr in ["lang=\"", "data-lang=\""] {
         for segment in html.split(attr).skip(1) {
@@ -450,17 +450,17 @@ fn detected_lang_attribute(html: &str) -> Option<&'static str> {
     None
 }
 
-/// رأیِ اسکریپت — بازرسیِ قطعیِ حروفِ خاص به ترتیبِ اولویت: اردو، فارسی،
-/// عربی، عبری، دیواناگری، تایلندی، کانا، هانگول، سیریلیک، CJK.
+/// Script vote — deterministic inspection of specific letters in priority order: Urdu, Persian,
+/// Arabic, Hebrew, Devanagari, Thai, Kana, Hangul, Cyrillic, CJK.
 ///
-/// حروفِ خاصِ اردو/فارسی «قاطع»اند (شمارش نمی‌برند — متنِ فارسی تقریباً
-/// تماماً با حروفِ بلوکِ عربی نوشته می‌شود)؛ پس گلیفِ خاص، برندهٔ مطلق است.
+/// Urdu/Persian-specific letters are 'decisive' (counting does not win — Persian text is almost
+/// entirely written with Arabic-block letters); so a specific glyph is the absolute winner.
 fn script_vote_winner(text: &str) -> Option<&'static str> {
-    // اردو — حروفِ خاصِ اردو (ٹ ڈ ڑ ں ے ھ ہ) پیش از فارسی؛ فارسی‌زبان‌ها
-    // هرگز این گلیف‌ها را نمی‌نویسند.
-    const URDU_SPECIFIC: [char; 7] = ['ٹ', 'ڈ', 'ڑ', 'ں', 'ے', 'ھ', 'ہ'];
-    // فارسی — پ چ ژ گ ک (کِ فارسی `U+06A9` جدا از کافِ عربی `U+0643`).
-    const PERSIAN_SPECIFIC: [char; 5] = ['پ', 'چ', 'ژ', 'گ', 'ک'];
+    // Urdu — the Urdu-specific letters (U+0679 U+0688 U+0691 U+06BA U+06D2 U+06BE U+06C1) come before Persian; Persian speakers
+    // never write these glyphs.
+    const URDU_SPECIFIC: [char; 7] = ['\u{679}', '\u{688}', '\u{691}', '\u{6ba}', '\u{6d2}', '\u{6be}', '\u{6c1}'];
+    // Persian — U+067E U+0686 U+0698 U+06AF U+06A9 (the Persian `U+06A9` is distinct from the Arabic kaf `U+0643`).
+    const PERSIAN_SPECIFIC: [char; 5] = ['\u{67e}', '\u{686}', '\u{698}', '\u{6af}', '\u{6a9}'];
     if text.chars().any(|c| URDU_SPECIFIC.contains(&c)) {
         return Some("ur");
     }
@@ -494,39 +494,39 @@ fn script_vote_winner(text: &str) -> Option<&'static str> {
     None
 }
 
-/// شمارشِ بازهٔ یونیکد.
+/// Counts a Unicode range.
 fn count_in_range(text: &str, lo: char, hi: char) -> usize {
     text.chars().filter(|c| (lo..=hi).contains(c)).count()
 }
 
-/// تشخیصِ ویتنامی — حروفِ خاصِ لاتینِ گسترش‌یافته.
+/// Vietnamese detection — extended-Latin-specific letters.
 fn has_vietnamese_markers(text: &str) -> bool {
     const MARKS: [char; 15] = ['ă', 'â', 'đ', 'ê', 'ô', 'ơ', 'ư', 'ạ', 'ả', 'ấ', 'ầ', 'ế', 'ỗ', 'ộ', 'ự'];
     text.chars().any(|c| MARKS.contains(&c))
 }
 
-// ── 1B-۳: کاتالوگِ یکپارچهٔ ۶-دامنه‌ای + اعتبارسنجِ توازنِ مکانیکی ───────────
+// ── 1B-3: the unified 6-domain catalog + the mechanical parity validator ───────────
 
-/// شش دامنهٔ یکپارچه — جایگزینِ ۶ دیکشنریِ پراکندهٔ فیشکال
-/// (`I18N`، `BIZSTR`، `LOGSTR`، `CARDSTR`، `OPTSTR`، `SPECIES`).
+/// The six unified domains — replacing the six scattered Fishkal dictionaries
+/// (`I18N`, `BIZSTR`, `LOGSTR`, `CARDSTR`, `OPTSTR`, `SPECIES`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArdaCatalogScope {
-    /// هستهٔ رابط — عنوان، برچسب‌های عمومی.
+    /// Interface core — titles, general labels.
     Core,
-    /// تجارت — قیمت، خرید، پرداخت Stars/XTR.
+    /// Commerce — price, purchase, Stars/XTR payment.
     Business,
-    /// رکوردها — جدول‌ها، تاریخچه، حالت خالی.
+    /// Records — tables, history, empty state.
     Records,
-    /// هم‌رسانی — پیوند، دعوت، affiliate.
+    /// Sharing — links, invites, affiliate.
     Share,
-    /// ابزارها — محاسبه‌گر، فرم، خروجی.
+    /// Tools — calculator, forms, export.
     Tools,
-    /// محتوا — توضیح محصول، راهنما.
+    /// Content — product descriptions, guides.
     Content,
 }
 
 impl ArdaCatalogScope {
-    /// رشتهٔ متعارف دامنه.
+    /// The domain's canonical string.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -539,62 +539,62 @@ impl ArdaCatalogScope {
         }
     }
 
-    /// همهٔ دامنه‌ها به ترتیب قطعی.
+    /// All domains in deterministic order.
     #[must_use]
     pub fn all() -> [Self; 6] {
         [Self::Core, Self::Business, Self::Records, Self::Share, Self::Tools, Self::Content]
     }
 }
 
-/// یک مدخلِ کاتالوگ — `(دامنه، کلید)` با ترجمهٔ هر زبان.
+/// One catalog entry — a `(domain, key)` pair with each language's translation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArdaCatalogEntry {
-    /// دامنهٔ شش‌گانه.
+    /// One of the six domains.
     pub scope: ArdaCatalogScope,
-    /// کلید (`"app_title"`، `"price_stars"`، …).
+    /// Key (`"app_title"`, `"price_stars"`, …).
     pub key: String,
-    /// ترجمه‌ها — کدِ زبان → رشتهٔ بومی.
+    /// Translations — language code → native string.
     pub translations: std::collections::BTreeMap<String, String>,
 }
 
-/// گزارشِ توازنِ یک زبان نسبت به زبانِ پایه.
+/// One language's parity report against the base language.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocaleParity {
-    /// کد زبان.
+    /// Language code.
     pub locale: String,
-    /// کلیدهای غایب (نقصِ `unitFt` در `tr..ko` — درمان‌شده).
+    /// Missing keys (the `unitFt` defect across `tr..ko` — fixed).
     pub missing_keys: Vec<String>,
-    /// نمرهٔ پوششِ دقیقِ `0.0..=1.0` — `(کل − غایب) / کل`.
+    /// Exact coverage score `0.0..=1.0` — `(total − missing) / total`.
     pub coverage_score: f64,
 }
 
-/// گزارشِ کاملِ توازنِ کاتالوگ — مکانیکی و بازتولیدپذیر.
+/// The full catalog parity report — mechanical and reproducible.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArdaParityReport {
-    /// زبانِ پایهٔ توازن.
+    /// The parity base language.
     pub base_locale: String,
-    /// تعدادِ کلیدهای مرجعِ پایه.
+    /// Count of the base reference keys.
     pub total_keys: usize,
-    /// توازنِ هر زبانِ غیرِ پایه به ترتیبِ دیکشنری.
+    /// Parity for every non-base language in dictionary order.
     pub locales: Vec<LocaleParity>,
-    /// بدترینِ پوشش بین زبان‌ها — نمرهٔ بر parfait کاتالوگ.
+    /// Worst coverage across languages — the catalog's parfait score.
     pub coverage_score: f64,
-    /// کلیدهای تکراریِ `(دامنه، کلید)` در ساخت.
+    /// Duplicate `(domain, key)` pairs at build time.
     pub duplicate_keys: Vec<String>,
-    /// توازنِ کامل؟ (صفرِ غایب + صفرِ تکراری)
+    /// Full parity? (zero missing + zero duplicates)
     pub fully_parity: bool,
 }
 
-/// کاتالوگِ یکپارچهٔ بومی‌سازی — یک دیکشنری به‌جای شش دیکشنریِ فیشکال.
+/// The unified localization catalog — one dictionary instead of six Fishkal dictionaries.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ArdaLocaleCatalog {
-    /// زبانِ پایهٔ توازن (پیش‌فرض `en`).
+    /// Parity base language (default `en`).
     pub base_locale: String,
-    /// مدخل‌ها به ترتیبِ درج.
+    /// Entries in insertion order.
     pub entries: Vec<ArdaCatalogEntry>,
 }
 
-/// سازندهٔ کاتالوگ با ثبتِ کلیدهای تکراری (نقصِ دیکشنری‌های فیشکال).
+/// Catalog builder that records duplicate keys (the Fishkal-dictionaries defect).
 #[derive(Debug, Clone)]
 pub struct ArdaLocaleCatalogBuilder {
     base: String,
@@ -603,14 +603,14 @@ pub struct ArdaLocaleCatalogBuilder {
 }
 
 impl ArdaLocaleCatalogBuilder {
-    /// سازندهٔ تازه روی زبانِ پایه.
+    /// A fresh builder on the base language.
     #[must_use]
     pub fn new(base: &str) -> Self {
         Self { base: base.to_owned(), entries: Vec::new(), duplicates: Vec::new() }
     }
 
-    /// افزودنِ یک مدخل — ترجمه‌ها به‌صورت `(کد، متن)`؛ ترجمهٔ پایه الزامی نیست
-    /// اما توازن نسبت به پایه سنجیده می‌شود.
+    /// Adds an entry — translations as `(code, text)`; the base translation is not required
+    /// but parity is measured against the base.
     pub fn add(&mut self, scope: ArdaCatalogScope, key: &str, translations: &[(&str, &str)]) {
         let id = format!("{}.{}", scope.as_str(), key);
         if self.entries.iter().any(|e| e.scope == scope && e.key == key) {
@@ -624,21 +624,21 @@ impl ArdaLocaleCatalogBuilder {
         self.entries.push(ArdaCatalogEntry { scope, key: key.to_owned(), translations: map });
     }
 
-    /// نهایی‌سازی — کاتالوگِ کامل با فهرستِ تکراری‌ها.
+    /// Finalizes — the complete catalog with the duplicates list.
     #[must_use]
     pub fn build(self) -> ArdaLocaleCatalog {
         ArdaLocaleCatalog { base_locale: self.base, entries: self.entries }
     }
 
-    /// تکراری‌های ثبت‌شده هنگام ساخت.
+    /// Duplicates recorded at build time.
     #[must_use]
     pub fn duplicates(&self) -> &[String] {
         &self.duplicates
     }
 }
 
-/// اعتبارسنجِ مکانیکیِ توازنِ ۱۰۰٪ — درمانِ نقصِ `unitFt` غایب در `tr..ko`
-/// و نقصِ `OPTSTR` سه-زبانِ فیشکال: هیچ زبانی کمتر از پایه کلید ندارد.
+/// The 100% mechanical parity validator — fixes the `unitFt` defect missing across `tr..ko`
+/// and Fishkal's three-language `OPTSTR` defect: no language carries fewer keys than the base.
 #[must_use]
 pub fn validate_catalog_parity(catalog: &ArdaLocaleCatalog) -> ArdaParityReport {
     let total_keys = catalog.entries.len();
@@ -672,7 +672,7 @@ pub fn validate_catalog_parity(catalog: &ArdaLocaleCatalog) -> ArdaParityReport 
     }
 }
 
-/// شمارشِ کلیدهای تکراریِ درونِ یک کاتالوگِ آماده (خطِ دفاعِ دوم).
+/// Counts duplicate keys inside a finished catalog (the second line of defense).
 fn catalog_duplicates(catalog: &ArdaLocaleCatalog) -> Vec<String> {
     let mut seen = std::collections::BTreeSet::new();
     let mut dups = Vec::new();
@@ -685,103 +685,103 @@ fn catalog_duplicates(catalog: &ArdaLocaleCatalog) -> Vec<String> {
     dups
 }
 
-// ── کاتالوگِ سیاره‌ایِ پیش‌فرض — ۷ کلید × ۲۰ زبان، توازنِ کامل ───────────────
+// ── The default planetary catalog — 7 keys × 20 languages, full parity ───────────────
 
-/// کاتالوگِ سیاره‌ایِ پیش‌فرض ARDA — یک کلید به‌ازای هر دامنهٔ شش‌گانه + کلید
-/// `aria-label` سوییچر؛ ۱۴۰ رشتهٔ بومیِ کامل با توازنِ ۱۰۰٪ مکانیکی.
+/// The ARDA default planetary catalog — one key per each of the six domains + the switcher's
+/// `aria-label` key; 140 complete native strings with 100% mechanical parity.
 #[must_use]
 pub fn default_planetary_catalog() -> ArdaLocaleCatalog {
     let mut b = ArdaLocaleCatalogBuilder::new("en");
     b.add(ArdaCatalogScope::Core, "app_title", &[
-        ("en", "Kian Sovereign Studio"), ("ar", "استوديو كيان السيادي"),
-        ("fa", "استودیوی حاکم کیان"), ("tr", "Kian Egemen Stüdyosu"),
+        ("en", "Kian Sovereign Studio"), ("ar", "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{64a}\u{648} \u{643}\u{64a}\u{627}\u{646} \u{627}\u{644}\u{633}\u{64a}\u{627}\u{62f}\u{64a}"),
+        ("fa", "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} \u{62d}\u{627}\u{6a9}\u{645} \u{6a9}\u{6cc}\u{627}\u{646}"), ("tr", "Kian Egemen Stüdyosu"),
         ("fr", "Studio Souverain Kian"), ("es", "Estudio Soberano Kian"),
         ("pt", "Estúdio Soberano Kian"), ("nl", "Kian Soeverein Studio"),
         ("ja", "キアン・ソブリン・スタジオ"), ("hi", "कियान सार्वभौम स्टूडियो"),
         ("zh", "KIAN 主权工作室"), ("id", "Studio Kian Berdaulat"),
         ("ko", "키안 주권 스튜디오"), ("de", "Kian Souveränes Studio"),
         ("ru", "Суверенная студия Kian"), ("it", "Studio Sovrano Kian"),
-        ("he", "סטודיו הריבוני של קיאן"), ("ur", "کئین خودمختار اسٹوڈیو"),
+        ("he", "סטודיו הריבוני של קיאן"), ("ur", "\u{6a9}\u{626}\u{6cc}\u{646} \u{62e}\u{648}\u{62f}\u{645}\u{62e}\u{62a}\u{627}\u{631} \u{627}\u{633}\u{679}\u{648}\u{688}\u{6cc}\u{648}"),
         ("vi", "Xưởng Kian Có Chủ quyền"), ("th", "สตูดิโอเคียนอธิปไตย"),
     ]);
     b.add(ArdaCatalogScope::Core, "ui_language", &[
-        ("en", "UI language"), ("ar", "لغة الواجهة"),
-        ("fa", "زبانِ رابط"), ("tr", "Arayüz dili"),
+        ("en", "UI language"), ("ar", "\u{644}\u{63a}\u{629} \u{627}\u{644}\u{648}\u{627}\u{62c}\u{647}\u{629}"),
+        ("fa", "\u{632}\u{628}\u{627}\u{646}\u{650} \u{631}\u{627}\u{628}\u{637}"), ("tr", "Arayüz dili"),
         ("fr", "Langue de l'interface"), ("es", "Idioma de la interfaz"),
         ("pt", "Idioma da interface"), ("nl", "Interfacetaal"),
         ("ja", "インターフェース言語"), ("hi", "इंटरफ़ेस भाषा"),
         ("zh", "界面语言"), ("id", "Bahasa antarmuka"),
         ("ko", "인터페이스 언어"), ("de", "Oberflächensprache"),
         ("ru", "Язык интерфейса"), ("it", "Lingua interfaccia"),
-        ("he", "שפת הממשק"), ("ur", "انٹرفیس زبان"),
+        ("he", "שפת הממשק"), ("ur", "\u{627}\u{646}\u{679}\u{631}\u{641}\u{6cc}\u{633} \u{632}\u{628}\u{627}\u{646}"),
         ("vi", "Ngôn ngữ giao diện"), ("th", "ภาษาอินเทอร์เฟซ"),
     ]);
     b.add(ArdaCatalogScope::Business, "price_stars", &[
-        ("en", "Price (Stars)"), ("ar", "السعر (نجوم)"),
-        ("fa", "قیمت (ستاره)"), ("tr", "Fiyat (Yıldız)"),
+        ("en", "Price (Stars)"), ("ar", "\u{627}\u{644}\u{633}\u{639}\u{631} (\u{646}\u{62c}\u{648}\u{645})"),
+        ("fa", "\u{642}\u{6cc}\u{645}\u{62a} (\u{633}\u{62a}\u{627}\u{631}\u{647})"), ("tr", "Fiyat (Yıldız)"),
         ("fr", "Prix (étoiles)"), ("es", "Precio (estrellas)"),
         ("pt", "Preço (estrelas)"), ("nl", "Prijs (sterren)"),
         ("ja", "価格（スター）"), ("hi", "कीमत (स्टार)"),
         ("zh", "价格（星星）"), ("id", "Harga (Bintang)"),
         ("ko", "가격(스타)"), ("de", "Preis (Sterne)"),
         ("ru", "Цена (звёзды)"), ("it", "Prezzo (stelle)"),
-        ("he", "מחיר (כוכבים)"), ("ur", "قیمت (ستارے)"),
+        ("he", "מחיר (כוכבים)"), ("ur", "\u{642}\u{6cc}\u{645}\u{62a} (\u{633}\u{62a}\u{627}\u{631}\u{6d2})"),
         ("vi", "Giá (sao)"), ("th", "ราคา (ดาว)"),
     ]);
     b.add(ArdaCatalogScope::Records, "empty_state", &[
-        ("en", "No records yet"), ("ar", "لا سجلات بعد"),
-        ("fa", "هنوز سابقه‌ای نیست"), ("tr", "Henüz kayıt yok"),
+        ("en", "No records yet"), ("ar", "\u{644}\u{627} \u{633}\u{62c}\u{644}\u{627}\u{62a} \u{628}\u{639}\u{62f}"),
+        ("fa", "\u{647}\u{646}\u{648}\u{632} \u{633}\u{627}\u{628}\u{642}\u{647}‌\u{627}\u{6cc} \u{646}\u{6cc}\u{633}\u{62a}"), ("tr", "Henüz kayıt yok"),
         ("fr", "Aucun enregistrement"), ("es", "Aún no hay registros"),
         ("pt", "Ainda sem registros"), ("nl", "Nog geen registraties"),
         ("ja", "記録はまだありません"), ("hi", "अभी कोई रिकॉर्ड नहीं"),
         ("zh", "暂无记录"), ("id", "Belum ada catatan"),
         ("ko", "아직 기록이 없습니다"), ("de", "Noch keine Einträge"),
         ("ru", "Записей пока нет"), ("it", "Nessun record"),
-        ("he", "אין עדיין רשומות"), ("ur", "ابھی کوئی ریکارڈ نہیں"),
+        ("he", "אין עדיין רשומות"), ("ur", "\u{627}\u{628}\u{6be}\u{6cc} \u{6a9}\u{648}\u{626}\u{6cc} \u{631}\u{6cc}\u{6a9}\u{627}\u{631}\u{688} \u{646}\u{6c1}\u{6cc}\u{6ba}"),
         ("vi", "Chưa có bản ghi"), ("th", "ยังไม่มีรายการ"),
     ]);
     b.add(ArdaCatalogScope::Share, "copy_link", &[
-        ("en", "Copy link"), ("ar", "نسخ الرابط"),
-        ("fa", "رونوشتِ پیوند"), ("tr", "Bağlantıyı kopyala"),
+        ("en", "Copy link"), ("ar", "\u{646}\u{633}\u{62e} \u{627}\u{644}\u{631}\u{627}\u{628}\u{637}"),
+        ("fa", "\u{631}\u{648}\u{646}\u{648}\u{634}\u{62a}\u{650} \u{67e}\u{6cc}\u{648}\u{646}\u{62f}"), ("tr", "Bağlantıyı kopyala"),
         ("fr", "Copier le lien"), ("es", "Copiar enlace"),
         ("pt", "Copiar link"), ("nl", "Link kopiëren"),
         ("ja", "リンクをコピー"), ("hi", "लिंक कॉपी करें"),
         ("zh", "复制链接"), ("id", "Salin tautan"),
         ("ko", "링크 복사"), ("de", "Link kopieren"),
         ("ru", "Копировать ссылку"), ("it", "Copia link"),
-        ("he", "העתק קישור"), ("ur", "لنک کاپی کریں"),
+        ("he", "העתק קישור"), ("ur", "\u{644}\u{646}\u{6a9} \u{6a9}\u{627}\u{67e}\u{6cc} \u{6a9}\u{631}\u{6cc}\u{6ba}"),
         ("vi", "Sao chép liên kết"), ("th", "คัดลอกลิงก์"),
     ]);
     b.add(ArdaCatalogScope::Tools, "calculate", &[
-        ("en", "Calculate"), ("ar", "احسب"),
-        ("fa", "محاسبه"), ("tr", "Hesapla"),
+        ("en", "Calculate"), ("ar", "\u{627}\u{62d}\u{633}\u{628}"),
+        ("fa", "\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}"), ("tr", "Hesapla"),
         ("fr", "Calculer"), ("es", "Calcular"),
         ("pt", "Calcular"), ("nl", "Berekenen"),
         ("ja", "計算する"), ("hi", "गणना करें"),
         ("zh", "计算"), ("id", "Hitung"),
         ("ko", "계산"), ("de", "Berechnen"),
         ("ru", "Рассчитать"), ("it", "Calcola"),
-        ("he", "חשב"), ("ur", "حساب کریں"),
+        ("he", "חשב"), ("ur", "\u{62d}\u{633}\u{627}\u{628} \u{6a9}\u{631}\u{6cc}\u{6ba}"),
         ("vi", "Tính toán"), ("th", "คำนวณ"),
     ]);
     b.add(ArdaCatalogScope::Content, "description", &[
-        ("en", "Description"), ("ar", "الوصف"),
-        ("fa", "توضیح"), ("tr", "Açıklama"),
+        ("en", "Description"), ("ar", "\u{627}\u{644}\u{648}\u{635}\u{641}"),
+        ("fa", "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}"), ("tr", "Açıklama"),
         ("fr", "Description"), ("es", "Descripción"),
         ("pt", "Descrição"), ("nl", "Beschrijving"),
         ("ja", "説明"), ("hi", "विवरण"),
         ("zh", "描述"), ("id", "Deskripsi"),
         ("ko", "설명"), ("de", "Beschreibung"),
         ("ru", "Описание"), ("it", "Descrizione"),
-        ("he", "תיאור"), ("ur", "تفصیل"),
+        ("he", "תיאור"), ("ur", "\u{62a}\u{641}\u{635}\u{6cc}\u{644}"),
         ("vi", "Mô tả"), ("th", "คำอธิบาย"),
     ]);
     b.build()
 }
 
-// ── 1B: مولدِ باندلِ زمانِ اجرا — درمانِ ۲۵ نقصِ ممیزیِ فیشکال ───────────────
+// ── 1B: the runtime bundle generator — remediating Fishkal's 25 audited defects ───────────────
 
-/// پشتهٔ قلمِ هر اسکریپت — ارتقای L299/L301–304 فیشکال.
+/// Per-script font stack — the Fishkal L299/L301–304 upgrade.
 fn font_stack(code: &str) -> &'static str {
     match code {
         "ar" | "fa" | "ur" => "'Vazirmatn','Vazirmatn FD','Noto Sans Arabic',Tahoma,sans-serif",
@@ -795,9 +795,9 @@ fn font_stack(code: &str) -> &'static str {
     }
 }
 
-/// بلوکِ CSSِ هر زبان — متغیرهای `--font`، `--track-body`، `--track-display`
-/// و (برای RTL) تورفتگیِ نمایشیِ هم‌اندازه تا پیوندِ حروفِ خطِ کرسیو هرگز
-/// نشکند (L389–390 ارتقایافته).
+/// Per-language CSS block — the `--font`, `--track-body`, `--track-display` variables
+/// and (for RTL) a matching display indent so cursive-script letter-joining never
+/// breaks (upgraded from L389–390).
 fn css_locale_block(l: &FishkalLocale) -> String {
     let (track_body, track_display, indent) = if l.is_rtl() {
         (ARDA_TRACK_BODY_RTL, ARDA_TRACK_DISPLAY_RTL, ARDA_TRACK_DISPLAY_RTL)
@@ -815,7 +815,7 @@ fn css_locale_block(l: &FishkalLocale) -> String {
     )
 }
 
-/// CSSِ پایهٔ باندل — نشانه‌گذاری‌های ثابتِ آزمون‌پذیر.
+/// The bundle's base CSS — fixed, testable markers.
 fn base_css() -> String {
     String::from(
         "/* ARDA Fishkal planetary localization runtime (arda-fishkal-20) — 25 audit defects cured */\n\
@@ -847,7 +847,7 @@ fn base_css() -> String {
     )
 }
 
-/// قالبِ JSِ باندل — `__ARDA_DATA__` در زمانِ تولید جای‌گذاری می‌شود.
+/// The bundle's JS template — `__ARDA_DATA__` is substituted at generation time.
 const JS_TEMPLATE: &str = r#"(function(){"use strict";
 if(window.ARDA&&window.ARDA.__fishkalSignature==="arda-fishkal-20"){return;}
 var DATA=__ARDA_DATA__;
@@ -962,38 +962,38 @@ else{ARDA.hydrate(document);}
 })();
 "#;
 
-/// باندلِ زمانِ اجرا — CSS + JS + ترکیبِ آمادهٔ تزریق.
+/// The runtime bundle — CSS + JS + the injection-ready composition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArdaRuntimeBundle {
-    /// زبانِ مبدأ.
+    /// Origin language.
     pub origin: String,
-    /// زبان‌های فعالِ باندل (به ترتیبِ دیکشنری).
+    /// Languages active in the bundle (in dictionary order).
     pub locales: Vec<String>,
-    /// بلوک `<style>` کامل.
+    /// The complete `<style>` block.
     pub css: String,
-    /// بلوک `<script>` کامل.
+    /// The complete `<script>` block.
     pub js: String,
-    /// ترکیبِ `<style>…</style><script>…</script>` برای تزریقِ تک‌لنگه‌ای.
+    /// The `<style>…</style><script>…</script>` composition for single-block injection.
     pub combined: String,
 }
 
 impl ArdaRuntimeBundle {
-    /// SHA-256 محتوای ترکیبی — گاردِ دلتای کرون.
+    /// SHA-256 of the composed content — the cron delta guard.
     #[must_use]
     pub fn content_sha256(&self) -> String {
         arda_content_sha256(&self.combined)
     }
 }
 
-/// مولدِ باندلِ بومی‌سازی — معماریِ اصیلِ فیشکال با ۲۵ نقصِ درمان‌شده.
+/// The localization bundle generator — the authentic Fishkal architecture with 25 defects fixed.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ArdaFishkalBundleGenerator;
 
 impl ArdaFishkalBundleGenerator {
-    /// تولیدِ باندل برای زبانِ مبدأ و فهرستِ هدف‌ها.
+    /// Generates the bundle for an origin language and a target list.
     ///
-    /// کدهای ناشناخته رد می‌شوند؛ زبانِ مبدأ همیشه در فهرستِ فعال است؛
-    /// خروجی برای همان ورودی بیتِ-بیت یکسان است (قطعیتِ کامل).
+    /// Unknown codes are rejected; the origin language is always in the active list;
+    /// output is bit-for-bit identical for the same input (full determinism).
     #[must_use]
     pub fn generate(&self, origin: &str, targets: &[&str]) -> ArdaRuntimeBundle {
         let origin = fishkal_locale(origin).map_or("en", |l| l.code);
@@ -1022,7 +1022,7 @@ impl ArdaFishkalBundleGenerator {
         }
     }
 
-    /// JSON دادهٔ زبان‌ها — `strings`، `dir`، `native`، `glyph`، `intl`، `order`، `origin`.
+    /// The languages data JSON — `strings`, `dir`, `native`, `glyph`, `intl`, `order`, `origin`.
     #[must_use]
     fn data_json(codes: &[&str], origin: &str) -> String {
         let catalog = default_planetary_catalog();
@@ -1059,20 +1059,20 @@ impl ArdaFishkalBundleGenerator {
     }
 }
 
-/// گزارشِ تزریق — HTML نهایی + آیا تزریق رخ داد؟
+/// Injection report — the final HTML + whether injection happened.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArdaInjectionReport {
-    /// HTML پس از تزریق (یا دست‌نخورده اگر قبلاً تزریق شده بود).
+    /// HTML after injection (or untouched if already injected).
     pub html: String,
-    /// تزریق انجام شد؟
+    /// Did injection happen?
     pub injected: bool,
-    /// نقطهٔ لنگر — `head`، `html` یا `prepend`.
+    /// Anchor point — `head`, `html`, or `prepend`.
     pub anchor: &'static str,
 }
 
-/// تزریقِ ایدمپوتنتِ باندل در HTML محصول — پیش از `</head>`، یا پس از تگِ
-/// `<html…>`، یا در صورت نبودِ هر دو، پیش‌اِسناد. تزریقِ دوباره هیچ‌گاه
-/// باندلِ دوم نمی‌سازد (گیتِ `data-arda-runtime="on"`).
+/// Idempotently injects the bundle into product HTML — before `</head>`, or after the
+/// `<html…>` tag, or prepended when both are absent. Re-injection never
+/// creates a second bundle (the `data-arda-runtime="on"` gate).
 #[must_use]
 pub fn inject_arda_runtime(html: &str, bundle: &ArdaRuntimeBundle) -> ArdaInjectionReport {
     if html.contains(ARDA_RUNTIME_MARKUP_MARKER) {
@@ -1102,68 +1102,68 @@ pub fn inject_arda_runtime(html: &str, bundle: &ArdaRuntimeBundle) -> ArdaInject
     ArdaInjectionReport { html: out, injected: true, anchor: "prepend" }
 }
 
-/// SHA-256 محتوا — گاردِ دلتای کرون و مهرِ محتوای پاسخِ localize.
+/// Content SHA-256 — the cron delta guard and the localize-response content stamp.
 #[must_use]
 pub fn arda_content_sha256(content: &str) -> String {
     format!("{:x}", Sha256::digest(content.as_bytes()))
 }
 
-// ── 1C: دیمنِ کرونِ سیاره‌ای — کارِ خودکارِ ۲۴ساعته ─────────────────────────
+// ── 1C: the planetary cron daemon — the automatic 24-hour job ─────────────────────────
 
-/// یک محصولِ صفِ کرون.
+/// One product on the cron queue.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArdaCronItem {
-    /// شناسهٔ محصول (`prod:<uuid>`) یا نمای پلتفرم (`view:<slug>`).
+    /// Product ID (`prod:<uuid>`) or platform view (`view:<slug>`).
     pub id: String,
-    /// HTML فعلی محصول.
+    /// The product's current HTML.
     pub html: String,
 }
 
-/// گزارشِ یک تیکِ کرون.
+/// One cron-tick report.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArdaCronTickReport {
-    /// کلِ صفِ اسکن‌شده.
+    /// Total queue scanned.
     pub scanned: usize,
-    /// بیتغییر رد شد (گاردِ دلتا — ایدمپوتنس).
+    /// Unchanged skipped (delta guard — idempotency).
     pub skipped_unchanged: usize,
-    /// بومی‌سازی شد (تازه یا به‌روزشده).
+    /// Localized (fresh or updated).
     pub localized: usize,
-    /// شناسه‌های بومی‌سازی‌شده به ترتیبِ صف.
+    /// Localized IDs in queue order.
     pub localized_ids: Vec<String>,
 }
 
-/// دیمنِ کرونِ سیاره‌ای ARDA — هر [`ARDA_CRON_INTERVAL_SECS`] (۲۴ ساعت) کلِ
-/// صف را با گاردِ دلتای SHA-256 اسکن می‌کند: محصولِ بیتغییر ایدمپوتنت رد
-/// می‌شود و تازه/به‌روزشده روی ۲۰ زبان بومی‌سازی و نشان‌گذاری می‌شود.
+/// The ARDA planetary cron daemon — every [`ARDA_CRON_INTERVAL_SECS`] (24 hours) the entire
+/// queue is scanned with the SHA-256 delta guard: unchanged products are idempotently skipped
+/// and fresh/updated ones are localized and flagged across the 20 languages.
 #[derive(Debug, Clone, Default)]
 pub struct ArdaPlanetaryCronDaemon {
     last_digests: std::collections::BTreeMap<String, String>,
 }
 
 impl ArdaPlanetaryCronDaemon {
-    /// دیمنِ تازه با بازهٔ دقیقاً ۲۴ساعته.
+    /// A fresh daemon with an exactly-24-hour interval.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// بازهٔ کرون به ثانیه — همیشه `86_400`.
+    /// Cron interval in seconds — always `86_400`.
     #[must_use]
     pub fn interval_secs(&self) -> u64 {
         ARDA_CRON_INTERVAL_SECS
     }
 
-    /// خلاصهٔ دیجستِ شناخته‌شده برای شناسه (اگر قبلاً بومی‌سازی شده).
+    /// The known digest summary for an ID (if previously localized).
     #[must_use]
     pub fn known_digest(&self, id: &str) -> Option<&String> {
         self.last_digests.get(id)
     }
 
-    /// یک تیکِ کرون — قطعی و ایدمپوتنت.
+    /// One cron tick — deterministic and idempotent.
     ///
-    /// هر آیتم با [`arda_content_sha256`] سنجیده می‌شود؛ اگر دیجست با تیکِ
-    /// قبل برابر باشد → `skipped_unchanged`، وگرنه → `localized` و دیجستِ
-    /// تازه ثبت می‌شود.
+    /// Each item is measured with [`arda_content_sha256`]; if the digest equals the previous
+    /// tick → `skipped_unchanged`, otherwise → `localized` and the new
+    /// digest is recorded.
     pub fn run_tick(&mut self, items: &[ArdaCronItem]) -> ArdaCronTickReport {
         let mut report = ArdaCronTickReport {
             scanned: items.len(),
@@ -1185,19 +1185,19 @@ impl ArdaPlanetaryCronDaemon {
     }
 }
 
-// ── 1D: فورجِ مهارتِ مایرون — SKILL.md + skill.json خودکار ──────────────────
+// ── 1D: the Mairon skill forge — automatic SKILL.md + skill.json ──────────────────
 
-/// خطای فورجِ مهارت.
+/// Skill-forge error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SkillForgeError {
-    /// محصول از گیتِ REA مایرون (`>= 85`) نگذشته — فورج رد می‌شود.
+    /// The product has not passed Mairon's REA gate (`>= 85`) — the forge is refused.
     BelowReaGate {
-        /// نمرهٔ REA فعلی.
+        /// Current REA score.
         score: u8,
-        /// آستانهٔ گیت.
+        /// Gate threshold.
         gate: u8,
     },
-    /// زبانِ مبدأ نامعتبر (خارج از ۲۰ زبانِ سیاره‌ای).
+    /// Invalid origin language (outside the 20 planetary languages).
     InvalidOriginLocale(String),
 }
 
@@ -1216,41 +1216,41 @@ impl std::fmt::Display for SkillForgeError {
 
 impl std::error::Error for SkillForgeError {}
 
-/// درخواستِ فورجِ مهارت.
+/// Skill-forge request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SkillForgeRequest {
-    /// شناسهٔ محصول (`prod:<uuid>`).
+    /// Product ID (`prod:<uuid>`).
     pub product_id: String,
-    /// عنوانِ محصول.
+    /// Product title.
     pub product_title: String,
-    /// نمرهٔ REA مایرون (`0..=100`).
+    /// Mairon REA score (`0..=100`).
     pub rea_score: u8,
-    /// زبانِ مبدأ (باید جزو ۲۰ زبان باشد).
+    /// Origin language (must be one of the 20 languages).
     pub origin_locale: String,
-    /// زبان‌های ترجمه‌شده (باید جزو ۲۰ زبان باشند؛ ناشناخته‌ها رد می‌شوند).
+    /// Translated languages (must be among the 20 languages; unknowns are rejected).
     pub translated_locales: Vec<String>,
 }
 
-/// بستهٔ مهارتِ فورج‌شده.
+/// The forged skill bundle.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SkillPackage {
-    /// سند `SKILL.md` با پیش‌مادهٔ YAML.
+    /// The `SKILL.md` document with YAML frontmatter.
     pub skill_md: String,
-    /// مانیفست `skill.json` سازگار با رجیستری‌های Hermes / MCP / `OpenCode`.
+    /// The `skill.json` manifest compatible with the Hermes / MCP / `OpenCode` registries.
     pub skill_json: String,
 }
 
-/// فورجِ مهارتِ مایرون — هرگاه محصول از گیتِ REA (`>= 85`) بگذرد، بستهٔ
-/// مهارتِ استاندارد را خودکار می‌سازد؛ زیرِ گیت، فورج هرگز رخ نمی‌دهد.
+/// The Mairon skill forge — once a product passes the REA gate (`>= 85`), the standard
+/// skill bundle is forged automatically; below the gate, forging never happens.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct MaironSkillForge;
 
 impl MaironSkillForge {
-    /// فورجِ بستهٔ مهارت — قطعی و بازتولیدپذیر.
+    /// Forges the skill bundle — deterministic and reproducible.
     ///
     /// # Errors
-    /// [`SkillForgeError::BelowReaGate`] اگر نمره زیرِ گیت باشد؛
-    /// [`SkillForgeError::InvalidOriginLocale`] اگر مبدأ خارج از ۲۰ زبان باشد.
+    /// [`SkillForgeError::BelowReaGate`] if the score is below the gate;
+    /// [`SkillForgeError::InvalidOriginLocale`] if the origin is outside the 20 languages.
     #[allow(clippy::too_many_lines)]
     pub fn forge_skill_package(req: &SkillForgeRequest) -> Result<SkillPackage, SkillForgeError> {
         if req.rea_score < SKILL_FORGE_REA_GATE {
@@ -1371,7 +1371,7 @@ impl MaironSkillForge {
     }
 }
 
-/// اسلاگِ مهارت — قطعی: عنوانِ لاتین‌شده + پسوندِ کوتاهِ شناسه.
+/// The skill slug — deterministic: a latinized title + a short ID suffix.
 #[must_use]
 pub fn skill_slug(title: &str, product_id: &str) -> String {
     let mut base = String::new();
@@ -1397,13 +1397,13 @@ pub fn skill_slug(title: &str, product_id: &str) -> String {
     }
 }
 
-// ── آزمون‌ها — گیت‌های قطعیِ معماری فیشکال ──────────────────────────────────
+// ── Tests — the Fishkal architecture's deterministic gates ──────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // ── 1A: دیکشنری پرچمِ وکتور ──
+    // ── 1A: the vector-flag dictionary ──
 
     #[test]
     fn dictionary_holds_exactly_20_planetary_locales() {
@@ -1423,23 +1423,23 @@ mod tests {
 
     #[test]
     fn original_13_svgs_are_verbatim_fishkal() {
-        // verbatim از L2690–2704 — رد شده‌اند تا هر تغییری در ممیزیِ بعدی شکست بخورد.
+        // verbatim from L2690–2704 — rejected so any later-audit change fails.
         let fa = fishkal_locale("fa").unwrap();
         assert_eq!(fa.svg, "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"4.7\" fill=\"#239f40\"/><rect y=\"4.7\" width=\"20\" height=\"4.7\" fill=\"#fff\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#da0000\"/><path d=\"M10 5.7c-.95 0-1.7.8-1.7 1.8S9.05 9.3 10 9.3s1.7-.8 1.7-1.8S10.95 5.7 10 5.7zm0 .9c.5 0 .8.4.8.9s-.3.9-.8.9-.8-.4-.8-.9.3-.9.8-.9z\" fill=\"#da0000\"/></svg>");
         let ar = fishkal_locale("ar").unwrap();
         assert_eq!(ar.svg, "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#fff\"/><rect width=\"20\" height=\"4.7\" fill=\"#00732F\"/><rect y=\"9.3\" width=\"20\" height=\"4.7\" fill=\"#000\"/><rect width=\"6\" height=\"14\" fill=\"#FF0000\"/></svg>");
         let en = fishkal_locale("en").unwrap();
         assert_eq!(en.svg, "<svg viewBox=\"0 0 20 14\"><rect width=\"20\" height=\"14\" fill=\"#012169\"/><path d=\"M0 0l20 14M20 0L0 14\" stroke=\"#fff\" stroke-width=\"2.6\"/><path d=\"M0 0l20 14M20 0L0 14\" stroke=\"#C8102E\" stroke-width=\"1\"/><path d=\"M10 0v14M0 7h20\" stroke=\"#fff\" stroke-width=\"4\"/><path d=\"M10 0v14M0 7h20\" stroke=\"#C8102E\" stroke-width=\"2.2\"/></svg>");
-        // همهٔ ۲۰ پرچم با همان viewBox اصیل فیشکال.
+        // All 20 flags carry the same authentic Fishkal viewBox.
         assert_eq!(count_flags_with("viewBox=\"0 0 20 14\""), 20);
     }
 
     #[test]
     fn native_script_glyphs_and_directions_are_locked() {
         let cases = [
-            ("fa", "فا", "فارسی", TextDirection::Rtl, "fa-IR"),
-            ("ar", "ع", "العربية", TextDirection::Rtl, "ar-AE"),
-            ("ur", "اردو", "اردو", TextDirection::Rtl, "ur-PK"),
+            ("fa", "\u{641}\u{627}", "\u{641}\u{627}\u{631}\u{633}\u{6cc}", TextDirection::Rtl, "fa-IR"),
+            ("ar", "\u{639}", "\u{627}\u{644}\u{639}\u{631}\u{628}\u{64a}\u{629}", TextDirection::Rtl, "ar-AE"),
+            ("ur", "\u{627}\u{631}\u{62f}\u{648}", "\u{627}\u{631}\u{62f}\u{648}", TextDirection::Rtl, "ur-PK"),
             ("he", "עב", "עברית", TextDirection::Rtl, "he-IL"),
             ("en", "EN", "English", TextDirection::Ltr, "en-US"),
             ("tr", "TR", "Türkçe", TextDirection::Ltr, "tr-TR"),
@@ -1454,7 +1454,7 @@ mod tests {
             assert_eq!(l.dir, dir, "dir of {code}");
             assert_eq!(l.intl_locale, intl, "Intl subtag of {code}");
         }
-        // دقیقاً ۴ زبان RTL — قفلِ معماری.
+        // Exactly 4 RTL languages — the architecture lock.
         assert_eq!(FISHKAL_VECTOR_FLAGS.iter().filter(|l| l.is_rtl()).count(), 4);
     }
 
@@ -1464,29 +1464,29 @@ mod tests {
         assert!(badge.contains("--flag-badge-radius:50%"));
         assert!(badge.contains("border-radius:50%"));
         assert!(badge.contains("box-shadow:0 0 0 1px rgba(239,230,214,.28)"));
-        // بازچرخشِ دفاعیِ کِرت — همان قاعدهٔ فیشکال L353–358.
+        // The defensive counter-rotation quirk — the same Fishkal rule L353–358.
         assert!(badge.contains("transform:none !important;transition:none;stroke:none"));
-        assert!(badge.contains("aria-label=\"فارسی (fa)\""));
+        assert!(badge.contains("aria-label=\"\u{641}\u{627}\u{631}\u{633}\u{6cc} (fa)\""));
         assert!(badge.contains("preserveAspectRatio=\"xMidYMid slice\""));
         assert!(render_circular_flag_badge("xx").is_none());
 
         let strip = render_product_flag_strip("fa", &["fa", "en", "ar", "xx"]).unwrap();
-        // مبدأ + ۲ ترجمهٔ معتبر؛ تکرارِ مبدأ و کدِ ناشناخته حذف شده‌اند.
+        // Origin + 2 valid translations; origin duplicates and unknown codes are dropped.
         assert_eq!(count_flag_badges(&strip), 3);
         assert!(strip.contains("data-origin=\"fa\""));
         assert!(strip.contains("data-lang=\"en\""));
         assert!(strip.contains("data-lang=\"ar\""));
         assert!(!strip.contains("data-lang=\"xx\""));
         assert!(strip.starts_with("<span class=\"arda-flag-strip\""));
-        // مبدأ ناشناخته → نوار ساخته نمی‌شود.
+        // Unknown origin → no strip is built.
         assert!(render_product_flag_strip("zz", &["en"]).is_none());
     }
 
     #[test]
     fn origin_locale_detection_is_script_deterministic() {
-        let fa = "<html><head><title>محاسبه‌گر</title></head><body>گزارش مالی ماهانه</body></html>";
+        let fa = "<html><head><title>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631}</title></head><body>\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{644}\u{6cc} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</body></html>";
         assert_eq!(detect_origin_locale(fa), "fa");
-        let ar = "<div>مرحبا بك في المتجر</div>";
+        let ar = "<div>\u{645}\u{631}\u{62d}\u{628}\u{627} \u{628}\u{643} \u{641}\u{64a} \u{627}\u{644}\u{645}\u{62a}\u{62c}\u{631}</div>";
         assert_eq!(detect_origin_locale(ar), "ar");
         let he = "<div>שלום וברכה</div>";
         assert_eq!(detect_origin_locale(he), "he");
@@ -1502,23 +1502,23 @@ mod tests {
         assert_eq!(detect_origin_locale(th), "th");
         let vi = "<div>Xưởng của chúng tôi có chủ quyền</div>";
         assert_eq!(detect_origin_locale(vi), "vi");
-        let ur = "<div>یہ ایک اردو جملہ ہے</div>";
+        let ur = "<div>\u{6cc}\u{6c1} \u{627}\u{6cc}\u{6a9} \u{627}\u{631}\u{62f}\u{648} \u{62c}\u{645}\u{644}\u{6c1} \u{6c1}\u{6d2}</div>";
         assert_eq!(detect_origin_locale(ur), "ur");
         let en = "<html lang=\"en\"><body>Accounting calculator</body></html>";
         assert_eq!(detect_origin_locale(en), "en");
-        // ویژگیِ lang بر شمارشِ اسکریپت مقدم است.
+        // The lang attribute outranks script counting.
         let attr_first = "<html lang=\"tr\"><body>Finansal hesap makinesi</body></html>";
         assert_eq!(detect_origin_locale(attr_first), "tr");
         let plain = "<div>Plain English accounting</div>";
         assert_eq!(detect_origin_locale(plain), "en");
     }
 
-    // ── 1B-۳: کاتالوگِ یکپارچه و اعتبارسنجِ توازن ──
+    // ── 1B-3: the unified catalog and the parity validator ──
 
     #[test]
     fn default_planetary_catalog_has_full_mechanical_parity() {
         let catalog = default_planetary_catalog();
-        // یک کلید به‌ازای هر دامنهٔ شش‌گانه + aria سوییچر = ۷ کلید، ۱۴۰ رشته.
+        // One key per each of the six domains + the switcher aria = 7 keys, 140 strings.
         assert_eq!(catalog.entries.len(), 7);
         let total_translations: usize = catalog.entries.iter().map(|e| e.translations.len()).sum();
         assert_eq!(total_translations, 7 * 20);
@@ -1544,7 +1544,7 @@ mod tests {
         let mut b = ArdaLocaleCatalogBuilder::new("en");
         b.add(ArdaCatalogScope::Business, "price_stars", &[
             ("en", "Price (Stars)"),
-            ("fa", "قیمت (ستاره)"),
+            ("fa", "\u{642}\u{6cc}\u{645}\u{62a} (\u{633}\u{62a}\u{627}\u{631}\u{647})"),
             // tr..ko intentionally missing — the cured `unitFt` defect class.
         ]);
         b.add(ArdaCatalogScope::Tools, "calculate", &[("en", "Calculate")]);
@@ -1559,20 +1559,20 @@ mod tests {
         assert!((fa.coverage_score - 0.5).abs() < f64::EPSILON);
         assert!((report.coverage_score - 0.0).abs() < f64::EPSILON);
 
-        // کلید تکراری — همان نقصِ دیکشنری‌های پراکندهٔ فیشکال.
+        // Duplicate key — the same defect as Fishkal's scattered dictionaries.
         let mut d = ArdaLocaleCatalogBuilder::new("en");
         d.add(ArdaCatalogScope::Core, "app_title", &[("en", "One")]);
         assert_eq!(d.duplicates().len(), 0);
         d.add(ArdaCatalogScope::Core, "app_title", &[("en", "Two")]);
         assert_eq!(d.duplicates().len(), 1);
         assert_eq!(d.duplicates()[0], "core.app_title");
-        // کلید تکراری در کاتالوگِ ساخته‌شده — خطِ دفاعِ دوم.
+        // Duplicate key in a built catalog — the second line of defense.
         let dcat = d.build();
         assert_eq!(dcat.entries.len(), 1);
         assert_eq!(catalog_duplicates(&dcat), Vec::<String>::new());
     }
 
-    // ── 1B: باندلِ زمانِ اجرا — ۲۵ نقصِ درمان‌شده ──
+    // ── 1B: the runtime bundle — 25 defects fixed ──
 
     #[test]
     fn bundle_is_deterministic_and_carries_all_cure_markers() {
@@ -1582,14 +1582,14 @@ mod tests {
         assert_eq!(a.content_sha256(), b.content_sha256(), "same input, same bundle");
         assert_eq!(a.origin, "fa");
         assert_eq!(a.locales, ["fa", "en", "ar"]);
-        // کد ناشناخته رد می‌شود؛ مبدأ همیشه اول است.
+        // Unknown codes are rejected; the origin always comes first.
         let c = generator.generate("zz", &["xx", "ja"]);
         assert_eq!(c.origin, "en");
         assert_eq!(c.locales, ["en", "ja"]);
 
-        // (۱) فلیپِ اتمیِ ۳-ویژگیِ ریشه — L2085.
+        // (1) the atomic 3-attribute root flip — L2085.
         assert!(a.js.contains("root.lang=l; root.dir=DIR[l]; root.dataset.lang=l;"));
-        // (۲) تایپوگرافیِ هر-اسکریپت — RTL پیوندِ حروف را نمی‌شکند.
+        // (2) per-script typography — RTL does not break letter-joining.
         assert!(a.css.contains(":root[data-lang=\"fa\"]"));
         assert!(a.css.contains("--track-body:.16em"));
         assert!(a.css.contains("--track-display:.07em"));
@@ -1597,28 +1597,28 @@ mod tests {
         assert!(a.css.contains("'Vazirmatn'"));
         assert!(a.css.contains(":root[data-lang=\"en\"]"));
         assert!(a.css.contains("--track-body:.34em"));
-        // (۳) کاتالوگِ یکپارچهٔ ۶-دامنه‌ای درونِ داده.
+        // (3) the unified 6-domain catalog inside the data.
         for key in [
             "core.app_title", "core.ui_language", "business.price_stars", "records.empty_state",
             "share.copy_link", "tools.calculate", "content.description",
         ] {
             assert!(a.js.contains(key), "unified catalog key {key} missing from bundle");
         }
-        // (۴) موتور Intl کش‌شده + پول‌های بازار.
+        // (4) the cached Intl engine + marketplace currencies.
         assert!(a.js.contains("new Intl.NumberFormat"));
         assert!(a.js.contains("new Intl.DateTimeFormat"));
         assert!(a.js.contains("new Intl.PluralRules"));
         assert!(a.js.contains("fa-IR"));
         assert!(a.js.contains("currencyDisplay:\"code\""));
         assert!(a.js.contains("\"XTR\""));
-        // (۵) جداسازیِ bidi در DOM و Canvas — رویهٔ ۴-گامیِ دقیق.
+        // (5) bidi isolation in DOM and Canvas — an exact 4-step procedure.
         assert!(a.js.contains("ARDA.canvas.drawBidiText"));
         assert!(a.js.contains("ctx.direction=latin?\"ltr\":(rtl?\"rtl\":\"ltr\")"));
         assert!(a.js.contains("ctx.textAlign"));
         assert!(a.js.contains("opts.width||ctx.canvas.width)-x"));
         assert!(a.js.contains("[data-arda-latin]"));
         assert!(a.js.contains("dir\",\"auto\""));
-        // (۶) سوییچرِ لیست‌باکسِ WAI-ARIA با اصلاحات D-1..D-8.
+        // (6) the WAI-ARIA listbox switcher with the D-1..D-8 fixes.
         assert!(a.css.contains("inset-inline-start"), "D-1 logical positioning");
         assert!(!a.css.contains(" left:"), "D-1 no physical left anywhere");
         assert!(a.js.contains("aria-haspopup"));
@@ -1632,7 +1632,7 @@ mod tests {
         assert!(a.js.contains("--gold"));
         assert!(a.css.contains("min-height:44px"), "coarse-pointer 44px target");
         assert!(a.css.contains("width:40px"), "40px glass pill geometry");
-        // نگهت‌بانِ ایدمپوتنس — تزریقِ دوباره بی‌اثر.
+        // Idempotence guard — re-injection is a no-op.
         assert!(a.js.contains("__fishkalSignature"));
         assert!(a.combined.contains(ARDA_RUNTIME_MARKUP_MARKER));
     }
@@ -1640,7 +1640,7 @@ mod tests {
     #[test]
     fn injection_is_atomic_and_idempotent() {
         let bundle = ArdaFishkalBundleGenerator.generate("fa", &["en"]);
-        let page = "<!DOCTYPE html><html lang=\"fa\"><head><title>محاسبه‌گر</title></head><body><p>سلام</p></body></html>";
+        let page = "<!DOCTYPE html><html lang=\"fa\"><head><title>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631}</title></head><body><p>\u{633}\u{644}\u{627}\u{645}</p></body></html>";
         let report = inject_arda_runtime(page, &bundle);
         assert!(report.injected);
         assert_eq!(report.anchor, "head");
@@ -1648,30 +1648,30 @@ mod tests {
         let style_idx = report.html.find("<style").unwrap();
         assert!(style_idx < head_idx, "bundle must land inside <head>");
         assert!(report.html.starts_with("<!DOCTYPE html><html lang=\"fa\"><head>"), "prefix intact");
-        assert!(report.html.contains("<title>محاسبه‌گر</title>"), "original head preserved");
-        // ایدمپوتنس: تزریقِ دوباره هیچ تغییر نمی‌دهد.
+        assert!(report.html.contains("<title>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631}</title>"), "original head preserved");
+        // Idempotency: re-injection changes nothing.
         let second = inject_arda_runtime(&report.html, &bundle);
         assert!(!second.injected);
         assert_eq!(second.html, report.html);
 
-        // بدون head → لنگر پس از تگ html.
+        // No head → anchor after the html tag.
         let bare = "<html><body>x</body></html>";
         let r2 = inject_arda_runtime(bare, &bundle);
         assert_eq!(r2.anchor, "html");
         assert!(r2.injected);
-        // بدون هیچ تگ → پیش‌اِسناد.
+        // No tags at all → prepend.
         let r3 = inject_arda_runtime("<p>fragment</p>", &bundle);
         assert_eq!(r3.anchor, "prepend");
         assert!(r3.html.starts_with("<style"));
     }
 
-    // ── 1C: دیمنِ کرونِ سیاره‌ای ──
+    // ── 1C: the planetary cron daemon ──
 
     #[test]
     fn cron_daemon_is_24h_and_delta_guarded() {
         let mut daemon = ArdaPlanetaryCronDaemon::new();
         assert_eq!(daemon.interval_secs(), 86_400);
-        let page = "<html><body>محاسبه‌گر مالی</body></html>";
+        let page = "<html><body>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{645}\u{627}\u{644}\u{6cc}</body></html>";
         let items = vec![
             ArdaCronItem { id: "prod:one".to_owned(), html: page.to_owned() },
             ArdaCronItem { id: "prod:two".to_owned(), html: "<p>x</p>".to_owned() },
@@ -1683,12 +1683,12 @@ mod tests {
         assert_eq!(tick1.skipped_unchanged, 0);
         assert_eq!(tick1.localized_ids, ["prod:one", "prod:two", "view:home"]);
         assert!(daemon.known_digest("prod:one").is_some());
-        // تیکِ دوم با همان محتوا → همه ایدمپوتنت رد می‌شوند.
+        // A second tick with the same content → all skipped idempotently.
         let tick2 = daemon.run_tick(&items);
         assert_eq!(tick2.scanned, 3);
         assert_eq!(tick2.localized, 0);
         assert_eq!(tick2.skipped_unchanged, 3);
-        // تغییرِ محصول → فقط همان بومی‌سازی می‌شود.
+        // A product change → only that one is localized.
         let updated = vec![
             ArdaCronItem { id: "prod:one".to_owned(), html: format!("{page}<!-- updated -->") },
             ArdaCronItem { id: "prod:two".to_owned(), html: "<p>x</p>".to_owned() },
@@ -1699,13 +1699,13 @@ mod tests {
         assert_eq!(tick3.skipped_unchanged, 1);
     }
 
-    // ── 1D: فورجِ مهارتِ مایرون ──
+    // ── 1D: the Mairon skill forge ──
 
     #[test]
     fn skill_forge_refuses_below_rea_gate_and_bad_origin() {
         let req = SkillForgeRequest {
             product_id: "prod:abc".to_owned(),
-            product_title: "حسابدار".to_owned(),
+            product_title: "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631}".to_owned(),
             rea_score: SKILL_FORGE_REA_GATE - 1,
             origin_locale: "fa".to_owned(),
             translated_locales: vec!["en".to_owned()],
@@ -1734,15 +1734,15 @@ mod tests {
     fn skill_forge_emits_certified_md_and_registry_json() {
         let req = SkillForgeRequest {
             product_id: "prod:018f3c2e-7b1a-7f2e-9c3d-4b5a6c7d8e9f".to_owned(),
-            product_title: "حسابدار — Persian Accounting Calculator".to_owned(),
+            product_title: "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — Persian Accounting Calculator".to_owned(),
             rea_score: 92,
             origin_locale: "fa".to_owned(),
             translated_locales: vec!["fa".to_owned(), "en".to_owned(), "ar".to_owned()],
         };
         let pkg = MaironSkillForge::forge_skill_package(&req).unwrap();
-        // SKILL.md — پیش‌مادهٔ YAML با همهٔ فیلدهای قفل.
+        // SKILL.md — YAML frontmatter with every field locked.
         for fragment in [
-            "name: \"حسابدار — Persian Accounting Calculator — Sovereign Skill\"",
+            "name: \"\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — Persian Accounting Calculator — Sovereign Skill\"",
             "slug: ",
             "version: 1.0.0",
             "rea_score: 92",
@@ -1760,9 +1760,9 @@ mod tests {
             assert!(pkg.skill_md.contains(fragment), "SKILL.md missing {fragment}");
         }
         assert!(pkg.skill_md.starts_with("---\n"));
-        // نوارِ پرچمِ دایره‌ای در سند — مبدأ + ۲ ترجمه.
+        // The circular flag strip in the document — origin + 2 translations.
         assert_eq!(count_flag_badges(&pkg.skill_md), 3);
-        // skill.json — مانیفستِ رجیستری.
+        // skill.json — the registry manifest.
         let manifest: serde_json::Value = serde_json::from_str(&pkg.skill_json).unwrap();
         assert_eq!(manifest["mairon_certified"], serde_json::Value::Bool(true));
         assert_eq!(manifest["rea_score"], serde_json::json!(92));
@@ -1775,7 +1775,7 @@ mod tests {
             .unwrap()
             .ends_with("/skill"));
         assert!(manifest["verification_gates"].as_array().unwrap().len() >= 4);
-        // قطعیت — همان ورودی، همان خروجی.
+        // Determinism — same input, same output.
         let again = MaironSkillForge::forge_skill_package(&req).unwrap();
         assert_eq!(pkg, again);
     }
@@ -1784,8 +1784,8 @@ mod tests {
     fn skill_slug_is_deterministic_and_sanitized() {
         assert_eq!(skill_slug("Persian Calculator", "prod:018f-7b1a"), "persian-calculator-8f7b1a");
         assert_eq!(skill_slug("  !!!  ", "prod:abc"), "sovereign-skill-c");
-        let a = skill_slug("حسابدار", "prod:xyz123");
-        assert_eq!(a, skill_slug("حسابدار", "prod:xyz123"));
+        let a = skill_slug("\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631}", "prod:xyz123");
+        assert_eq!(a, skill_slug("\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631}", "prod:xyz123"));
         assert!(!a.starts_with('-') && !a.ends_with('-'));
     }
 }

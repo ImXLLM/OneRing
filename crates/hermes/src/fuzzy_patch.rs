@@ -1,44 +1,45 @@
-//! `fuzzy_patch` — ویرایشگر جراحی ۵گذر کیان (Wave 2 — Step 4/6).
+//! `fuzzy_patch` — Kian's 5-pass surgical editor (Wave 2 — Step 4/6).
 //!
-//! تلفیق دو موتور مرجع:
-//! - `anomalyco/opencode` (`packages/util/src/patch.ts` + `edit.rs`): نرمال‌سازی
-//!   تایپوگرافی، حفظ CRLF/LF و رأی‌گیری خط نزدیک برای hint.
+//! Merges two reference engines:
+//! - `anomalyco/opencode` (`packages/util/src/patch.ts` + `edit.rs`): typography
+//!   normalization, CRLF/LF preservation, and near-line voting for hints.
 //! - `openai/codex` (`apply-patch/src/seek_sequence.rs` + `execpolicy`):
-//!   تطبیق multi-pass خط‌محور و سیاست اجرای دستوری (Allow/Prompt/Forbidden).
+//!   Multi-pass line-based matching and the command execution policy (Allow/Prompt/Forbidden).
 //!
-//! ترتیب گذرها (قرارداد سخت):
-//! ۱. تطبیق دقیق بایت‌به‌بایت؛ ۲. trim انتهای خط؛ ۳. trim دو طرف؛
-//! ۴. نرمال‌سازی یونیکد (گیومهٔ فرفری/دَش/فاصلهٔ non-breaking)؛
-//! ۵. انکرِ بلوکی (≥۳ خط: خط اول/آخر + شباهت میانی) و نرمال‌سازی تورفتگی.
-//! خروجی همیشه نشانه‌گذاری سطر اصلی فایل را حفظ می‌کند (CRLF/LF).
+//! Pass order (a hard contract):
+//! 1. Exact byte-for-byte match; 2. line-end trim; 3. both-sides trim;
+//! 4. Unicode normalization (curly quotes/dashes/non-breaking space);
+//! 5. Block anchor (≥3 lines: first/last line + middle similarity) and indentation normalization.
+//!
+//! The output always preserves the file's original line endings (CRLF/LF).
 #![allow(clippy::missing_panics_doc)]
 #![allow(clippy::missing_errors_doc)]
 
-/// نتیجهٔ سیاست اجرا برای یک دستور.
+/// Execution-policy result for one command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExecDecision {
-    /// اجرای مستقیم مجاز — فقط تشخیص‌های read-only امن.
+    /// Direct execution allowed — only safe read-only diagnostics.
     Allow,
-    /// نیازمند تأیید انسانی (HITL) — پیش‌فرض امن برای هر چیز نامطابق.
+    /// Requires human approval (HITL) — the safe default for anything unmatched.
     Prompt,
-    /// مطلقاً ممنوع — مخرب یا برگشت‌ناپذیر.
+    /// Absolutely forbidden — destructive or irreversible.
     Forbidden,
 }
 
-/// خطای پچ جراحی.
+/// Surgical patch error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatchError {
-    /// `old_str` و `new_str` یکسان‌اند — هیچ تغییر لازم نیست.
+    /// `old_str` and `new_str` are identical — no change needed.
     IdenticalInputs,
-    /// `old_str` خالی است — پچ جراحی جست‌وجوی خالی را نمی‌پذیرد.
+    /// `old_str` is empty — the surgical patch rejects an empty search.
     EmptyOldString,
-    /// هیچ گذری تطبیق نداد؛ شمارهٔ خط نزدیک‌ترین ناحیه و hint گنجانده شده.
+    /// No pass matched; the nearest region's line number and a hint are included.
     NotFound { closest_line: usize, hint: String },
-    /// چند تطبیق بدون تعیین تکلیف — پچ مبهم اجرا نمی‌شود.
+    /// Multiple matches left unresolved — an ambiguous patch is not applied.
     MultipleMatches { count: usize },
 }
 
-/// گذر تطبیقی که پچ را یافت — برای گزارش و تست.
+/// The matching pass that located the patch — for reporting and tests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MatchPass {
     Exact,
@@ -49,8 +50,8 @@ pub enum MatchPass {
     BlockAnchor,
 }
 
-/// نرمال‌سازی تایپوگرافی یونیکد (پورت `edit.ts`/`seek_sequence.rs`):
-/// گیومهٔ فرفری → ASCII، دَش‌ها → `-`، فاصله‌های عرض‌دار → فاصلهٔ ساده.
+/// Unicode typography normalization (port of `edit.ts`/`seek_sequence.rs`):
+/// curly quotes → ASCII, dashes → `-`, wide spaces → plain space.
 #[must_use]
 pub fn normalize_typographic(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
@@ -118,7 +119,7 @@ fn split_lines_with_offsets(text: &str) -> Vec<(usize, usize, &str)> {
     lines
 }
 
-/// تطبیق خط‌محور با گزارهٔ تساوی سفارشی — قلب گذرهای ۲ و ۳ و ۴.
+/// Line-based matching with a custom equality predicate — the heart of passes 2, 3, and 4.
 fn find_line_spans<F>(haystack: &str, needle: &str, eq: F) -> Vec<(usize, usize)>
 where
     F: Fn(&str, &str) -> bool,
@@ -160,8 +161,8 @@ fn strip_common_indent(lines: &[&str]) -> Vec<String> {
         .collect()
 }
 
-/// گذر ۵ الف — نرمال‌سازی تورفتگی: پنجرهٔ هم‌اندازه با الگو پس از حذف
-/// بیشینهٔ تورفتگی مشترک باید خط‌به‌خط (با نرمال‌سازی تایپوگرافی) برابر شود.
+/// Pass 5a — indentation normalization: a window sized like the pattern, after stripping
+/// the maximal common indentation, must equal it line-by-line (with typography normalization).
 fn find_indent_normalized_spans(haystack: &str, needle: &str) -> Vec<(usize, usize)> {
     let src_lines = split_lines_with_offsets(haystack);
     let pat_raw: Vec<&str> = needle.trim_end_matches('\n').split('\n').collect();
@@ -188,8 +189,8 @@ fn find_indent_normalized_spans(haystack: &str, needle: &str) -> Vec<(usize, usi
     spans
 }
 
-/// شباهت دو خط پس از نرمال‌سازی — نسبت طول LCS نویسه‌ای به طول بلندتر.
-#[allow(clippy::cast_precision_loss)] // شباهت فازی خطوط — دقت f32 کاملاً کافی است
+/// Similarity of two lines after normalization — the character-LCS length ratio over the longer line.
+#[allow(clippy::cast_precision_loss)] // Fuzzy line similarity — f32 precision is entirely sufficient
 fn line_similarity(left: &str, right: &str) -> f32 {
     let left: Vec<char> = normalize_typographic(left.trim()).chars().collect();
     let right: Vec<char> = normalize_typographic(right.trim()).chars().collect();
@@ -199,7 +200,7 @@ fn line_similarity(left: &str, right: &str) -> f32 {
     if left.is_empty() || right.is_empty() {
         return 0.0;
     }
-    // LCS کلاسیک روی نویسه‌ها؛ برای خط‌های کوتاهِ بلوک‌های واقعی کافی است.
+    // Classic LCS over characters; sufficient for the short lines of real blocks.
     let mut dp = vec![0u32; right.len() + 1];
     for lch in &left {
         let mut prev_diag = 0u32;
@@ -217,9 +218,9 @@ fn line_similarity(left: &str, right: &str) -> f32 {
     lcs / left.len().max(right.len()) as f32
 }
 
-/// گذر ۵ ب — انکرِ بلوکی: برای الگوهای ≥۳ خط، خط اول و آخر (نرمال‌شدهٔ trim)
-/// باید عیناً برابر باشند و شباهت خطوط میانی ≥ ۰٫۵ شود.
-#[allow(clippy::cast_precision_loss)] // نسبت شباهت فازی بلوک — دقت f32 کافی است
+/// Pass 5b — block anchor: for patterns of ≥3 lines, the first and last lines (trim-normalized)
+/// must match exactly and the middle lines must reach ≥ 0.5 similarity.
+#[allow(clippy::cast_precision_loss)] // Block fuzzy similarity ratio — f32 precision suffices
 fn find_block_anchor_spans(haystack: &str, needle: &str) -> Vec<(usize, usize)> {
     let src_lines = split_lines_with_offsets(haystack);
     let pat: Vec<&str> = needle.trim_end_matches('\n').split('\n').collect();
@@ -253,8 +254,8 @@ fn find_block_anchor_spans(haystack: &str, needle: &str) -> Vec<(usize, usize)> 
     spans
 }
 
-/// رأی‌گیری خطوط نزدیک (پورت `edit.ts` `missHint`) — نزدیک‌ترین شمارهٔ خط
-/// (۱-مبنا) به محلِ بیشترین هم‌رأیی با الگو را برمی‌گرداند؛ بدون هم‌رأیی → `None`.
+/// Near-line voting (port of `edit.ts` `missHint`) — returns the closest 1-based
+/// line number to the location of strongest pattern agreement; no agreement → `None`.
 #[must_use]
 pub fn miss_hint(source: &str, old_str: &str) -> Option<(usize, String)> {
     let view = to_lf(source);
@@ -301,16 +302,16 @@ pub fn miss_hint(source: &str, old_str: &str) -> Option<(usize, String)> {
     Some((best_start + 1, format!("The closest lines in the file:\n{snippet}")))
 }
 
-/// اعمال پچ جراحی با آبشار ۵گذر و حفظ نشانه‌گذاری سطر فایل.
+/// Apply a surgical patch with the 5-pass cascade, preserving the file's line endings.
 ///
-/// ترتیب گذرها: `Exact` → `LineEndTrimmed` → `BothSidesTrimmed` →
-/// `UnicodeNormalized` → `IndentationNormalized` → `BlockAnchor` (≥۳ خط).
-/// اگر الگو در چند ناحیه تطبیق کند، پچ اجرا نمی‌شود (کد مبهم ممنوع).
+/// Pass order: `Exact` → `LineEndTrimmed` → `BothSidesTrimmed` →
+/// `UnicodeNormalized` → `IndentationNormalized` → `BlockAnchor` (≥3 lines).
+/// If the pattern matches several regions, the patch is not applied (ambiguous code is forbidden).
 ///
 /// # Errors
-/// `IdenticalInputs`/`EmptyOldString` برای ورودی نامشروع؛ `NotFound` با
-/// شمارهٔ خط نزدیک و hint (شامل «از قبل اعمال‌شده» اگر `new_str` موجود باشد)؛
-/// `MultipleMatches` برای تطبیق مبهم.
+/// `IdenticalInputs`/`EmptyOldString` for illegitimate input; `NotFound` with
+/// the nearest line number and hint (including "already applied" if `new_str` is present);
+/// `MultipleMatches` for an ambiguous match.
 pub fn apply_surgical_patch(source: &str, old_str: &str, new_str: &str) -> Result<String, PatchError> {
     if old_str == new_str {
         return Err(PatchError::IdenticalInputs);
@@ -324,32 +325,32 @@ pub fn apply_surgical_patch(source: &str, old_str: &str, new_str: &str) -> Resul
     let old_lf = to_lf(old_str);
     let new_lf = to_lf(new_str);
 
-    // گذر ۱ — دقیق بایت‌به‌بایت
+    // Pass 1 — exact byte-for-byte
     let mut spans = find_exact_spans(&view, &old_lf);
 
-    // گذر ۲ — trim انتهای هر خط
+    // Pass 2 — line-end trim
     if spans.is_empty() {
         spans = find_line_spans(&view, &old_lf, |src, pat| src.trim_end() == pat.trim_end());
     }
 
-    // گذر ۳ — trim دو طرف
+    // Pass 3 — both-sides trim
     if spans.is_empty() {
         spans = find_line_spans(&view, &old_lf, |src, pat| src.trim() == pat.trim());
     }
 
-    // گذر ۴ — نرمال‌سازی تایپوگرافی یونیکد (ترکیب با trim انتهای خط)
+    // Pass 4 — Unicode typography normalization (combined with line-end trim)
     if spans.is_empty() {
         spans = find_line_spans(&view, &old_lf, |src, pat| {
             normalize_typographic(src.trim_end()) == normalize_typographic(pat.trim_end())
         });
     }
 
-    // گذر ۵ الف — نرمال‌سازی تورفتگی
+    // Pass 5a — indentation normalization
     if spans.is_empty() {
         spans = find_indent_normalized_spans(&view, &old_lf);
     }
 
-    // گذر ۵ ب — انکرِ بلوکی (≥۳ خط)
+    // Pass 5b — block anchor (≥3 lines)
     if spans.is_empty() {
         spans = find_block_anchor_spans(&view, &old_lf);
     }
@@ -381,8 +382,8 @@ pub fn apply_surgical_patch(source: &str, old_str: &str, new_str: &str) -> Resul
     Ok(restore_line_endings(&out, ending))
 }
 
-/// قواعد پیشوندی سیاست اجرا (الهام از `codex-rs/execpolicy`) — بلندترین
-/// پیشوندِ منطبق برنده است؛ دستور نامطابق = `Prompt`.
+/// Execution-policy prefix rules (inspired by `codex-rs/execpolicy`) — the longest
+/// matching prefix wins; an unmatched command = `Prompt`.
 pub const KIAN_DEFAULT_EXEC_POLICY: &[(&[&str], ExecDecision, &str)] = &[
     (
         &["git", "reset", "--hard"],
@@ -411,14 +412,14 @@ pub const KIAN_DEFAULT_EXEC_POLICY: &[(&[&str], ExecDecision, &str)] = &[
     ),
 ];
 
-/// ارزیابی سیاست اجرا برای یک دستور (`argv`) با قواعد پیش‌فرض کیان.
+/// Evaluate the execution policy for a command (`argv`) with Kian's default rules.
 #[must_use]
 pub fn evaluate_exec_policy(argv: &[&str]) -> ExecDecision {
     let (decision, _why) = evaluate_exec_policy_with_rules(argv, KIAN_DEFAULT_EXEC_POLICY);
     decision
 }
 
-/// همان ارزیابی با مجموعهٔ قواعد دلخواه + دلیل برنده (برای تست و گزارش).
+/// The same evaluation with a custom rule set + the winning reason (for tests and reports).
 #[must_use]
 pub fn evaluate_exec_policy_with_rules<'r>(
     argv: &[&str],

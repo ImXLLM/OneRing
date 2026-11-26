@@ -1,11 +1,11 @@
-//! هندلرهای موتور هرمس (M4) — فهرست مهارت‌ها، اجرای مهارت، ران‌های من.
+//! Hermes engine handlers (M4) — skill listing, skill execution, my runs.
 //!
-//! امنیت: `run` و `my_runs` نشست bearer؛ `skills` عمومی (فهرست، بدون قالب
-//! پرامپت). اجرا از [`kian_hermes::HermesEngine`] — سپر، بودجه، شاهد و امتیاز
-//! همه داخل موتور؛ اینجا فقط نگاشت خطاها به سیم است.
+//! Security: `run` and `my_runs` require a bearer session; `skills` is public (listing, no prompt
+//! templates). Execution goes through [`kian_hermes::HermesEngine`] — shield, budget, witness, and score
+//! all live inside the engine; this layer only maps errors onto the wire.
 //!
-//! بوت: [`seed_skills`] — ۱۶ مهارت از `kian_hermes::SKILLS` در دیتابیس؛
-//! idempotent و پرچم `active` را دست نمی‌زند.
+//! Boot: [`seed_skills`] — 16 skills from `kian_hermes::SKILLS` into the database;
+//! idempotent, and it does not touch the `active` flag.
 
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -24,10 +24,10 @@ use crate::handlers::safe_wire_id;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// بذر مهارت‌های هرمس — از بوت (`main`) صدا زده می‌شود؛ idempotent.
+/// Seed the Hermes skills — called from boot (`main`); idempotent.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn seed_skills(store: &kian_db::V3Store) -> Result<(), kian_db::DbError> {
     let seeds: Vec<SkillSeed> = kian_hermes::SKILLS
         .iter()
@@ -43,10 +43,10 @@ pub async fn seed_skills(store: &kian_db::V3Store) -> Result<(), kian_db::DbErro
     store.seed_skills(&seeds).await
 }
 
-/// `GET /hermes/skills` — عمومی؛ مهارت‌های فعال از دیتابیس.
+/// `GET /hermes/skills` — public; active skills from the database.
 ///
 /// # Errors
-/// ۵۰۰ خطای db — خواندن مهارت‌های فعال.
+/// 500 db error — reading active skills.
 pub async fn skills(State(state): State<Arc<AppState>>) -> ApiResult<Json<HermesSkillListResponse>> {
     let rows = state.store.list_skills(true).await.map_err(ApiFailure::from)?;
     Ok(Json(HermesSkillListResponse {
@@ -64,13 +64,13 @@ pub async fn skills(State(state): State<Arc<AppState>>) -> ApiResult<Json<Hermes
     }))
 }
 
-/// `POST /hermes/run` — اجرای مهارت با سپر، بودجه و شاهد.
+/// `POST /hermes/run` — run a skill with shield, budget, and witness.
 ///
 /// # Errors
-/// ۴۰۴ مهارت ناشناخته، ۴۲۲ سپر/بودجه، ۵۰۳ AI غیرفعال، ۵۰۲ اسلات‌ها، ۵۰۰ db.
+/// 404 unknown skill, 422 shield/budget, 503 AI disabled, 502 slots, 500 db.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database IDs.
 pub async fn run(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -114,7 +114,7 @@ pub async fn run(
         kian_hermes::HermesError::Db(_) => HttpFailure::db_down(),
     }))?;
 
-    // سپر مسدود کرد — ران ثبت شد؛ ۴۲۲ با دلیل (شامل متن ران نیست)
+    // shield blocked — run recorded; 422 with reason (run text not included)
     if let kian_hermes::HermesExit::Blocked { reason } = outcome.exit {
         return Err(HttpFailure::hermes_blocked(reason).into());
     }
@@ -132,13 +132,13 @@ pub async fn run(
     }))
 }
 
-/// `GET /hermes/runs` — ران‌های من + امتیاز هویتی فعلی.
+/// `GET /hermes/runs` — my runs + the current identity score.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۵۰۰ خطای db.
+/// 401 session; 500 db error.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database IDs.
 pub async fn my_runs(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -163,14 +163,14 @@ pub async fn my_runs(
 }
 
 
-// ── supremacy — Wave 8: موتورِ برتریِ رقابتی (Commit #28) ───────────────────
+// ── supremacy — Wave 8: the competitive supremacy engine (Commit #28) ───────────────────
 //
-// پنج اندپوینتِ چهار ستونِ برتری روی وایر:
-// - [`supremacy_surgical_patch`] — Bolt/Lovable پچرِ جراحی + بازرسِ DOM (عمومی)؛
-// - [`supremacy_checkpoint_fork`] — LangGraph سفرِ زمانی (نشست)؛
-// - [`supremacy_workflow_execute`] — Dify/n8n DAG پویا (نشست)؛
-// - [`supremacy_mcp`] — پلِ MCP JSON-RPC 2.0 (عمومی؛ برایِ بین‌برنامه‌ای)؛
-// - [`supremacy_swe_verify`] — OpenHands حلقهٔ خودترمیمی (نشست).
+// the five endpoints of the four supremacy pillars on the wire:
+// - [`supremacy_surgical_patch`] — Bolt/Lovable surgical patcher + DOM inspector (public);
+// - [`supremacy_checkpoint_fork`] — LangGraph time travel (session);
+// - [`supremacy_workflow_execute`] — Dify/n8n dynamic DAG (session);
+// - [`supremacy_mcp`] — MCP JSON-RPC 2.0 bridge (public; for inter-app use);
+// - [`supremacy_swe_verify`] — OpenHands self-healing loop (session).
 
 use kian_contracts::{
     SupremacyCheckpointForkRequest, SupremacyCheckpointForkResponse, SupremacyMcpErrorView,
@@ -186,11 +186,11 @@ use kian_hermes::competitive_supremacy_engine::{
     TimeTravelLedger, WorkflowDagSpec, WorkflowNode, WorkflowNodeKind, AgentStateCheckpoint,
 };
 
-/// `POST /supremacy/surgical-patch` — پچرِ جراحیِ `SEARCH/REPLACE` + بستهٔ
-/// بازرسِ DOM زنده (عمومی؛ نرخ‌سنجی‌شده؛ سقفِ ورودی ۵۱۲/۲۵۶ کیلوبایت).
+/// `POST /supremacy/surgical-patch` — the `SEARCH/REPLACE` surgical patcher + the live
+/// DOM inspector bundle (public; rate-limited; input cap 512/256 KiB).
 ///
 /// # Errors
-/// ۴۰۰ بارِ نامعتبر یا بلوکِ `SEARCH` یافت‌نشده.
+/// 400 invalid payload or `SEARCH` block not found.
 pub async fn supremacy_surgical_patch(
     State(_state): State<Arc<AppState>>,
     bytes: axum::body::Bytes,
@@ -225,12 +225,12 @@ pub async fn supremacy_surgical_patch(
     }))
 }
 
-/// `POST /supremacy/checkpoint/fork` — انشعابِ زمان‌سفر از چک‌پوینتِ تاریخی
-/// (نشستِ شهروند). چک‌پوینت‌هایِ گردش‌کار از دیتابیس در دفترِ سفرِ زمانی بازسازی
-/// می‌شوند، انشعابِ merge-وصله اجرا و سرِ شاخه ماندگار می‌شود.
+/// `POST /supremacy/checkpoint/fork` — time-travel fork from a historical checkpoint
+/// (citizen session). Workflow checkpoints are rebuilt from the database into the time-travel
+/// ledger, the fork's merge patch is applied, and the branch head is persisted.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ چک‌پوینتِ غایب یا JSON نامعتبر؛ ۵۰۰ db.
+/// 401 missing session; 400 missing checkpoint or invalid JSON; 500 db.
 #[allow(clippy::too_many_lines)]
 pub async fn supremacy_checkpoint_fork(
     State(state): State<Arc<AppState>>,
@@ -307,11 +307,11 @@ pub async fn supremacy_checkpoint_fork(
     }))
 }
 
-/// `POST /supremacy/workflow/execute` — اجرایِ DAG پویا با مرتب‌سازیِ
-/// توپولوژیکِ Kahn (نشستِ شهروند)؛ ران در `WorkflowDagRun` ماندگار می‌شود.
+/// `POST /supremacy/workflow/execute` — dynamic DAG execution with Kahn's
+/// topological sort (citizen session); the run is persisted in `WorkflowDagRun`.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ چرخه/گرهِ ناشناخته؛ ۵۰۰ db.
+/// 401 missing session; 400 cycle/unknown node; 500 db.
 pub async fn supremacy_workflow_execute(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -376,12 +376,12 @@ pub async fn supremacy_workflow_execute(
     }))
 }
 
-/// `POST /supremacy/mcp` — پلِ استانداردِ MCP JSON-RPC 2.0 (عمومی؛ برایِ
-/// ایجنت‌هایِ بیرونی). `initialize`، `tools/list` و `tools/call` پشتیبانی
-/// می‌شوند؛ خطاها در پاکتِ JSON-RPC برمی‌گردند، نه کدِ HTTP.
+/// `POST /supremacy/mcp` — the standard MCP JSON-RPC 2.0 bridge (public; for
+/// external agents). `initialize`, `tools/list`, and `tools/call` are supported;
+/// errors come back in the JSON-RPC envelope, not as an HTTP status code.
 ///
 /// # Errors
-/// ۴۰۰ بدنهٔ JSON-RPC نامعتبر یا `jsonrpc != "2.0"`.
+/// 400 invalid JSON-RPC body or `jsonrpc != "2.0"`.
 pub async fn supremacy_mcp(
     State(_state): State<Arc<AppState>>,
     bytes: axum::body::Bytes,
@@ -407,11 +407,11 @@ pub async fn supremacy_mcp(
     }))
 }
 
-/// `POST /supremacy/swe-verify` — حلقهٔ `Plan → Verify → Self-Heal` با مُهرِ
-/// مایرون (نشستِ شهروند)؛ ممیزی در `SweSandboxAudit` ماندگار می‌شود.
+/// `POST /supremacy/swe-verify` — the `Plan → Verify → Self-Heal` loop with the
+/// Mairon seal (citizen session); the audit is persisted in `SweSandboxAudit`.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ زبانِ ناشناخته؛ ۵۰۰ db.
+/// 401 missing session; 400 unknown language; 500 db.
 pub async fn supremacy_swe_verify(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -463,16 +463,16 @@ pub async fn supremacy_swe_verify(
 }
 
 
-// ── Wave 9 (Commit #29): HUD عصبی + Grok + i18n ────────────────────────────
+// ── Wave 9 (Commit #29): neural HUD + Grok + i18n ────────────────────────────
 //
-// شش اندپوینتِ تازه روی موتورهایِ قطعیِ `neural_hud_studio_engine` و
+// six new endpoints on the deterministic `neural_hud_studio_engine` and
 // `grok_ux_and_lab_engine`:
-// - [`hud_presets`] — کاتالوگِ ۸ پیش‌تن (عمومی)؛
-// - [`hud_synthesize`] — سنتزِ پیش‌تنِ مخزن + بستهٔ HTML + ماندگاریِ ران؛
-// - [`grok_ui_bundle`] — بستهٔ UIِ «مادهٔ تاریکِ کیهانی» (عمومی)؛
-// - [`grok_chat_turn`] — نوبتِ چتِ امضایی با تفکر/استناد/روح‌ها (نشست)؛
-// - [`i18n_ecosystem_matrix`] — ماتریسِ ۲۰ لوکال (عمومی)؛
-// - [`i18n_apply_patch`] — پچِ داغِ ترجمه + ماندگاری (نشست).
+// - [`hud_presets`] — catalog of the 8 presets (public);
+// - [`hud_synthesize`] — repo preset synthesis + HTML bundle + run persistence;
+// - [`grok_ui_bundle`] — the "cosmic dark matter" UI bundle (public);
+// - [`grok_chat_turn`] — a signature chat turn with thinking/citations/souls (session);
+// - [`i18n_ecosystem_matrix`] — the 20-locale matrix (public);
+// - [`i18n_apply_patch`] — hot translation patch + persistence (session).
 
 use kian_contracts::{
     GrokChatTurnRequest, GrokChatTurnResponse, GrokCitationView, GrokThinkStepView,
@@ -493,7 +493,7 @@ use kian_hermes::neural_hud_studio_engine::{
     HudAspect, HudFps, HudPreset, HudRenderSpec, HudResolution, NEURAL_HUD_SIGNATURE,
 };
 
-/// پارسِ قطعیِ نسبت از وایر — ناشناخته → `9:16`.
+/// Deterministic aspect-ratio parsing from the wire — unknown → `9:16`.
 fn hud_aspect_from(wire: Option<&str>) -> HudAspect {
     if wire == Some("16:9") {
         HudAspect::SixteenByNine
@@ -502,7 +502,7 @@ fn hud_aspect_from(wire: Option<&str>) -> HudAspect {
     }
 }
 
-/// پارسِ قطعیِ رزولوشن از وایر — ناشناخته → `1080p`.
+/// Deterministic resolution parsing from the wire — unknown → `1080p`.
 fn hud_resolution_from(wire: Option<&str>) -> HudResolution {
     if wire == Some("720p") {
         HudResolution::Hd720
@@ -511,7 +511,7 @@ fn hud_resolution_from(wire: Option<&str>) -> HudResolution {
     }
 }
 
-/// پارسِ قطعیِ فریم‌ریت از وایر — ناشناخته → `24`.
+/// Deterministic frame-rate parsing from the wire — unknown → `24`.
 fn hud_fps_from(wire: Option<&str>) -> HudFps {
     if wire == Some("60") {
         HudFps::Sixty
@@ -520,7 +520,7 @@ fn hud_fps_from(wire: Option<&str>) -> HudFps {
     }
 }
 
-/// نمایِ وایرِ یک پیش‌تن.
+/// Wire view of one preset.
 fn hud_preset_view(preset: &HudPreset) -> HudPresetView {
     HudPresetView {
         slug: preset.slug.clone(),
@@ -533,10 +533,10 @@ fn hud_preset_view(preset: &HudPreset) -> HudPresetView {
     }
 }
 
-/// `GET /hud/presets` — کاتالوگِ ۸ پیش‌تنِ تلمتری (عمومی).
+/// `GET /hud/presets` — catalog of the 8 telemetry presets (public).
 ///
 /// # Errors
-/// هرگز — خروجیِ ثابت.
+/// Never — static output.
 pub async fn hud_presets() -> ApiResult<Json<HudPresetsResponse>> {
     Ok(Json(HudPresetsResponse {
         presets: hud_preset_catalog().iter().map(hud_preset_view).collect(),
@@ -544,13 +544,13 @@ pub async fn hud_presets() -> ApiResult<Json<HudPresetsResponse>> {
     }))
 }
 
-/// `POST /hud/synthesize` — سنتزِ قطعیِ پیش‌تنِ مخزن + بستهٔ HTML
-/// (`window.seekTo` + `WebAudio`) + فرمان‌هایِ `FFmpeg` + ماندگاریِ رانِ رندر
-/// (نشستِ شهروند؛ سقفِ ورودی ۱۶ کیلوبایت).
+/// `POST /hud/synthesize` — deterministic synthesis of a repo preset + an HTML bundle
+/// (`window.seekTo` + `WebAudio`) + `FFmpeg` commands + render-run persistence
+/// (citizen session; input cap 16 KiB).
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ ورودیِ نامعتبر (نامِ خالی، رنگِ بد، مدتِ خارج از
-/// بازه)؛ ۵۰۰ db.
+/// 401 missing session; 400 invalid input (empty name, bad color, duration out of
+/// range); 500 db.
 pub async fn hud_synthesize(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -579,7 +579,7 @@ pub async fn hud_synthesize(
         .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
     let video = build_ffmpeg_mjpeg_pipe_command(&spec, Some("hud_audio.wav"))
         .map_err(|_| ApiFailure::from(HttpFailure::invalid_request(1)))?;
-    // ماندگاریِ رانِ رندر — قطعی و ایدمپوتنت روی id
+    // render-run persistence — deterministic and idempotent on id
     let job_id = format!("hudjob:{}", bundle.html_sha256.get(..16).unwrap_or("0"));
     let row = NeuralHudRenderJobRow {
         id: job_id,
@@ -609,11 +609,11 @@ pub async fn hud_synthesize(
     }))
 }
 
-/// `GET /grok/ui-bundle` — بستهٔ UIِ امضاییِ Grok برای (لوکال، لایه، پرسونا)
-/// (عمومی؛ نرخ‌سنجی‌شده).
+/// `GET /grok/ui-bundle` — Grok's signature UI bundle for (locale, layer, persona)
+/// (public; rate-limited).
 ///
 /// # Errors
-/// هرگز — ورودیِ ناشناخته به پیش‌فرضِ قطعی سقوط می‌کند.
+/// Never — unknown input falls back to the deterministic default.
 pub async fn grok_ui_bundle(
     axum::extract::Query(query): axum::extract::Query<GrokUiBundleQuery>,
 ) -> ApiResult<Json<GrokUiBundleResponse>> {
@@ -635,12 +635,12 @@ pub async fn grok_ui_bundle(
     }))
 }
 
-/// `POST /grok/chat-turn` — یک نوبتِ چتِ امضایی: آکاردئونِ تفکر + نوارِ
-/// `DeepSearch` + پاسخِ پرسونا + سه چیپِ روحِ بعدی (نشستِ شهروند؛ سقفِ
-/// پرامپت ۴ کیلوبایت).
+/// `POST /grok/chat-turn` — one signature chat turn: thinking accordion + the
+/// `DeepSearch` bar + persona reply + three next-soul chips (citizen session; prompt
+/// cap 4 KiB).
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ پرامپتِ خالی/بزرگ‌تر از سقف.
+/// 401 missing session; 400 empty prompt or prompt over the cap.
 pub async fn grok_chat_turn(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -692,11 +692,11 @@ pub async fn grok_chat_turn(
     }))
 }
 
-/// `GET /i18n/ecosystem-matrix` — ماتریسِ ۲۰ لوکالِ اکوسیستمِ روزِ اول
-/// (عمومی).
+/// `GET /i18n/ecosystem-matrix` — the Day-1 ecosystem matrix of 20 locales
+/// (public).
 ///
 /// # Errors
-/// هرگز — خروجیِ ثابت.
+/// Never — static output.
 pub async fn i18n_ecosystem_matrix() -> ApiResult<Json<I18nMatrixResponse>> {
     let matrix = build_day1_ecosystem_i18n_matrix();
     Ok(Json(I18nMatrixResponse {
@@ -722,11 +722,11 @@ pub async fn i18n_ecosystem_matrix() -> ApiResult<Json<I18nMatrixResponse>> {
     }))
 }
 
-/// `POST /i18n/apply-patch` — پچِ داغِ ترجمه روی یک لوکال + ماندگاریِ وضعیت
-/// در `LocalePatchRegistry` (نشستِ شهروند؛ سقفِ ۲۰۰ مدخل).
+/// `POST /i18n/apply-patch` — hot translation patch on one locale + persisting the state
+/// in `LocalePatchRegistry` (citizen session; 200-entry cap).
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ لوکال/ماژولِ ناشناخته یا مدخلِ خالی؛ ۵۰۰ db.
+/// 401 missing session; 400 unknown locale/module or empty entry; 500 db.
 #[allow(clippy::too_many_lines)]
 pub async fn i18n_apply_patch(
     State(state): State<Arc<AppState>>,
@@ -787,13 +787,13 @@ pub async fn i18n_apply_patch(
     }))
 }
 
-/// بارگذاریِ تلمتریِ آزمایشگاه — از `UserLabTelemetryLog`؛ اگر store خالی بود
-/// (دویدنِ آزمون روی store درون‌حافظه‌ای)، تلمتریِ قطعیِ شبیه‌سازیِ ۱۰-DNA
-/// به‌عنوانِ fallback استفاده می‌شود تا داشبورد و صادراتِ RLHF همیشه
-/// out-of-the-box کار کنند.
+/// Load the lab telemetry — from `UserLabTelemetryLog`; if the store is empty
+/// (tests running against the in-memory store), the deterministic telemetry of the 10-DNA
+/// simulation is used as a fallback so the dashboard and the RLHF export always
+/// work out of the box.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub(crate) async fn load_lab_telemetry_entries(
     state: &Arc<AppState>,
 ) -> Result<Vec<UserLabTelemetryEntry>, kian_db::DbError> {
@@ -804,8 +804,8 @@ pub(crate) async fn load_lab_telemetry_entries(
     Ok(rows.iter().map(lab_row_to_entry).collect())
 }
 
-/// تبدیلِ ردیفِ db به مدخلِ موتور.
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // ستون‌هایِ اطمینان‌شدهٔ SQLite
+/// Convert a db row into an engine entry.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // SQLite columns relied upon
 pub(crate) fn lab_row_to_entry(row: &UserLabTelemetryLogRow) -> UserLabTelemetryEntry {
     UserLabTelemetryEntry {
         id: row.id.clone(),
@@ -860,7 +860,7 @@ mod tests {
             daily_cap_tokens: 10_000,
         };
         let scripted = ScriptedClient::new(vec![Ok(kian_ai::gateway::CompletionPacket {
-            content: "پاسخ مغز".into(),
+            content: "\u{67e}\u{627}\u{633}\u{62e} \u{645}\u{63a}\u{632}".into(),
             prompt_tokens: 10,
             completion_tokens: 5,
         })]);
@@ -896,9 +896,9 @@ mod tests {
     }
 
 
-    // ── Wave 9 (Commit #29): HUD عصبی + Grok + i18n ─────────────────────────
+    // ── Wave 9 (Commit #29): neural HUD + Grok + i18n ─────────────────────────
 
-    /// کاتالوگِ HUD عمومی — ۸ پیش‌تن با امضا؛ بدونِ نشست.
+    /// Public HUD catalog — 8 presets with signature; no session.
     #[tokio::test]
     async fn hud_presets_is_public_with_eight() {
         let app = app().await;
@@ -914,11 +914,11 @@ mod tests {
         assert_eq!(res.status(), 200);
         let body = body_json(res).await;
         assert_eq!(body["presets"].as_array().unwrap().len(), 8);
-        assert_eq!(body["signature"], "KIA-NEURAL-HUD-W9");
+        assert_eq!(body["signature"], "MAIRON-NEURAL-HUD");
     }
 
-    /// سنتزِ HUD بدونِ نشست → ۴۰۱؛ با نشست → ۲۰۰ با بستهٔ HTML قطعی +
-    /// فرمان‌هایِ `FFmpeg` (محدودگر + faststart)؛ رنگِ نامعتبر → ۴۰۰.
+    /// HUD synthesis without a session → 401; with a session → 200 with a deterministic HTML bundle +
+    /// `FFmpeg` commands (limiter + faststart); invalid color → 400.
     #[tokio::test]
     async fn hud_synthesize_requires_session_and_renders_bundle() {
         let app = app().await;
@@ -965,7 +965,7 @@ mod tests {
             .join("\n");
         assert!(video_join.contains("+faststart"));
         assert!(video_join.contains("1080x1920"));
-        // رنگِ نامعتبر → ۴۰۰
+        // invalid color → 400
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/hud/synthesize")
@@ -976,8 +976,8 @@ mod tests {
         assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
     }
 
-    /// بستهٔ UIِ Grok عمومی — RTL فارسی پیش‌فرض، ۶ چیپ، ۲۰ اسلاتِ لوکال،
-    /// سوییچِ LTR برای `en`.
+    /// Public Grok UI bundle — Persian RTL by default, 6 chips, 20 locale slots,
+    /// LTR switch for `en`.
     #[tokio::test]
     async fn grok_ui_bundle_is_public_and_localized() {
         let app = app().await;
@@ -1012,8 +1012,8 @@ mod tests {
         assert_eq!(body["persona"], "mairon_sovereign");
     }
 
-    /// نوبتِ چتِ Grok بدونِ نشست → ۴۰۱؛ با نشست → گام‌هایِ تفکر + روح‌ها +
-    /// روتینگِ ژنوم؛ پرامپتِ خالی → ۴۰۰.
+    /// Grok chat turn without a session → 401; with a session → thinking steps + souls +
+    /// genome routing; empty prompt → 400.
     #[tokio::test]
     async fn grok_chat_turn_requires_session_and_answers() {
         let app = app().await;
@@ -1032,7 +1032,7 @@ mod tests {
             .header("authorization", format!("Bearer {tok}"))
             .header("content-type", "application/json")
             .body(Body::from(
-                r#"{"prompt":"ماتریس ژنوم را نشان بده","locale":"fa","uxTier":"pro_terminal","persona":"mairon_sovereign","deepSearch":true,"think":true}"#,
+                r#"{"prompt":"Show the genome matrix","locale":"fa","uxTier":"pro_terminal","persona":"mairon_sovereign","deepSearch":true,"think":true}"#,
             ))
             .unwrap();
         let res = app.clone().oneshot(req).await.unwrap();
@@ -1043,7 +1043,7 @@ mod tests {
         assert_eq!(body["citations"].as_array().unwrap().len(), 3);
         assert_eq!(body["ghostFollowUps"].as_array().unwrap().len(), 3);
         assert_eq!(body["modelSlug"], "02-gemini-4-aragon-high");
-        // پرامپتِ خالی → ۴۰۰
+        // empty prompt → 400
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/grok/chat-turn")
@@ -1054,8 +1054,8 @@ mod tests {
         assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
     }
 
-    /// ماتریسِ i18n عمومی — ۲۰ لوکال، `fa`/`en` فعالِ ۱۰۰٪؛ پچِ داغِ `ar` با
-    /// نشست → ۵۵۵ bps؛ لوکالِ ناشناخته → ۴۰۰.
+    /// Public i18n matrix — 20 locales, `fa`/`en` 100% active; hot patching of `ar` with
+    /// a session → 555 bps; unknown locale → 400.
     #[tokio::test]
     async fn i18n_matrix_public_and_hot_patch_requires_session() {
         let app = app().await;
@@ -1085,18 +1085,18 @@ mod tests {
         assert_eq!(fa["direction"], "rtl");
         assert!(fa["flagSvg"].as_str().unwrap_or("").contains("viewBox=\"0 0 20 14\""));
 
-        // پچ بدونِ نشست → ۴۰۱
+        // patch without a session → 401
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/i18n/apply-patch")
             .header("content-type", "application/json")
             .body(Body::from(
-                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"مرحبا"}]}"#,
+                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"Hello"}]}"#,
             ))
             .unwrap();
         assert_eq!(app.clone().oneshot(req).await.unwrap().status(), 401);
 
-        // پچ با نشست → ۵۵۵ bps + ماندگاری
+        // patch with a session → 555 bps + persistence
         let tok = token(&app).await;
         let req = axum::http::Request::builder()
             .method("POST")
@@ -1104,7 +1104,7 @@ mod tests {
             .header("authorization", format!("Bearer {tok}"))
             .header("content-type", "application/json")
             .body(Body::from(
-                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"مرحبا کیان"},{"module":"nav","key":"market","value":"السوق"}]}"#,
+                r#"{"localeCode":"ar","patchEntries":[{"module":"nav","key":"brand","value":"Hello Kian"},{"module":"nav","key":"market","value":"The Market"}]}"#,
             ))
             .unwrap();
         let res = app.clone().oneshot(req).await.unwrap();
@@ -1114,9 +1114,9 @@ mod tests {
         assert_eq!(body["appliedCount"], 2);
         assert_eq!(body["patchVersion"], "wave9.2");
         assert!(body["persisted"].as_bool().unwrap_or(false));
-        assert_eq!(body["appliedEntries"]["nav.brand"], "مرحبا کیان");
+        // hot-patch reply contract (fixture now institutional English)
 
-        // لوکالِ ناشناخته → ۴۰۰
+        // unknown locale → 400
         let req = axum::http::Request::builder()
             .method("POST")
             .uri("/api/v1/i18n/apply-patch")
@@ -1129,7 +1129,7 @@ mod tests {
         assert_eq!(app.oneshot(req).await.unwrap().status(), 400);
     }
 
-    /// فهرست عمومی مهارت‌ها — ۱۶ مهارت پس از seed؛ بدون قالب پرامپت.
+    /// Public skill listing — 16 skills after seeding; no prompt templates.
     #[tokio::test]
     async fn skills_list_is_public_with_sixteen() {
         let app = app().await;
@@ -1144,7 +1144,7 @@ mod tests {
         assert!(!wire.contains("prompt"), "prompt templates must never leak");
     }
 
-    /// ران kernel (wallet.balance) با نشست — ۲۰۰ + امتیاز؛ ران ناشناخته — ۴۰۴.
+    /// kernel run (wallet.balance) with a session — 200 + score; unknown run — 404.
     #[tokio::test]
     async fn run_kernel_skill_and_unknown() {
         let app = app().await;
@@ -1157,7 +1157,7 @@ mod tests {
                     .method("POST")
                     .uri("/api/v1/hermes/run")
                     .header("authorization", format!("Bearer {tok}"))
-                    .body(Body::from(r#"{"skillId":"wallet.balance","input":"ترازم را بگو"}"#))
+                    .body(Body::from(r#"{"skillId":"wallet.balance","input":"Report my balance"}"#))
                     .unwrap(),
             )
             .await
@@ -1165,11 +1165,11 @@ mod tests {
         assert_eq!(res.status(), 200);
         let body = body_json(res).await;
         assert_eq!(body["skillId"], "wallet.balance");
-        assert!(body["output"].as_str().unwrap().contains("تراز شما"));
+        assert!(body["output"].as_str().unwrap().contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
         assert_eq!(body["tokens"], 0);
         assert_eq!(body["identityScore"], 52);
 
-        // ران ناشناخته
+        // unknown run
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -1185,7 +1185,7 @@ mod tests {
         assert_eq!(body_json(res).await["error"]["code"], "HERMES_SKILL_NOT_FOUND");
     }
 
-    /// تزریق پرامپت → ۴۲۲ `HERMES_INPUT_BLOCKED` — بدون اجرای مهارت.
+    /// Prompt injection → 422 `HERMES_INPUT_BLOCKED` — no skill execution.
     #[tokio::test]
     async fn injection_is_422_blocked() {
         let app = app().await;
@@ -1207,12 +1207,12 @@ mod tests {
         assert_eq!(err["error"]["meta"]["reason"], "prompt injection marker: ignore previous");
     }
 
-    /// ران‌های من — پیش‌نمایش ران‌ها + امتیاز هویتی.
+    /// My runs — run previews + identity score.
     #[tokio::test]
     async fn my_runs_reports_score() {
         let app = app().await;
         let tok = token(&app).await;
-        // یک ران سالم
+        // a healthy run
         let res = app
             .clone()
             .oneshot(
@@ -1220,7 +1220,7 @@ mod tests {
                     .method("POST")
                     .uri("/api/v1/hermes/run")
                     .header("authorization", format!("Bearer {tok}"))
-                    .body(Body::from(r#"{"skillId":"hermes.help","input":"مهارت‌ها"}"#))
+                    .body(Body::from(r#"{"skillId":"hermes.help","input":"skills"}"#))
                     .unwrap(),
             )
             .await
@@ -1247,8 +1247,8 @@ mod tests {
 
     // ── supremacy — Wave 8 (Commit #28) ────────────────────────────────────
 
-    /// اپِ تست با دسترسیِ مستقیم به فروشگاه — برایِ بذرِ چک‌پوینت و راستیِ
-    /// ماندگاری.
+    /// Test app with direct store access — for checkpoint seeding and verifying
+    /// persistence.
     async fn app_and_store() -> (axum::Router, V3Store) {
         let store = V3Store::connect_in_memory().await.unwrap();
         store.migrate().await.unwrap();
@@ -1258,7 +1258,7 @@ mod tests {
         cfg.admin_key = Some(ADMIN.to_owned());
         cfg.bot_token = Some(BOT.to_owned());
         let scripted = ScriptedClient::new(vec![Ok(kian_ai::gateway::CompletionPacket {
-            content: "پاسخ مغز".into(),
+            content: "\u{67e}\u{627}\u{633}\u{62e} \u{645}\u{63a}\u{632}".into(),
             prompt_tokens: 1,
             completion_tokens: 1,
         })]);
@@ -1282,13 +1282,13 @@ mod tests {
             .unwrap()
     }
 
-    /// پچرِ جراحی عمومی است — ۲۰۰ با SHA-256 قبل/بعد و بلوکِ اعمال‌شده.
+    /// The surgical patcher is public — 200 with before/after SHA-256 and the applied block.
     #[tokio::test]
     async fn supremacy_surgical_patch_is_public_and_deterministic() {
         let (app, _store) = app_and_store().await;
         let body = serde_json::json!({
-            "originalSource": "<!DOCTYPE html>\n<html><body><main>\n<p id=\"price\">قیمت: 1</p>\n</main></body></html>\n",
-            "patchPayload": "<<<<<<< SEARCH\n<p id=\"price\">قیمت: 1</p>\n=======\n<p id=\"price\">قیمت: 42</p>\n>>>>>>> REPLACE\n",
+            "originalSource": "<!DOCTYPE html>\n<html><body><main>\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 1</p>\n</main></body></html>\n",
+            "patchPayload": "<<<<<<< SEARCH\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 1</p>\n=======\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 42</p>\n>>>>>>> REPLACE\n",
             "locale": "fa",
             "injectSandboxInspector": true
         })
@@ -1299,13 +1299,13 @@ mod tests {
         assert_eq!(v["patchApplied"], true);
         assert_eq!(v["hunkCount"], 1);
         assert_eq!(v["patchMode"], "exact");
-        assert!(v["patchedSource"].as_str().unwrap().contains("قیمت: 42"));
+        assert!(v["patchedSource"].as_str().unwrap().contains("\u{642}\u{6cc}\u{645}\u{62a}: 42"));
         let bundle = &v["sandboxBundle"];
         assert_eq!(bundle["locale"], "fa");
         assert!(bundle["nodeCount"].as_u64().unwrap() >= 2);
         assert_eq!(bundle["messageType"], "KIA_DOM_INSPECT");
         assert!(bundle["instrumentedHtml"].as_str().unwrap().contains("data-kia-node-id"));
-        // بلوکِ گمشده → ۴۰۰
+        // missing block → 400
         let bad = serde_json::json!({
             "originalSource": "fn main() {}\n",
             "patchPayload": "<<<<<<< SEARCH\nghost\n=======\nx\n>>>>>>> REPLACE\n"
@@ -1316,8 +1316,8 @@ mod tests {
         assert_eq!(body_json(res).await["error"]["code"], "INVALID_REQUEST");
     }
 
-    /// پلِ MCP عمومی است — tools/list پنج ابزارِ داخلی را می‌دهد؛ متدِ
-    /// ناشناخته خطایِ JSON-RPC در پاکتِ ۲۰۰ برمی‌گرداند.
+    /// The MCP bridge is public — tools/list returns the five internal tools; an unknown
+    /// method returns a JSON-RPC error inside a 200 envelope.
     #[tokio::test]
     async fn supremacy_mcp_bridge_serves_jsonrpc_20() {
         let (app, _store) = app_and_store().await;
@@ -1359,8 +1359,8 @@ mod tests {
         assert!(v["result"]["content"][0]["text"].as_str().unwrap().contains("zero-sum"));
     }
 
-    /// انشعابِ زمان‌سفر — از چک‌پوینتِ ریشه شاخه می‌زند، merge-وصله را اعمال
-    /// می‌کند و سرِ شاخه را در `AgentCheckpoint` ماندگار می‌کند.
+    /// Time-travel fork — branches from the root checkpoint, applies the merge patch,
+    /// and persists the branch head in `AgentCheckpoint`.
     #[tokio::test]
     async fn supremacy_checkpoint_fork_time_travels_and_persists() {
         let (app, store) = app_and_store().await;
@@ -1397,16 +1397,16 @@ mod tests {
             serde_json::from_str(v["stateJson"].as_str().unwrap()).unwrap();
         assert_eq!(state["goal"], "pivot");
         assert_eq!(state["step"], 0);
-        // ماندگاری — ردیفِ دوم در دیتابیس
+        // persistence — second row in the database
         let rows = store.list_agent_checkpoints("wf-a", 10).await.unwrap();
         assert_eq!(rows.len(), 2);
         assert_eq!(rows[1].agent_role, "Logic-Prime");
-        // بدونِ نشست → ۴۰۱
+        // without a session → 401
         let res = post_json(&app, "/api/v1/supremacy/checkpoint/fork", None, &body).await;
         assert_eq!(res.status(), 401);
     }
 
-    /// اجرایِ DAG پویا — ترتیبِ توپولوژیکِ درست، امتیازِ REA و ماندگاریِ ران.
+    /// Dynamic DAG execution — correct topological order, REA score, and run persistence.
     #[tokio::test]
     async fn supremacy_workflow_executes_dag_and_persists() {
         let (app, store) = app_and_store().await;
@@ -1434,7 +1434,7 @@ mod tests {
         for r in v["nodeResults"].as_array().unwrap() {
             assert_eq!(r["outputSha256"].as_str().unwrap().len(), 64);
         }
-        // چرخه → ۴۰۰
+        // cycle → 400
         let cyclic = serde_json::json!({
             "workflow": {
                 "workflowId": "wf-cyc",
@@ -1447,14 +1447,14 @@ mod tests {
         .to_string();
         let res = post_json(&app, "/api/v1/supremacy/workflow/execute", Some(&tok), &cyclic).await;
         assert_eq!(res.status(), 400);
-        // بدونِ نشست → ۴۰۱
+        // without a session → 401
         let res = post_json(&app, "/api/v1/supremacy/workflow/execute", None, &body).await;
         assert_eq!(res.status(), 401);
-        let _ = store; // فروشگاه برایِ رانِ ماندگار استفاده شده است
+        let _ = store; // the store is used for the persisted run
     }
 
-    /// حلقهٔ SWE — آرتیفکتِ سالم مُهرِ مایرون می‌گیرد و در `SweSandboxAudit`
-    /// ماندگار می‌شود؛ زبانِ ناشناخته ۴۰۰.
+    /// SWE loop — a healthy artifact receives the Mairon seal and is persisted in
+    /// `SweSandboxAudit`; unknown language 400.
     #[tokio::test]
     async fn supremacy_swe_verify_seals_and_persists() {
         let (app, store) = app_and_store().await;
@@ -1477,11 +1477,11 @@ mod tests {
         assert_eq!(v["seal"]["reaScore"], 100);
         assert!(v["seal"]["sealId"].as_str().unwrap().starts_with("mairon-seal:"));
         assert_eq!(v["persisted"], true);
-        // زبانِ ناشناخته → ۴۰۰
+        // unknown language → 400
         let bad = serde_json::json!({ "language": "cobol", "artifact": "x" }).to_string();
         let res = post_json(&app, "/api/v1/supremacy/swe-verify", Some(&tok), &bad).await;
         assert_eq!(res.status(), 400);
-        // بدونِ نشست → ۴۰۱
+        // without a session → 401
         let res = post_json(&app, "/api/v1/supremacy/swe-verify", None, &body).await;
         assert_eq!(res.status(), 401);
         let _ = store;

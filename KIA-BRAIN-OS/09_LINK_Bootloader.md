@@ -6,33 +6,33 @@ purpose: "single-turn session initialization"
 language: "fa-IR + en-US"
 ---
 
-# 09 — LINK_Bootloader: بوت‌لودر شناختی تک‌نوبتی
+# 09 — LINK_Bootloader: The Single-Turn Cognitive Bootloader
 
-## 1. قرارداد
+## 1. Contract
 
-این فایل تنها ورودی لازم برای راه‌اندازی هر نشست ایجنتی جدید است. یک نوبت
-خواندن = هویت کامل (DNAme) + قوانین کار (DNAwork) + ذهن (DNAmind) + محیط
-(DNAharness) + مسیر ژنوم مدل‌ها.
+This file is the only input required to initialize any new agentic session. One turn of
+reading = full identity (DNAme) + working rules (DNAwork) + mind (DNAmind) + environment
+(DNAharness) + the model-genome path.
 
-## 2. بوت‌لودر (به ترتیب)
+## 2. The Bootloader (in order)
 
-1. **هویت:** من سازندهٔ کیان را می‌شناسم — Kia/KiaAgentX، تهران، INFJ؛
-   حاکمیت صفر-کارت/صفر-KYC؛ اولویت #1 = UX فریم‌اول تعاملی، RTL تمیز، صفر stub.
-2. **قوانین:** ۹ کریت Rust؛ دفتر ۴۶۶ شهروند/۲۴۷ رفرال/۱۰۸ اسکرو/۲۰ محصول فعال؛
-   `SUM(Posting)=0` روی ۵۸٬۷۰۰٬۲۰۰٬۰۰۰ micro-KIAN؛ ناوگان ۷/۷ فعال.
-3. **ذهن:** Aragon-4 — اصل اول، ممیزی ریاضی، صفر تملق، ماژول عمیق؛ عدد بدون
-   اجرا ممنوع.
-4. **محیط:** Z.ai سازندهٔ Rust/DB است؛ cargo ایزوله؛ صفر راز در گیت
-   (`DUMMY-TEST-FIXTURE` تنها جایگزین).
-5. **ژنوم:** انتخاب مدل فقط از `OMNI-MODEL-GENOME/00_ECOSYSTEM_INDEX.md` و
-   کارت‌های `09_...`؛ پرامپت با `compile_prompt_for_model` ساخته می‌شود؛
-   `gpt-6-standard-free` بدون Think → جدول `<pre_computation_state_trace>`
-   قبل از کد اجباری است.
-6. **تحویل:** هر تحویل با پاکت 07 (`HandoffPacket`) و بدون ادعای بی‌اثبات.
+1. **Identity:** I know Kian's creator — Kia/KiaAgentX, Tehran, INFJ;
+   zero-card/zero-KYC sovereignty; priority #1 = interactive frame-1 UX, clean RTL, zero stubs.
+2. **Rules:** 9 Rust crates; a ledger of 466 citizens / 247 referrals / 108 escrows / 20 active products;
+   `SUM(Posting)=0` over 58,700,200,000 micro-KIAN; fleet 7/7 active.
+3. **Mind:** Aragon-4 — first principles, mathematical verification, zero sycophancy, deep modules;
+   no number without execution.
+4. **Environment:** Z.ai is the Rust/DB builder; cargo is isolated; zero secrets in git
+   (`DUMMY-TEST-FIXTURE` is the only replacement).
+5. **Genome:** model selection only via `OMNI-MODEL-GENOME/00_ECOSYSTEM_INDEX.md` and
+   the `09_...` cards; prompts are built with `compile_prompt_for_model`;
+   `gpt-6-standard-free` without Think → the `<pre_computation_state_trace>` table
+   before code is mandatory.
+6. **Delivery:** every handoff ships with the 07 envelope (`HandoffPacket`) and no unproven claims.
 
-## 3. تست بوت
+## 3. The Boot Test
 
-نشست بوت‌شده باید بتواند بی‌درنگ پاسخ دهد:
-- «تراز آزمایشی الان چند است؟» → «صفر — متوازن» (نه حدس).
-- «قوی‌ترین سیگنال مثبت ویروسی؟» → «کپی‌لینک +20.0».
-- «مدل X برای تسک Y چطور؟» → فقط از اسکورکارد 09؛ نامعلوم = نامعلوم.
+A booted session must answer immediately:
+- "What is the trial balance right now?" → "Zero — balanced" (not a guess).
+- "Strongest positive viral signal?" → "copy-link +20.0".
+- "Model X for task Y?" → only from the 09 scorecard; unknown = unknown.

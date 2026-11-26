@@ -1,10 +1,10 @@
 /**
- * کلاینت API ادمین — همهٔ تماس‌ها با هدر X-KIAN-Key از sessionStorage.
+ * The admin API client — every call carries the X-KIAN-Key header from sessionStorage.
  *
- * قواعد امنیتی:
- * * کلید فقط در `sessionStorage` زندگی می‌کند — با بستن تب می‌میرد؛
- *   هرگز localStorage، هرگز کوکی، هرگز در URL.
- * * هر خطا به `{ code, message }` نگاشت می‌شود — پیام‌های کرنل صادقانه‌اند.
+ * Security rules:
+ * * The key lives only in `sessionStorage` — it dies when the tab closes;
+ *   never localStorage, never cookies, never in the URL.
+ * * Every error maps to `{ code, message }` — kernel messages are honest.
  */
 
 export const KERNEL_URL =
@@ -12,13 +12,13 @@ export const KERNEL_URL =
 
 const KEY_STORAGE = "kian.adminKey";
 
-/** کلید ذخیره‌شدهٔ این نشست — غایب یعنی لاگ‌اوت. */
+/** The key stored for this session — absent means logged out. */
 export function getKey(): string | null {
   if (typeof window === "undefined") return null;
   return window.sessionStorage.getItem(KEY_STORAGE);
 }
 
-/** ذخیره/حذف کلید نشست. */
+/** Store/remove the session key. */
 export function setKey(key: string | null): void {
   if (typeof window === "undefined") return;
   if (key) window.sessionStorage.setItem(KEY_STORAGE, key);
@@ -42,23 +42,23 @@ async function handle<T>(res: Response): Promise<T> {
     const err = (body as { error?: { code?: string; message?: string } }).error;
     throw new AdminApiError(
       err?.code ?? `HTTP_${res.status}`,
-      err?.message ?? `درخواست شکست خورد (${res.status})`,
+      err?.message ?? `\u062f\u0631\u062e\u0648\u0627\u0633\u062a \u0634\u06a9\u0633\u062a \u062e\u0648\u0631\u062f (${res.status})`,
       res.status,
     );
   }
   return body as T;
 }
 
-/** GET عمومی — بدون کلید (شادهالت/اقتصاد). */
+/** Public GET — no key (health/economy). */
 export async function publicGet<T>(path: string): Promise<T> {
   const res = await fetch(`${KERNEL_URL}/api/v1${path}`, { cache: "no-store" });
   return handle<T>(res);
 }
 
-/** GET ادمین — با X-KIAN-Key. */
+/** Admin GET — with X-KIAN-Key. */
 export async function adminGet<T>(path: string): Promise<T> {
   const key = getKey();
-  if (!key) throw new AdminApiError("NO_KEY", "کلید ادمین ثبت نشده", 0);
+  if (!key) throw new AdminApiError("NO_KEY", "\u06a9\u0644\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646 \u062b\u0628\u062a \u0646\u0634\u062f\u0647", 0);
   const res = await fetch(`${KERNEL_URL}/api/v1${path}`, {
     cache: "no-store",
     headers: { "X-KIAN-Key": key },
@@ -66,10 +66,10 @@ export async function adminGet<T>(path: string): Promise<T> {
   return handle<T>(res);
 }
 
-/** POST ادمین با بدنهٔ JSON. */
+/** Admin POST with a JSON body. */
 export async function adminPost<T>(path: string, body: unknown = {}): Promise<T> {
   const key = getKey();
-  if (!key) throw new AdminApiError("NO_KEY", "کلید ادمین ثبت نشده", 0);
+  if (!key) throw new AdminApiError("NO_KEY", "\u06a9\u0644\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646 \u062b\u0628\u062a \u0646\u0634\u062f\u0647", 0);
   const res = await fetch(`${KERNEL_URL}/api/v1${path}`, {
     method: "POST",
     headers: { "X-KIAN-Key": key, "Content-Type": "application/json" },
@@ -78,10 +78,10 @@ export async function adminPost<T>(path: string, body: unknown = {}): Promise<T>
   return handle<T>(res);
 }
 
-/** DELETE ادمین. */
+/** Admin DELETE. */
 export async function adminDelete(path: string): Promise<void> {
   const key = getKey();
-  if (!key) throw new AdminApiError("NO_KEY", "کلید ادمین ثبت نشده", 0);
+  if (!key) throw new AdminApiError("NO_KEY", "\u06a9\u0644\u06cc\u062f \u0627\u062f\u0645\u06cc\u0646 \u062b\u0628\u062a \u0646\u0634\u062f\u0647", 0);
   const res = await fetch(`${KERNEL_URL}/api/v1${path}`, {
     method: "DELETE",
     headers: { "X-KIAN-Key": key },

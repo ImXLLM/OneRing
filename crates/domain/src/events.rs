@@ -1,33 +1,33 @@
-//! رویدادهای دامنه — تایپ‌شده، شناسه‌های دترمینیستیک، بدون ساعت پنهان.
-//! `at` همیشه توسط فراخوان (فرمان هندلر یا ساعت آداپتور) تأمین می‌شود.
+//! Domain events — typed, deterministic IDs, no hidden clock.
+//! `at` is always supplied by the caller (a handler command or the adapter clock).
 
-/// زمان پیش‌فرض دترمینیستیک وقتی فراخوان `at` نمی‌دهد.
-/// دامنه ساعت واقعی ندارد — ساعت، مسئولیت آداپتور است.
+/// Deterministic default time when the caller omits `at`.
+/// The domain has no real clock — time is the adapter's responsibility.
 pub const EPOCH_ISO: &str = "1970-01-01T00:00:00.000Z";
 
-/// نوع رویداد اسکرو — ۸ گذار مجاز ماشین وضعیت.
+/// Escrow event type — the 8 allowed state-machine transitions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EscrowEventKind {
-    /// ساخته‌شدن امانت
+    /// Escrow created
     Created,
-    /// تامین‌مالی (خریدار → اسکرو)
+    /// Funded (buyer → escrow)
     Funded,
-    /// تحویل کالا/خدمت
+    /// Goods/service delivered
     Delivered,
-    /// آزادسازی به نفع فروشنده + مالیات
+    /// Released in favor of the seller + tax
     Released,
-    /// اختلاف/دعوا
+    /// Dispute raised
     Disputed,
-    /// بازگشت وجه به خریدار
+    /// Refunded to the buyer
     Refunded,
-    /// لغو قبل از تامین‌مالی
+    /// Cancelled before funding
     Cancelled,
-    /// انقضا با بازگشت خودکار
+    /// Expired with automatic refund
     Expired,
 }
 
 impl EscrowEventKind {
-    /// رشته کانانیکی — یکسان با نسخه TS (برای شناسه رویداد و dual-run).
+    /// Canonical string — identical to the TS version (for event IDs and dual-run).
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -49,38 +49,38 @@ impl std::fmt::Display for EscrowEventKind {
     }
 }
 
-/// رویداد اسکرو — شناسه دترمینیستیک: `{escrowId}#{kind}`.
+/// Escrow event — deterministic ID: `{escrowId}#{kind}`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EscrowEvent {
-    /// شناسه دترمینیستیک رویداد
+    /// Deterministic event ID
     pub id: String,
-    /// زمان ISO (فراهم‌شده توسط فراخوان)
+    /// ISO time (supplied by the caller)
     pub at: String,
-    /// نوع رویداد
+    /// Event kind
     pub kind: EscrowEventKind,
-    /// شناسه امانت
+    /// Escrow ID
     pub escrow_id: String,
-    /// خریدار (در Created)
+    /// Buyer (on Created)
     pub buyer_id: Option<String>,
-    /// فروشنده (در Created)
+    /// Seller (on Created)
     pub seller_id: Option<String>,
-    /// مبلغ (Funded/Refunded/Expired/Created)
+    /// Amount (Funded/Refunded/Expired/Created)
     pub amount: Option<i64>,
-    /// شناسه تراکنش دفتر (Funded/Released/Refunded/Expired)
+    /// Ledger transaction ID (Funded/Released/Refunded/Expired)
     pub tx_id: Option<String>,
-    /// سهم خالص فروشنده (Released)
+    /// Seller net share (Released)
     pub seller_net: Option<i64>,
-    /// مالیات خزانه (Released)
+    /// Treasury tax (Released)
     pub tax: Option<i64>,
-    /// دلیل اختلاف (Disputed)
+    /// Dispute reason (Disputed)
     pub reason: Option<String>,
-    /// شناسه همبستگی اختیاری برای trace
+    /// Optional correlation ID for tracing
     pub correlation_id: Option<String>,
 }
 
 impl EscrowEvent {
-    /// ساخت رویداد با شناسه دترمینیستیک — هر گذار حداکثر یک‌بار برای هر امانت
-    /// رخ می‌دهد، پس `{escrowId}#{kind}` یکتا و قابل replay است.
+    /// Build the event with a deterministic ID — each transition happens at most once per escrow,
+    /// so `{escrowId}#{kind}` is unique and replayable.
     #[must_use]
     pub fn new(kind: EscrowEventKind, escrow_id: &str, at: &str) -> Self {
         Self {
@@ -100,25 +100,25 @@ impl EscrowEvent {
     }
 }
 
-/// رویداد ثبت تراکنش در دفتر.
+/// The ledger-transaction-posted event.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TransactionPostedEvent {
-    /// شناسه دترمینیستیک: `{txId}#posted`
+    /// Deterministic ID: `{txId}#posted`
     pub id: String,
-    /// زمان ISO
+    /// ISO time
     pub at: String,
-    /// شناسه تراکنش
+    /// Transaction ID
     pub tx_id: String,
-    /// یادداشت
+    /// Memo
     pub memo: Option<String>,
-    /// کلید یکسان‌سازی
+    /// Dedup key
     pub idempotency_key: Option<String>,
-    /// شناسه همبستگی
+    /// Correlation ID
     pub correlation_id: Option<String>,
 }
 
 impl TransactionPostedEvent {
-    /// ساخت رویداد با شناسه دترمینیستیک.
+    /// Build the event with a deterministic ID.
     #[must_use]
     pub fn new(tx_id: &str, at: &str) -> Self {
         Self {
@@ -132,17 +132,17 @@ impl TransactionPostedEvent {
     }
 }
 
-/// هر رویداد دامنه — همان اجتماع `DomainEvent` در TS.
+/// Every domain event — the same union as `DomainEvent` in TS.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DomainEvent {
-    /// تراکنش دفتر ثبت شد
+    /// Ledger transaction posted
     TransactionPosted(TransactionPostedEvent),
-    /// رویداد اسکرو
+    /// Escrow event
     Escrow(EscrowEvent),
 }
 
 impl DomainEvent {
-    /// شناسه دترمینیستیک رویداد.
+    /// Deterministic event ID.
     #[must_use]
     pub fn id(&self) -> &str {
         match self {
@@ -151,7 +151,7 @@ impl DomainEvent {
         }
     }
 
-    /// زمان رویداد.
+    /// Event time.
     #[must_use]
     pub const fn at(&self) -> &String {
         match self {

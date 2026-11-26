@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * KIAN M3 — ساخت initData معتبر تلگرام برای تست/توسعه مینی‌اپ.
+ * KIAN M3 — builds valid Telegram initData for mini-app testing/development.
  *
- * دقیقاً همان طرح رسمی WebApp: مرتب‌سازی پارامترها، data_check_string با
- * `\n`، secret = SHA256(bot_token)، HMAC-SHA256 → hash hex.
+ * Exactly the official WebApp scheme: sorted params, a data_check_string joined with
+ * `\n`, secret = SHA256(bot_token), HMAC-SHA256 → hex hash.
  *
- * استفاده:
+ * Usage:
  *   node tools/telegram/make-init-data.mjs --bot "123:ABC" --user 100 [--username kia] [--json]
  *
- * هشدار: هرگز با توکن بات واقعی در لاگ/CI استفاده نکنید.
+ * Warning: never run it with a real bot token in logs/CI.
  */
 
 import { createHash, createHmac } from "node:crypto";
@@ -38,7 +38,7 @@ const userJson = JSON.stringify({
   first_name: args.username ?? String(user),
 });
 
-/** مثل URLSearchParams واقعی — فقط unreserved خام می‌ماند. */
+/** Mirrors the real URLSearchParams — only raw unreserved characters survive. */
 function urlencode(s) {
   return encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 }

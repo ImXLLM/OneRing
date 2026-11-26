@@ -1,130 +1,130 @@
-//! موتور منشور — منشور پولی کشور دیجیتال (سیاست خالص، بدون IO).
+//! Charter engine — the monetary charter of the digital nation (pure policy, no IO).
 //!
-//! آینه `docs/economy-charter.md` امپراتوری v2 (۱۰ ماده) به‌صورت ماژول
-//! سیاست ماشین‌پذیر. اصل تقدس: پول حفظ می‌شود — خارج از حساب‌های
-//! mint/burn هرگز ساخته یا نابود نمی‌شود.
+//! A machine-readable policy module mirroring the `docs/economy-charter.md` v2 empire
+//! charter (10 articles). Sanctity principle: money is conserved — outside the
+//! mint/burn accounts it is never created or destroyed.
 
 use crate::errors::{DomainError, DomainErrorCode, DomainResult};
 use crate::money::Din;
 
-/// نرخ پیش‌فرض پورسانت معرف (۱۰٪ = 1000 bps).
+/// Default affiliate commission rate (10% = 1000 bps).
 pub const DEFAULT_AFFILIATE_BPS: u16 = 1_000;
 
-/// سقف مجاز پورسانت معرف که فروشنده می‌تواند روی محصول بگذارد (۵۰٪ = 5000 bps).
+/// Max affiliate commission a seller may set on a product (50% = 5000 bps).
 pub const MAX_AFFILIATE_BPS: u16 = 5_000;
 
-/// ثابت‌های منشور — معادل `CHARTER` در TS.
+/// Charter constants — equivalent to `CHARTER` in TS.
 pub struct Charter;
 
 impl Charter {
-    /// ماده ۱ — هویت ارز
+    /// Article 1 — currency identity
     pub const CURRENCY: &'static str = "DNX";
-    /// نماد پول
+    /// Currency symbol
     pub const SYMBOL: &'static str = "\u{110}";
-    /// ماده ۲ — مالیات پلتفرم روی تسویه بازار (۱۰٪ = 1000 bps)
+    /// Article 2 — platform tax on marketplace settlement (10% = 1000 bps)
     pub const TAX_BPS: i64 = 1_000;
-    /// ماده ۷ — آستانه تأیید انسانی: عملیات ≥ ۵۰,۰۰۰ Đ نیاز به تأیید مالک دارد
+    /// Article 7 — human-approval threshold: operations ≥ 50,000 Đ require owner approval
     pub const HITL_THRESHOLD_DIN: Din = Din(50_000);
-    /// ماده ۳ — سقف ضرب سالانه: ۵۰۰٬۰۰۰ KIAN (۵۰۰ میلیارد micro) — پس از
-    /// مهاجرت جامعهٔ لگاسی dropagent (genesis پاک‌سازی‌شدهٔ ۵۸٬۷۰۰.۲ KIAN در
-    /// سال ۲۰۲۶) سقف قبلی ۶۰٬۰۰۰ KIAN تقریباً پر بود و شیر dev و واریزهای
-    /// واقعی جا نداشتند؛ سقف جدید سرریز فراوان برای رشد می‌دهد و ضرب با
-    /// واریز تأییدشده و همین سقف کنترل می‌شود.
+    /// Article 3 — annual mint cap: 500,000 KIAN (500 billion micro) — after
+    /// the dropagent legacy community migration (the sanitized 58,700.2 KIAN genesis in
+    /// 2026) the previous 60,000 KIAN cap was nearly full and the dev faucet and real
+    /// deposits had no room; the new cap gives ample headroom for growth, and minting
+    /// is controlled by verified deposits and this same cap.
     pub const YEARLY_MINT_CAP_DIN: Din = Din(500_000_000_000);
-    /// عرضهٔ genesis مهاجرت لگاسی — ممیزی پایگاه ۳۰روزهٔ dropagent:
-    /// ۴۶۶ شهروند، ۴۳۵ حساب با تراز مثبت، Σ = ۵۸٬۷۰۰٬۲۰۰٬۰۰۰ micro
-    /// (۵۸٬۷۰۰.۲ KIAN) — پاک‌سازی‌شده: کاربران عادی ≤ ۱٬۰۰۰ KIAN،
-    /// `@ImXsi` ۱٬۰۰۰ KIAN (اصلاح واریز دوبارِ #3)، `@ImXforevr` ۵٬۰۰۰ KIAN.
+    /// Genesis supply of the legacy migration — dropagent 30-day base audit:
+    /// 466 citizens, 435 accounts with positive balance, Σ = 58,700,200,000 micro
+    /// (58,700.2 KIAN) — sanitized: ordinary users ≤ 1,000 KIAN,
+    /// `@ImXsi` 1,000 KIAN (fix of double deposit #3), `@ImXforevr` 5,000 KIAN.
     pub const GENESIS_SUPPLY_DIN: Din = Din(58_700_200_000);
 }
 
-/// یک ماده از منشور — به‌صورت داده (برای UI و داشبورد).
+/// One charter article — as data (for UI and dashboard).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CharterArticle {
-    /// شماره ماده (۱ تا ۱۰)
+    /// Article number (1 to 10)
     pub article: u8,
-    /// عنوان ماده
+    /// Article title
     pub title: &'static str,
-    /// متن ماده
+    /// Article body
     pub value: &'static str,
 }
 
-/// ۱۰ ماده منشور — یک‌به‌یک با نسخه TS (فارسی حفظ شده).
+/// The 10 charter articles — one-to-one with the TS version (Persian preserved).
 pub const CHARTER_ARTICLES: [CharterArticle; 10] = [
     CharterArticle {
         article: 1,
-        title: "واحد پول",
-        value: "دینار دیجیتال (Đ / DNX) — عدد صحیح، بدون اعشار",
+        title: "\u{648}\u{627}\u{62d}\u{62f} \u{67e}\u{648}\u{644}",
+        value: "\u{62f}\u{6cc}\u{646}\u{627}\u{631} \u{62f}\u{6cc}\u{62c}\u{6cc}\u{62a}\u{627}\u{644} (Đ / DNX) — \u{639}\u{62f}\u{62f} \u{635}\u{62d}\u{6cc}\u{62d}\u{60c} \u{628}\u{62f}\u{648}\u{646} \u{627}\u{639}\u{634}\u{627}\u{631}",
     },
     CharterArticle {
         article: 2,
-        title: "مالیات بازار",
-        value: "۱۰٪ هر تسویه اسکرو به خزانه می‌رود",
+        title: "\u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a} \u{628}\u{627}\u{632}\u{627}\u{631}",
+        value: "\u{6f1}\u{6f0}\u{66a} \u{647}\u{631} \u{62a}\u{633}\u{648}\u{6cc}\u{647} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}",
     },
     CharterArticle {
-        article: 3, title: "سقف ضرب", value: "حداکثر ۵۰۰٬۰۰۰ KIAN ضرب در سال"
+        article: 3, title: "\u{633}\u{642}\u{641} \u{636}\u{631}\u{628}", value: "\u{62d}\u{62f}\u{627}\u{6a9}\u{62b}\u{631} \u{6f5}\u{6f0}\u{6f0}\u{66c}\u{6f0}\u{6f0}\u{6f0} KIAN \u{636}\u{631}\u{628} \u{62f}\u{631} \u{633}\u{627}\u{644}"
     },
     CharterArticle {
         article: 4,
-        title: "حفاظت عرضه",
-        value: "پول فقط از حساب mint صادر و فقط به حساب burn می‌رود",
+        title: "\u{62d}\u{641}\u{627}\u{638}\u{62a} \u{639}\u{631}\u{636}\u{647}",
+        value: "\u{67e}\u{648}\u{644} \u{641}\u{642}\u{637} \u{627}\u{632} \u{62d}\u{633}\u{627}\u{628} mint \u{635}\u{627}\u{62f}\u{631} \u{648} \u{641}\u{642}\u{637} \u{628}\u{647} \u{62d}\u{633}\u{627}\u{628} burn \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}",
     },
     CharterArticle {
         article: 5,
-        title: "پایایی دفتر",
-        value: "هر تراکنش دوطرفه است و مجموع تراز همه حساب‌ها همیشه صفر است",
+        title: "\u{67e}\u{627}\u{6cc}\u{627}\u{6cc}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}",
+        value: "\u{647}\u{631} \u{62a}\u{631}\u{627}\u{6a9}\u{646}\u{634} \u{62f}\u{648}\u{637}\u{631}\u{641}\u{647} \u{627}\u{633}\u{62a} \u{648} \u{645}\u{62c}\u{645}\u{648}\u{639} \u{62a}\u{631}\u{627}\u{632} \u{647}\u{645}\u{647} \u{62d}\u{633}\u{627}\u{628}‌\u{647}\u{627} \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{635}\u{641}\u{631} \u{627}\u{633}\u{62a}",
     },
     CharterArticle {
-        article: 6, title: "شفافیت", value: "هر تراکنش شناسه یکتا و memo دارد"
+        article: 6, title: "\u{634}\u{641}\u{627}\u{641}\u{6cc}\u{62a}", value: "\u{647}\u{631} \u{62a}\u{631}\u{627}\u{6a9}\u{646}\u{634} \u{634}\u{646}\u{627}\u{633}\u{647} \u{6cc}\u{6a9}\u{62a}\u{627} \u{648} memo \u{62f}\u{627}\u{631}\u{62f}"
     },
     CharterArticle {
         article: 7,
-        title: "آستانه HITL",
-        value: "عملیات ≥ ۵۰٬۰۰۰ Đ نیازمند تایید انسانی است",
+        title: "\u{622}\u{633}\u{62a}\u{627}\u{646}\u{647} HITL",
+        value: "\u{639}\u{645}\u{644}\u{6cc}\u{627}\u{62a} ≥ \u{6f5}\u{6f0}\u{66c}\u{6f0}\u{6f0}\u{6f0} Đ \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc} \u{627}\u{633}\u{62a}",
     },
     CharterArticle {
         article: 8,
-        title: "اسکرو اجباری",
-        value: "خرید از مارکت فقط از مسیر اسکرو انجام می‌شود",
+        title: "\u{627}\u{633}\u{6a9}\u{631}\u{648} \u{627}\u{62c}\u{628}\u{627}\u{631}\u{6cc}",
+        value: "\u{62e}\u{631}\u{6cc}\u{62f} \u{627}\u{632} \u{645}\u{627}\u{631}\u{6a9}\u{62a} \u{641}\u{642}\u{637} \u{627}\u{632} \u{645}\u{633}\u{6cc}\u{631} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}",
     },
     CharterArticle {
         article: 9,
-        title: "بازگشت وجه",
-        value: "اختلاف اسکرو به نفع خریدار بازگشت می‌شود مگر داوری خلاف آن را تعیین کند",
+        title: "\u{628}\u{627}\u{632}\u{6af}\u{634}\u{62a} \u{648}\u{62c}\u{647}",
+        value: "\u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{628}\u{647} \u{646}\u{641}\u{639} \u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631} \u{628}\u{627}\u{632}\u{6af}\u{634}\u{62a} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f} \u{645}\u{6af}\u{631} \u{62f}\u{627}\u{648}\u{631}\u{6cc} \u{62e}\u{644}\u{627}\u{641} \u{622}\u{646} \u{631}\u{627} \u{62a}\u{639}\u{6cc}\u{6cc}\u{646} \u{6a9}\u{646}\u{62f}",
     },
     CharterArticle {
         article: 10,
-        title: "تعدادیل میراث",
-        value: "گپ تاریخی −۶۳ Đ با یک ردیف تعدیل شفاف ثبت شده است",
+        title: "\u{62a}\u{639}\u{62f}\u{627}\u{62f}\u{6cc}\u{644} \u{645}\u{6cc}\u{631}\u{627}\u{62b}",
+        value: "\u{6af}\u{67e} \u{62a}\u{627}\u{631}\u{6cc}\u{62e}\u{6cc} −\u{6f6}\u{6f3} Đ \u{628}\u{627} \u{6cc}\u{6a9} \u{631}\u{62f}\u{6cc}\u{641} \u{62a}\u{639}\u{62f}\u{6cc}\u{644} \u{634}\u{641}\u{627}\u{641} \u{62b}\u{628}\u{62a} \u{634}\u{62f}\u{647} \u{627}\u{633}\u{62a}",
     },
 ];
 
-/// مالیات ماده ۲ — `taxOf`.
+/// Article 2 tax — `taxOf`.
 ///
 /// # Errors
-/// خطاهای لایه پول را عبور می‌دهد.
+/// Passes through money-layer errors.
 pub fn tax_of(amount: Din) -> DomainResult<Din> {
     amount.mul_bps(Charter::TAX_BPS)
 }
 
-/// تفکیک تسویه: سهم فروشنده + مالیات خزانه.
+/// Settlement split: seller share + treasury tax.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SellerSplit {
-    /// سهم خالص فروشنده
+    /// Seller net share
     pub seller: Din,
-    /// مالیات خزانه
+    /// Treasury tax
     pub tax: Din,
 }
 
-/// تفکیک سه‌گانهٔ مبلغ تسویه: `(فروشنده، مالیات خزانه، پورسانت معرف)`.
+/// Three-way split of the settlement amount: `(seller, treasury tax, affiliate commission)`.
 ///
-/// * مالیات پلتفرم همیشه طبق مادهٔ ۲ منشور (`Charter::TAX_BPS = 1000`، ۱۰٪) محاسبه می‌شود.
-/// * سهم معرف بر اساس `affiliate_bps` از کل `amount` (با ریاضی صحیح `u128` ضدسرریز) است.
-/// * هر باقیماندهٔ گردکردن به پایین به نفع فروشنده حفظ می‌شود تا همواره
-///   `seller + tax + affiliate == amount` برقرار باشد.
+/// * Platform tax is always computed per charter Article 2 (`Charter::TAX_BPS = 1000`, 10%).
+/// * The affiliate share is `affiliate_bps` of the whole `amount` (overflow-safe `u128` integer math).
+/// * Any floor-rounding remainder is kept in the seller's favor so that
+///   `seller + tax + affiliate == amount` always holds.
 ///
 /// # Errors
-/// `BPS_OUT_OF_RANGE` اگر `affiliate_bps > MAX_AFFILIATE_BPS` باشد.
+/// `BPS_OUT_OF_RANGE` if `affiliate_bps > MAX_AFFILIATE_BPS`.
 pub fn split_seller_tax_affiliate(
     amount: Din,
     affiliate_bps: u16,
@@ -163,26 +163,26 @@ pub fn split_seller_tax_affiliate(
     Ok((seller, tax, affiliate))
 }
 
-/// تفکیک مبلغ تسویه به سهم فروشنده + مالیات خزانه
-/// (seller + tax = amount، همیشه).
+/// Split the settlement amount into seller share + treasury tax
+/// (seller + tax = amount, always).
 ///
 /// # Errors
-/// خطاهای لایه پول را عبور می‌دهد.
+/// Passes through money-layer errors.
 pub fn split_seller_tax(amount: Din) -> DomainResult<SellerSplit> {
     let (seller, tax, _) = split_seller_tax_affiliate(amount, 0)?;
     Ok(SellerSplit { seller, tax })
 }
 
-/// ماده ۷ — دروازه HITL: آیا این مبلغ تأیید انسانی می‌خواهد؟
+/// Article 7 — the HITL gate: does this amount require human approval?
 #[must_use]
 pub fn requires_hitl(amount: Din) -> bool {
     amount >= Charter::HITL_THRESHOLD_DIN
 }
 
-/// ماده ۳ — بررسی سقف ضرب سالانه نسبت به مجموع جاری.
+/// Article 3 — check the annual mint cap against the current total.
 ///
 /// # Errors
-/// `MINT_CAP_EXCEEDED` اگر مجموع از سقف بگذرد؛ خطاهای جمع را عبور می‌دهد.
+/// `MINT_CAP_EXCEEDED` if the total exceeds the cap; passes through sum errors.
 pub fn assert_mint_within_cap(minted_so_far: Din, amount: Din) -> DomainResult<()> {
     let next = minted_so_far.checked_add(amount)?;
     if next > Charter::YEARLY_MINT_CAP_DIN {
@@ -209,9 +209,9 @@ mod tests {
 
     #[test]
     fn fixes_the_sanitized_genesis_supply_of_the_legacy_migration() {
-        // ممیزی مهاجرت dropagent: Σ ضربِ پاک‌سازی‌شدهٔ ۴۶۶ شهروند
+        // dropagent migration audit: the sanitized mint Σ of 466 citizens
         assert_eq!(Charter::GENESIS_SUPPLY_DIN.as_i64(), 58_700_200_000);
-        // genesis باید با سقف مادهٔ ۳ تضمین‌شده فاصلهٔ فراوان داشته باشد
+        // genesis must keep ample distance below the guaranteed Article 3 cap
         assert!(Charter::GENESIS_SUPPLY_DIN.as_i64() * 4 < Charter::YEARLY_MINT_CAP_DIN.as_i64());
     }
 
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn floors_tax_to_keep_money_integer() {
-        // ۱۰٪ از ۵ Đ = ۰
+        // 10% of 5 Đ = 0
         let split = split_seller_tax(d(5)).unwrap();
         assert_eq!(split.tax.as_i64(), 0);
         assert_eq!(split.seller.as_i64(), 5);
@@ -252,7 +252,7 @@ mod tests {
         assert!(assert_mint_within_cap(d(500_000), d(500_000)).is_ok());
         let r = assert_mint_within_cap(d(499_999_000_000), d(2_000_000));
         assert_eq!(r.unwrap_err().code, DomainErrorCode::MintCapExceeded);
-        // genesis مهاجرت‌شده + یک شیر dev کامل باید زیر سقف بماند
+        // migrated genesis + one full dev faucet must stay under the cap
         assert!(assert_mint_within_cap(d(58_700_200_000), d(5_000_000_000)).is_ok());
     }
 
@@ -271,21 +271,21 @@ mod tests {
 
     #[test]
     fn splits_three_way_affiliate_with_exact_conservation() {
-        // عدد رند با پیش‌فرض ۱۰٪ معرف + ۱۰٪ مالیات → ۸۰٪ فروشنده
+        // Round number with default 10% affiliate + 10% tax → 80% seller
         let (seller, tax, aff) = split_seller_tax_affiliate(d(1_000), DEFAULT_AFFILIATE_BPS).unwrap();
         assert_eq!((seller.as_i64(), tax.as_i64(), aff.as_i64()), (800, 100, 100));
 
-        // عدد اول ۱۰۱ با ۱۰٪ → مالیات ۱۰، معرف ۱۰، فروشنده ۸۱ (باقیمانده به نفع فروشنده)
+        // Prime 101 at 10% → tax 10, affiliate 10, seller 81 (remainder favors the seller)
         let (seller, tax, aff) = split_seller_tax_affiliate(d(101), DEFAULT_AFFILIATE_BPS).unwrap();
         assert_eq!((seller.as_i64(), tax.as_i64(), aff.as_i64()), (81, 10, 10));
         assert_eq!(seller.as_i64() + tax.as_i64() + aff.as_i64(), 101);
 
-        // عدد فرد ۹۹۹ با سقف ۵۰٪ → مالیات ۹۹، معرف ۴۹۹، فروشنده ۴۰۱
+        // Odd 999 at the 50% cap → tax 99, affiliate 499, seller 401
         let (seller, tax, aff) = split_seller_tax_affiliate(d(999), MAX_AFFILIATE_BPS).unwrap();
         assert_eq!((seller.as_i64(), tax.as_i64(), aff.as_i64()), (401, 99, 499));
         assert_eq!(seller.as_i64() + tax.as_i64() + aff.as_i64(), 999);
 
-        // رنج کامل ۰..=۲۵۰ روی نرخ‌های مختلف
+        // Full 0..=250 range across different rates
         for bps in [0u16, 1, 333, 1_000, 2_500, MAX_AFFILIATE_BPS] {
             for n in 0..=250 {
                 let (s, t, a) = split_seller_tax_affiliate(d(n), bps).unwrap();
@@ -297,7 +297,7 @@ mod tests {
             }
         }
 
-        // ضدسرریز u128 روی MAX_DIN با سقف ۵۰۰۰ bps (در i64 سرریز می‌کرد)
+        // u128 overflow safety on MAX_DIN with the 5000 bps cap (i64 would overflow)
         let max = Din::new(crate::money::MAX_DIN).unwrap();
         let (s, t, a) = split_seller_tax_affiliate(max, MAX_AFFILIATE_BPS).unwrap();
         assert_eq!(s.as_i64() + t.as_i64() + a.as_i64(), crate::money::MAX_DIN);

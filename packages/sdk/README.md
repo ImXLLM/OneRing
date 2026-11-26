@@ -1,4 +1,4 @@
-# @kian/sdk — کلاینت تایپ‌سیف خودکار
+# @kian/sdk — The Auto-Generated Type-Safe Client
 
-از OpenAPI 3.1 ساخته‌شده توسط `crates/contracts` (utoipa 6) → openapi-typescript.
-دروازه ورود بیلدرهای خارجی به اکوسیستم.
+Generated from the OpenAPI 3.1 produced by `crates/contracts` (utoipa 6) → openapi-typescript.
+The entry gate for external builders into the ecosystem.

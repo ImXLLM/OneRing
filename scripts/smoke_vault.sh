@@ -8,7 +8,7 @@
 #    Wave 4-6  · /api/v1/ai/status, quant venues
 #    Wave 7-9  · /api/v1/monopoly/charter-and-base, /api/v1/hud/presets,
 #                /api/v1/grok/ui-bundle, /api/v1/i18n/ecosystem-matrix
-#    Wave 10   · /api/v1/war-room/state (KIA-WAR-ROOM-W10 · 24 ticks · $9.55)
+#    Sovereign OS · /api/v1/war-room/state (MAIRON-WAR-ROOM · 24 ticks · $9.55)
 #    Wave 10   · GET /war-room + GET /neural-hud standalone HTML dashboards
 #  Layout-agnostic: works from the repository root (Wave-10 layout) — the
 #  server binary path and the seed DB are discovered relative to the repo.
@@ -81,11 +81,11 @@ chk "GET /war-room/state -> 200" "$(code "$B/war-room/state" "$WORK/warroom.json
 python3 - <<'PYEOF'
 import json
 d = json.load(open('/tmp/kian-smoke/warroom.json'))
-assert d['signature'] == 'KIA-WAR-ROOM-W10', d['signature']
+assert d['signature'] == 'MAIRON-WAR-ROOM', d['signature']
 assert len(d['scenario']) == 24, len(d['scenario'])
 assert d['day1TotalEarnedMicros'] == 9550000
 assert d['wallet']['cryptoSeedMicros'] == 33000000
-print("  OK   KIA-WAR-ROOM-W10 · 24-tick canonical scenario · $9.55 day-1 · $33.00 seed")
+print("  OK   MAIRON-WAR-ROOM · 24-tick canonical scenario · $9.55 day-1 · $33.00 seed")
 PYEOF
 if [ $? -eq 0 ]; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); fi
 

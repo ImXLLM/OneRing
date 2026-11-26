@@ -4374,7 +4374,7 @@
             renderPinnedMessages();
 
             try {
-                // BUG-14: three.js فقط هنگام init صحنه بارگذاری می‌شود (lazy)
+                // BUG-14: three.js is loaded only when the scene initializes (lazy)
                 loadThree().then(initThreeJS)
                     .catch((e3) => console.error('three.js lazy load failed:', e3));
             } catch (err) {

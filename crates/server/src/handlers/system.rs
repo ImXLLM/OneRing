@@ -1,7 +1,7 @@
-//! هندلرهای سیستم — health عمیق، بکاپ و شفافیت اقتصاد (مادهٔ ۶ منشور).
+//! System handlers — deep health, backup, and economy transparency (charter article 6).
 //!
-//! M2: چیپ‌های bot/ai صادقانه «disabled» بودند (سیم‌کشی واقعی با M3/M4)؛
-//! بکاپ `VACUUM INTO` از همین‌جا در دسترس ادمین است.
+//! M2: the bot/ai chips were honestly "disabled" (real wiring came with M3/M4);
+//! the `VACUUM INTO` backup is admin-accessible from here.
 
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -18,26 +18,26 @@ use crate::middleware::require_admin;
 use crate::state::AppState;
 use crate::views::wire_din;
 
-/// `GET /health` — liveness: سروری که به دیتابیسش نمی‌رسد سالم نیست.
+/// `GET /health` — liveness: a server that cannot reach its database is not healthy.
 ///
-/// اصلاح تست بار ۲۰۲۵-۱۱: چک سلامت حالا پینگ سبک است (`SELECT 1`)، نه
-/// خوانش عمیق دفتر که این مسیر را به ۸۶ RPS محدود کرده بود.
+/// 2025-11 load-test fix: the health check is now a light ping (`SELECT 1`), not
+/// a deep ledger read, which had capped this path at 86 RPS.
 ///
 /// # Errors
-/// دیتابیس در دسترس نیست → 503 `DB_DOWN`.
+/// Database unreachable → 503 `DB_DOWN`.
 pub async fn health(State(state): State<Arc<AppState>>) -> ApiResult<Json<HealthResponse>> {
-    // پینگ سبک — گپ واقعی بین پروسه و دیتابیس را می‌گیرد؛ خوانش عمیقِ آشتی
-    // در `/economy` ماند (اکنون با SQL تجمیعی، سبک و O(1) نسبت به تعداد اکانت).
+    // light ping — catches a real gap between the process and the database; the deep reconciliation
+    // read stayed in `/economy` (now with aggregate SQL, light and O(1) in account count).
     state.store.ping().await.map_err(|_| kian_contracts::HttpFailure::db_down())?;
-    // M4 — گیت‌وی AI از پیکربندی بوت؛ اسلات کانفیگ‌نشده صادقانه disabled،
-    // هرگز دروغ. بات (M6) فقط با هر دو راز توکن+وبهوک «enabled» است —
-    // همان معناشناسی fail-closed؛ بدون راز صادقانه disabled.
+    // M4 — the AI gateway comes from boot configuration; an unconfigured slot is honestly disabled,
+    // never a lie. The bot (M6) is "enabled" only with both token+webhook secrets —
+    // the same fail-closed semantics; without secrets, honestly disabled.
     let primary = state
         .ai
         .slot_statuses()
         .into_iter()
         .find(|s| s.enabled)
-        // چیپ health کوتاه می‌ماند — فقط اولین مدلِ گروهِ برنده (گروه چندمدلی با کاما می‌آید)
+        // the health chip stays short — only the winning group's first model (a multi-model group arrives comma-separated)
         .map(|s| s.model.split(',').next().unwrap_or_default().trim().to_owned())
         .filter(|m| !m.is_empty());
     let bot_enabled = state.bot.is_some();
@@ -54,10 +54,10 @@ pub async fn health(State(state): State<Arc<AppState>>) -> ApiResult<Json<Health
     }))
 }
 
-/// `POST /system/backup` — اسنپ‌شات سازگار SQLite (`VACUUM INTO`) + هرس. ادمین.
+/// `POST /system/backup` — SQLite-consistent snapshot (`VACUUM INTO`) + pruning. Admin.
 ///
 /// # Errors
-/// فروشگاه درون‌حافظه‌ای → 503 `BACKUP_UNSUPPORTED`؛ شکست SQL → `BACKUP_FAILED`.
+/// In-memory store → 503 `BACKUP_UNSUPPORTED`; SQL failure → `BACKUP_FAILED`.
 pub async fn create_backup(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -84,10 +84,10 @@ pub async fn create_backup(
     }))
 }
 
-/// `GET /economy` — خلاصهٔ اقتصاد ملی؛ عمومی و فقط‌خواندنی (مادهٔ ۶).
+/// `GET /economy` — the national economy summary; public and read-only (article 6).
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn get_economy(State(state): State<Arc<AppState>>) -> ApiResult<Json<EconomySummary>> {
     let s = state.store.economy_summary().await?;
     let minted_all_time = state.store.minted_all_time().await?;

@@ -25,33 +25,33 @@ DGX.pages.wallet = async (view) => {
         <div style="color:var(--dim2);font-size:10px">${DGX.timeAgo(t.created_at)}</div></div>
       <span class="amt ${cls}">${t.amount >= 0 ? '+' : ''}${DGX.fmt(t.amount)}</span>
     </div>`;
-  }).join('') : '<div class="empty">هنوز تراکنشی نداری</div>';
+  }).join('') : '<div class="empty">\u0647\u0646\u0648\u0632 \u062a\u0631\u0627\u06a9\u0646\u0634\u06cc \u0646\u062f\u0627\u0631\u06cc</div>';
 
   function esc(s) { return DGX.esc(s); }
 
   view.innerHTML = `
     <div class="wcard burst">
-      <div class="lbl" style="display:flex;align-items:center;gap:7px">${DGX.icon('wallet')} موجودی DropAgentX</div>
-      <div class="bal num">${DGX.fmt(d.credits)} <small style="font-size:15px;color:var(--dim)">کردیت</small></div>
+      <div class="lbl" style="display:flex;align-items:center;gap:7px">${DGX.icon('wallet')} \u0645\u0648\u062c\u0648\u062f\u06cc DropAgentX</div>
+      <div class="bal num">${DGX.fmt(d.credits)} <small style="font-size:15px;color:var(--dim)">\u06a9\u0631\u062f\u06cc\u062a</small></div>
       <div class="addr">≈ ${usd} USDT · wallet: ${String(DGX.user?.id || '0x0000').slice(-6)}…${String(DGX.user?.id || '').slice(-4)}</div>
       <div class="w-actions">
-        <div class="w-btn" onclick="location.hash='#/activity'"><span class="ic">${DGX.icon('history')}</span>تاریخچه</div>
-        <div class="w-btn" onclick="DGX.openBot('/start')"><span class="ic">${DGX.icon('deposit')}</span>واریز</div>
-        <div class="w-btn" onclick="DGX.openBot('/start')"><span class="ic">${DGX.icon('withdraw')}</span>برداشت</div>
-        <div class="w-btn" onclick="location.hash='#/create'"><span class="ic">${DGX.icon('rocket')}</span>بفروش</div>
+        <div class="w-btn" onclick="location.hash='#/activity'"><span class="ic">${DGX.icon('history')}</span>\u062a\u0627\u0631\u06cc\u062e\u0686\u0647</div>
+        <div class="w-btn" onclick="DGX.openBot('/start')"><span class="ic">${DGX.icon('deposit')}</span>\u0648\u0627\u0631\u06cc\u0632</div>
+        <div class="w-btn" onclick="DGX.openBot('/start')"><span class="ic">${DGX.icon('withdraw')}</span>\u0628\u0631\u062f\u0627\u0634\u062a</div>
+        <div class="w-btn" onclick="location.hash='#/create'"><span class="ic">${DGX.icon('rocket')}</span>\u0628\u0641\u0631\u0648\u0634</div>
       </div>
     </div>
 
     <div class="stat3">
-      <div><b class="num">${DGX.fmt(d.earned)}</b><span>کل درآمد</span></div>
-      <div><b class="num">${DGX.fmt(d.spent)}</b><span>کل خرج</span></div>
-      <div><b>${(d.earned / d.per_usdt).toFixed(2)}$</b><span>ارزش کل</span></div>
+      <div><b class="num">${DGX.fmt(d.earned)}</b><span>\u06a9\u0644 \u062f\u0631\u0622\u0645\u062f</span></div>
+      <div><b class="num">${DGX.fmt(d.spent)}</b><span>\u06a9\u0644 \u062e\u0631\u062c</span></div>
+      <div><b>${(d.earned / d.per_usdt).toFixed(2)}$</b><span>\u0627\u0631\u0632\u0634 \u06a9\u0644</span></div>
     </div>
 
-    <h3 style="margin:16px 0 6px;display:flex;align-items:center;gap:6px">${DGX.icon('history','ic-s')} تراکنش‌های اخیر</h3>
+    <h3 style="margin:16px 0 6px;display:flex;align-items:center;gap:6px">${DGX.icon('history','ic-s')} \u062a\u0631\u0627\u06a9\u0646\u0634‌\u0647\u0627\u06cc \u0627\u062e\u06cc\u0631</h3>
     ${txHtml}
     <div style="color:var(--dim2);font-size:10.5px;text-align:center;margin-top:14px">
-      🔒 موجودی روی زیرساخت امن DropAgentX · نرخ ثابت ۱٬۰۰۰ کردیت = ۱ USDT</div>`;
+      🔒 \u0645\u0648\u062c\u0648\u062f\u06cc \u0631\u0648\u06cc \u0632\u06cc\u0631\u0633\u0627\u062e\u062a \u0627\u0645\u0646 DropAgentX · \u0646\u0631\u062e \u062b\u0627\u0628\u062a \u06f1\u066c\u06f0\u06f0\u06f0 \u06a9\u0631\u062f\u06cc\u062a = \u06f1 USDT</div>`;
 
   DGX.ptr(view, async () => { await DGX.refreshMe(); await DGX.pages.wallet(view); });
 

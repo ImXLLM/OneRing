@@ -1,1 +1,1 @@
-# infra — Docker (web/kernel server) + استقرار Railway (railway.json آینده)
+# infra — Docker (web/kernel server) + Railway deployment (railway.json planned)

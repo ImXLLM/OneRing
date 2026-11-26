@@ -13,16 +13,16 @@ DGX.pages.home = async (view, params) => {
     <div id="stories" class="stories"></div>
     ${DGX.hubBar()}
     <div class="seg" style="margin-bottom:10px">
-      <button data-tab="foryou" class="${tab === 'foryou' ? 'on' : ''}">${DGX.icon('flame','ic-s')} برای تو</button>
-      <button data-tab="following" class="${tab === 'following' ? 'on' : ''}">${DGX.icon('users','ic-s')} فالوینگ‌ها</button>
-      <button data-tab="trend" class="${tab === 'trend' ? 'on' : ''}">${DGX.icon('chart','ic-s')} ترند</button>
-      <button data-tab="fresh" class="${tab === 'fresh' ? 'on' : ''}">${DGX.icon('deposit','ic-s')} تازه‌ها</button>
+      <button data-tab="foryou" class="${tab === 'foryou' ? 'on' : ''}">${DGX.icon('flame','ic-s')} \u0628\u0631\u0627\u06cc \u062a\u0648</button>
+      <button data-tab="following" class="${tab === 'following' ? 'on' : ''}">${DGX.icon('users','ic-s')} \u0641\u0627\u0644\u0648\u06cc\u0646\u06af‌\u0647\u0627</button>
+      <button data-tab="trend" class="${tab === 'trend' ? 'on' : ''}">${DGX.icon('chart','ic-s')} \u062a\u0631\u0646\u062f</button>
+      <button data-tab="fresh" class="${tab === 'fresh' ? 'on' : ''}">${DGX.icon('deposit','ic-s')} \u062a\u0627\u0632\u0647‌\u0647\u0627</button>
     </div>
     <div class="chips" id="homeCats"></div>
     <div id="feed">${DGX.skelCards(3)}</div>
     <div id="more" style="text-align:center;color:var(--dim2);padding:14px"></div>`;
 
-  // Instagram-style stories (built-in "همه" + categories)
+  // Instagram-style stories (built-in "All" + categories)
   const stBox = DGX.$('#stories');
   if (stBox) stBox.innerHTML = DGX.storiesBox([]);
 
@@ -33,7 +33,7 @@ DGX.pages.home = async (view, params) => {
     const box = DGX.$('#homeCats');
     if (box) {
       box.innerHTML = `<button class="chip ${cat === 'all' ? 'on' : ''}"
-        data-c="all">همه</button>` +
+        data-c="all">\u0647\u0645\u0647</button>` +
         cats.filter(c => c.count > 0 || c.key === cat).map(c =>
           `<button class="chip ${cat === c.key ? 'on' : ''}" data-c="${c.key}">
              ${c.icon} ${c.fa}${c.count ? ` · ${DGX.kfmt(c.count)}` : ''}</button>`).join('');
@@ -66,13 +66,13 @@ DGX.pages.home = async (view, params) => {
       cursor = d.next ?? cursor;
       if (ended && !d.items.length && reset)
         feed.innerHTML = `<div class="empty"><div class="big">${DGX.icon('flame','big-ic')}</div>
-          هنوز پستی نیست — اولین سازنده باش!<br><br>
-          <button class="btn btn-primary" onclick="location.hash='#/create'">${DGX.icon('plus','ic-s')} ساخت محصول</button></div>`;
-      more.textContent = ended ? (d.items.length ? 'همه را دیدی' : '') : '…';
+          \u0647\u0646\u0648\u0632 \u067e\u0633\u062a\u06cc \u0646\u06cc\u0633\u062a — \u0627\u0648\u0644\u06cc\u0646 \u0633\u0627\u0632\u0646\u062f\u0647 \u0628\u0627\u0634!<br><br>
+          <button class="btn btn-primary" onclick="location.hash='#/create'">${DGX.icon('plus','ic-s')} \u0633\u0627\u062e\u062a \u0645\u062d\u0635\u0648\u0644</button></div>`;
+      more.textContent = ended ? (d.items.length ? '\u0647\u0645\u0647 \u0631\u0627 \u062f\u06cc\u062f\u06cc' : '') : '…';
     } catch (e) {
       if (reset) feed.innerHTML =
-        `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || 'خطا'}
-         <br><br><button class="btn btn-ghost" onclick="location.reload()">تلاش مجدد</button></div>`;
+        `<div class="empty"><div class="big">${DGX.icon('live','big-ic')}</div>${e.msg || '\u062e\u0637\u0627'}
+         <br><br><button class="btn btn-ghost" onclick="location.reload()">\u062a\u0644\u0627\u0634 \u0645\u062c\u062f\u062f</button></div>`;
     }
     busy = false;
   }

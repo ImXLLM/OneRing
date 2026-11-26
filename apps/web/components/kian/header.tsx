@@ -5,12 +5,12 @@ import Image from "next/image";
 import { InstallButton } from "./install-button";
 
 const LINKS = [
-  { href: "/wallet", label: "ولت" },
-  { href: "/market", label: "بازار" },
-  { href: "#subsystems", label: "زیرسیستم‌ها" },
-  { href: "#architecture", label: "معماری" },
-  { href: "#roadmap", label: "نقشه راه" },
-  { href: "#security", label: "امنیت REA" },
+  { href: "/wallet", label: "\u0648\u0644\u062a" },
+  { href: "/market", label: "\u0628\u0627\u0632\u0627\u0631" },
+  { href: "#subsystems", label: "\u0632\u06cc\u0631\u0633\u06cc\u0633\u062a\u0645‌\u0647\u0627" },
+  { href: "#architecture", label: "\u0645\u0639\u0645\u0627\u0631\u06cc" },
+  { href: "#roadmap", label: "\u0646\u0642\u0634\u0647 \u0631\u0627\u0647" },
+  { href: "#security", label: "\u0627\u0645\u0646\u06cc\u062a REA" },
 ];
 
 export function SiteHeader() {
@@ -32,7 +32,7 @@ export function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="#top" className="flex items-center gap-2.5" aria-label="KIAN — بازگشت به بالا">
+        <a href="#top" className="flex items-center gap-2.5" aria-label="KIAN — &#x628;&#x627;&#x632;&#x6af;&#x634;&#x62a; &#x628;&#x647; &#x628;&#x627;&#x644;&#x627;">
           <Image
             src="/logo-badge.png"
             alt=""
@@ -43,11 +43,11 @@ export function SiteHeader() {
           />
           <span className="text-xl font-black tracking-tight">
             KIAN
-            <span className="mr-2 text-xs font-medium text-zinc-500">پادشاهی ایجنت‌ها</span>
+            <span className="mr-2 text-xs font-medium text-zinc-500">&#x67e;&#x627;&#x62f;&#x634;&#x627;&#x647;&#x6cc; &#x627;&#x6cc;&#x62c;&#x646;&#x62a;‌&#x647;&#x627;</span>
           </span>
         </a>
 
-        <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="&#x646;&#x627;&#x648;&#x628;&#x631;&#x6cc; &#x627;&#x635;&#x644;&#x6cc;" className="hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
             <a
               key={l.href}

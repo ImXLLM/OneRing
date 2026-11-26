@@ -1,24 +1,24 @@
-//! `dual-run` — پراکسی گذار فاز ۸: TS و Rust کنار هم روی **همان** SQLite.
+//! `dual-run` — the phase 8 transition proxy: TS and Rust side by side on **the same** SQLite.
 //!
-//! متغیرهای محیطی:
-//! | متغیر | پیش‌فرض | نقش |
+//! Environment variables:
+//! | Variable | Default | Role |
 //! |---|---|---|
-//! | `PORT` | `3001` | پورت پراکسی |
-//! | `TS_URL` | الزامی | آپ‌استریم Node (مثل `http://127.0.0.1:3000`) |
-//! | `RUST_URL` | الزامی | آپ‌استریم Rust |
-//! | `RUST_TRAFFIC_PCT` | `0` | تک‌متغیرِ سوییچ (۰=سایه/برگشت، ۱۰۰=کامل) |
-//! | `SHADOW` | `1` | `1` = اجرای سایه فعال (فقط با pct=۰ معتبر) |
-//! | `STABILITY_DAYS` | `0` | روزهای پایداری — سپر HITL روی ۳ باز می‌شود |
+//! | `PORT` | `3001` | Proxy port |
+//! | `TS_URL` | required | The Node upstream (e.g. `http://127.0.0.1:3000`) |
+//! | `RUST_URL` | required | The Rust upstream |
+//! | `RUST_TRAFFIC_PCT` | `0` | The single switch variable (0=shadow/rollback, 100=full) |
+//! | `SHADOW` | `1` | `1` = shadow execution active (valid only with pct=0) |
+//! | `STABILITY_DAYS` | `0` | Stability days — the HITL shield opens at 3 |
 //!
-//! نقاط کنترل زنده: `GET /_dualrun/status` · `POST /_dualrun/pct {"pct":10}`
-//! · `POST /_dualrun/rollback` — همهٔ تغییرها خط JSON روی stderr لاگ می‌شوند.
+//! Live control points: `GET /_dualrun/status` · `POST /_dualrun/pct {"pct":10}`
+//! · `POST /_dualrun/rollback` — every change is logged as a JSON line on stderr.
 //!
-//! بوت با کانفیگ متناقض رد می‌شود (fail-closed — مثل ServerConfig فاز ۴).
+//! Boot with contradictory configuration is rejected (fail-closed — like the phase 4 ServerConfig).
 
 use dropagentx_tooling::dual_run::DualRunConfig;
 use dropagentx_tooling::proxy::{proxy_router, ProxyState};
 
-/// خواندن env اختیاری با پیش‌فرض.
+/// Read an optional env var with a default.
 fn env_or(name: &str, default: &str) -> String {
     std::env::var(name).ok().filter(|v| !v.trim().is_empty()).unwrap_or_else(|| default.into())
 }
@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     let ts_url = std::env::var("TS_URL").ok().filter(|v| !v.trim().is_empty());
     let rust_url = std::env::var("RUST_URL").ok().filter(|v| !v.trim().is_empty());
     let (Some(ts_url), Some(rust_url)) = (ts_url, rust_url) else {
-        eprintln!("dual-run: TS_URL و RUST_URL الزامی‌اند — بوت رد شد (fail-closed)");
+        eprintln!("dual-run: TS_URL \u{648} RUST_URL \u{627}\u{644}\u{632}\u{627}\u{645}\u{6cc}‌\u{627}\u{646}\u{62f} — \u{628}\u{648}\u{62a} \u{631}\u{62f} \u{634}\u{62f} (fail-closed)");
         std::process::exit(2);
     };
 
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
         hitl_shield_din: dropagentx_tooling::dual_run::HITL_SHIELD_DIN,
     };
     if let Err(msg) = cfg.validate() {
-        eprintln!("dual-run: کانفیگ متناقض — بوت رد شد: {msg}");
+        eprintln!("dual-run: \u{6a9}\u{627}\u{646}\u{641}\u{6cc}\u{6af} \u{645}\u{62a}\u{646}\u{627}\u{642}\u{636} — \u{628}\u{648}\u{62a} \u{631}\u{62f} \u{634}\u{62f}: {msg}");
         std::process::exit(2);
     }
 
@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
     let app = proxy_router(state);
     let addr = format!("0.0.0.0:{port}");
     println!("dual-run proxy → {addr}  (TS={ts_url} · RUST={rust_url})");
-    println!("  کنترل: GET /_dualrun/status · POST /_dualrun/pct · POST /_dualrun/rollback");
+    println!("  \u{6a9}\u{646}\u{62a}\u{631}\u{644}: GET /_dualrun/status · POST /_dualrun/pct · POST /_dualrun/rollback");
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;
     Ok(())

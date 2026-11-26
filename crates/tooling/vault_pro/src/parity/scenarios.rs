@@ -1,8 +1,8 @@
-//! رجیستری سناریوهای طلایی parity — پوشش کامل سطح وایر (ADR-009 فاز ۸).
+//! The golden parity scenario registry — full wire-level coverage (ADR-009 phase 8).
 //!
-//! هر سناریو = آماده‌سازی (گام‌های HTTP) + درخواستِ ثبت‌شده + انتظار وضعیت
-//! دیتابیس. ترتیب رجیستری پایدار است (گلدن‌ها بر اساس `name` فایل می‌شوند).
-//! مبالغ و شناسه‌ها همه دترمینیستیک‌اند تا خوانش SQL بین اجراها ثابت بماند.
+//! Each scenario = setup (HTTP steps) + the recorded request + a database-state
+//! expectation. Registry order is stable (golden files are named by `name`).
+//! Amounts and IDs are all deterministic so SQL reads stay stable across runs.
 
 use std::collections::BTreeMap;
 
@@ -10,23 +10,23 @@ use serde_json::{json, Value};
 
 use super::BootCfg;
 
-/// گام HTTP یک سناریو — درخواست مستقل از محیط.
+/// A scenario's HTTP step — an environment-independent request.
 #[derive(Debug, Clone)]
 pub struct Step {
-    /// متد HTTP
+    /// HTTP method
     pub method: &'static str,
-    /// مسیر کامل زیر `/api/v1`
+    /// Full path under `/api/v1`
     pub path: String,
-    /// ارسال `X-KIA-Key` ادمین؟
+    /// Send the admin `X-KIA-Key`?
     pub admin: bool,
-    /// ارسال هدر مخفی تلگرام (درست)؟ — غلط یعنی بدون هدر (۴۰۱)
+    /// Send the Telegram secret header (correctly)? — false means no header (401)
     pub bot_secret_header: bool,
-    /// بدنهٔ JSON اختیاری
+    /// Optional JSON body
     pub body: Option<Value>,
 }
 
 impl Step {
-    /// GET بدون کلید.
+    /// GET without a key.
     pub fn get(path: &str) -> Self {
         Self {
             method: "GET",
@@ -37,12 +37,12 @@ impl Step {
         }
     }
 
-    /// GET با کلید ادمین.
+    /// GET with the admin key.
     pub fn get_admin(path: &str) -> Self {
         Self { method: "GET", path: path.into(), admin: true, bot_secret_header: false, body: None }
     }
 
-    /// POST با کلید ادمین و بدنه.
+    /// POST with the admin key and a body.
     pub fn post_admin(path: &str, body: Value) -> Self {
         Self {
             method: "POST",
@@ -53,7 +53,7 @@ impl Step {
         }
     }
 
-    /// POST بدون کلید و بدون بدنه.
+    /// POST without a key or body.
     pub fn post_open(path: &str) -> Self {
         Self {
             method: "POST",
@@ -64,7 +64,7 @@ impl Step {
         }
     }
 
-    /// POST با هدر مخفی درست بات و بدنهٔ update.
+    /// POST with the bot's correct secret header and an update body.
     pub fn post_bot(path: &str, body: Value) -> Self {
         Self {
             method: "POST",
@@ -75,7 +75,7 @@ impl Step {
         }
     }
 
-    /// متد و مسیر دلخواه — برای PUT/PATCH و هدر مخفی نادرست.
+    /// Arbitrary method and path — for PUT/PATCH and a wrong secret header.
     pub fn raw(
         method: &'static str,
         path: &str,
@@ -87,43 +87,43 @@ impl Step {
     }
 }
 
-/// انتظار وضعیت دیتابیس پس از سناریو — فقط فیلدهای مقداردهی‌شده مقایسه می‌شوند.
+/// Expected database state after the scenario — only set fields are compared.
 #[derive(Debug, Clone, Default)]
 pub struct DbExpect {
-    /// Σ کیف کاربران
+    /// Σ user wallets
     pub user_wallet_sum: Option<i64>,
-    /// تراز خزانه
+    /// Treasury balance
     pub treasury: Option<i64>,
-    /// تعداد ردیف Tx
+    /// Tx row count
     pub tx_count: Option<i64>,
-    /// تعداد ردیف Outbox
+    /// Outbox row count
     pub outbox_count: Option<i64>,
-    /// وضعیت اسکروها بر اساس id
+    /// Escrow statuses by ID
     pub escrow_status: BTreeMap<String, String>,
 }
 
 impl DbExpect {
-    /// انتظار خالی — هیچ فیلدی مقایسه نمی‌شود.
+    /// Empty expectation — no field is compared.
     #[must_use]
     pub fn none() -> Self {
         Self::default()
     }
 
-    /// تعیین Σ کیف کاربران.
+    /// Set Σ user wallets.
     #[must_use]
     pub fn sum(mut self, v: i64) -> Self {
         self.user_wallet_sum = Some(v);
         self
     }
 
-    /// تعیین تراز خزانه.
+    /// Set the treasury balance.
     #[must_use]
     pub fn treasury(mut self, v: i64) -> Self {
         self.treasury = Some(v);
         self
     }
 
-    /// تعیین وضعیت یک اسکرو.
+    /// Set one escrow's status.
     #[must_use]
     pub fn escrow(mut self, id: &str, status: &str) -> Self {
         self.escrow_status.insert(id.into(), status.into());
@@ -131,22 +131,22 @@ impl DbExpect {
     }
 }
 
-/// یک سناریوی parity کامل.
+/// One complete parity scenario.
 #[derive(Debug, Clone)]
 pub struct Scenario {
-    /// نام — نام فایل گلدن هم هست
+    /// Name — also the golden file name
     pub name: &'static str,
-    /// کانفیگ بوت
+    /// Boot config
     pub boot: BootCfg,
-    /// گام‌های آماده‌سازی (پاسخشان فقط از 5xx بودن چک می‌شود)
+    /// Setup steps (their responses are only checked for being 5xx)
     pub setup: Vec<Step>,
-    /// درخواستِ ثبت‌شده — پاسخش با گلدن مقایسه می‌شود
+    /// The recorded request — its response is compared against the golden
     pub request: Step,
-    /// انتظار دیتابیس
+    /// Database expectation
     pub db: DbExpect,
 }
 
-/// ساختارگر سناریو — خوانا مثل جدول تست.
+/// Scenario constructor — readable like a test table.
 struct ScenarioBuilder {
     name: &'static str,
     boot: BootCfg,
@@ -183,19 +183,19 @@ impl ScenarioBuilder {
     }
 }
 
-// ── گام‌های آماده‌سازی پرتکرار ───────────────────────────────────────────────
+// ── Repeated setup steps ───────────────────────────────────────────────
 
-/// ساخت حساب کاربر.
+/// Create a user account.
 fn user(id: &str) -> Step {
     Step::post_admin("/accounts", json!({ "id": id, "label": "parity" }))
 }
 
-/// ضرب به کیف کاربر.
+/// Mint into the user wallet.
 fn mint(id: &str, amount: i64) -> Step {
     Step::post_admin("/wallet/mint", json!({ "accountId": id, "amount": amount }))
 }
 
-/// ساخت امانت.
+/// Create an escrow.
 fn escrow(id: &str, buyer: &str, seller: &str, amount: i64) -> Step {
     Step::post_admin(
         "/escrows",
@@ -203,12 +203,12 @@ fn escrow(id: &str, buyer: &str, seller: &str, amount: i64) -> Step {
     )
 }
 
-/// اقدام روی امانت (fund/deliver/release/...).
+/// Act on the escrow (fund/deliver/release/...).
 fn act(id: &str, action: &str, body: Value) -> Step {
     Step::post_admin(&format!("/escrows/{id}/{action}"), body)
 }
 
-/// امانتِ تحویل‌شدهٔ آمادهٔ تسویه — خریدار و فروشنده با کیف ۱۰۰٬۰۰۰ Đ.
+/// A delivered escrow ready for settlement — buyer and seller with 100,000 Đ wallets.
 fn delivered(id: &str, amount: i64) -> Vec<Step> {
     vec![
         user("user:p1"),
@@ -221,7 +221,7 @@ fn delivered(id: &str, amount: i64) -> Vec<Step> {
     ]
 }
 
-/// آپدیت تلگرام — فرمان متنی از یک کاربر خصوصی.
+/// A Telegram update — a text command from a private-chat user.
 fn tg_update(update_id: i64, user_id: i64, text: &str) -> Value {
     json!({
         "update_id": update_id,
@@ -234,7 +234,7 @@ fn tg_update(update_id: i64, user_id: i64, text: &str) -> Value {
     })
 }
 
-/// رجیستری کامل سناریوها — ترتیب پایدار، نام یکتا.
+/// The full scenario registry — stable order, unique names.
 #[must_use]
 #[allow(clippy::too_many_lines)]
 pub fn scenarios() -> Vec<Scenario> {
@@ -250,7 +250,7 @@ pub fn scenarios() -> Vec<Scenario> {
             .req(Step::get("/docs"), DbExpect::none()),
         ScenarioBuilder::new("unknown_route_envelope")
             .req(Step::get("/definitely/nope"), DbExpect::none()),
-        // ── حساب‌ها ──────────────────────────────────────────────────────
+        // ── Accounts ──────────────────────────────────────────────────────
         ScenarioBuilder::new("account_created_201")
             .req(user("user:p1"), DbExpect::none().sum(0)),
         ScenarioBuilder::new("account_duplicate_rejected")
@@ -262,7 +262,7 @@ pub fn scenarios() -> Vec<Scenario> {
             .req(Step::get_admin("/accounts"), DbExpect::none()),
         ScenarioBuilder::new("account_balance_missing_404")
             .req(Step::get_admin("/accounts/user:ghost/balance"), DbExpect::none()),
-        // ── کیف پول ──────────────────────────────────────────────────────
+        // ── Wallets ──────────────────────────────────────────────────────
         ScenarioBuilder::new("mint_ok")
             .step(user("user:p1"))
             .req(mint("user:p1", 100_000), DbExpect::none().sum(100_000)),
@@ -288,7 +288,7 @@ pub fn scenarios() -> Vec<Scenario> {
                 Step::post_admin("/wallet/burn", json!({ "accountId": "user:p1", "amount": 10 })),
                 DbExpect::none().sum(0),
             ),
-        // ── امانت‌ها ─────────────────────────────────────────────────────
+        // ── Escrows ─────────────────────────────────────────────────────
         ScenarioBuilder::new("escrow_created_201")
             .step(user("user:p1"))
             .step(user("user:p2"))
@@ -347,7 +347,7 @@ pub fn scenarios() -> Vec<Scenario> {
                 act("escrow:e7", "expire", json!({})),
                 DbExpect::none().sum(200_000).escrow("escrow:e7", "EXPIRED"),
             ),
-        // ── HITL — مادهٔ ۷ ───────────────────────────────────────────────
+        // ── HITL — Article 7 ───────────────────────────────────────────────
         ScenarioBuilder::new("escrow_release_needs_hitl_over_threshold")
             .steps(delivered("escrow:h0", 60_000))
             .req(
@@ -399,7 +399,7 @@ pub fn scenarios() -> Vec<Scenario> {
             ),
         ScenarioBuilder::new("hitl_sweep_empty_is_zero")
             .req(Step::post_admin("/hitl/sweep", json!({})), DbExpect::none()),
-        // ── بات ──────────────────────────────────────────────────────────
+        // ── Bot ──────────────────────────────────────────────────────────
         ScenarioBuilder::new("bot_disabled_503")
             .req(
                 Step::raw("POST", "/bot/webhook", false, false, Some(tg_update(1, 77, "/balance"))),
@@ -421,7 +421,7 @@ pub fn scenarios() -> Vec<Scenario> {
         ScenarioBuilder::new("ai_chat_disabled_503")
             .step(user("user:p1"))
             .req(
-                Step::post_admin("/ai/chat", json!({ "userId": "user:p1", "text": "سلام" })),
+                Step::post_admin("/ai/chat", json!({ "userId": "user:p1", "text": "\u{633}\u{644}\u{627}\u{645}" })),
                 DbExpect::none(),
             ),
         ScenarioBuilder::new("ai_agents_list")
@@ -430,7 +430,7 @@ pub fn scenarios() -> Vec<Scenario> {
             .req(Step::get_admin("/ai/skills"), DbExpect::none()),
         ScenarioBuilder::new("ai_usage_empty")
             .req(Step::get_admin("/ai/usage"), DbExpect::none()),
-        // ── داشبورد ──────────────────────────────────────────────────────
+        // ── Dashboard ──────────────────────────────────────────────────────
         ScenarioBuilder::new("dashboard_overview")
             .req(Step::get_admin("/overview"), DbExpect::none()),
         ScenarioBuilder::new("dashboard_product_created_listed")
@@ -465,7 +465,7 @@ pub fn scenarios() -> Vec<Scenario> {
                     "/settings",
                     true,
                     false,
-                    Some(json!({ "key": "shop.notice", "value": "بازار باز است" })),
+                    Some(json!({ "key": "shop.notice", "value": "\u{628}\u{627}\u{632}\u{627}\u{631} \u{628}\u{627}\u{632} \u{627}\u{633}\u{62a}" })),
                 ),
                 DbExpect::none(),
             ),

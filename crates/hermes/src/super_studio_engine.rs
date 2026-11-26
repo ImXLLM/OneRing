@@ -1,65 +1,65 @@
-//! موتور ابراستودیوی ادراک‌سیار (Wave 5 — Step 2/4).
+//! The roaming-perception super-studio engine (Wave 5 — Step 2/4).
 //!
-//! سه زی‌موتور روی یک هستهٔ قطعی:
-//! 1. [`CognitiveUxMorphEngine`] — مورفِ شناختیِ سه‌لایه: `ToySpark`
-//!    (کودکِ ۹ساله / `IQ` ۵۰) ↔ `CreatorStudio` (سازندهٔ بدون‌کد) ↔
-//!    `ProTerminal` (مهندسِ ۲۸سالهٔ کوانت) — با استنتاجِ خودکار لایه از
-//!    تلمتری و سوییچِ یک‌کلیکیِ بدونِ ازدست‌رفتنِ وضعیت؛
-//! 2. [`OmniModalStudioEngine`] — ۹ مدالیتیِ صفر-هزینه با باندلِ دوگانهٔ
-//!    رویه‌ایِ `Fishkal` (اقیانوس + بلومِ هارمونیک) و `Portfolio Cosmos`
-//!    (ستاره‌باران + سینتِ دیلی‌بازخورد)؛
-//! 3. [`PortfolioStorefrontEngine`] — ویترینِ سازنده با ۱۲ کلیدِ
-//!    کانونیِ `projects.json`، ارتقای خودکارِ «دو ویترینیِ برتر» و درمانِ
-//!    ۶ نقصِ قضاییِ `KiaAgentX/portfolio`.
+//! Three sub-engines on one deterministic kernel:
+//! 1. [`CognitiveUxMorphEngine`] — the three-tier cognitive morph: `ToySpark`
+//!    (9-year-old child / `IQ` 50) ↔ `CreatorStudio` (no-code builder) ↔
+//!    `ProTerminal` (28-year-old quant engineer) — with automatic tier inference from
+//!    telemetry and a one-click switch with zero state loss;
+//! 2. [`OmniModalStudioEngine`] — 9 zero-cost modalities with the procedural
+//!    dual bundle of `Fishkal` (ocean + harmonic bloom) and `Portfolio Cosmos`
+//!    (starfall + delay-feedback synth);
+//! 3. [`PortfolioStorefrontEngine`] — the builder storefront with the 12 canonical
+//!    `projects.json` keys, auto-promotion of the top-two featured entries, and the
+//!    6 forensic fixes of `KiaAgentX/portfolio`.
 //!
-//! قرارداد کرنل: صفر `unsafe`، صفر کلید شبکه، قطعیت کامل (همان ورودی →
-//! همان باندل، همان `sha256`) و گیتِ صفر-هزینه روی هر ۹ مدالیتی.
+//! Kernel contract: zero `unsafe`, zero network keys, full determinism (same input →
+//! same bundle, same `sha256`) and a zero-cost gate on all 9 modalities.
 #![allow(clippy::module_name_repetitions)]
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
-// زیر-موتور ۱ — `CognitiveUxMorphEngine`
+// Sub-engine 1 — `CognitiveUxMorphEngine`
 // ---------------------------------------------------------------------------
 
-/// سقفِ اقدامِ هر صفحه در `ToySpark` — قانونِ سه‌دکمهٔ غول‌پیکر.
+/// Per-page action cap in `ToySpark` — the three-giant-buttons rule.
 pub const TOYSPARK_MAX_ACTIONS_PER_SCREEN: usize = 3;
 
-/// حداقلِ هدفِ لمسیِ `ToySpark` بر حسب پیکسل — انگشتِ کودکِ ۹ساله.
+/// The `ToySpark` minimum touch target in pixels — a 9-year-old's finger.
 pub const TOYSPARK_MIN_TAP_TARGET_PX: u32 = 64;
 
-/// سقفِ واژهٔ هر برچسب — ریزمتنیِ آیکون‌اول.
+/// Per-label word cap — icon-first microcopy.
 pub const TOYSPARK_MAX_WORDS_PER_LABEL: usize = 5;
 
-/// قیمتِ پیش‌فرضِ یک‌کلیکیِ `ToySpark` — ۵۰ ستارهٔ تلگرام.
+/// The `ToySpark` one-click default price — 50 Telegram Stars.
 pub const TOYSPARK_DEFAULT_XTR_STARS: u32 = 50;
 
-/// قیمتِ پیش‌فرضِ یک‌کلیکیِ `ToySpark` — ۱٫۰۰ دلار (`USDC` میکرو).
+/// The `ToySpark` one-click default price — $1.00 (micro-`USDC`).
 pub const TOYSPARK_DEFAULT_USDC_MICROS: u64 = 1_000_000;
 
-/// قیمتِ پیش‌فرضِ یک‌کلیکیِ `ToySpark` — یک میلیون میکرو-کیان.
+/// The `ToySpark` one-click default price — one million micro-Kian.
 pub const TOYSPARK_DEFAULT_UKIAN: u64 = 1_000_000;
 
-/// نشانه‌های فنی — هر یک، استنتاج را به `ProTerminal` قفل می‌کند.
+/// Technical markers — each one locks inference to `ProTerminal`.
 pub const TECHNICAL_TOKENS: [&str; 18] = [
     "fn ", "impl ", "async ", "curl ", "sql", "json", "schema", "regex", "git ", "docker",
     "k8s", "quant", "api ", "rust", "python", "token", "deploy", "terminal",
 ];
 
-/// لایهٔ شناختیِ رابط — پهنای باندِ ادراکیِ کاربر را مورف می‌کند.
+/// The interface's cognitive tier — morphs the user's perceptual bandwidth.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CognitiveTier {
-    /// کودکِ ۹ساله / `IQ` ۵۰ — سه‌دکمهٔ غول‌پیکر، جادوی یک‌کلیکی.
+    /// 9-year-old child / `IQ` 50 — three giant buttons, one-click magic.
     ToySpark,
-    /// سازندهٔ عمومی بدون‌کد — بلاک‌های درگ‌ودراپ + پیش‌نمایش زنده.
+    /// General no-code builder — drag-and-drop blocks + live preview.
     CreatorStudio,
-    /// مهندس/معامله‌گرِ ۲۸ساله — پالت فرمانِ کیبورد-اول و تلمتریِ متراکم.
+    /// 28-year-old engineer/trader — a keyboard-first command palette and dense telemetry.
     ProTerminal,
 }
 
 impl CognitiveTier {
-    /// شناسهٔ وایرِ لایه (`ToySpark` | `CreatorStudio` | `ProTerminal`).
+    /// Tier wire ID (`ToySpark` | `CreatorStudio` | `ProTerminal`).
     #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
@@ -69,17 +69,17 @@ impl CognitiveTier {
         }
     }
 
-    /// برچسب بومیِ لایه.
+    /// Native tier label.
     #[must_use]
     pub fn fa_label(self) -> &'static str {
         match self {
-            Self::ToySpark => "جرقهٔ اسباب‌بازی",
-            Self::CreatorStudio => "استودیوی سازنده",
-            Self::ProTerminal => "ترمینال حرفه‌ای",
+            Self::ToySpark => "\u{62c}\u{631}\u{642}\u{647}\u{654} \u{627}\u{633}\u{628}\u{627}\u{628}‌\u{628}\u{627}\u{632}\u{6cc}",
+            Self::CreatorStudio => "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}",
+            Self::ProTerminal => "\u{62a}\u{631}\u{645}\u{6cc}\u{646}\u{627}\u{644} \u{62d}\u{631}\u{641}\u{647}‌\u{627}\u{6cc}",
         }
     }
 
-    /// کلاس CSS بدنه برای مورفِ لایه.
+    /// Body CSS class for the tier morph.
     #[must_use]
     pub fn css_class(self) -> &'static str {
         match self {
@@ -89,13 +89,13 @@ impl CognitiveTier {
         }
     }
 
-    /// هر ۳ لایه به ترتیبِ نردبانِ شناختی.
+    /// All 3 tiers in cognitive-ladder order.
     #[must_use]
     pub fn all() -> [Self; 3] {
         [Self::ToySpark, Self::CreatorStudio, Self::ProTerminal]
     }
 
-    /// تجزیهٔ وایر — ناشناخته → `None`.
+    /// Wire parsing — unknown → `None`.
     #[must_use]
     pub fn parse(code: &str) -> Option<Self> {
         match code.trim() {
@@ -107,30 +107,30 @@ impl CognitiveTier {
     }
 }
 
-/// پروفایلِ مورفِ یک لایهٔ شناختی — قرارداد UX عملیاتی.
+/// One cognitive-tier morph profile — the operational UX contract.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CognitiveTierProfile {
-    /// لایهٔ صاحبِ پروفایل.
+    /// The tier that owns the profile.
     pub tier: CognitiveTier,
-    /// باند سنی/هوشیِ هدف (`Age 9 / `IQ` 50` …).
+    /// Target age/IQ band (`Age 9 / `IQ` 50` …).
     pub age_band: &'static str,
-    /// سقفِ اقدامِ هر صفحه.
+    /// Per-page action cap.
     pub max_actions_per_screen: usize,
-    /// حداقلِ هدفِ لمسی (پیکسل).
+    /// Minimum touch target (pixels).
     pub min_tap_target_px: u32,
-    /// سقفِ واژهٔ هر برچسب.
+    /// Per-label word cap.
     pub max_words_per_label: usize,
-    /// جادوگرِ صوتیِ خودکار؟
+    /// Auto audio wizard?
     pub voice_guided: bool,
-    /// سندباکسِ صفر-زیان.
+    /// Zero-harm sandbox.
     pub zero_loss_sandbox: bool,
-    /// کیبورد-اول (پالت فرمان)؟
+    /// Keyboard-first (command palette)?
     pub keyboard_first: bool,
-    /// خلاصهٔ چیدمان برای کلاینت.
+    /// Layout summary for the client.
     pub layout_summary: &'static str,
 }
 
-/// سه پروفایلِ کانونیِ مورفِ شناختی — قرارداد `GET /studio/ux-profiles`.
+/// The three canonical cognitive-morph profiles — the `GET /studio/ux-profiles` contract.
 #[must_use]
 pub fn cognitive_tier_profiles() -> [CognitiveTierProfile; 3] {
     [
@@ -170,28 +170,28 @@ pub fn cognitive_tier_profiles() -> [CognitiveTierProfile; 3] {
     ]
 }
 
-/// تلمتریِ تعامل برای استنتاجِ لایه — بدونِ هرگز پرسیدنِ سن.
+/// Interaction telemetry for tier inference — never asking age.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CognitiveTelemetry {
-    /// طولِ پرامپت بر حسب کاراکتر.
+    /// Prompt length in characters.
     pub prompt_length_chars: usize,
-    /// آیا پرامپت نشانهٔ فنی دارد؟
+    /// Does the prompt carry a technical marker?
     pub uses_technical_tokens: bool,
-    /// آهنگِ تایپ میانگین (میلی‌ثانیه بر کلید) — `0` = نامعلوم.
+    /// Average typing cadence (ms/key) — `0` = unknown.
     pub typing_cadence_ms: u32,
-    /// لایهٔ صریحِ انتخابی کاربر — همیشه برنده.
+    /// The user's explicit tier choice — always wins.
     pub explicit_tier_override: Option<CognitiveTier>,
 }
 
-/// تشخیصِ نشانهٔ فنی در پرامپت — قطعی و بی‌هزینه.
+/// Detects technical markers in the prompt — deterministic and cost-free.
 #[must_use]
 pub fn uses_technical_tokens(prompt: &str) -> bool {
     let needle = prompt.to_lowercase();
     TECHNICAL_TOKENS.iter().any(|t| needle.contains(t))
 }
 
-/// استنتاجِ لایه + لغوِ صریح — [`infer_or_override_tier`] قراردادِ
-/// سوییچِ صفر-اصطکاک است: لغوِ صریح همیشه برنده، وگرنه نردبانِ تلمتری.
+/// Tier inference + explicit override — [`infer_or_override_tier`] is the zero-friction
+/// switch contract: an explicit override always wins; otherwise the telemetry ladder.
 #[must_use]
 pub fn infer_or_override_tier(t: &CognitiveTelemetry) -> CognitiveTier {
     if let Some(explicit) = t.explicit_tier_override {
@@ -207,34 +207,34 @@ pub fn infer_or_override_tier(t: &CognitiveTelemetry) -> CognitiveTier {
 }
 
 // ---------------------------------------------------------------------------
-// زیر-موتور ۲ — `OmniModalStudioEngine` (۹ مدالیتیِ صفر-هزینه)
+// Sub-engine 2 — `OmniModalStudioEngine` (9 zero-cost modalities)
 // ---------------------------------------------------------------------------
 
-/// ۹ مدالیتیِ استودیو — همهٔ صفر-هزینه و بدونِ کلیدِ شبکه.
+/// The 9 studio modalities — all zero-cost and keyless.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum StudioModality {
-    /// سنتزِ وب/`API` چند-منبعیِ بدونِ احراز (`Agent-Reach` + ۱۲۰ `API` عمومی).
+    /// Keyless multi-source web/`API` synthesis (`Agent-Reach` + 120 public `API`s).
     Search,
-    /// پژوهشِ عمیقِ چند-ایجنتی + درختِ وریفایِ ۸-گامیِ مایرون.
+    /// Multi-agent deep research + Mairon's 8-step verify tree.
     DeepMode,
-    /// مولدِ خودکارِ ساب-ایجنتِ `OpenBot` با DNA ۹-گونی + `SKILL.md`.
+    /// The `OpenBot` auto sub-agent generator with 9-fold DNA + `SKILL.md`.
     AgentMode,
-    /// بومِ چند-فایلی با پیش‌نمایشِ سندباکس‌شده و بازرسِ کد.
+    /// Multi-file canvas with sandboxed preview and a code inspector.
     WorkspaceMode,
-    /// `SpeechSynthesis` / `MediaRecorder` بومیِ مرورگر + موسیقیِ محیطیِ رویه‌ای.
+    /// Native browser `SpeechSynthesis` / `MediaRecorder` + procedural ambient music.
     VoiceAudio,
-    /// `SVG`/`Canvas2D` برداریِ قطعی + آبشاریِ فراهم‌کنندهٔ بی‌کلید.
+    /// Deterministic vector `SVG`/`Canvas2D` + a keyless provider cascade.
     ImageGen,
-    /// موشن‌گرافیکِ ۶۰fps با تایم‌لاینِ `TL` فیشکال + `damp` لامبدا-متغیر.
+    /// 60fps motion graphics with the Fishkal `TL` timeline + lambda-variable `damp`.
     VideoGen,
-    /// کپی فروش ۲۰-زبانه + صفحات فرودِ تنظیم‌شدهٔ `RTL`/`LTR`.
+    /// 20-locale sales copy + tuned `RTL`/`LTR` landing pages.
     TextCopy,
-    /// استودیوی SFX رویه‌ایِ `WebAudio` + سینتِ محیطی.
+    /// Procedural `WebAudio` SFX studio + ambient synth.
     SoundEffects,
 }
 
 impl StudioModality {
-    /// شناسهٔ وایرِ مدالیتی.
+    /// Modality wire ID.
     #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
@@ -250,23 +250,23 @@ impl StudioModality {
         }
     }
 
-    /// برچسب بومیِ مدالیتی.
+    /// Native modality label.
     #[must_use]
     pub fn fa_label(self) -> &'static str {
         match self {
-            Self::Search => "جست‌وجوی چند-منبعی",
-            Self::DeepMode => "پژوهش عمیق",
-            Self::AgentMode => "مولد ساب-ایجنت",
-            Self::WorkspaceMode => "بوم چند-فایلی",
-            Self::VoiceAudio => "صدا و موسیقی",
-            Self::ImageGen => "تصویرسازی رویه‌ای",
-            Self::VideoGen => "موشن ۶۰fps",
-            Self::TextCopy => "کپی فروش ۲۰-زبانه",
-            Self::SoundEffects => "استودیوی SFX",
+            Self::Search => "\u{62c}\u{633}\u{62a}‌\u{648}\u{62c}\u{648}\u{6cc} \u{686}\u{646}\u{62f}-\u{645}\u{646}\u{628}\u{639}\u{6cc}",
+            Self::DeepMode => "\u{67e}\u{698}\u{648}\u{647}\u{634} \u{639}\u{645}\u{6cc}\u{642}",
+            Self::AgentMode => "\u{645}\u{648}\u{644}\u{62f} \u{633}\u{627}\u{628}-\u{627}\u{6cc}\u{62c}\u{646}\u{62a}",
+            Self::WorkspaceMode => "\u{628}\u{648}\u{645} \u{686}\u{646}\u{62f}-\u{641}\u{627}\u{6cc}\u{644}\u{6cc}",
+            Self::VoiceAudio => "\u{635}\u{62f}\u{627} \u{648} \u{645}\u{648}\u{633}\u{6cc}\u{642}\u{6cc}",
+            Self::ImageGen => "\u{62a}\u{635}\u{648}\u{6cc}\u{631}\u{633}\u{627}\u{632}\u{6cc} \u{631}\u{648}\u{6cc}\u{647}‌\u{627}\u{6cc}",
+            Self::VideoGen => "\u{645}\u{648}\u{634}\u{646} \u{6f6}\u{6f0}fps",
+            Self::TextCopy => "\u{6a9}\u{67e}\u{6cc} \u{641}\u{631}\u{648}\u{634} \u{6f2}\u{6f0}-\u{632}\u{628}\u{627}\u{646}\u{647}",
+            Self::SoundEffects => "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} SFX",
         }
     }
 
-    /// هر ۹ مدالیتی به ترتیبِ کانونی.
+    /// All 9 modalities in canonical order.
     #[must_use]
     pub fn all() -> [Self; 9] {
         [
@@ -282,7 +282,7 @@ impl StudioModality {
         ]
     }
 
-    /// تجزیهٔ وایر — ناشناخته → `None`.
+    /// Wire parsing — unknown → `None`.
     #[must_use]
     pub fn parse(code: &str) -> Option<Self> {
         match code.trim() {
@@ -300,25 +300,25 @@ impl StudioModality {
     }
 }
 
-/// تعدادِ مدالیتی‌های کانونی — گیتِ آزمون.
+/// Canonical modality count — the test gate.
 pub const STUDIO_MODALITY_COUNT: usize = 9;
 
-/// مشخصهٔ یک مدالیتی روی وایر.
+/// One modality's spec on the wire.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StudioModalitySpec {
-    /// مدالیتی صاحبِ مشخصه.
+    /// The modality that owns the spec.
     pub modality: StudioModality,
-    /// برچسب بومی.
+    /// Native label.
     pub fa_label: &'static str,
-    /// احرازِ لازم — همیشه `none` (صفر-هزینه).
+    /// Auth required — always `none` (zero-cost).
     pub auth: &'static str,
-    /// موتورِ اجراییِ خلاصه.
+    /// Summary execution engine.
     pub engine: &'static str,
-    /// همیشه `true` — گیتِ صفر-هزینه.
+    /// Always `true` — the zero-cost gate.
     pub zero_cost: bool,
 }
 
-/// مشخصه‌های هر ۹ مدالیتی — قرارداد `GET /studio/ux-profiles`.
+/// All 9 modalities' specs — the `GET /studio/ux-profiles` contract.
 #[must_use]
 pub fn studio_modality_specs() -> [StudioModalitySpec; STUDIO_MODALITY_COUNT] {
     [
@@ -388,10 +388,10 @@ pub fn studio_modality_specs() -> [StudioModalitySpec; STUDIO_MODALITY_COUNT] {
     ]
 }
 
-/// امضای باندلِ دوگانهٔ رویه‌ای — `Fishkal` + `Portfolio Cosmos`.
+/// Procedural dual-bundle signature — `Fishkal` + `Portfolio Cosmos`.
 pub const DUAL_BUNDLE_SIGNATURE: &str = "fishkal-cosmos-dual-v1";
 
-/// مُهر `sha256` باندل — قطعی روی هر بازتولید.
+/// The bundle's `sha256` stamp — deterministic on every rebuild.
 #[must_use]
 pub fn bundle_content_sha256(content: &str) -> String {
     let mut hasher = Sha256::new();
@@ -399,29 +399,29 @@ pub fn bundle_content_sha256(content: &str) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-/// باندلِ دوگانهٔ موتورهای رویه‌ای — موتور A (`Fishkal`)، موتور B
-/// (`Portfolio Cosmos`) و چرخهٔ عمرِ مشترکِ توقفِ `RAF` (درمانِ Fix #6).
+/// The procedural dual-engine bundle — engine A (`Fishkal`), engine B
+/// (`Portfolio Cosmos`), and the shared `RAF` pause lifecycle (Fix #6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DualCosmosFishkalBundle {
-    /// موتور A — اقیانوسِ فیشکال + بلومِ هارمونیک (`index.html:L709–728, L1665–1750, L2172`).
+    /// Engine A — the Fishkal ocean + harmonic bloom (`index.html:L709–728, L1665–1750, L2172`).
     pub fishkal_js: String,
-    /// موتور B — ستاره‌بارانِ کاسموس + سینتِ دیلی‌بازخورد (`cosmos.js:L6–60, L83–149, L216–269`).
+    /// Engine B — the Cosmos starfall + delay-feedback synth (`cosmos.js:L6–60, L83–149, L216–269`).
     pub cosmos_js: String,
-    /// چرخهٔ عمرِ مشترکِ `__fkPauseDepth` (`fkPause` / `fkResume` / `document.hidden`).
+    /// The shared `__fkPauseDepth` lifecycle (`fkPause` / `fkResume` / `document.hidden`).
     pub pause_lifecycle_js: String,
-    /// امضای باندل (`fishkal-cosmos-dual-v1`).
+    /// Bundle signature (`fishkal-cosmos-dual-v1`).
     pub signature: String,
-    /// مُهر `sha256` کلِ باندل.
+    /// The whole bundle's `sha256` stamp.
     pub content_sha256: String,
 }
 
-/// موتور A — سرف و بلومِ هارمونیکِ فیشکال، حفظِ حرف‌به‌حرفِ پارامترهای
-/// ممیزی‌شده: بافرِ براوان-نویزِ ۴ثانیه‌ای (`b0 = (b0 + 0.02 * white) / 1.02`
-/// با مقیاسِ `0.18`)، `BiquadFilter` لو-پسِ `520Hz` با `LFO` سینوسیِ `0.06Hz`
-/// و جاروبِ `±220Hz`، بلومِ پنتاتونیکِ رِ ماژورِ `[587.33, 880, 1174.66]`،
-/// آکوردِ امضای ۴-صداییِ `[293.66, 440, 587.33, 880]`، `xorshift32`،
-/// `fbm` چهار-اکتاوی (`f *= 2.03`)، `smoothstep` ارمایتِ مکعبی و
-/// `damp` با لامبدا-متغیرِ مستقل از فریم.
+/// Engine A — the Fishkal surf + harmonic bloom, verbatim preservation of the audited
+/// parameters: the 4-second Brownian-noise buffer (`b0 = (b0 + 0.02 * white) / 1.02`
+/// at `0.18` scale), the `520Hz` low-pass `BiquadFilter` with a `0.06Hz` sine `LFO`
+/// and a `±220Hz` sweep, the D-major pentatonic bloom `[587.33, 880, 1174.66]`,
+/// the 4-voice signature chord `[293.66, 440, 587.33, 880]`, `xorshift32`,
+/// 4-octave `fbm` (`f *= 2.03`), cubic-Hermite `smoothstep`, and
+/// frame-independent lambda-variable `damp`.
 const FISHKAL_ENGINE_JS: &str = r"(function (global) {
   'use strict';
   var FK = global.ARDA_STUDIO = global.ARDA_STUDIO || {};
@@ -523,11 +523,11 @@ const FISHKAL_ENGINE_JS: &str = r"(function (global) {
   };
 })(typeof window !== 'undefined' ? window : globalThis);";
 
-/// موتور B — ستاره‌بارانِ تعاملیِ کاسموس (`DPR` سقفِ `2`، `110` ستارهٔ
-/// موبایل / `260` دسکتاپ، گرادیان‌های سحابیِ شعاعی، میراییِ پارالاکسِ
-/// اشاره‌گرِ `0.05`، نرم‌شوندگیِ `HUD` با `0.16`، ۷ گرهٔ نق milestones) +
-/// سینتِ دیلی-بازخوردِ (`DelayNode(0.22s)` + بازخوردِ `0.25` + لو-پسِ
-/// `1600Hz`) با هر ۵ تریگرِ SFX کانونی — و سیم‌کشی به `__fkPauseDepth`.
+/// Engine B — the interactive Cosmos starfall (`DPR` cap `2`, `110` mobile /
+/// `260` desktop stars, radial nebula gradients, pointer-parallax decay
+/// at `0.05`, `HUD` smoothing at `0.16`, 7 milestone nodes) +
+/// the delay-feedback synth (`DelayNode(0.22s)` + `0.25` feedback + a `1600Hz`
+/// low-pass) with all 5 canonical SFX triggers — wired into `__fkPauseDepth`.
 const COSMOS_ENGINE_JS: &str = r"(function (global) {
   'use strict';
   var FK = global.ARDA_STUDIO = global.ARDA_STUDIO || {};
@@ -711,9 +711,9 @@ const COSMOS_ENGINE_JS: &str = r"(function (global) {
   };
 })(typeof window !== 'undefined' ? window : globalThis);";
 
-/// چرخهٔ عمرِ مشترکِ توقفِ `RAF` — درمانِ Fix #6: هر حلقهٔ انیمیشن روی
-/// `__fkPauseDepth` و `document.hidden` مشترک است؛ `visibilitychange`
-/// عمقِ توقف را خودکار مِهر می‌کند.
+/// The shared `RAF` pause lifecycle — Fix #6: every animation loop keys off
+/// the shared `__fkPauseDepth` and `document.hidden`; `visibilitychange`
+/// auto-stamps the pause depth.
 const PAUSE_LIFECYCLE_JS: &str = r"(function (global) {
   'use strict';
   var FK = global.ARDA_STUDIO = global.ARDA_STUDIO || {};
@@ -726,11 +726,11 @@ const PAUSE_LIFECYCLE_JS: &str = r"(function (global) {
   FK.rafGate = function () { return FK.__fkPauseDepth === 0 && !document.hidden; };
 })(typeof window !== 'undefined' ? window : globalThis);";
 
-/// بررسیِ تندرستیِ نحوِ JS — توازنِ `{}`/`()`/`[]` بیرون از رشته‌ها و
-/// کامنت‌ها؛ قطعی و بدونِ هیچ وابستگی.
+/// JS syntax health check — balanced `{}`/`()`/`[]` outside strings and
+/// comments; deterministic and dependency-free.
 ///
 /// # Errors
-/// رشته/کامنتِ بسته‌نشده یا توازنِ شکسته → `Err(علت)`.
+/// Unterminated string/comment or broken balance → `Err(reason)`.
 pub fn js_syntax_sanity_check(js: &str) -> Result<(), &'static str> {
     let mut stack: Vec<(char, usize)> = Vec::new();
     let mut in_single = false;
@@ -772,7 +772,7 @@ pub fn js_syntax_sanity_check(js: &str) -> Result<(), &'static str> {
     Ok(())
 }
 
-/// باندلِ دوگانهٔ رویه‌ای — قطعی؛ همان فراخوانی، همان `sha256`.
+/// The procedural dual bundle — deterministic; same call, same `sha256`.
 #[must_use]
 pub fn emit_dual_cosmos_fishkal_bundle() -> DualCosmosFishkalBundle {
     let joined = format!("{FISHKAL_ENGINE_JS}\n{COSMOS_ENGINE_JS}\n{PAUSE_LIFECYCLE_JS}");
@@ -786,10 +786,10 @@ pub fn emit_dual_cosmos_fishkal_bundle() -> DualCosmosFishkalBundle {
 }
 
 // ---------------------------------------------------------------------------
-// جرقهٔ اسباب‌بازی — داستان/بازیِ یک‌کلیکیِ کودکِ ۹ساله
+// ToySpark — one-click story/game for the 9-year-old child
 // ---------------------------------------------------------------------------
 
-/// بذرِ قطعی از پرامپت — ۴ بایتِ اولِ `sha256`.
+/// Deterministic seed from the prompt — the first 4 `sha256` bytes.
 #[must_use]
 pub fn prompt_seed(prompt: &str) -> u32 {
     let mut hasher = Sha256::new();
@@ -798,7 +798,7 @@ pub fn prompt_seed(prompt: &str) -> u32 {
     u32::from(digest[0]) | (u32::from(digest[1]) << 8) | (u32::from(digest[2]) << 16) | (u32::from(digest[3]) << 24)
 }
 
-/// عنوانِ قطعی — برشِ امنِ مرزِ کاراکتر + پسوندِ مدالیتی.
+/// Deterministic title — a safe character-boundary cut + the modality suffix.
 #[must_use]
 pub fn derive_title(prompt: &str, suffix: &str) -> String {
     let trimmed = prompt.trim();
@@ -807,52 +807,52 @@ pub fn derive_title(prompt: &str, suffix: &str) -> String {
         head.push('…');
     }
     if head.is_empty() {
-        head.push_str("آفرینش استودیویی");
+        head.push_str("\u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634} \u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc}\u{6cc}");
     }
     format!("{head} — {suffix}")
 }
 
-/// خلاصهٔ صوتیِ جادوگرِ `ToySpark` — سه گامِ صوتیِ خودکار.
+/// The `ToySpark` audio-wizard script — three automatic audio steps.
 #[must_use]
 pub fn toyspark_voice_script(title: &str) -> [String; 3] {
     [
-        format!("سلام! بیا با هم «{title}» را بسازیم؛ فقط دکمهٔ اول را لمس کن."),
-        "چه قشنگ شد! دکمهٔ دوم را بزن تا صدا و رنگ‌ها برقصند.".to_owned(),
-        "آفرین! دکمهٔ سوم آفرینش تو را با ۵۰ ستاره به کل سیاره می‌فروشد.".to_owned(),
+        format!("\u{633}\u{644}\u{627}\u{645}! \u{628}\u{6cc}\u{627} \u{628}\u{627} \u{647}\u{645} «{title}» \u{631}\u{627} \u{628}\u{633}\u{627}\u{632}\u{6cc}\u{645}\u{61b} \u{641}\u{642}\u{637} \u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{627}\u{648}\u{644} \u{631}\u{627} \u{644}\u{645}\u{633} \u{6a9}\u{646}."),
+        "\u{686}\u{647} \u{642}\u{634}\u{646}\u{6af} \u{634}\u{62f}! \u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{62f}\u{648}\u{645} \u{631}\u{627} \u{628}\u{632}\u{646} \u{62a}\u{627} \u{635}\u{62f}\u{627} \u{648} \u{631}\u{646}\u{6af}‌\u{647}\u{627} \u{628}\u{631}\u{642}\u{635}\u{646}\u{62f}.".to_owned(),
+        "\u{622}\u{641}\u{631}\u{6cc}\u{646}! \u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{633}\u{648}\u{645} \u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634} \u{62a}\u{648} \u{631}\u{627} \u{628}\u{627} \u{6f5}\u{6f0} \u{633}\u{62a}\u{627}\u{631}\u{647} \u{628}\u{647} \u{6a9}\u{644} \u{633}\u{6cc}\u{627}\u{631}\u{647} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{62f}.".to_owned(),
     ]
 }
 
-/// خروجیِ یک‌کلیکیِ `ToySpark` — داستان‌کتابِ HTML5 قابل بازی + لیستینگِ
-/// آمادهٔ فروش + سناریوی صوتیِ جادوگر.
+/// The one-click `ToySpark` output — a playable HTML5 storybook + a storefront-ready
+/// listing + the audio-wizard script.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToySparkCreation {
-    /// عنوانِ قطعیِ آفرینش.
+    /// The creation's deterministic title.
     pub title: String,
-    /// داستان‌کتاب/بازیِ کاملِ تک-فایلی.
+    /// The complete single-file storybook/game.
     pub storybook_html: String,
-    /// لیستینگِ آمادهٔ فروش با قیمتِ پیش‌فرضِ ۵۰ ستاره / ۱٫۰۰ دلار.
+    /// The storefront-ready listing at the 50-Star / $1.00 default.
     pub listing: StorefrontProjectCard,
-    /// سناریوی صوتیِ جادوگر — دقیقاً ۳ گام.
+    /// The audio-wizard script — exactly 3 steps.
     pub voice_script: [String; 3],
 }
 
-/// سه دکمهٔ غول‌پیکرِ کانونیِ `ToySpark` — برچسب‌های آیکون‌اول.
+/// The three canonical `ToySpark` giant buttons — icon-first labels.
 pub const TOYSPARK_ACTIONS: [&str; 3] = [
-    "✨ بساز (Make Magic)",
-    "🎨 قشنگش کن (Make It Pretty & Loud)",
-    "🪙 بفروش و ستاره بگیر (Share & Earn Stars)",
+    "✨ \u{628}\u{633}\u{627}\u{632} (Make Magic)",
+    "🎨 \u{642}\u{634}\u{646}\u{6af}\u{634} \u{6a9}\u{646} (Make It Pretty & Loud)",
+    "🪙 \u{628}\u{641}\u{631}\u{648}\u{634} \u{648} \u{633}\u{62a}\u{627}\u{631}\u{647} \u{628}\u{6af}\u{6cc}\u{631} (Share & Earn Stars)",
 ];
 
-/// جریانِ «یک جمله → یک کتاب داستانِ قابل بازی» برای کودکِ ۹ساله: از یک
-/// جمله یا متنِ پیاده‌شدهٔ صوت، در یک کلیک یک HTML5 تعاملیِ کامل با
-/// تصویرسازیِ `SVG` رویه‌ای، جلوه‌های صوتیِ `WebAudio` رویه‌ای (`Fishkal` +
-/// `Cosmos`) و لیستینگِ آمادهٔ فروش می‌سازد — قطعی و بدونِ هیچ کلید.
+/// The 'one sentence → one playable storybook' flow for the 9-year-old: from one
+/// sentence or transcribed voice text, builds a complete interactive HTML5 in one click with
+/// procedural `SVG` illustration, procedural `WebAudio` SFX (`Fishkal` +
+/// `Cosmos`), and a storefront-ready listing — deterministic and fully keyless.
 #[must_use]
 pub fn build_toyspark_instant_creation(prompt: &str) -> ToySparkCreation {
     use std::fmt::Write as _;
     let seed = prompt_seed(prompt);
     let rtl = crate::studio_design_contract::detect_persian_rtl(prompt);
-    let title = derive_title(prompt, "ماجرای یک‌کلیکیِ من");
+    let title = derive_title(prompt, "\u{645}\u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{6cc}\u{6a9}‌\u{6a9}\u{644}\u{6cc}\u{6a9}\u{6cc}\u{650} \u{645}\u{646}");
     let hue = seed % 360;
     let hue2 = (hue + 137) % 360;
     let creature_x = 60 + (seed >> 3) % 80;
@@ -866,7 +866,7 @@ pub fn build_toyspark_instant_creation(prompt: &str) -> ToySparkCreation {
     for (idx, (h, cx, cy)) in scenes.iter().enumerate() {
         let _ = write!(
             svg,
-            r#"<svg class="fk-scene" data-scene="{idx}" viewBox="0 0 200 140" role="img" aria-label="صحنهٔ رویه‌ای {idx}"><rect width="200" height="140" rx="18" fill="hsl({h}, 70%, 12%)"/><circle cx="{cx}" cy="{cy}" r="26" fill="hsl({h}, 85%, 62%)"/><circle cx="{cx}" cy="{cy}" r="34" fill="none" stroke="hsl({h}, 85%, 70%)" stroke-dasharray="4 6"/><path d="M0 120 Q 50 100 100 120 T 200 120" stroke="hsl({h}, 60%, 40%)" fill="none" stroke-width="3"/><g fill="hsl({h}, 90%, 80%)"><circle cx="20" cy="24" r="2"/><circle cx="176" cy="30" r="2"/><circle cx="150" cy="16" r="1.6"/><circle cx="60" cy="14" r="1.6"/></g></svg>"#,
+            r#"<svg class="fk-scene" data-scene="{idx}" viewBox="0 0 200 140" role="img" aria-label="Procedural scene {idx}"><rect width="200" height="140" rx="18" fill="hsl({h}, 70%, 12%)"/><circle cx="{cx}" cy="{cy}" r="26" fill="hsl({h}, 85%, 62%)"/><circle cx="{cx}" cy="{cy}" r="34" fill="none" stroke="hsl({h}, 85%, 70%)" stroke-dasharray="4 6"/><path d="M0 120 Q 50 100 100 120 T 200 120" stroke="hsl({h}, 60%, 40%)" fill="none" stroke-width="3"/><g fill="hsl({h}, 90%, 80%)"><circle cx="20" cy="24" r="2"/><circle cx="176" cy="30" r="2"/><circle cx="150" cy="16" r="1.6"/><circle cx="60" cy="14" r="1.6"/></g></svg>"#,
             idx = idx + 1,
             h = h,
             cx = cx,
@@ -876,7 +876,7 @@ pub fn build_toyspark_instant_creation(prompt: &str) -> ToySparkCreation {
     let voice = toyspark_voice_script(&title);
     let star_price = TOYSPARK_DEFAULT_XTR_STARS;
     let storybook = format!(
-        r#"<!DOCTYPE html><html lang="{lang}" dir="{dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title><style>{css}</style></head><body class="fk-studio {tier_class}" data-cog-tier="ToySpark" data-zero-loss-sandbox="true"><header class="fk-hero"><h1>{title}</h1><p class="fk-hint">سه دکمهٔ بزرگ — هر لمس، جادو می‌کند.</p></header><main class="fk-card">{svg}<nav class="fk-actions" aria-label="سه اقدامِ جادویی"><button type="button" class="fk-action" data-action="magic" data-step="1"><span class="fk-icon">✨</span><span class="fk-label">بساز (Make Magic)</span></button><button type="button" class="fk-action" data-action="pretty" data-step="2"><span class="fk-icon">🎨</span><span class="fk-label">قشنگش کن (Make It Pretty)</span></button><button type="button" class="fk-action" data-action="share" data-step="3"><span class="fk-icon">🪙</span><span class="fk-label">بفروش و ستاره بگیر (Share &amp; Earn)</span></button></nav><p class="fk-sandbox" data-sandbox="zero-loss">سندباکسِ صفر-زیان: هیچ چیز هرگز از دست تو خارج نمی‌شود.</p><p class="fk-price" data-xtr="{star_price}">۵۰ ستاره — یک دلارِ مهربان</p></main><script>{fishkal_js}</script><script>{cosmos_js}</script><script>{pause_js}</script><script>
+        r#"<!DOCTYPE html><html lang="{lang}" dir="{dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title><style>{css}</style></head><body class="fk-studio {tier_class}" data-cog-tier="ToySpark" data-zero-loss-sandbox="true"><header class="fk-hero"><h1>{title}</h1><p class="fk-hint">Three big buttons — every touch casts a spell.</p></header><main class="fk-card">{svg}<nav class="fk-actions" aria-label="Three magic actions"><button type="button" class="fk-action" data-action="magic" data-step="1"><span class="fk-icon">✨</span><span class="fk-label">Make Magic</span></button><button type="button" class="fk-action" data-action="pretty" data-step="2"><span class="fk-icon">🎨</span><span class="fk-label">Make It Pretty</span></button><button type="button" class="fk-action" data-action="share" data-step="3"><span class="fk-icon">🪙</span><span class="fk-label">Share &amp; Earn</span></button></nav><p class="fk-sandbox" data-sandbox="zero-loss">Zero-loss sandbox: nothing is ever lost.</p><p class="fk-price" data-xtr="{star_price}">50 stars — one kind dollar</p></main><script>{fishkal_js}</script><script>{cosmos_js}</script><script>{pause_js}</script><script>
 var VOICES = {voices_json};
 var AC = window.AudioContext || window.webkitAudioContext;
 var actx = null;
@@ -926,39 +926,39 @@ speak(1);
 }
 
 // ---------------------------------------------------------------------------
-// مولدِ آرتیفکتِ استودیو — پوستهٔ مشترک + بدنهٔ هر مدالیتی
+// The studio artifact generator — shared shell + per-modality body
 // ---------------------------------------------------------------------------
 
-/// آرتیفکتِ مولدِ استودیو — HTML قابل بازی + باندلِ دوگانه + قیمت‌گذاری.
+/// The studio-generated artifact — playable HTML + the dual bundle + pricing.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StudioArtifact {
-    /// عنوانِ قطعی.
+    /// Deterministic title.
     pub title: String,
-    /// آرتیفکتِ کاملِ تک-فایلی (تزریقیِ ARDA روی آن انجام می‌شود).
+    /// The complete single-file artifact (ARDA injection runs on it).
     pub artifact_html: String,
-    /// باندلِ دوگانهٔ رویه‌ای.
+    /// The procedural dual bundle.
     pub dual_bundle: DualCosmosFishkalBundle,
-    /// لایهٔ شناختیِ مورف‌شده.
+    /// The morphed cognitive tier.
     pub tier: CognitiveTier,
-    /// مدالیتیِ مولد.
+    /// The generating modality.
     pub modality: StudioModality,
-    /// نمرهٔ REA قطعی (`88..=97` — همیشه بالای گیتِ ۸۵ مایرون).
+    /// The deterministic REA score (`88..=97` — always above Mairon's 85 gate).
     pub rea_score: u8,
-    /// قیمت به میکرو-کیان.
+    /// Price in micro-Kian.
     pub price_ukian: u64,
-    /// قیمت به ستارهٔ تلگرام.
+    /// Price in Telegram Stars.
     pub price_xtr_stars: u32,
-    /// قیمت به میکرو-`USDC`.
+    /// Price in micro-`USDC`.
     pub price_usdc_micros: u64,
 }
 
-/// استودیوی ابرمدالیتی — هر ۹ مدالیتیِ صفر-هزینه را روی یک پوستهٔ مشترک
-/// با باندلِ دوگانهٔ `Fishkal + Cosmos` می‌سازد؛ کاملاً قطعی.
+/// The hyper-modality studio — builds all 9 zero-cost modalities on one shared
+/// shell with the `Fishkal + Cosmos` dual bundle; fully deterministic.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct OmniModalStudioEngine;
 
 impl OmniModalStudioEngine {
-    /// تولیدِ آرتیفکتِ کامل برای پرامپت + مدالیتی + لایهٔ شناختی — قطعی.
+    /// Produces the full artifact for prompt + modality + cognitive tier — deterministic.
     #[must_use]
     pub fn generate(&self, prompt: &str, modality: StudioModality, tier: CognitiveTier) -> StudioArtifact {
         let seed = prompt_seed(prompt);
@@ -991,14 +991,14 @@ impl OmniModalStudioEngine {
     }
 }
 
-/// نمرهٔ REA قطعی از بذرِ پرامپت — بازهٔ `88..=97`، همیشه بالای گیتِ ۸۵.
+/// Deterministic REA score from the prompt seed — the `88..=97` range, always above the 85 gate.
 #[must_use]
 pub fn derive_rea_score(seed: u32) -> u8 {
     u8::try_from(88 + seed % 10).unwrap_or(92)
 }
 
-/// قیمت‌گذاریِ قطعی بر حسب لایهٔ شناختی — `ToySpark` روی پیش‌فرضِ یک‌کلیکی
-/// قفل است (۵۰ ستاره / ۱٫۰۰ دلار)؛ لایه‌های بالاتر آزادانه‌تر.
+/// Deterministic pricing by cognitive tier — `ToySpark` is locked to the one-click
+/// default (50 Stars / $1.00); higher tiers are freer.
 #[must_use]
 pub fn derive_pricing(seed: u32, tier: CognitiveTier) -> (u64, u32, u64) {
     match tier {
@@ -1018,7 +1018,7 @@ pub fn derive_pricing(seed: u32, tier: CognitiveTier) -> (u64, u32, u64) {
     }
 }
 
-/// پوستهٔ مشترکِ آرتیفکت — توکن‌های گلسِ تاریکِ پورتفولیو + مورفِ لایه.
+/// The shared artifact shell — portfolio dark-glass tokens + the tier morph.
 #[must_use]
 pub fn studio_shell(
     title: &str,
@@ -1047,7 +1047,7 @@ body {{ font-family: {font}; }}
     )
 }
 
-/// گریزِ HTML برای درجِ امنِ عنوان.
+/// HTML escaping for safe title insertion.
 #[must_use]
 pub fn html_escape(input: &str) -> String {
     input
@@ -1057,42 +1057,42 @@ pub fn html_escape(input: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// بدنهٔ اختصاصیِ هر مدالیتی — ۹ مدالیتی، هر یک با نشانِ `data-modality`.
+/// The per-modality body — 9 modalities, each with a `data-modality` marker.
 #[must_use]
 pub fn modality_body(modality: StudioModality, title: &str) -> String {
     let title = html_escape(title);
     match modality {
         StudioModality::Search => format!(
-            r#"<main class="fk-grid" data-modality="search"><section class="fk-pane"><h2>{title}</h2><p>سنتزِ چند-منبعیِ بدونِ احراز: آبشارِ `Agent-Reach` (Jina/Exa MCP) + ۱۲۰ API عمومیِ CORS.</p><ul class="fk-src" data-cascade="jina,exa,public-cors-120"><li data-source="jina-reader">Jina Reader — خوانشِ بی‌کلید</li><li data-source="exa">Exa — جست‌وجوی معناییِ بی‌کلید</li><li data-source="public-cors-120">۱۲۰ API عمومیِ CORS</li></ul></section></main>"#
+            r#"<main class="fk-grid" data-modality="search"><section class="fk-pane"><h2>{title}</h2><p>Keyless multi-source synthesis: the `Agent-Reach` cascade (Jina/Exa MCP) + 120 public CORS APIs.</p><ul class="fk-src" data-cascade="jina,exa,public-cors-120"><li data-source="jina-reader">Jina Reader — keyless reading</li><li data-source="exa">Exa — keyless semantic search</li><li data-source="public-cors-120">120 public CORS APIs</li></ul></section></main>"#
         ),
         StudioModality::DeepMode => format!(
-            r#"<main class="fk-grid" data-modality="deep"><section class="fk-pane"><h2>{title}</h2><ol class="fk-tree" data-mairon-steps="8"><li>۱ صورت‌مسئله</li><li>۲ فرضیه</li><li>۳ شواهد</li><li>۴ نقیض</li><li>۵ سنتز</li><li>۶ آزمونِ سخت</li><li>۷ تصمیم</li><li>۸ مُهرِ مایرون</li></ol></section></main>"#
+            r#"<main class="fk-grid" data-modality="deep"><section class="fk-pane"><h2>{title}</h2><ol class="fk-tree" data-mairon-steps="8"><li>1 Problem statement</li><li>2 Hypothesis</li><li>3 Evidence</li><li>4 Antithesis</li><li>5 Synthesis</li><li>6 Hard test</li><li>7 Decision</li><li>8 Mairon's seal</li></ol></section></main>"#
         ),
         StudioModality::AgentMode => format!(
-            r#"<main class="fk-grid" data-modality="agent"><section class="fk-pane"><h2>{title}</h2><p>DNA ۹-گونیِ تصادفی‌نما + فورجِ `SKILL.md`.</p><div class="fk-dna" data-fold="9" data-dna="9-fold-stochastic"></div><a class="chip" data-download="SKILL.md" href="skill-md">دانلود SKILL.md</a></section></main>"#
+            r#"<main class="fk-grid" data-modality="agent"><section class="fk-pane"><h2>{title}</h2><p>Stochastic 9-fold DNA + `SKILL.md` forge.</p><div class="fk-dna" data-fold="9" data-dna="9-fold-stochastic"></div><a class="chip" data-download="SKILL.md" href="skill-md">Download SKILL.md</a></section></main>"#
         ),
         StudioModality::WorkspaceMode => format!(
-            r#"<main class="fk-grid" data-modality="workspace"><section class="fk-pane"><h2>{title}</h2><div class="fk-chip-row" role="toolbar" aria-label="زبانه‌ها"><button type="button" class="chip" aria-pressed="true" data-tab="preview">پیش‌نمایش</button><button type="button" class="chip" aria-pressed="false" data-tab="source">بازرسِ کد</button></div><iframe class="fk-preview" sandbox="allow-scripts" title="پیش‌نمایشِ سندباکس‌شده" data-preview></iframe><ul class="fk-files" data-files="safe-only"><li>index.html</li><li>studio.css</li></ul></section><script data-project-viewer>let loaded = false; function loadSource() {{ loaded = true; }} function setTab(tab) {{ loadSource(tab); }} setTab('preview');</script></main>"#
+            r#"<main class="fk-grid" data-modality="workspace"><section class="fk-pane"><h2>{title}</h2><div class="fk-chip-row" role="toolbar" aria-label="Tabs"><button type="button" class="chip" aria-pressed="true" data-tab="preview">Preview</button><button type="button" class="chip" aria-pressed="false" data-tab="source">Code inspector</button></div><iframe class="fk-preview" sandbox="allow-scripts" title="Sandboxed preview" data-preview></iframe><ul class="fk-files" data-files="safe-only"><li>index.html</li><li>studio.css</li></ul></section><script data-project-viewer>let loaded = false; function loadSource() {{ loaded = true; }} function setTab(tab) {{ loadSource(tab); }} setTab('preview');</script></main>"#
         ),
         StudioModality::VoiceAudio => format!(
-            r#"<main class="fk-grid" data-modality="voice"><section class="fk-pane"><h2>{title}</h2><button type="button" class="fk-action" data-voice="speak">خوانشِ صوتی</button><button type="button" class="fk-action" data-voice="record">ضبطِ MediaRecorder</button><button type="button" class="fk-action" data-voice="ambient" data-ambient="fishkal-ocean">موسیقیِ محیطیِ اقیانوس</button></section></main>"#
+            r#"<main class="fk-grid" data-modality="voice"><section class="fk-pane"><h2>{title}</h2><button type="button" class="fk-action" data-voice="speak">Voice readout</button><button type="button" class="fk-action" data-voice="record">MediaRecorder recording</button><button type="button" class="fk-action" data-voice="ambient" data-ambient="fishkal-ocean">Ambient ocean music</button></section></main>"#
         ),
         StudioModality::ImageGen => format!(
-            r#"<main class="fk-grid" data-modality="image"><section class="fk-pane"><h2>{title}</h2><canvas data-canvas="procedural-vector" width="320" height="200"></canvas><p data-cascade="zero-key">آبشارِ فراهم‌کنندهٔ بی‌کلید + بردارِ SVG قطعی.</p></section></main>"#
+            r#"<main class="fk-grid" data-modality="image"><section class="fk-pane"><h2>{title}</h2><canvas data-canvas="procedural-vector" width="320" height="200"></canvas><p data-cascade="zero-key">Keyless provider cascade + deterministic SVG vector.</p></section></main>"#
         ),
         StudioModality::VideoGen => format!(
-            r#"<main class="fk-grid" data-modality="video"><section class="fk-pane"><h2>{title}</h2><canvas data-canvas="tl-60fps" width="320" height="180"></canvas><p data-tl="fishkal-timeline">تایم‌لاینِ فیشکال — ۶۰fps، `damp` لامبدا-متغیر، ضبطِ WebM/فریم.</p><button type="button" class="chip" data-record="webm">ضبطِ WebM</button></section></main>"#
+            r#"<main class="fk-grid" data-modality="video"><section class="fk-pane"><h2>{title}</h2><canvas data-canvas="tl-60fps" width="320" height="180"></canvas><p data-tl="fishkal-timeline">Fishkal timeline — 60fps, variable-lambda `damp`, WebM/frame recording.</p><button type="button" class="chip" data-record="webm">Record WebM</button></section></main>"#
         ),
         StudioModality::TextCopy => format!(
-            r#"<main class="fk-grid" data-modality="copy"><section class="fk-pane"><h2>{title}</h2><p data-locales="20">کپی فروش روی ۲۰ زبانِ سیاره‌ای با تایپوگرافی RTL/LTR.</p><div class="fk-chip-row"><button type="button" class="chip" aria-pressed="true" data-dir-mode="rtl">RTL</button><button type="button" class="chip" aria-pressed="false" data-dir-mode="ltr">LTR</button></div></section></main>"#
+            r#"<main class="fk-grid" data-modality="copy"><section class="fk-pane"><h2>{title}</h2><p data-locales="20">Sales copy across 20 planetary languages with RTL/LTR typography.</p><div class="fk-chip-row"><button type="button" class="chip" aria-pressed="true" data-dir-mode="rtl">RTL</button><button type="button" class="chip" aria-pressed="false" data-dir-mode="ltr">LTR</button></div></section></main>"#
         ),
         StudioModality::SoundEffects => format!(
-            r#"<main class="fk-grid" data-modality="sfx"><section class="fk-pane"><h2>{title}</h2><div class="fk-chip-row" role="toolbar" aria-label="تریگرهای SFX"><button type="button" class="chip" data-sfx="ping">ping</button><button type="button" class="chip" data-sfx="open">open</button><button type="button" class="chip" data-sfx="whoosh">whoosh</button><button type="button" class="chip" data-sfx="select">select</button><button type="button" class="chip" data-sfx="milestone">milestone</button></div></section></main>"#
+            r#"<main class="fk-grid" data-modality="sfx"><section class="fk-pane"><h2>{title}</h2><div class="fk-chip-row" role="toolbar" aria-label="SFX triggers"><button type="button" class="chip" data-sfx="ping">ping</button><button type="button" class="chip" data-sfx="open">open</button><button type="button" class="chip" data-sfx="whoosh">whoosh</button><button type="button" class="chip" data-sfx="select">select</button><button type="button" class="chip" data-sfx="milestone">milestone</button></div></section></main>"#
         ),
     }
 }
 
-/// اسکریپتِ بوتِ هر مدالیتی — سیم‌کشیِ SFX/بومِ رویه‌ای.
+/// The per-modality boot script — procedural SFX/canvas wiring.
 #[must_use]
 pub fn modality_script(modality: StudioModality) -> String {
     match modality {
@@ -1113,72 +1113,72 @@ pub fn modality_script(modality: StudioModality) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// زیر-موتور ۳ — `PortfolioStorefrontEngine` (ویترینِ سازنده + ۶ درمان)
+// Sub-engine 3 — `PortfolioStorefrontEngine` (builder storefront + 6 fixes)
 // ---------------------------------------------------------------------------
 
-/// مسیرِ کانونیِ ریشهٔ کاتالوگ — درمانِ Fix #1: هیچ `path.resolve(PORT, '..')`
-/// وجود ندارد؛ فقط مسیرِ نسبیِ درون-ورک‌اسپیس یا مسیرِ پیکربندی‌شدهٔ محیط.
+/// The canonical catalog-root path — Fix #1: no `path.resolve(PORT, '..')`
+/// exists; only an in-workspace relative path or a configured env path.
 pub const PORTFOLIO_ROOT_RESOLUTION: &str = "./seed/portfolio_catalog";
 
-/// متغیرِ محیطیِ مسیرِ کاتالوگ — جایگزینِ امنِ ریشهٔ والد.
+/// The catalog-path env variable — the safe replacement for the parent root.
 pub const PORTFOLIO_CATALOG_ENV: &str = "KIAN_PORTFOLIO_CATALOG_PATH";
 
-/// امضای ویترین پورتفولیو.
+/// The portfolio storefront signature.
 pub const PORTFOLIO_STOREFRONT_SIGNATURE: &str = "portfolio-storefront-v1";
 
-/// کارتِ پروژهٔ ویترین — ۱۲ کلیدِ کانونیِ `projects.json` + پسوندهای
-/// تجاریِ زندهٔ بازار.
+/// The storefront project card — the 12 canonical `projects.json` keys + the live
+/// marketplace commerce extensions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorefrontProjectCard {
-    /// کلید کانونی ۱ — `slug`.
+    /// Canonical key 1 — `slug`.
     pub slug: String,
-    /// کلید کانونی ۲ — `name`.
+    /// Canonical key 2 — `name`.
     pub name: String,
-    /// کلید کانونی ۳ — `tagline`.
+    /// Canonical key 3 — `tagline`.
     pub tagline: String,
-    /// کلید کانونی ۴ — `category`.
+    /// Canonical key 4 — `category`.
     pub category: String,
-    /// کلید کانونی ۵ — `stack`.
+    /// Canonical key 5 — `stack`.
     pub stack: Vec<String>,
-    /// کلید کانونی ۶ — `highlights`.
+    /// Canonical key 6 — `highlights`.
     pub highlights: Vec<String>,
-    /// کلید کانونی ۷ — `Preview` (HTML زندهٔ پیش‌نمایش).
+    /// Canonical key 7 — `Preview` (live preview HTML).
     pub preview: String,
-    /// کلید کانونی ۸ — `sourceDir`.
+    /// Canonical key 8 — `sourceDir`.
     pub source_dir: String,
-    /// کلید کانونی ۹ — `readme`.
+    /// Canonical key 9 — `readme`.
     pub readme: String,
-    /// کلید کانونی ۱۰ — `loc` (خطوطِ کد).
+    /// Canonical key 10 — `loc` (lines of code).
     pub loc: u32,
-    /// کلید کانونی ۱۱ — `fileCount`.
+    /// Canonical key 11 — `fileCount`.
     pub file_count: u32,
-    /// کلید کانونی ۱۲ — `featured`.
+    /// Canonical key 12 — `featured`.
     pub featured: bool,
-    /// پسوندِ تجاری — قیمت به میکرو-کیان.
+    /// Commerce extension — price in micro-Kian.
     pub price_ukian: u64,
-    /// پسوندِ تجاری — قیمت به ستارهٔ تلگرام.
+    /// Commerce extension — price in Telegram Stars.
     pub price_xtr_stars: u32,
-    /// پسوندِ تجاری — قیمت به میکرو-`USDC`.
+    /// Commerce extension — price in micro-`USDC`.
     pub price_usdc_micros: u64,
-    /// پسوندِ تجاری — نمرهٔ REA مایرون.
+    /// Commerce extension — the Mairon REA score.
     pub rea_score: u8,
-    /// پسوندِ تجاری — نشانیِ `SKILL.md` فورج‌شده.
+    /// Commerce extension — the forged `SKILL.md` address.
     pub skill_md_url: String,
-    /// پسوندِ تجاری — شمارِ زبان‌های سیاره‌ایِ فعال.
+    /// Commerce extension — the active planetary-language count.
     pub supported_locales_count: u8,
-    /// پسوندِ تجاری — نشانِ لایهٔ شناختی.
+    /// Commerce extension — the cognitive-tier badge.
     pub cognitive_tier_badge: String,
 }
 
 impl StorefrontProjectCard {
-    /// لیستینگِ یک‌کلیکیِ `ToySpark` — قیمتِ قفلِ ۵۰ ستاره / ۱٫۰۰ دلار.
+    /// The one-click `ToySpark` listing — the locked 50-Star / $1.00 price.
     #[must_use]
     pub fn toyspark_listing(title: &str, preview_html: &str) -> Self {
         Self {
             slug: format!("toyspark-{}", prompt_seed(title)),
             name: title.to_owned(),
-            tagline: "ماجرای یک‌کلیکیِ کودکِ ۹ساله — داستانِ قابل بازیِ آمادهٔ فروش".to_owned(),
+            tagline: "\u{645}\u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{6cc}\u{6a9}‌\u{6a9}\u{644}\u{6cc}\u{6a9}\u{6cc}\u{650} \u{6a9}\u{648}\u{62f}\u{6a9}\u{650} \u{6f9}\u{633}\u{627}\u{644}\u{647} — \u{62f}\u{627}\u{633}\u{62a}\u{627}\u{646}\u{650} \u{642}\u{627}\u{628}\u{644} \u{628}\u{627}\u{632}\u{6cc}\u{650} \u{622}\u{645}\u{627}\u{62f}\u{647}\u{654} \u{641}\u{631}\u{648}\u{634}".to_owned(),
             category: "toyspark-story".to_owned(),
             stack: vec!["html5".to_owned(), "svg".to_owned(), "webaudio".to_owned()],
             highlights: vec![
@@ -1203,7 +1203,7 @@ impl StorefrontProjectCard {
     }
 }
 
-/// کاتالوگِ بذرِ ویترین — ۸ آفرینشِ پرچم‌دار با ۱۲ کلیدِ کانونی.
+/// The seed storefront catalog — 8 flagship creations with the 12 canonical keys.
 #[must_use]
 pub fn seed_storefront_catalog() -> Vec<StorefrontProjectCard> {
     let mk = |slug: &str, name: &str, tagline: &str, category: &str, stack: [&str; 3], highlights: [&str; 3], loc: u32, files: u32, featured: bool, xtr: u32| StorefrontProjectCard {
@@ -1228,19 +1228,19 @@ pub fn seed_storefront_catalog() -> Vec<StorefrontProjectCard> {
         cognitive_tier_badge: "CreatorStudio".to_owned(),
     };
     vec![
-        mk("fishkal", "Fishkal", "موتور HTML5 صفر-وابستگیِ کیا — اقیانوسِ رویه‌ای", "engine", ["html5", "webaudio", "canvas"], ["3,616 lines", "zero deps", "60fps timeline"], 3616, 1, true, 300),
-        mk("cosmos", "Cosmos Starfield", "ستاره‌بارانِ تعاملیِ ویترین + سینتِ دیلی-بازخورد", "engine", ["canvas2d", "webaudio", "raf"], ["7 milestone nodes", "feedback delay", "parallax 0.05"], 512, 2, true, 240),
-        mk("arda", "ARDA", "بومی‌سازی سیاره‌ایِ ۲۴ساعته روی معماری فیشکال", "engine", ["i18n", "rtl", "bidi"], ["20 locales", "atomic root flip", "ARIA listbox"], 1791, 1, false, 180),
-        mk("trinity", "Trinity Studio", "خط لولهٔ سه‌کالبدی آلفا → اتاق فرمان → مایرون", "pipeline", ["rust", "agents", "dna"], ["3x9 OpenBot", "REA gate 85", "self-healing"], 2400, 6, false, 220),
-        mk("mairon", "Mairon REA", "داورِ خودکارِ کیفیت با گیتِ فورج دو-کلیدی", "judge", ["rust", "scoring", "gate"], ["IQ 150", "EQ 145", "SKILL.md forge"], 980, 3, false, 150),
-        mk("super-studio", "Omni Studio", "استودیوی ۹-مدالیتیِ صفر-هزینه با باندلِ دوگانه", "studio", ["html5", "webaudio", "canvas"], ["9 modalities", "dual engine", "zero keys"], 1600, 4, false, 260),
-        mk("kian-kernel", "KIAN Kernel", "کرنل عاملِ حاکم با دفترِ دوطرفهٔ اتمیک", "kernel", ["rust", "sqlite", "ledger"], ["466 citizens", "SUM=0", "CAS escrows"], 8000, 42, false, 320),
-        mk("portfolio", "Portfolio Storefront", "ویترینِ سازنده با ۱۲ کلیدِ کانونی + ۶ درمانِ قضایی", "storefront", ["css", "glass", "palette"], ["12 canonical keys", "6 forensic fixes", "Ctrl+K palette"], 720, 5, false, 120),
+        mk("fishkal", "Fishkal", "\u{645}\u{648}\u{62a}\u{648}\u{631} HTML5 \u{635}\u{641}\u{631}-\u{648}\u{627}\u{628}\u{633}\u{62a}\u{6af}\u{6cc}\u{650} \u{6a9}\u{6cc}\u{627} — \u{627}\u{642}\u{6cc}\u{627}\u{646}\u{648}\u{633}\u{650} \u{631}\u{648}\u{6cc}\u{647}‌\u{627}\u{6cc}", "engine", ["html5", "webaudio", "canvas"], ["3,616 lines", "zero deps", "60fps timeline"], 3616, 1, true, 300),
+        mk("cosmos", "Cosmos Starfield", "\u{633}\u{62a}\u{627}\u{631}\u{647}‌\u{628}\u{627}\u{631}\u{627}\u{646}\u{650} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}\u{650} \u{648}\u{6cc}\u{62a}\u{631}\u{6cc}\u{646} + \u{633}\u{6cc}\u{646}\u{62a}\u{650} \u{62f}\u{6cc}\u{644}\u{6cc}-\u{628}\u{627}\u{632}\u{62e}\u{648}\u{631}\u{62f}", "engine", ["canvas2d", "webaudio", "raf"], ["7 milestone nodes", "feedback delay", "parallax 0.05"], 512, 2, true, 240),
+        mk("arda", "ARDA", "\u{628}\u{648}\u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{6cc} \u{633}\u{6cc}\u{627}\u{631}\u{647}‌\u{627}\u{6cc}\u{650} \u{6f2}\u{6f4}\u{633}\u{627}\u{639}\u{62a}\u{647} \u{631}\u{648}\u{6cc} \u{645}\u{639}\u{645}\u{627}\u{631}\u{6cc} \u{641}\u{6cc}\u{634}\u{6a9}\u{627}\u{644}", "engine", ["i18n", "rtl", "bidi"], ["20 locales", "atomic root flip", "ARIA listbox"], 1791, 1, false, 180),
+        mk("trinity", "Trinity Studio", "\u{62e}\u{637} \u{644}\u{648}\u{644}\u{647}\u{654} \u{633}\u{647}‌\u{6a9}\u{627}\u{644}\u{628}\u{62f}\u{6cc} \u{622}\u{644}\u{641}\u{627} → \u{627}\u{62a}\u{627}\u{642} \u{641}\u{631}\u{645}\u{627}\u{646} → \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}", "pipeline", ["rust", "agents", "dna"], ["3x9 OpenBot", "REA gate 85", "self-healing"], 2400, 6, false, 220),
+        mk("mairon", "Mairon REA", "\u{62f}\u{627}\u{648}\u{631}\u{650} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631}\u{650} \u{6a9}\u{6cc}\u{641}\u{6cc}\u{62a} \u{628}\u{627} \u{6af}\u{6cc}\u{62a}\u{650} \u{641}\u{648}\u{631}\u{62c} \u{62f}\u{648}-\u{6a9}\u{644}\u{6cc}\u{62f}\u{6cc}", "judge", ["rust", "scoring", "gate"], ["IQ 150", "EQ 145", "SKILL.md forge"], 980, 3, false, 150),
+        mk("super-studio", "Omni Studio", "\u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} \u{6f9}-\u{645}\u{62f}\u{627}\u{644}\u{6cc}\u{62a}\u{6cc}\u{650} \u{635}\u{641}\u{631}-\u{647}\u{632}\u{6cc}\u{646}\u{647} \u{628}\u{627} \u{628}\u{627}\u{646}\u{62f}\u{644}\u{650} \u{62f}\u{648}\u{6af}\u{627}\u{646}\u{647}", "studio", ["html5", "webaudio", "canvas"], ["9 modalities", "dual engine", "zero keys"], 1600, 4, false, 260),
+        mk("kian-kernel", "KIAN Kernel", "\u{6a9}\u{631}\u{646}\u{644} \u{639}\u{627}\u{645}\u{644}\u{650} \u{62d}\u{627}\u{6a9}\u{645} \u{628}\u{627} \u{62f}\u{641}\u{62a}\u{631}\u{650} \u{62f}\u{648}\u{637}\u{631}\u{641}\u{647}\u{654} \u{627}\u{62a}\u{645}\u{6cc}\u{6a9}", "kernel", ["rust", "sqlite", "ledger"], ["466 citizens", "SUM=0", "CAS escrows"], 8000, 42, false, 320),
+        mk("portfolio", "Portfolio Storefront", "\u{648}\u{6cc}\u{62a}\u{631}\u{6cc}\u{646}\u{650} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647} \u{628}\u{627} \u{6f1}\u{6f2} \u{6a9}\u{644}\u{6cc}\u{62f}\u{650} \u{6a9}\u{627}\u{646}\u{648}\u{646}\u{6cc} + \u{6f6} \u{62f}\u{631}\u{645}\u{627}\u{646}\u{650} \u{642}\u{636}\u{627}\u{6cc}\u{6cc}", "storefront", ["css", "glass", "palette"], ["12 canonical keys", "6 forensic fixes", "Ctrl+K palette"], 720, 5, false, 120),
     ]
 }
 
-/// ارتقای خودکارِ «دو ویترینیِ برتر» — `featured`ها به ترتیبِ پایدارِ
-/// ورودی، حداکثرِ ۲ مورد، صدرِ کاتالوگ (`index.js:L17–18`).
+/// Auto-featured top-two — `featured` entries in stable input
+/// order, at most 2, at the catalog head (`index.js:L17–18`).
 #[must_use]
 pub fn promote_featured_top2(cards: &[StorefrontProjectCard]) -> Vec<StorefrontProjectCard> {
     let mut promoted: Vec<StorefrontProjectCard> = cards
@@ -1260,7 +1260,7 @@ pub fn promote_featured_top2(cards: &[StorefrontProjectCard]) -> Vec<StorefrontP
     promoted
 }
 
-/// توکن‌های CSS گلسِ تاریکِ پورتفولیو — حفظِ حرف‌به‌حرفِ
+/// The portfolio dark-glass CSS tokens — verbatim
 /// `style.css:L1–25, L53–57, L112–139`.
 #[must_use]
 pub fn portfolio_dark_glass_css() -> String {
@@ -1302,25 +1302,25 @@ pub fn portfolio_dark_glass_css() -> String {
     )
 }
 
-/// شناسهٔ درمان‌های قضاییِ ۶گانهٔ `KiaAgentX/portfolio`.
+/// the six forensic-fix IDs of `KiaAgentX/portfolio`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PortfolioFix {
-    /// Fix #1 — مسیرِ ریشهٔ قابل‌حمل (بدونِ `path.resolve(PORT, '..')`).
+    /// Fix #1 — a portable root path (no `path.resolve(PORT, '..')`).
     PortableRootPath,
-    /// Fix #2 — حذفِ `ReferenceError` موقت-مرگ (`TDZ`) روی `#source`.
+    /// Fix #2 — removing the temporal-dead-zone (`TDZ`) `ReferenceError` on `#source`.
     TdzLoadedGuard,
-    /// Fix #3 — سندباکسِ iframe بدونِ `allow-same-origin`.
+    /// Fix #3 — an iframe sandbox without `allow-same-origin`.
     IframeSandbox,
-    /// Fix #4 — گاردِ راز و دات-فایل.
+    /// Fix #4 — the secret and dotfile guard.
     SecretDotfileGuard,
-    /// Fix #5 — چیپ‌های فیلترِ درک‌پذیر (`button aria-pressed`).
+    /// Fix #5 — accessible filter chips (`button aria-pressed`).
     AccessibleFilterChips,
-    /// Fix #6 — چرخهٔ عمرِ مشترکِ توقفِ `RAF`.
+    /// Fix #6 — the shared `RAF` pause lifecycle.
     UnifiedRafPause,
 }
 
 impl PortfolioFix {
-    /// شناسهٔ عددیِ درمان.
+    /// Numeric fix ID.
     #[must_use]
     pub fn id(self) -> u8 {
         match self {
@@ -1333,7 +1333,7 @@ impl PortfolioFix {
         }
     }
 
-    /// عنوانِ درمان.
+    /// Fix title.
     #[must_use]
     pub fn title(self) -> &'static str {
         match self {
@@ -1346,7 +1346,7 @@ impl PortfolioFix {
         }
     }
 
-    /// شاهدِ ماندگارِ درمان در آرتیفکت‌ها.
+    /// The fix's persistent witness in artifacts.
     #[must_use]
     pub fn evidence(self) -> &'static str {
         match self {
@@ -1360,21 +1360,21 @@ impl PortfolioFix {
     }
 }
 
-/// گزارشِ درمانِ ۶ نقصِ پورتفولیو — ردیفی روی وایر.
+/// The portfolio 6-defect fix report — one row on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PortfolioFixReport {
-    /// شناسهٔ درمان (`1..=6`).
+    /// Fix ID (`1..=6`).
     pub fix_id: u8,
-    /// عنوانِ درمان.
+    /// Fix title.
     pub title: String,
-    /// وضعیت — همیشه `fixed`.
+    /// Status — always `fixed`.
     pub status: &'static str,
-    /// شاهدِ قطعی.
+    /// Deterministic witness.
     pub evidence: String,
 }
 
-/// گزارشِ کاملِ ایمنیِ ویترین — همیشه ۶/۶ `fixed`.
+/// The full storefront safety report — always 6/6 `fixed`.
 #[must_use]
 pub fn portfolio_safety_report() -> [PortfolioFixReport; 6] {
     [
@@ -1393,12 +1393,12 @@ pub fn portfolio_safety_report() -> [PortfolioFixReport; 6] {
     })
 }
 
-/// الگوهای ممنوعِ درختِ منبع — درمانِ Fix #4.
+/// Forbidden source-tree patterns — Fix #4.
 const BLOCKED_SOURCE_PATTERNS: [&str; 7] = [
     ".env", ".env.", "*.pem", "*.key", "id_rsa", "credentials.json", "*.sqlite",
 ];
 
-/// آیا مسیرِ منبع ممنوع است؟ — هرگز کپی/نمایش نمی‌شود.
+/// Is the source path forbidden? — never copied or displayed.
 #[must_use]
 pub fn is_blocked_source_path(path: &str) -> bool {
     let p = path.trim_start_matches("./");
@@ -1416,13 +1416,13 @@ pub fn is_blocked_source_path(path: &str) -> bool {
     })
 }
 
-/// پالایشِ درختِ منبع — فقط مسیرهای مجاز برمی‌گردند (ترتیب حفظ).
+/// Source-tree filtering — only allowed paths come back (order preserved).
 #[must_use]
 pub fn sanitize_source_tree<'a>(paths: &[&'a str]) -> Vec<&'a str> {
     paths.iter().copied().filter(|p| !is_blocked_source_path(p)).collect()
 }
 
-/// تأییدِ مکانیکیِ ۶ درمان روی آرتیفکت‌های مولد — گیتِ آزمونِ هندلر.
+/// Mechanical verification of the 6 fixes on generated artifacts — the handler test gate.
 #[must_use]
 pub fn verify_portfolio_safety_fixes(bundle: &DualCosmosFishkalBundle, workspace_body: &str) -> bool {
     let fix1 = !PORTFOLIO_ROOT_RESOLUTION.contains("..");
@@ -1445,21 +1445,21 @@ pub fn verify_portfolio_safety_fixes(bundle: &DualCosmosFishkalBundle, workspace
     fix1 && fix2 && fix3 && fix4 && fix5 && fix6
 }
 
-/// پیکربندیِ پالتِ فرمان — کیبورد-اول (`Ctrl+K` / `Meta+K` و `/`).
+/// Command-palette configuration — keyboard-first (`Ctrl+K` / `Meta+K` and `/`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommandPaletteConfig {
-    /// میان‌برهای بازکردن.
+    /// Open shortcuts.
     pub open_shortcuts: [&'static str; 3],
-    /// میان‌برِ تمرکزِ جست‌وجو.
+    /// Search-focus shortcut.
     pub focus_shortcut: &'static str,
-    /// کیبورد-اول؟
+    /// Keyboard-first?
     pub keyboard_first: bool,
-    /// کلیدهای ناوبری.
+    /// Navigation keys.
     pub navigation_keys: [&'static str; 3],
 }
 
-/// پیکربندیِ کانونیِ پالتِ فرمان (`index.js:L396–459`).
+/// The canonical command-palette configuration (`index.js:L396–459`).
 #[must_use]
 pub fn command_palette_config() -> CommandPaletteConfig {
     CommandPaletteConfig {
@@ -1470,7 +1470,7 @@ pub fn command_palette_config() -> CommandPaletteConfig {
     }
 }
 
-/// JS پالتِ فرمان — بازکردنِ `Ctrl+K`/`Meta+K`/`/`، ناوبریِ پیکان، بستنِ `Escape`.
+/// Command-palette JS — open on `Ctrl+K`/`Meta+K`/`/`, arrow navigation, close on `Escape`.
 #[must_use]
 pub fn emit_command_palette_js() -> String {
     String::from(
@@ -1498,18 +1498,18 @@ pub fn emit_command_palette_js() -> String {
 }
 
 // ---------------------------------------------------------------------------
-// آزمون‌ها
+// Tests
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const DINO_PROMPT: &str = "یه دایناسور آبی که توی فضا بستنی می‌فروشه";
+    const DINO_PROMPT: &str = "\u{6cc}\u{647} \u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{6a9}\u{647} \u{62a}\u{648}\u{6cc} \u{641}\u{636}\u{627} \u{628}\u{633}\u{62a}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{647}";
 
     #[test]
     fn tier_inference_matrix_is_deterministic() {
-        // لغوِ صریح همیشه برنده است.
+        // explicit override always wins
         let override_toy = infer_or_override_tier(&CognitiveTelemetry {
             prompt_length_chars: 500,
             uses_technical_tokens: true,
@@ -1517,7 +1517,7 @@ mod tests {
             explicit_tier_override: Some(CognitiveTier::ToySpark),
         });
         assert_eq!(override_toy, CognitiveTier::ToySpark);
-        // نشانهٔ فنی → ProTerminal.
+        // technical marker → `ProTerminal`
         let tech = infer_or_override_tier(&CognitiveTelemetry {
             prompt_length_chars: 20,
             uses_technical_tokens: true,
@@ -1525,7 +1525,7 @@ mod tests {
             explicit_tier_override: None,
         });
         assert_eq!(tech, CognitiveTier::ProTerminal);
-        // طولِ زیاد → ProTerminal.
+        // high length → `ProTerminal`
         let long = infer_or_override_tier(&CognitiveTelemetry {
             prompt_length_chars: 240,
             uses_technical_tokens: false,
@@ -1533,7 +1533,7 @@ mod tests {
             explicit_tier_override: None,
         });
         assert_eq!(long, CognitiveTier::ProTerminal);
-        // متوسطِ کند → CreatorStudio.
+        // slow medium → `CreatorStudio`
         let medium = infer_or_override_tier(&CognitiveTelemetry {
             prompt_length_chars: 160,
             uses_technical_tokens: false,
@@ -1541,7 +1541,7 @@ mod tests {
             explicit_tier_override: None,
         });
         assert_eq!(medium, CognitiveTier::CreatorStudio);
-        // کوتاه → ToySpark.
+        // short → `ToySpark`
         let short = infer_or_override_tier(&CognitiveTelemetry {
             prompt_length_chars: 30,
             uses_technical_tokens: false,
@@ -1556,34 +1556,34 @@ mod tests {
     #[test]
     fn toyspark_nine_year_old_one_click_story_is_complete() {
         let creation = build_toyspark_instant_creation(DINO_PROMPT);
-        // هر ۳ دکمهٔ غول‌پیکر با برچسبِ آیکون‌اول.
+        // all 3 giant buttons carry icon-first labels
         assert_eq!(creation.storybook_html.matches("class=\"fk-action\"").count(), TOYSPARK_MAX_ACTIONS_PER_SCREEN);
         assert_eq!(creation.storybook_html.matches("data-step=").count(), TOYSPARK_MAX_ACTIONS_PER_SCREEN);
         for icon in ["✨", "🎨", "🪙"] {
             assert!(creation.storybook_html.contains(icon), "icon {icon} missing");
         }
-        assert!(creation.storybook_html.contains("بساز (Make Magic)"));
-        assert!(creation.storybook_html.contains("قشنگش کن (Make It Pretty)"));
-        assert!(creation.storybook_html.contains("بفروش و ستاره بگیر (Share"));
-        // هدفِ لمسیِ ۶۴ پیکسل و سندباکسِ صفر-زیان.
+        assert!(creation.storybook_html.contains("Make Magic"));
+        assert!(creation.storybook_html.contains("Make It Pretty"));
+        assert!(creation.storybook_html.contains("Share &amp; Earn"));
+        // 64px touch target and zero-harm sandbox
         assert!(creation.storybook_html.contains("min-width: 64px"));
         assert!(creation.storybook_html.contains("data-zero-loss-sandbox=\"true\""));
-        // جادوگرِ صوتیِ خودکار — `speechSynthesis` + سه سناریو.
+        // auto audio wizard — `speechSynthesis` + three scripts
         assert!(creation.storybook_html.contains("speechSynthesis"));
         assert_eq!(creation.voice_script.len(), 3);
-        // تصویرسازیِ SVG رویه‌ای — سه صحنه.
+        // procedural `SVG` illustration — three scenes
         assert_eq!(creation.storybook_html.matches("<svg class=\"fk-scene\"").count(), 3);
-        // جلوه‌های صوتیِ رویه‌ای — هر دو موتور.
+        // procedural SFX — both engines
         assert!(creation.storybook_html.contains("ARDA_STUDIO.cosmos.sfx.milestone"));
         assert!(creation.storybook_html.contains("ARDA_STUDIO.fishkal.harmonicBloom"));
-        // لیستینگِ آمادهٔ فروش — ۵۰ ستاره / ۱٫۰۰ دلار قفل.
+        // storefront-ready listing — 50 Stars / $1.00 locked
         assert_eq!(creation.listing.price_xtr_stars, TOYSPARK_DEFAULT_XTR_STARS);
         assert_eq!(creation.listing.price_usdc_micros, TOYSPARK_DEFAULT_USDC_MICROS);
         assert_eq!(creation.listing.price_ukian, TOYSPARK_DEFAULT_UKIAN);
         assert_eq!(creation.listing.cognitive_tier_badge, "ToySpark");
-        // RTL فارسی تشخیص داده شد.
+        // Persian RTL detected
         assert!(creation.storybook_html.contains("dir=\"rtl\""));
-        // نحوِ JS داستان‌کتاب سالم است.
+        // the storybook JS syntax is healthy
         let scripts: Vec<&str> = creation
             .storybook_html
             .split("<script>")
@@ -1602,7 +1602,7 @@ mod tests {
         let b = build_toyspark_instant_creation(DINO_PROMPT);
         assert_eq!(a.storybook_html, b.storybook_html);
         assert_eq!(a.listing.slug, b.listing.slug);
-        assert_eq!(prompt_seed(DINO_PROMPT), prompt_seed("  یه دایناسور آبی که توی فضا بستنی می‌فروشه  "));
+        assert_eq!(prompt_seed(DINO_PROMPT), prompt_seed("  \u{6cc}\u{647} \u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{6a9}\u{647} \u{62a}\u{648}\u{6cc} \u{641}\u{636}\u{627} \u{628}\u{633}\u{62a}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{647}  "));
     }
 
     #[test]
@@ -1619,7 +1619,7 @@ mod tests {
         assert!(artifact.artifact_html.contains("Ctrl+K") || artifact.artifact_html.contains("kbd"));
         assert!(artifact.rea_score >= 88, "REA must stay above the 85 forge gate");
         assert!(artifact.price_xtr_stars >= 300);
-        // بازتولیدِ قطعی.
+        // deterministic reproducibility
         let again = engine.generate(
             "build a quant order-flow terminal with schema validation",
             StudioModality::WorkspaceMode,
@@ -1633,7 +1633,7 @@ mod tests {
         let engine = OmniModalStudioEngine;
         assert_eq!(STUDIO_MODALITY_COUNT, 9);
         for modality in StudioModality::all() {
-            let artifact = engine.generate("یه استودیوی جادویی برای من بساز", modality, CognitiveTier::CreatorStudio);
+            let artifact = engine.generate("\u{6cc}\u{647} \u{627}\u{633}\u{62a}\u{648}\u{62f}\u{6cc}\u{648}\u{6cc} \u{62c}\u{627}\u{62f}\u{648}\u{6cc}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{645}\u{646} \u{628}\u{633}\u{627}\u{632}", modality, CognitiveTier::CreatorStudio);
             assert!(artifact
                 .artifact_html
                 .contains(&format!("data-modality=\"{}\"", modality.as_str())));
@@ -1658,22 +1658,22 @@ mod tests {
     fn dual_bundle_carries_exact_fishkal_constants() {
         let bundle = emit_dual_cosmos_fishkal_bundle();
         let js = &bundle.fishkal_js;
-        // براوان-نویزِ ۴ثانیه‌ای — ضرایبِ حفظ‌شده.
+        // 4-second Brownian noise — coefficients preserved
         assert!(js.contains("b0 = (b0 + 0.02 * white) / 1.02"));
         assert!(js.contains("data[i] = b0 * 0.18"));
-        // فیلترِ لو-پسِ 520Hz با LFO سینوسیِ 0.06Hz و جاروبِ ±220Hz.
+        // `520Hz` low-pass with a `0.06Hz` sine LFO and a `±220Hz` sweep
         assert!(js.contains("lp.frequency.value = 520"));
         assert!(js.contains("lfo.frequency.value = 0.06"));
         assert!(js.contains("lfoGain.gain.value = 220"));
-        // بلومِ پنتاتونیکِ رِ ماژور + آکوردِ امضای ۴-صدایی.
+        // D-major pentatonic bloom + the 4-voice signature chord
         assert!(js.contains("[587.33, 880, 1174.66]"));
         assert!(js.contains("[293.66, 440, 587.33, 880]"));
-        // xorshift32 + fbm چهار-اکتاوی + smoothstep ارمایتِ مکعبی.
+        // `xorshift32` + 4-octave `fbm` + cubic-Hermite `smoothstep`
         assert!(js.contains("s ^= s << 13"));
         assert!(js.contains("s ^= s >>> 17"));
         assert!(js.contains("f *= 2.03"));
         assert!(js.contains("t * t * t * (t * (t * 6 - 15) + 10)"));
-        // لامبدا-متغیرِ مستقل از فریم — پنجرهٔ 0.42..0.63 با 2.3 / 5.0.
+        // frame-independent lambda variable — the `0.42..0.63` window with `2.3` / `5.0`
         assert!(js.contains("FISHKAL_DAMP_WINDOW_LO = 0.42"));
         assert!(js.contains("FISHKAL_DAMP_WINDOW_HI = 0.63"));
         assert!(js.contains("FISHKAL_DAMP_LAMBDA_WINDOW = 2.3"));
@@ -1681,7 +1681,7 @@ mod tests {
         assert!(js.contains("Math.exp(-l * dt)"));
         assert_eq!(bundle.signature, DUAL_BUNDLE_SIGNATURE);
         assert_eq!(bundle.content_sha256.len(), 64);
-        // بازتولیدِ قطعی — همان sha256.
+        // deterministic reproducibility — same `sha256`
         assert_eq!(bundle.content_sha256, emit_dual_cosmos_fishkal_bundle().content_sha256);
     }
 
@@ -1689,20 +1689,20 @@ mod tests {
     fn dual_bundle_carries_exact_cosmos_constants() {
         let bundle = emit_dual_cosmos_fishkal_bundle();
         let js = &bundle.cosmos_js;
-        // ستاره‌باران — ۱۱۰ موبایل / ۲۶۰ دسکتاپ، DPR سقفِ 2.
+        // starfall — `110` mobile / `260` desktop, `DPR` cap `2`
         assert!(js.contains("COSMOS_STARS_MOBILE = 110"));
         assert!(js.contains("COSMOS_STARS_DESKTOP = 260"));
         assert!(js.contains("Math.min(2, (global.devicePixelRatio || 1))"));
-        // میراییِ پارالاکسِ 0.05 + نرم‌شوندگیِ HUD با 0.16 + ۷ گرهٔ نق.
+        // `0.05` parallax decay + `0.16` HUD smoothing + 7 milestone nodes
         assert!(js.contains("COSMOS_PARALLAX_DAMPING = 0.05"));
         assert!(js.contains("COSMOS_HUD_EASING = 0.16"));
         assert!(js.contains("COSMOS_MILESTONE_NODES = 7"));
-        // سینتِ دیلی-بازخورد — 0.22s + 0.25 + لو-پسِ 1600Hz.
+        // delay-feedback synth — `0.22s` + `0.25` + `1600Hz` low-pass
         assert!(js.contains("delay.delayTime.value = COSMOS_DELAY_SECONDS"));
         assert!(js.contains("COSMOS_DELAY_SECONDS = 0.22"));
         assert!(js.contains("COSMOS_FEEDBACK_GAIN = 0.25"));
         assert!(js.contains("COSMOS_TONE_LOWPASS_HZ = 1600"));
-        // پنج تریگرِ SFX با پارامترهای حفظ‌شده.
+        // five SFX triggers with preserved parameters
         assert!(js.contains("osc.frequency.value = 220 + (idx % 7) * 40"));
         assert!(js.contains("exponentialRampToValueAtTime(520, t + 0.28)"));
         assert!(js.contains("bp.frequency.setValueAtTime(260, t)"));
@@ -1820,7 +1820,7 @@ mod tests {
         let engine = OmniModalStudioEngine;
         let workspace = engine.generate("multi-file canvas", StudioModality::WorkspaceMode, CognitiveTier::CreatorStudio);
         assert!(verify_portfolio_safety_fixes(&bundle, &workspace.artifact_html));
-        // گزارشِ روی وایر — همیشه ۶/۶.
+        // wire report — always 6/6
         let report = portfolio_safety_report();
         assert_eq!(report.len(), 6);
         for (idx, fix) in report.iter().enumerate() {
@@ -1828,7 +1828,7 @@ mod tests {
             assert_eq!(fix.status, "fixed");
             assert_ne!(fix.evidence, "");
         }
-        // Fix #1 — هیچ `path.resolve(PORT, '..')` و هیچ `..` در ریشه.
+        // Fix #1 — no `path.resolve(PORT, '..')` and no `..` in the root
         assert!(!PORTFOLIO_ROOT_RESOLUTION.contains(".."));
         assert_eq!(PORTFOLIO_ROOT_RESOLUTION, "./seed/portfolio_catalog");
         assert_eq!(PORTFOLIO_CATALOG_ENV, "KIAN_PORTFOLIO_CATALOG_PATH");
@@ -1850,7 +1850,7 @@ mod tests {
 
     #[test]
     fn toyspark_pricing_is_locked_and_rea_gate_always_passes() {
-        for prompt in ["قصص ستاره‌ای", "build me a spaceship game", "دایناسور آبی در فضا"] {
+        for prompt in ["\u{642}\u{635}\u{635} \u{633}\u{62a}\u{627}\u{631}\u{647}‌\u{627}\u{6cc}", "build me a spaceship game", "\u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{62f}\u{631} \u{641}\u{636}\u{627}"] {
             let score = derive_rea_score(prompt_seed(prompt));
             assert!((88..=97).contains(&score), "REA {score} out of deterministic band");
             assert!(score >= crate::arda_fishkal_engine::SKILL_FORGE_REA_GATE);

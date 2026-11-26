@@ -1,12 +1,12 @@
-//! هندلرهای پارلمان M5 — لایحه، رأی، بستن قطعی و اجرا روی کرنل پول.
+//! M5 parliament handlers — bills, votes, deterministic close, and execution on the money kernel.
 //!
-//! گیت‌ها (همه fail-closed):
-//!  * باز کردن لایحه — نشست (شهروند)؛ اعتبارسنجی کامل در `kian-nation`.
-//!  * رأی — نشست؛ هر شهروند یک‌بار؛ رأی انسانی است (gait مادهٔ ۷).
-//!  * بستن — فقط ادمین؛ شمارش قطعی در `kian-nation` (نصاب + اکثریت + مادهٔ ۷).
-//!  * اجرا — فقط ادمین و فقط از `PASSED`؛ کنش پولی از همان مسیر دامنهٔ خالص
-//!    M2 می‌گذرد (`apply_escrow` / posting خزانه) — هیچ مسیر جانبی برای پول نیست.
-//!  * خواندن لایحه‌ها — عمومی (شفافیت مادهٔ ۶).
+//! Gates (all fail-closed):
+//!  * Open a bill — session (citizen); full validation in `kian-nation`.
+//!  * Vote — session; one vote per citizen; the vote is human (Article 7 gate).
+//!  * Close — admin only; deterministic tally in `kian-nation` (quorum + majority + Article 7).
+//!  * Execute — admin only and only from `PASSED`; the money action goes through the same pure
+//!    M2 domain path (`apply_escrow` / treasury posting) — there is no side path for money.
+//!  * Reading bills — public (Article 6 transparency).
 
 use axum::Json;
 use axum::extract::{Path, Query, State};
@@ -30,7 +30,7 @@ use crate::handlers::parse_body;
 use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 
-/// سیاست پارلمان از پیکربندی — آستانه همیشه منشور (۵۰,۰۰۰ Đ)، نصاب از env.
+/// Parliament policy from configuration — the threshold is always the charter's (50,000 Đ), quorum from env.
 fn nation_policy(state: &AppState) -> NationPolicy {
     NationPolicy {
         quorum: state.config.nation_quorum.max(1),
@@ -38,7 +38,7 @@ fn nation_policy(state: &AppState) -> NationPolicy {
     }
 }
 
-/// نوع لایحه سیم → دامنه.
+/// Wire bill type → domain.
 fn kind_from_wire(w: BillKind) -> kian_nation::BillKind {
     match w {
         BillKind::EscrowRelease => kian_nation::BillKind::EscrowRelease,
@@ -46,7 +46,7 @@ fn kind_from_wire(w: BillKind) -> kian_nation::BillKind {
     }
 }
 
-/// نتیجهٔ پیشنهادی سیم → دامنه.
+/// Wire proposed outcome → domain.
 fn resolution_from_wire(w: EscrowResolution) -> kian_nation::EscrowResolution {
     match w {
         EscrowResolution::Release => kian_nation::EscrowResolution::Release,
@@ -54,7 +54,7 @@ fn resolution_from_wire(w: EscrowResolution) -> kian_nation::EscrowResolution {
     }
 }
 
-/// نگاشت خطای پارلمان → پاکت HTTP صادقانه.
+/// Map parliament errors → honest HTTP envelope.
 fn nation_error(e: NationError) -> ApiFailure {
     match e {
         NationError::BillNotOpen(_) => {
@@ -69,8 +69,8 @@ fn nation_error(e: NationError) -> ApiFailure {
     }
 }
 
-/// نمای لایحه از ردیف db — شمارش‌های زنده برای لایحهٔ باز.
-#[allow(clippy::cast_possible_wrap)] // شمارش رأی‌ها — محدود و امن
+/// Bill view from the db row — live tallies for an open bill.
+#[allow(clippy::cast_possible_wrap)] // tally votes — bounded and safe
 async fn bill_view(state: &AppState, row: &BillRow) -> ApiResult<BillView> {
     let kind = parse_kind(&row.kind).ok_or_else(|| {
         kian_contracts::HttpFailure::internal(format!("unknown bill kind {}", row.kind))
@@ -111,7 +111,7 @@ async fn bill_view(state: &AppState, row: &BillRow) -> ApiResult<BillView> {
     })
 }
 
-/// واسط صریح رشتهٔ db → نوع سیم — الگوی `wire_status_to_domain`.
+/// Explicit db string → wire type bridge — the `wire_status_to_domain` pattern.
 fn parse_kind(s: &str) -> Option<BillKind> {
     match s {
         "escrowRelease" => Some(BillKind::EscrowRelease),
@@ -120,7 +120,7 @@ fn parse_kind(s: &str) -> Option<BillKind> {
     }
 }
 
-/// فیلتر وضعیت فهرست — رشتهٔ نامعتبر = 400 `INVALID_REQUEST`.
+/// List status filter — an invalid string = 400 `INVALID_REQUEST`.
 fn parse_status_filter(raw: &str) -> ApiResult<&'static str> {
     match raw.to_ascii_uppercase().as_str() {
         "OPEN" => Ok("OPEN"),
@@ -131,16 +131,16 @@ fn parse_status_filter(raw: &str) -> ApiResult<&'static str> {
     }
 }
 
-/// `POST /nation/bills` — باز کردن لایحه. نشست. ۲۰۱.
+/// `POST /nation/bills` — open a bill. Session. 201.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ قواعد لایحه (`kian-nation`)؛ 500 خطای SQL.
+/// 401 session; 400 invalid body; 422 bill rules (`kian-nation`); 500 SQL error.
 pub async fn create_bill(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
     body: axum::body::Bytes,
 ) -> ApiResult<(StatusCode, Json<BillView>)> {
-    // هویت فقط برای گیت ورود — لایحه از طرف شهروند ثبت می‌شود اما subject مستقل است
+    // identity is only for the entry gate — the bill is registered on the citizen's behalf but the subject is independent
     require_session(&state, &headers).await?;
     let req: CreateBillRequest = parse_body(&body)?;
     let amount = req.amount_din.map_or(0, kian_contracts::Din::get);
@@ -180,17 +180,17 @@ pub async fn create_bill(
     Ok((StatusCode::CREATED, Json(bill_view(&state, &row).await?)))
 }
 
-/// فیلتر فهرست لایحه‌ها — `?status=`.
+/// Bill list filter — `?status=`.
 #[derive(Debug, Deserialize)]
 pub struct BillFilter {
-    /// وضعیت اختیاری: OPEN/PASSED/REJECTED/EXECUTED
+    /// Optional status: OPEN/PASSED/REJECTED/EXECUTED
     status: Option<String>,
 }
 
-/// `GET /nation/bills` — فهرست لایحه‌ها. عمومی (مادهٔ ۶).
+/// `GET /nation/bills` — list bills. Public (Article 6).
 ///
 /// # Errors
-/// ۴۰۰ فیلتر نامعتبر؛ 500 خطای SQL.
+/// 400 invalid filter; 500 SQL error.
 pub async fn list_bills(
     State(state): State<Arc<AppState>>,
     Query(filter): Query<BillFilter>,
@@ -211,10 +211,10 @@ pub async fn list_bills(
     Ok(Json(BillListResponse { items }))
 }
 
-/// `GET /nation/bills/{id}` — یک لایحه. عمومی.
+/// `GET /nation/bills/{id}` — one bill. Public.
 ///
 /// # Errors
-/// 404 ناشناخته؛ 500 خطای SQL.
+/// 404 unknown; 500 SQL error.
 pub async fn get_bill(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
@@ -228,10 +228,10 @@ pub async fn get_bill(
     Ok(Json(bill_view(&state, &row).await?))
 }
 
-/// `POST /nation/bills/{id}/votes` — ثبت رأی انسانی. نشست.
+/// `POST /nation/bills/{id}/votes` — record a human vote. Session.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 404 لایحهٔ ناشناخته؛ ۴۲۲ لایحهٔ بسته؛ ۴۰۹ رأی تکراری؛ 500 خطای SQL.
+/// 401 session; 404 unknown bill; 422 closed bill; 409 duplicate vote; 500 SQL error.
 pub async fn cast_vote(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -263,7 +263,7 @@ pub async fn cast_vote(
         .insert_vote(&VoteRow {
             bill_id: id.clone(),
             voter: user.id.clone(),
-            is_human: true, // نشست تلگرام = انسان؛ گیت مادهٔ ۷ روی همین است
+            is_human: true, // a Telegram session = a human; the Article 7 gate rests on exactly this
             approve: req.approve,
             created_at: now_iso(),
         })
@@ -278,13 +278,13 @@ pub async fn cast_vote(
     Ok(Json(bill_view(&state, &fresh).await?))
 }
 
-/// `POST /nation/bills/{id}/close` — بستن قطعی با شمارش دامنه. ادمین.
+/// `POST /nation/bills/{id}/close` — deterministic close with the domain tally. Admin.
 ///
-/// شمارش از رأی‌های واقعی db داخل [`Bill`] دامنهٔ خالص انجام می‌شود —
-/// نتیجه (PASSED/REJECTED + دلیل) و شمارش‌ها همان‌جا ثبت می‌شوند.
+/// The tally over real db votes happens inside the pure domain [`Bill`] —
+/// the outcome (PASSED/REJECTED + reason) and tallies are recorded right there.
 ///
 /// # Errors
-/// ۴۰۱ ادمین؛ 404 ناشناخته؛ ۴۲۲ قبلاً بسته؛ 500 خطای SQL.
+/// 401 admin; 404 unknown; 422 already closed; 500 SQL error.
 pub async fn close_bill(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -301,7 +301,7 @@ pub async fn close_bill(
         return Err(kian_contracts::HttpFailure::bill_not_open(&id).into());
     }
 
-    // بازسازی وضعیت دامنه از db — همان الگوی اسکرو: دامنه خالص تصمیم می‌گیرد
+    // rebuild the domain state from db — the same escrow pattern: the pure domain decides
     let votes = state.store.votes_for(&id).await.map_err(ApiFailure::from)?;
     let mut bill = Bill::open(
         &row.id,
@@ -343,9 +343,9 @@ pub async fn close_bill(
     Ok(Json(bill_view(&state, &updated).await?))
 }
 
-/// جابه‌جایی خزانه → حساب مقصد — posting دوطرفهٔ واقعی داخل `apply` (مادهٔ ۶)،
-/// دقیقاً همان الگوی `wallet_move`: رویداد دامنه + audit در نقطهٔ واحد.
-/// overdraft ناممکن: مبدأ خزانه است؛ تراز منفی خزانه = نقض دامنه (۴۲۲).
+/// Treasury → destination account transfer — a real double-entry posting inside `apply` (Article 6),
+/// exactly the `wallet_move` pattern: domain event + audit at the single point.
+/// Overdraft impossible: the source is the treasury; a negative treasury balance = domain violation (422).
 async fn treasury_move(
     state: &AppState,
     bill_id: &str,
@@ -399,14 +399,14 @@ async fn treasury_move(
         .map_err(ApiFailure::from)
 }
 
-/// `POST /nation/bills/{id}/execute` — اجرای لایحهٔ تصویب‌شده روی کرنل پول. ادمین.
+/// `POST /nation/bills/{id}/execute` — execute a passed bill on the money kernel. Admin.
 ///
-/// * `escrowRelease` — اسکرو باید `DISPUTED` باشد؛ release (مادهٔ ۲: ۹۰/۱۰) یا
-///   refund (بازگشت کامل) با `approved_by_admin: true` از مسیر دامنهٔ خالص M2.
-/// * `treasuryMove` — posting دوطرفهٔ خزانه → حساب مقصد (کلید یکسان‌سازی: لایحه).
+/// * `escrowRelease` — the escrow must be `DISPUTED`; release (Article 2: 90/10) or
+///   refund (full return) with `approved_by_admin: true` via the pure M2 domain path.
+/// * `treasuryMove` — double-entry treasury → destination account posting (idempotency key: the bill).
 ///
 /// # Errors
-/// ۴۰۱ ادمین؛ 404 ناشناخته؛ ۴۲۲ غیر-PASSED یا گذار نامعتبر؛ 500 خطای SQL.
+/// 401 admin; 404 unknown; 422 not PASSED or invalid transition; 500 SQL error.
 pub async fn execute_bill(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -451,7 +451,7 @@ pub async fn execute_bill(
                                     escrow_id: closure_id,
                                     idempotency_key: closure_key.clone(),
                                     at,
-                                    approved_by_admin: true, // مادهٔ ۷: رأی پارلمان = تأیید انسانی
+                                    approved_by_admin: true, // Article 7: a parliament vote = human approval
                                 },
                             )
                             .map(into_outcome)
@@ -554,17 +554,17 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(clippy::too_many_lines)] // چرخهٔ کامل بازار→لایحه→اجرا — خوانایی تست مهم‌تر است
+    #[allow(clippy::too_many_lines)] // full market→bill→execute cycle — test readability matters more
     async fn parliament_full_lifecycle_passes_and_executes() {
         let app = app().await;
-        // سه شهروند — نصاب ۳
+        // three citizens — quorum 3
         let t1 = login(&app, "10", "voter1").await;
         let t2 = login(&app, "11", "voter2").await;
         let t3 = login(&app, "12", "voter3").await;
 
-        // خزانه باید پول داشته باشد — مالیات ۱۰٪ از چرخهٔ واقعی بازار:
-        // ضرب ۱۰۰۰ به خریدار (t2) → خرید محصول ۱۰۰۰ (t1) → تحویل → آزادسازی
-        // → فروشنده ۹۰۰ + خزانه ۱۰۰ (مادهٔ ۲)
+        // the treasury must hold money — 10% tax from a real market cycle:
+        // mint 1000 to the buyer (t2) → buy the 1000 product (t1) → deliver → release
+        // → seller 900 + treasury 100 (Article 2)
         let res = app
             .clone()
             .oneshot(
@@ -590,8 +590,8 @@ mod tests {
                     .header("authorization", format!("Bearer {t1}"))
                     .body(Body::from(
                         json!({
-                            "title": "پارلمان را آزمایش کن",
-                            "description": "محصول چرخهٔ خزانه",
+                            "title": "\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{631}\u{627} \u{622}\u{632}\u{645}\u{627}\u{6cc}\u{634} \u{6a9}\u{646}",
+                            "description": "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{686}\u{631}\u{62e}\u{647}\u{654} \u{62e}\u{632}\u{627}\u{646}\u{647}",
                             "priceDin": 1000
                         })
                         .to_string(),
@@ -646,7 +646,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 200, "buyer releases — tax 100 to treasury");
 
-        // لایحهٔ خزانهٔ کوچک (زیر آستانه) — نشست؛ مبلغ ≤ مالیات واقعی خزانه (۱۰۰)
+        // small treasury bill (below threshold) — session; amount ≤ the treasury's real tax (100)
         let res = app
             .clone()
             .oneshot(
@@ -659,7 +659,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:10",
                             "amountDin": 100,
-                            "title": "پاداش مشارکت"
+                            "title": "\u{67e}\u{627}\u{62f}\u{627}\u{634} \u{645}\u{634}\u{627}\u{631}\u{6a9}\u{62a}"
                         })
                         .to_string(),
                     ))
@@ -673,7 +673,7 @@ mod tests {
         assert_eq!(body["hitlRequired"], false);
         let bill_id = body["id"].as_str().unwrap().to_owned();
 
-        // فهرست عمومی — بدون هیچ احرازی
+        // public list — no authentication at all
         let res = app
             .clone()
             .oneshot(
@@ -688,7 +688,7 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["items"].as_array().unwrap().len(), 1);
 
-        // رأی سه شهروند موافق + رأی تکراری چهارم — ۴۰۹
+        // three citizens vote yes + a fourth duplicate vote — 409
         for t in [&t1, &t2, &t3] {
             let res = app
                 .clone()
@@ -718,7 +718,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 409, "one vote per voter");
 
-        // بدون ادمین بسته نمی‌شود — ۴۰۱
+        // cannot be closed without admin — 401
         let res = app
             .clone()
             .oneshot(
@@ -732,7 +732,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // ادمین می‌بندد — نصاب ۳ → PASSED
+        // admin closes — quorum 3 → PASSED
         let res = app
             .clone()
             .oneshot(
@@ -750,7 +750,7 @@ mod tests {
         assert_eq!(body["status"], "PASSED");
         assert_eq!(body["decisionReason"], "passed");
 
-        // اجرا — خزانه → شهروند؛ posting واقعی روی دفتر
+        // execute — treasury → citizen; real posting on the ledger
         let res = app
             .clone()
             .oneshot(
@@ -767,7 +767,7 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["status"], "EXECUTED");
 
-        // پول واقعاً جابه‌جا شده — /me شهروند اول نشان می‌دهد ۵۰۰
+        // money actually moved — the first citizen's /me shows 500
         let res = app
             .clone()
             .oneshot(
@@ -782,10 +782,10 @@ mod tests {
         let me = json_body(res).await;
         assert_eq!(
             me["balance"], 1000,
-            "تسویهٔ ۹۰٪ فروش (۹۰۰) + جابه‌جایی خزانهٔ لایحه‌شده (۱۰۰) — پول واقعی"
+            "\u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{6f9}\u{6f0}\u{66a} \u{641}\u{631}\u{648}\u{634} (\u{6f9}\u{6f0}\u{6f0}) + \u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} \u{644}\u{627}\u{6cc}\u{62d}\u{647}‌\u{634}\u{62f}\u{647} (\u{6f1}\u{6f0}\u{6f0}) — \u{67e}\u{648}\u{644} \u{648}\u{627}\u{642}\u{639}\u{6cc}"
         );
 
-        // اجرای دوباره — لایحهٔ EXECUTED دیگر PASSED نیست → ۴۲۲
+        // re-execute — an EXECUTED bill is no longer PASSED → 422
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -802,9 +802,9 @@ mod tests {
 
     #[tokio::test]
     async fn hitl_bill_needs_human_vote_even_if_agents_stack_yes() {
-        // مادهٔ ۷: لایحهٔ ۶۰,۰۰۰ Đ بدون رأی انسانی رد می‌شود — حتی با نصاب رأی موافق.
-        // سه شهروند «مخالف» رأی می‌دهند تا فقط شمارش انسانی صفر بماند؛ چون نشست =
-        // انسان، این تست رفتار رأی انسانی موافق-نبودن را می‌بندد: رد با دلیل.
+        // Article 7: a 60,000 Đ bill with no human votes is rejected — even with a quorum of yes votes.
+        // three citizens vote "no" so the human yes tally stays zero; because session =
+        // human, this test pins down the no-human-yes-vote behavior: rejection with a reason.
         let app = app().await;
         let t1 = login(&app, "21", "a").await;
         let t2 = login(&app, "22", "b").await;
@@ -822,7 +822,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:21",
                             "amountDin": 60_000,
-                            "title": "جابه‌جایی بزرگ"
+                            "title": "\u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{628}\u{632}\u{631}\u{6af}"
                         })
                         .to_string(),
                     ))
@@ -849,8 +849,8 @@ mod tests {
                 .unwrap();
             assert_eq!(res.status(), 200);
         }
-        // رأی انسانی موافق هست (t1، t2 — هر نشست انسان است) → PASSED؛
-        // گیت «بدون رأی انسانی رد می‌شود» در kian-nation::tests پوشش خالص دارد.
+        // there are human yes votes (t1, t2 — each session is a human) → PASSED;
+        // the "rejected without a human vote" gate is covered purely in kian-nation::tests.
         let res = app
             .clone()
             .oneshot(
@@ -873,7 +873,7 @@ mod tests {
         let app = app().await;
         let token = login(&app, "30", "maker").await;
 
-        // بدنهٔ نامعتبر — عنوان خالی
+        // invalid body — empty title
         let res = app
             .clone()
             .oneshot(
@@ -896,7 +896,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
 
-        // بدون نشست — ۴۰۱
+        // without a session — 401
         let res = app
             .clone()
             .oneshot(
@@ -908,7 +908,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:30",
                             "amountDin": 100,
-                            "title": "بدون نشست"
+                            "title": "\u{628}\u{62f}\u{648}\u{646} \u{646}\u{634}\u{633}\u{62a}"
                         })
                         .to_string(),
                     ))
@@ -918,7 +918,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // لایحهٔ ناشناخته — 404
+        // unknown bill — 404
         let res = app
             .oneshot(
                 axum::http::Request::builder()

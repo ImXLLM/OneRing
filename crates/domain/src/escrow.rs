@@ -1,16 +1,16 @@
-//! ADR-004 — اسکرو به‌عنوان ماشین وضعیت صریح روی دفتر.
+//! ADR-004 — escrow as an explicit state machine on the ledger.
 //!
 //! ```text
 //! CREATED → FUNDED → DELIVERED → RELEASED
-//!                    ↘ DISPUTED → REFUNDED | RELEASED (داوری)
-//! CREATED → CANCELLED        (هیچ پولی جابه‌جا نشده)
-//! FUNDED  → EXPIRED          (بازگشت خودکار در جاروب TTL)
+//!                    ↘ DISPUTED → REFUNDED | RELEASED (arbitration)
+//! CREATED → CANCELLED        (no money moved)
+//! FUNDED  → EXPIRED          (auto-refund in the TTL sweep)
 //! ```
 //!
-//! مسیر پول (ماده ۸ — اسکرو اجباری برای بازار):
-//!   fund    : خریدار → اسکرو
-//!   release : اسکرو → فروشنده (خالص) + اسکرو → خزانه (مالیات ۱۰٪)
-//!   refund  : اسکرو → خریدار (کامل، بدون مالیات)
+//! Money flow (Article 8 — mandatory escrow for the marketplace):
+//!   fund    : buyer → escrow
+//!   release : escrow → seller (net) + escrow → treasury (10% tax)
+//!   refund  : escrow → buyer (full, no tax)
 
 use crate::charter::{
     requires_hitl, split_seller_tax, split_seller_tax_affiliate, Charter, MAX_AFFILIATE_BPS,
@@ -24,29 +24,29 @@ use crate::ledger::{
 use crate::money::Din;
 use std::collections::BTreeMap;
 
-/// وضعیت امانت — ۸ حالت ماشین.
+/// Escrow state — the machine's 8 states.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EscrowStatus {
-    /// ساخته‌شده، هنوز تامین‌نشده
+    /// Created, not yet funded
     Created,
-    /// تامین‌شده (پول در حساب اسکرو)
+    /// Funded (money in the escrow account)
     Funded,
-    /// تحویل‌شده
+    /// Delivered
     Delivered,
-    /// آزادشده (پایانی)
+    /// Released (terminal)
     Released,
-    /// در اختلاف (پایانی نیست)
+    /// Disputed (non-terminal)
     Disputed,
-    /// بازگشت‌داده‌شده (پایانی)
+    /// Refunded (terminal)
     Refunded,
-    /// لغوشده (پایانی)
+    /// Cancelled (terminal)
     Cancelled,
-    /// منقضی‌شده (پایانی)
+    /// Expired (terminal)
     Expired,
 }
 
 impl EscrowStatus {
-    /// رشته کانانیکی — یکسان با نسخه TS.
+    /// Canonical string — identical to the TS version.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -61,7 +61,7 @@ impl EscrowStatus {
         }
     }
 
-    /// آیا وضعیت پایانی است؟ (هیچ گذاری از آن خارج نمی‌شود)
+    /// Is the state terminal? (No transition leaves it)
     #[must_use]
     pub const fn is_terminal(self) -> bool {
         matches!(self, Self::Released | Self::Refunded | Self::Cancelled | Self::Expired)
@@ -74,7 +74,7 @@ impl std::fmt::Display for EscrowStatus {
     }
 }
 
-/// وضعیت‌های پایانی ماشین.
+/// The machine's terminal states.
 pub const ESCROW_TERMINAL_STATUSES: [EscrowStatus; 4] = [
     EscrowStatus::Released,
     EscrowStatus::Refunded,
@@ -82,8 +82,8 @@ pub const ESCROW_TERMINAL_STATUSES: [EscrowStatus; 4] = [
     EscrowStatus::Expired,
 ];
 
-/// جدول گذار ماشین‌پذیر — مصرف هندلرها، تست‌ها و UI.
-/// یک‌به‌یک با `ESCROW_TRANSITIONS` در TS.
+/// Machine-readable transition table — consumed by handlers, tests, and the UI.
+/// One-to-one with `ESCROW_TRANSITIONS` in TS.
 #[must_use]
 pub const fn escrow_transitions(status: EscrowStatus) -> &'static [EscrowEventKind] {
     match status {
@@ -100,70 +100,70 @@ pub const fn escrow_transitions(status: EscrowStatus) -> &'static [EscrowEventKi
     }
 }
 
-/// یک امانت.
+/// An escrow.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Escrow {
-    /// شناسه یکتا
+    /// Unique ID
     pub id: String,
-    /// حساب خریدار
+    /// Buyer account
     pub buyer_id: String,
-    /// حساب فروشنده
+    /// Seller account
     pub seller_id: String,
-    /// مبلغ
+    /// Amount
     pub amount: Din,
-    /// ارجاع محصول اختیاری
+    /// Optional product reference
     pub product_ref: Option<String>,
-    /// وضعیت فعلی
+    /// Current state
     pub status: EscrowStatus,
-    /// زمان ساخت ISO
+    /// ISO creation time
     pub created_at: String,
-    /// شناسه تراکنش تامین‌مالی
+    /// Funding transaction ID
     pub funded_tx_id: Option<String>,
-    /// شناسه تراکنش تسویه (release/refund/expire)
+    /// Settlement transaction ID (release/refund/expire)
     pub settle_tx_id: Option<String>,
-    /// دلیل اختلاف
+    /// Dispute reason
     pub dispute_reason: Option<String>,
-    /// ارجاع تحویل
+    /// Delivery reference
     pub delivery_ref: Option<String>,
-    /// مهلت انقضا ISO
+    /// ISO expiry deadline
     pub expires_at: Option<String>,
-    /// حساب معرف اختیاری برای پرداخت پورسانت رفرال در آزادسازی
+    /// Optional referrer account for the referral commission paid on release
     pub referrer: Option<AccountId>,
-    /// سهم معرف بر حسب نقاط پایه (`0..=MAX_AFFILIATE_BPS`)
+    /// Referrer share in basis points (`0..=MAX_AFFILIATE_BPS`)
     pub affiliate_bps: u16,
 }
 
-/// ثبت‌همه امانت‌ها — تغییرناپذیر از دید فراخوان.
+/// Registry of all escrows — immutable from the caller's perspective.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EscrowRegistry {
-    /// امانت‌ها بر اساس شناسه
+    /// Escrows keyed by ID
     pub escrows: BTreeMap<String, Escrow>,
 }
 
-/// رجیستری خالی.
+/// Empty registry.
 #[must_use]
 pub fn open_registry() -> EscrowRegistry {
     EscrowRegistry::default()
 }
 
-/// شناسه حساب دفتریِ یک امانت: `escrow:{id}`.
+/// Ledger account ID of an escrow: `escrow:{id}`.
 #[must_use]
 pub fn escrow_account_id(escrow_id: &str) -> String {
     format!("escrow:{escrow_id}")
 }
 
-/// خروجی عملیات اسکرو — وضعیت‌های جدید + رویدادها + تراکنش اختیاری.
+/// Escrow operation output — new states + events + optional transaction.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EscrowOutcome {
-    /// وضعیت جدید دفتر
+    /// New ledger state
     pub ledger: LedgerState,
-    /// رجیستری جدید
+    /// New registry
     pub registry: EscrowRegistry,
-    /// نسخه به‌روزشده امانت
+    /// Updated escrow
     pub escrow: Escrow,
-    /// رویدادهای صادرشده (به‌ترتیب)
+    /// Emitted events (in order)
     pub events: Vec<EscrowEvent>,
-    /// تراکنش دفتر (فقط برای عملیات پول‌محور)
+    /// Ledger transaction (money-moving operations only)
     pub tx: Option<PostedTransaction>,
 }
 
@@ -182,81 +182,81 @@ fn load_escrow(registry: &EscrowRegistry, escrow_id: &str) -> DomainResult<Escro
     })
 }
 
-/// فرمان ساخت امانت.
+/// Escrow creation command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CreateEscrowCommand {
-    /// شناسه یکتای امانت
+    /// Unique escrow id
     pub id: String,
-    /// حساب خریدار
+    /// Buyer account
     pub buyer_id: String,
-    /// حساب فروشنده
+    /// Seller account
     pub seller_id: String,
-    /// مبلغ
+    /// Amount
     pub amount: Din,
-    /// ارجاع محصول
+    /// Product reference
     pub product_ref: Option<String>,
-    /// مهلت انقضا ISO
+    /// ISO expiry deadline
     pub expires_at: Option<String>,
-    /// زمان ISO (پیش‌فرض epoch دترمینیستیک)
+    /// ISO time (defaults to the deterministic epoch)
     pub at: Option<String>,
 }
 
-/// فرمان با ارجاع به امانت موجود.
+/// Command referencing an existing escrow.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EscrowRefCommand {
-    /// شناسه امانت
+    /// Escrow ID
     pub escrow_id: String,
-    /// کلید یکسان‌سازی (برای عملیات پول‌محور)
+    /// Idempotency key (for money-moving operations)
     pub idempotency_key: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: Option<String>,
 }
 
-/// فرمان تحویل.
+/// Delivery command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeliverEscrowCommand {
-    /// شناسه امانت
+    /// Escrow ID
     pub escrow_id: String,
-    /// کلید یکسان‌سازی
+    /// Idempotency key
     pub idempotency_key: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: Option<String>,
-    /// ارجاع تحویل
+    /// Delivery reference
     pub delivery_ref: Option<String>,
 }
 
-/// فرمان آزادسازی — ماده ۷: برای مبلغ ≥ ۵۰,۰۰۰ Đ نیاز به تأیید ادمین دارد.
+/// Release command — Article 7: amounts ≥ 50,000 Đ require admin approval.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReleaseEscrowCommand {
-    /// شناسه امانت
+    /// Escrow ID
     pub escrow_id: String,
-    /// کلید یکسان‌سازی
+    /// Idempotency key
     pub idempotency_key: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: Option<String>,
-    /// تأیید انسانی (ماده ۷)
+    /// Human approval (Article 7)
     pub approved_by_admin: bool,
 }
 
-/// فرمان ثبت اختلاف.
+/// Dispute filing command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DisputeEscrowCommand {
-    /// شناسه امانت
+    /// Escrow ID
     pub escrow_id: String,
-    /// کلید یکسان‌سازی
+    /// Idempotency key
     pub idempotency_key: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: Option<String>,
-    /// دلیل اختلاف (غیرخالی)
+    /// Dispute reason (non-empty)
     pub reason: String,
 }
 
-/// ساخت امانت (CREATED) بدون معرف — فقط حساب اسکرو با تراز صفر اضافه می‌شود.
+/// Create an escrow (CREATED) without a referrer — only a zero-balance escrow account is added.
 ///
-/// برای ساخت امانت همراه با پورسانت رفرال از [`create_escrow_with_affiliate`] استفاده کنید.
+/// Use [`create_escrow_with_affiliate`] to create an escrow with a referral commission.
 ///
 /// # Errors
-/// `ESCROW_ALREADY_EXISTS`، `UNKNOWN_ACCOUNT`، `INVALID_ACCOUNT_KIND`،
+/// `ESCROW_ALREADY_EXISTS`, `UNKNOWN_ACCOUNT`, `INVALID_ACCOUNT_KIND`,
 /// `DUPLICATE_ACCOUNT`.
 pub fn create_escrow(
     ledger: &LedgerState,
@@ -266,19 +266,19 @@ pub fn create_escrow(
     create_escrow_with_affiliate(ledger, registry, cmd, None, 0)
 }
 
-/// ساخت امانت (CREATED) با پشتیبانی اختیاری از معرف (Affiliate).
+/// Create an escrow (CREATED) with optional Affiliate support.
 ///
-/// * اگر `affiliate_bps > MAX_AFFILIATE_BPS` باشد، خطای `BPS_OUT_OF_RANGE` برمی‌گرداند.
-/// * **خنثی‌سازی خودکار خودرفرالی:** اگر `referrer` برابر خریدار یا فروشنده باشد
-///   (یا خالی / `affiliate_bps == 0` باشد)، بدون شکست خرید به‌صورت خودکار
-///   `referrer = None` و `affiliate_bps = 0` تنظیم می‌شود.
-/// * اگر `referrer` حساب معتبر سوم است، باید در دفتر موجود و از نوع `User` باشد.
+/// * Returns `BPS_OUT_OF_RANGE` if `affiliate_bps > MAX_AFFILIATE_BPS`.
+/// * **Automatic self-referral neutralization:** if `referrer` equals the buyer or the seller
+///   (or is empty / `affiliate_bps == 0`), it is automatically set to
+///   `referrer = None` and `affiliate_bps = 0` without failing the purchase.
+/// * If `referrer` is a valid third-party account, it must exist in the ledger with kind `User`.
 ///
 /// # Errors
-/// `ESCROW_ALREADY_EXISTS`، `UNKNOWN_ACCOUNT`، `INVALID_ACCOUNT_KIND`،
-/// `DUPLICATE_ACCOUNT`، `BPS_OUT_OF_RANGE`.
-// امضای عمومی مهاجرت‌یافته (ADR-009) منجمد است؛ `referrer` فقط با اتصال
-// `ref` خوانده می‌شود و مصرف نمی‌شود — کلون صریح در شاخهٔ Some انجام می‌گیرد.
+/// `ESCROW_ALREADY_EXISTS`, `UNKNOWN_ACCOUNT`, `INVALID_ACCOUNT_KIND`,
+/// `DUPLICATE_ACCOUNT`, `BPS_OUT_OF_RANGE`.
+// The migrated public signature (ADR-009) is frozen; `referrer` is read only through the
+// `ref` binding and is not consumed — an explicit clone happens in the `Some` branch.
 #[allow(clippy::needless_pass_by_value)]
 pub fn create_escrow_with_affiliate(
     ledger: &LedgerState,
@@ -379,10 +379,10 @@ pub fn create_escrow_with_affiliate(
     })
 }
 
-/// تامین‌مالی امانت: خریدار → اسکرو (CREATED → FUNDED).
+/// Fund the escrow: buyer → escrow (CREATED → FUNDED).
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`، خطاهای دفتر.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`, ledger errors.
 pub fn fund_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -425,10 +425,10 @@ pub fn fund_escrow(
     })
 }
 
-/// تحویل کالا/خدمت (FUNDED → DELIVERED) — پولی جابه‌جا نمی‌شود.
+/// Deliver the goods/service (FUNDED → DELIVERED) — no money moves.
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`.
 pub fn deliver_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -457,12 +457,12 @@ pub fn deliver_escrow(
     })
 }
 
-/// آزادسازی: اسکرو → فروشنده (خالص) + خزانه (مالیات ۱۰٪) + [معرف در صورت وجود].
-/// ماده ۷ — مبلغ ≥ ۵۰,۰۰۰ Đ بدون `approved_by_admin` رد می‌شود.
+/// Release: escrow → seller (net) + treasury (10% tax) + [referrer if present].
+/// Article 7 — amounts ≥ 50,000 Đ are rejected without `approved_by_admin`.
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`، `REQUIRES_HUMAN_APPROVAL`،
-/// `UNKNOWN_ACCOUNT`، `INVALID_ACCOUNT_KIND`، خطاهای دفتر/منشور.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`, `REQUIRES_HUMAN_APPROVAL`,
+/// `UNKNOWN_ACCOUNT`, `INVALID_ACCOUNT_KIND`, ledger/charter errors.
 pub fn release_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -562,10 +562,10 @@ pub fn release_escrow(
     })
 }
 
-/// ثبت اختلاف (FUNDED|DELIVERED → DISPUTED) — دلیل غیرخالی الزامی است.
+/// File a dispute (FUNDED|DELIVERED → DISPUTED) — a non-empty reason is required.
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`.
 pub fn dispute_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -601,10 +601,10 @@ pub fn dispute_escrow(
     })
 }
 
-/// بازگشت کامل وجه به خریدار، بدون مالیات (DISPUTED → REFUNDED).
+/// Full refund to the buyer, no tax (DISPUTED → REFUNDED).
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`، خطاهای دفتر.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`, ledger errors.
 pub fn refund_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -647,10 +647,10 @@ pub fn refund_escrow(
     })
 }
 
-/// لغو قبل از تامین‌مالی (CREATED → CANCELLED) — هیچ پولی حرکت نمی‌کند.
+/// Cancel before funding (CREATED → CANCELLED) — no money moves.
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`.
 pub fn cancel_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -675,10 +675,10 @@ pub fn cancel_escrow(
     })
 }
 
-/// انقضای امانت تامین‌شده با بازگشت خودکار کامل (ماده ۹).
+/// Expire a funded escrow with a full automatic refund (Article 9).
 ///
 /// # Errors
-/// `ESCROW_NOT_FOUND`، `INVALID_TRANSITION`، خطاهای دفتر.
+/// `ESCROW_NOT_FOUND`, `INVALID_TRANSITION`, ledger errors.
 pub fn expire_escrow(
     ledger: &LedgerState,
     registry: &EscrowRegistry,
@@ -721,7 +721,7 @@ pub fn expire_escrow(
     })
 }
 
-/// جاروب TTL: امانت‌های FUNDEDِ گذشته از مهلت که هنوز پول در اسکرو دارند.
+/// TTL sweep: FUNDED escrows past their deadline that still hold money in escrow.
 #[must_use]
 pub fn find_expired(registry: &EscrowRegistry, now_iso: &str) -> Vec<Escrow> {
     let Some(now) = parse_iso_unix(now_iso) else {
@@ -742,8 +742,8 @@ pub fn find_expired(registry: &EscrowRegistry, now_iso: &str) -> Vec<Escrow> {
     out
 }
 
-/// تبدیل ISO-8601 UTC (`YYYY-MM-DDTHH:MM:SS(.mmm)?Z`) به ثانیه یونیکس —
-/// بدون وابستگی خارجی؛ فقط برای مقایسه مهلت‌ها.
+/// Convert ISO-8601 UTC (`YYYY-MM-DDTHH:MM:SS(.mmm)?Z`) to Unix seconds —
+/// no external dependencies; only for deadline comparison.
 #[must_use]
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn parse_iso_unix(s: &str) -> Option<i64> {
@@ -764,7 +764,7 @@ fn parse_iso_unix(s: &str) -> Option<i64> {
     Some(days_from_civil(year, month, day) * 86_400 + hour * 3_600 + minute * 60 + second)
 }
 
-/// الگوریتم `days_from_civil` (Hinnant) — تبدیل تاریخ میلادی به شمارش روز.
+/// The `days_from_civil` algorithm (Hinnant) — Gregorian date to day count.
 const fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
     let y = y - if m <= 2 { 1 } else { 0 };
     let era = if y >= 0 { y } else { y - 399 } / 400;
@@ -775,7 +775,7 @@ const fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
     era * 146_097 + doe - 719_468
 }
 
-/// `i64::from` معادل — سازگار با `const fn`.
+/// `i64::from` equivalent — `const fn` compatible.
 const fn i64_from_u32(v: u32) -> i64 {
     v as i64
 }
@@ -815,14 +815,14 @@ mod tests {
         let l = add_account(
             &l,
             Account {
-                id: BUYER.into(), kind: AccountKind::User, label: Some("خریدار".into())
+                id: BUYER.into(), kind: AccountKind::User, label: Some("\u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631}".into())
             },
         )
         .unwrap();
         let l = add_account(
             &l,
             Account {
-                id: SELLER.into(), kind: AccountKind::User, label: Some("فروشنده".into())
+                id: SELLER.into(), kind: AccountKind::User, label: Some("\u{641}\u{631}\u{648}\u{634}\u{646}\u{62f}\u{647}".into())
             },
         )
         .unwrap();
@@ -841,7 +841,7 @@ mod tests {
         (l, open_registry())
     }
 
-    /// create → fund → deliver یک‌جا (امانت آماده تسویه + رویدادهای تجمعی)
+    /// create → fund → deliver in one call (escrow ready for settlement + cumulative events)
     fn funded(
         ledger: &LedgerState,
         registry: &EscrowRegistry,
@@ -1083,7 +1083,7 @@ mod tests {
                 escrow_id: "e2".into(),
                 idempotency_key: None,
                 at: None,
-                reason: "کالا ناقص بود".into(),
+                reason: "\u{6a9}\u{627}\u{644}\u{627} \u{646}\u{627}\u{642}\u{635} \u{628}\u{648}\u{62f}".into(),
             },
         )
         .unwrap();
@@ -1131,7 +1131,7 @@ mod tests {
                 escrow_id: "e3".into(),
                 idempotency_key: None,
                 at: None,
-                reason: "ادعای خریدار".into(),
+                reason: "\u{627}\u{62f}\u{639}\u{627}\u{6cc} \u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631}".into(),
             },
         )
         .unwrap();
@@ -1222,10 +1222,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)] // ماتریس کامل گذارهای غیرمجاز — یکجا خوانا است
+    #[allow(clippy::too_many_lines)] // the full matrix of illegal transitions — readable in one place
     fn rejects_every_illegal_transition_fail_closed() {
         let (l, reg) = setup();
-        // امانت ناشناخته
+        // unknown escrow
         assert!(fund_escrow(
             &l,
             &reg,
@@ -1246,7 +1246,7 @@ mod tests {
             },
         )
         .unwrap();
-        // تحویل قبل از تامین
+        // deliver before fund
         assert!(deliver_escrow(
             &c.ledger,
             &c.registry,
@@ -1258,7 +1258,7 @@ mod tests {
             }
         )
         .is_err());
-        // آزادسازی قبل از تامین
+        // release before fund
         assert!(release_escrow(
             &c.ledger,
             &c.registry,
@@ -1270,7 +1270,7 @@ mod tests {
             }
         )
         .is_err());
-        // لغو بعد از تامین
+        // cancel after fund
         let f = fund_escrow(
             &c.ledger,
             &c.registry,
@@ -1283,14 +1283,14 @@ mod tests {
             &EscrowRefCommand { escrow_id: "e6".into(), idempotency_key: None, at: None }
         )
         .is_err());
-        // بازگشت بدون اختلاف
+        // refund without dispute
         assert!(refund_escrow(
             &f.ledger,
             &f.registry,
             &EscrowRefCommand { escrow_id: "e6".into(), idempotency_key: None, at: None }
         )
         .is_err());
-        // آزادسازی قبل از تحویل
+        // release before delivery
         assert!(release_escrow(
             &f.ledger,
             &f.registry,
@@ -1302,7 +1302,7 @@ mod tests {
             }
         )
         .is_err());
-        // ساخت تکراری
+        // duplicate creation
         assert!(create_escrow(
             &l,
             &f.registry,
@@ -1317,7 +1317,7 @@ mod tests {
             }
         )
         .is_err());
-        // خریدار باید حساب user باشد
+        // buyer must be a user account
         assert!(create_escrow(
             &l,
             &reg,
@@ -1332,7 +1332,7 @@ mod tests {
             }
         )
         .is_err());
-        // اختلاف نیاز به دلیل دارد
+        // dispute requires a reason
         assert!(dispute_escrow(
             &f.ledger,
             &f.registry,
@@ -1362,11 +1362,11 @@ mod tests {
 
     #[test]
     fn parses_iso_dates_for_ttl_sweep() {
-        // مرزهای الگوریتم تاریخ — بدون وابستگی خارجی
+        // date algorithm boundaries — no external dependencies
         assert_eq!(parse_iso_unix("2026-01-01T00:00:00.000Z"), Some(1_767_225_600));
         assert_eq!(parse_iso_unix("1970-01-01T00:00:00.000Z"), Some(0));
         assert_eq!(parse_iso_unix("2026-13-01T00:00:00Z"), None);
-        assert_eq!(parse_iso_unix("نامعتبر"), None);
+        assert_eq!(parse_iso_unix("\u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631}"), None);
         // 2026-01-05 <= 2026-01-06
         assert!(
             parse_iso_unix("2026-01-05T00:00:00.000Z").unwrap()
@@ -1380,7 +1380,7 @@ mod tests {
         let ref_id = "user:referrer";
         let l = add_account(
             &l,
-            Account { id: ref_id.into(), kind: AccountKind::User, label: Some("معرف".into()) },
+            Account { id: ref_id.into(), kind: AccountKind::User, label: Some("\u{645}\u{639}\u{631}\u{641}".into()) },
         )
         .unwrap();
 
@@ -1397,7 +1397,7 @@ mod tests {
                 at: Some(T0.into()),
             },
             Some(ref_id.into()),
-            2_000, // ۲۰٪ معرف + ۱۰٪ خزانه → بقیه برای فروشنده
+            2_000, // 20% referrer + 10% treasury → remainder to the seller
         )
         .unwrap();
         assert_eq!(created.escrow.referrer.as_deref(), Some(ref_id));
@@ -1432,7 +1432,7 @@ mod tests {
         )
         .unwrap();
 
-        // ۹۹۹: مالیات = ۹۹، معرف ۲۰٪ = ۱۹۹، فروشنده = ۷۰۱ (۷۰۱ + ۹۹ + ۱۹۹ = ۹۹۹)
+        // 999: tax = 99, referrer 20% = 199, seller = 701 (701 + 99 + 199 = 999)
         let tx = released.tx.as_ref().expect("4-leg tx");
         assert_eq!(tx.postings.len(), 4);
         assert_eq!(balance_of(&released.ledger, &escrow_account_id("aff-1")).unwrap(), 0);
@@ -1450,7 +1450,7 @@ mod tests {
     fn normalizes_self_referral_for_buyer_and_seller_without_failing_purchase() {
         let (l, reg) = setup();
 
-        // خودرفرالی خریدار
+        // buyer self-referral
         let buyer_self = create_escrow_with_affiliate(
             &l,
             &reg,
@@ -1503,7 +1503,7 @@ mod tests {
         assert_eq!(balance_of(&rel.ledger, TREASURY).unwrap(), 20);
         assert!(trial_balance(&rel.ledger).balanced);
 
-        // خودرفرالی فروشنده
+        // seller self-referral
         let seller_self = create_escrow_with_affiliate(
             &l,
             &reg,
@@ -1544,7 +1544,7 @@ mod tests {
             at: None,
         };
 
-        // سقف ۵۰۰۰ bps نقض شود → BPS_OUT_OF_RANGE
+        // 5000 bps cap violated → BPS_OUT_OF_RANGE
         let err = create_escrow_with_affiliate(
             &l,
             &reg,
@@ -1555,7 +1555,7 @@ mod tests {
         .unwrap_err();
         assert_eq!(err.code, DomainErrorCode::BpsOutOfRange);
 
-        // معرف غیرکاربر (خزانه) → INVALID_ACCOUNT_KIND
+        // non-user referrer (treasury) → INVALID_ACCOUNT_KIND
         let err_kind = create_escrow_with_affiliate(
             &l,
             &reg,
@@ -1566,7 +1566,7 @@ mod tests {
         .unwrap_err();
         assert_eq!(err_kind.code, DomainErrorCode::InvalidAccountKind);
 
-        // معرف ناشناخته → UNKNOWN_ACCOUNT
+        // unknown referrer → UNKNOWN_ACCOUNT
         let err_unknown = create_escrow_with_affiliate(
             &l,
             &reg,

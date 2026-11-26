@@ -1,262 +1,262 @@
-//! قراردادهای وایرِ انحصارِ حاکم — ژنومِ پنتامدلی، منشورِ روزِ اول و خزانهٔ
-//! Base (Wave 7 — Step 4/4 + Commit #27 پنتا-مدل و انتخابِ دومُد).
+//! Wire contracts of the sovereign monopoly — the penta-model genome, the Day-1 charter, and the
+//! Base treasury (Wave 7 — Step 4/4 + Commit #27 penta-model and dual-mode selection).
 //!
-//! DTOهای روی وایر:
-//! - [`MonopolyGenomeMatrixResponse`] — ماتریسِ ۵مدل × ۹فایل با وضعیتِ
-//!   تأییدِ ۴۵فایلی، قواعدِ مسیریابی و هر دو قابلیتِ انتخابِ دومُد؛
-//! - [`MonopolyRouteModelRequest`] / [`MonopolyRouteModelResponse`] — اجرایِ
-//!   `ManualOverride` یا `AgentAutoDecision` روی ۵ مدلِ حاکم با پرامپتِ
-//!   کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی و rationale تصمیم؛
-//! - [`MonopolyCharterAndBaseResponse`] — منشورِ چهارجریانیِ روزِ اول +
-//!   پیکربندیِ Base Mainnet (`8453`) + خلاصهٔ ممیزیِ هر دو قراردادِ Solidity؛
+//! On-wire DTOs:
+//! - [`MonopolyGenomeMatrixResponse`] — the 5-model × 9-file matrix with the
+//!   45-file verification status, routing rules, and both dual-mode selection capabilities;
+//! - [`MonopolyRouteModelRequest`] / [`MonopolyRouteModelResponse`] — running
+//!   `ManualOverride` or `AgentAutoDecision` across the 5 sovereign models with the
+//!   distilled clone prompt, the 9-file verification proof, and the decision rationale;
+//! - [`MonopolyCharterAndBaseResponse`] — the four-stream Day-1 charter +
+//!   Base Mainnet configuration (`8453`) + the audit summary of both Solidity contracts;
 //! - [`MonopolySimulateSplitRequest`] / [`MonopolySimulateSplitResponse`] —
-//!   اجرایِ `compute_day_one_atomic_split` (فروشِ معرف‌دار، فروشِ مستقیمِ
-//!   بی‌معرف با قانونِ `2000 bps`، یا بوستِ ۱۰۰٪) + اثباتِ صفرجمع +
-//!   URI پرداختِ EIP-681 روی Base.
+//!   running `compute_day_one_atomic_split` (a referred sale, a direct
+//!   unreferred sale under the `2000 bps` rule, or a 100% boost) + the zero-sum proof +
+//!   the EIP-681 payment URI on Base.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-// ── ماتریسِ ژنوم ─────────────────────────────────────────────────────────────
+// ── Genome matrix ─────────────────────────────────────────────────────────────
 
-/// وضعیتِ تأییدِ یک مدل در ماتریسِ ژنوم.
+/// Verification status of one model in the genome matrix.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyGenomeModelView {
-    /// شناسهٔ دقیقِ مدل (`GPT 6-Web`, …).
+    /// Exact model ID (`GPT 6-Web`, …).
     pub model_id: String,
-    /// شناسه‌های alias — همه حل می‌شوند.
+    /// Alias IDs — all resolve.
     pub aliases: Vec<String>,
-    /// پوشهٔ ژنوم زیر `OMNI-MODEL-GENOME/models/`.
+    /// Genome folder under `OMNI-MODEL-GENOME/models/`.
     pub genome_dir: String,
-    /// تخصصِ حاکم.
+    /// Sovereign specialty.
     pub specialty: String,
-    /// نامِ ۹ فایلِ canonical.
+    /// Names of the 9 canonical files.
     pub canonical_files: Vec<String>,
-    /// تعدادِ فایل‌هایِ تأییدشده (۰ تا ۹).
+    /// Number of verified files (0 to 9).
     pub files_verified: usize,
-    /// مدل کامل وقتی `9/9`.
+    /// Full model when `9/9`.
     pub is_complete: bool,
-    /// آواتارِ ترامینیتیِ پیش‌فرض (`Alpha` | `Logic-Prime` | `Mairon`).
+    /// Default Traminity avatar (`Alpha` | `Logic-Prime` | `Mairon`).
     pub trinity_avatar: String,
-    /// منبعِ تأیید — مسیرِ دیسکی یا `builtin-registry`.
+    /// Verification source — disk path or `builtin-registry`.
     pub verified_against: String,
 }
 
-/// قاعدهٔ مسیریابیِ دامنه → قهرمان.
+/// Domain → champion routing rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyRoutingRuleView {
-    /// دامنهٔ کار (`web-synthesis`, …).
+    /// Work domain (`web-synthesis`, …).
     pub domain: String,
-    /// مدلِ قهرمانِ مطلق.
+    /// The absolute champion model.
     pub champion_model_id: String,
-    /// آواتارِ ترامینیتیِ مقصد.
+    /// Destination Traminity avatar.
     pub trinity_avatar: String,
 }
 
-/// پاسخِ `GET /api/v1/monopoly/genome-matrix`.
+/// Response of `GET /api/v1/monopoly/genome-matrix`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyGenomeMatrixResponse {
-    /// امضایِ موتورِ انحصار.
+    /// Monopoly engine signature.
     pub signature: String,
-    /// پنج مدلِ حاکم با وضعیتِ تأییدِ ۹فایلی.
+    /// The five sovereign models with 9-file verification status.
     pub models: Vec<MonopolyGenomeModelView>,
-    /// قواعدِ مسیریابیِ دامنه → قهرمان.
+    /// Domain → champion routing rules.
     pub routing_rules: Vec<MonopolyRoutingRuleView>,
-    /// کلِ فایل‌هایِ تأییدشده (هدف: ۴۵).
+    /// Total verified files (target: 45).
     pub total_files_verified: usize,
-    /// هدفِ قراردادِ سخت.
+    /// Hard contract target.
     pub expected_file_count: usize,
-    /// حالت‌هایِ انتخابِ مدل روی این ماتریس — همیشه هر دو:
-    /// `manual_override` و `agent_auto_decision` (Commit #27).
+    /// Model selection modes on this matrix — always both:
+    /// `manual_override` and `agent_auto_decision` (Commit #27).
     pub selection_modes: Vec<String>,
 }
 
-// ── انتخابِ دومُدِ مدل (Commit #27) ───────────────────────────────────────
+// ── Dual-mode model selection (Commit #27) ───────────────────────────────────────
 
-/// درخواستِ `POST /api/v1/monopoly/route-model` — انتخابِ دومُد روی ۵ مدلِ حاکم.
+/// Request of `POST /api/v1/monopoly/route-model` — dual-mode selection across the 5 sovereign models.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyRouteModelRequest {
-    /// متنِ تسک — در `AgentAutoDecision` تلمتریِ آن تحلیل می‌شود.
+    /// Task text — in `AgentAutoDecision` its telemetry is analyzed.
     pub task_prompt: String,
-    /// Agent Mode — وقتی `true` (یا آوریِ غایب/`"auto"`) انتخابِ خودکار اجرا می‌شود.
+    /// Agent Mode — when `true` (or the actor is absent/`"auto"`), automatic selection runs.
     #[serde(default)]
     pub agent_mode: bool,
-    /// آوریِ دستیِ کاربر — exact یا alias هر یک از ۵ مدل
-    /// (`GLM 5.3 flash MAX` | `GPT 6-Web` | …)؛ `null`/`"auto"` = خودکار.
+    /// The user's manual actor — exact or alias of any of the 5 models
+    /// (`GLM 5.3 flash MAX` | `GPT 6-Web` | …); `null`/`"auto"` = automatic.
     pub manual_model_override: Option<String>,
 }
 
-/// پاسخِ `POST /api/v1/monopoly/route-model` — مدلِ انتخاب‌شده + اثباتِ تأیید.
+/// Response of `POST /api/v1/monopoly/route-model` — the selected model + verification proof.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyRouteModelResponse {
-    /// مدلِ انتخاب‌شده — شناسهٔ دقیق (`GLM 5.3 flash MAX`, …).
+    /// Selected model — exact ID (`GLM 5.3 flash MAX`, …).
     pub selected_model: String,
-    /// حالتِ انتخاب — `manual_override` | `agent_auto_decision`.
+    /// Selection mode — `manual_override` | `agent_auto_decision`.
     pub selection_mode: String,
-    /// اطمینانِ تصمیم در `0.0..=1.0` (آوریِ دستی همیشه 1.0).
+    /// Decision confidence in `0.0..=1.0` (manual actor always 1.0).
     pub confidence_score: f64,
-    /// توضیحِ قابلِ ممیزیِ تصمیم — سیگنال‌هایِ دیده‌شده و مسیرِ انتخاب.
+    /// Auditable explanation of the decision — observed signals and the selection path.
     pub decision_rationale: String,
-    /// دامنهٔ مسیریابی‌شده (`flash-agentic-execution`, …).
+    /// Routed domain (`flash-agentic-execution`, …).
     pub routed_domain: String,
-    /// آواتارِ ترامینیتیِ مقصد.
+    /// Destination Traminity avatar.
     pub trinity_avatar: String,
-    /// پرامپتِ کلونِ تقطیرشدهٔ مدلِ انتخاب‌شده (از ژنومِ ۹فایلی).
+    /// The selected model's distilled clone prompt (from the 9-file genome).
     pub distilled_system_prompt: String,
-    /// پوشهٔ ژنومِ مدلِ انتخاب‌شده (`models/05-glm-5.3-flash-max`, …).
+    /// Genome folder of the selected model (`models/05-glm-5.3-flash-max`, …).
     pub genome_dir: String,
-    /// فایل‌هایِ تأییدشدهٔ مدلِ انتخاب‌شده — اثباتِ ۹فایلی.
+    /// Verified files of the selected model — the 9-file proof.
     pub files_verified: usize,
-    /// هدفِ قراردادِ سخت — همیشه ۹.
+    /// Hard contract target — always 9.
     pub expected_files: usize,
 }
 
-// ── منشور + Base ─────────────────────────────────────────────────────────────
+// ── Charter + Base ─────────────────────────────────────────────────────────────
 
-/// نمایِ یک جریانِ منشور.
+/// View of one charter stream.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyCharterStreamView {
-    /// شمارهٔ جریان (۱ تا ۴).
+    /// Stream number (1 to 4).
     pub stream: u8,
-    /// نامِ جریان.
+    /// Stream name.
     pub name: String,
-    /// نرخِ bps اعلامی.
+    /// Declared bps rate.
     pub bps: i64,
-    /// مقصدِ حسابِ حاکم.
+    /// Destination sovereign account.
     pub destination_account: String,
-    /// توضیحِ یک‌خطی.
+    /// One-line description.
     pub note: String,
 }
 
-/// خلاصهٔ ممیزیِ یک قراردادِ Solidity.
+/// Audit summary of one Solidity contract.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyContractAuditView {
-    /// نامِ قرارداد.
+    /// Contract name.
     pub contract_name: String,
-    /// مسیرِ منبع در مخزن.
+    /// Source path in the repository.
     pub source_path: String,
-    /// نسخهٔ Solidity.
+    /// Solidity version.
     pub solidity_version: String,
-    /// ویژگی‌هایِ معماری — جفتِ کلید/مقدار.
+    /// Architecture properties — key/value pairs.
     pub audit_points: Vec<MonopolyAuditPoint>,
 }
 
-/// یک بندِ ممیزی.
+/// One audit clause.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyAuditPoint {
-    /// کلید (`total_supply`, `post_constructor_mint`, …).
+    /// Key (`total_supply`, `post_constructor_mint`, …).
     pub key: String,
-    /// مقدارِ اعلامی.
+    /// Declared value.
     pub value: String,
 }
 
-/// پاسخِ `GET /api/v1/monopoly/charter-and-base`.
+/// Response of `GET /api/v1/monopoly/charter-and-base`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolyCharterAndBaseResponse {
-    /// امضایِ موتورِ خزانه.
+    /// Treasury engine signature.
     pub signature: String,
-    /// شعارِ منشور — «جنگ اول به از صلح آخر».
+    /// Charter motto — "war first in exchange for peace last".
     pub charter_motto: String,
-    /// چهار جریانِ درآمدِ روزِ اول.
+    /// The four Day-1 revenue streams.
     pub streams: Vec<MonopolyCharterStreamView>,
-    /// پیکربندیِ Base Mainnet.
+    /// Base Mainnet configuration.
     pub base_chain_id: u64,
-    /// RPC عمومیِ Base.
+    /// Public Base RPC.
     pub base_rpc_url: String,
-    /// مرورگرِ زنجیره.
+    /// Block explorer.
     pub base_block_explorer: String,
-    /// قراردادِ USDC بومیِ Base.
+    /// Base-native USDC contract.
     pub base_usdc_contract: String,
-    /// خلاصهٔ ممیزیِ `ZeroXKiaToken.sol`.
+    /// Audit summary of `ZeroXKiaToken.sol`.
     pub token_audit: MonopolyContractAuditView,
-    /// خلاصهٔ ممیزیِ `KiaBaseEscrowTreasury.sol`.
+    /// Audit summary of `KiaBaseEscrowTreasury.sol`.
     pub escrow_audit: MonopolyContractAuditView,
 }
 
-// ── شبیه‌سازیِ تقسیم ─────────────────────────────────────────────────────────
+// ── Split simulation ─────────────────────────────────────────────────────────
 
-/// درخواستِ `POST /api/v1/monopoly/simulate-split`.
+/// Request of `POST /api/v1/monopoly/simulate-split`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolySimulateSplitRequest {
-    /// سناریو — `marketplace_sale` یا `instant_boost`.
+    /// Scenario — `marketplace_sale` or `instant_boost`.
     pub scenario: String,
-    /// داراییِ تسویه — `telegram-stars-xtr` | `base-native-eth` |
+    /// Settlement asset — `telegram-stars-xtr` | `base-native-eth` |
     /// `base-native-usdc` | `zero-x-kia-base-token` | `internal-micro-kian`.
     pub settlement_asset: String,
-    /// مبلغِ ناخالصِ میکرویی (۱۰^-۶ واحدِ نمایش) — برای بوست نادیده گرفته
-    /// می‌شود و قیمتِ کانونیکِ لایه اعمال می‌شود.
+    /// Gross micro amount (10^-6 display units) — ignored for the boost,
+    /// where the layer's canonical price applies.
     pub gross_amount_micros: i64,
-    /// شناسهٔ خریدار.
+    /// Buyer ID.
     pub buyer_user_id: String,
-    /// شناسهٔ سازنده.
+    /// Creator ID.
     pub creator_user_id: String,
-    /// شناسهٔ معرف — خالی/حذف‌شده یعنی فروشِ مستقیمِ بی‌معرف (قانونِ ۲۰۰۰ bps).
+    /// Referrer ID — empty/absent means a direct unreferred sale (the 2000 bps rule).
     pub referrer_user_id: Option<String>,
-    /// پایشِ وابسته — `1000..=5000`؛ پیش‌فرضِ منشور `1000`.
+    /// Affiliate watch — `1000..=5000`; charter default `1000`.
     pub affiliate_bps: i64,
-    /// لایهٔ بوست برای سناریویِ `instant_boost` — `featured-slot-24h` |
+    /// Boost tier for the `instant_boost` scenario — `featured-slot-24h` |
     /// `mairon-fast-track-audit` | `viral-swarm-amplifier`.
     pub boost_tier: Option<String>,
-    /// آدرسِ گیرندهٔ EIP-681 (اختیاری) — وقتی موجود باشد URI پرداختِ Base
-    /// ساخته می‌شود.
+    /// EIP-681 recipient address (optional) — when present, the Base payment URI
+    /// is built.
     pub recipient_address: Option<String>,
 }
 
-/// یک پایِ دفتری روی وایر.
+/// One ledger leg on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolySplitLegView {
-    /// گونهٔ پای (`buyer_debit` | `kia_treasury_credit` | …).
+    /// Leg kind (`buyer_debit` | `kia_treasury_credit` | …).
     pub leg_kind: String,
-    /// حسابِ دفتری.
+    /// Ledger account.
     pub account_id: String,
-    /// مبلغِ علامت‌دارِ میکرویی.
+    /// Signed micro amount.
     pub amount_micros: i64,
-    /// نرخِ bps اعلامی.
+    /// Declared bps rate.
     pub bps: i64,
-    /// یادداشتِ منشور.
+    /// Charter note.
     pub note: String,
 }
 
-/// پاسخِ شبیه‌سازیِ تقسیم — اثباتِ صفرجمع + ماندگاری + EIP-681.
+/// Split-simulation response — zero-sum proof + persistence + EIP-681.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonopolySimulateSplitResponse {
-    /// شناسهٔ ردیفِ ماندگار (`split:<hash>`).
+    /// Persisted row ID (`split:<hash>`).
     pub split_id: String,
-    /// سناریوی اجراشده.
+    /// Executed scenario.
     pub scenario: String,
-    /// داراییِ تسویه.
+    /// Settlement asset.
     pub settlement_asset: String,
-    /// مبلغِ ناخالصِ میکرویی.
+    /// Gross micro amount.
     pub gross_amount_micros: i64,
-    /// میکروهایِ خزانهٔ حاکم.
+    /// Sovereign treasury micros.
     pub kia_treasury_micros: i64,
-    /// میکروهایِ معرف (۰ وقتی بی‌معرف).
+    /// Referrer micros (0 when unreferred).
     pub referrer_micros: i64,
-    /// خالصِ سازنده.
+    /// Creator net.
     pub creator_net_micros: i64,
-    /// سهمِ مؤثرِ پلتفرم بر حسب bps (۲۰۰۰ روی فروشِ مستقیم).
+    /// Effective platform share in bps (2000 on a direct sale).
     pub effective_platform_bps: i64,
-    /// پاهای دفتریِ دوطرفه.
+    /// The two-sided ledger legs.
     pub legs: Vec<MonopolySplitLegView>,
-    /// اثباتِ صفرجمع — متنِ قابلِ ممیزی.
+    /// Zero-sum proof — auditable text.
     pub zero_sum_proof: String,
-    /// آیا ردیف در `sovereign_treasury_splits` ماندگار شد.
+    /// Whether the row was persisted in `sovereign_treasury_splits`.
     pub persisted: bool,
-    /// URI پرداختِ EIP-681 روی Base — فقط برای دارایی‌های on-chain و وقتی
-    /// `recipient_address` داده شده باشد.
+    /// EIP-681 payment URI on Base — only for on-chain assets and when
+    /// `recipient_address` is provided.
     pub eip681_payment_uri: Option<String>,
-    /// خلاصهٔ وضعیتِ اورکستراتور.
+    /// Orchestrator status summary.
     pub orchestrator_status: String,
 }

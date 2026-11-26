@@ -1,14 +1,14 @@
-//! `audit-ledger` — ممیزی نهایی cut-over فاز ۸ (ADR-009 §۷ فاز ۸).
+//! `audit-ledger` — final audit of the phase 8 cut-over (ADR-009 §7 phase 8).
 //!
-//! معیار پذیرش: «ممیزی نهایی: Σ کیف‌ها = 187,672 Đ و trialBalance.balanced
-//! == true — همان عدد نسل‌ها، حالا با هسته Rust».
+//! Acceptance criterion: «final audit: Σ wallets = 187,672 Đ and trialBalance.balanced
+//! == true — the same number as previous generations, now with the Rust core».
 //!
-//! این باینری روی فایل دیتابیس هدف اجرا می‌شود (فقط‌خواندنی، SQL خام مثل
-//! `genesis-proof`) و در پایان حکم go/no-go چاپ می‌کند:
-//! * `AUDIT PASS` → exit ۰ — مجاز به تگ `rust-core-1.0.0` و خاموشی Node
-//! * `AUDIT FAILED` → exit ۱ — هرگز با parity-fail مالی cut-over نکنید
+//! This binary runs against the target database file (read-only, raw SQL like
+//! `genesis-proof`) and prints a go/no-go verdict at the end:
+//! * `AUDIT PASS` → exit 0 — allowed to tag `rust-core-1.0.0` and shut down Node
+//! * `AUDIT FAILED` → exit 1 — never cut over with a financial parity failure
 //!
-//! استفاده: `audit-ledger <db-path>`
+//! Usage: `audit-ledger <db-path>`
 
 use dropagentx_db::genesis_proof;
 
@@ -35,15 +35,15 @@ async fn main() -> anyhow::Result<()> {
         println!("{line}");
     }
 
-    // حکم نهایی — همان دو شرط پذیرش ADR-009
+    // Final verdict — the same two acceptance criteria as ADR-009
     println!();
     if report.ok {
         println!("AUDIT PASS — Σ wallets = 187,672 Đ · trialBalance.balanced = true");
-        println!("→ مجاز به تگ rust-core-1.0.0 و خاموشی Node (پس از ۲ هفته ۱۰۰٪ سبز).");
+        println!("→ \u{645}\u{62c}\u{627}\u{632} \u{628}\u{647} \u{62a}\u{6af} rust-core-1.0.0 \u{648} \u{62e}\u{627}\u{645}\u{648}\u{634}\u{6cc} Node (\u{67e}\u{633} \u{627}\u{632} \u{6f2} \u{647}\u{641}\u{62a}\u{647} \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{633}\u{628}\u{632}).");
         Ok(())
     } else {
         println!("AUDIT FAILED — {}", report.problems.join(" · "));
-        println!("→ برگشت: RUST_TRAFFIC_PCT=0 — هرگز با مغایرت مالی cut-over نکنید.");
+        println!("→ \u{628}\u{631}\u{6af}\u{634}\u{62a}: RUST_TRAFFIC_PCT=0 — \u{647}\u{631}\u{6af}\u{632} \u{628}\u{627} \u{645}\u{63a}\u{627}\u{6cc}\u{631}\u{62a} \u{645}\u{627}\u{644}\u{6cc} cut-over \u{646}\u{6a9}\u{646}\u{6cc}\u{62f}.");
         std::process::exit(1);
     }
 }

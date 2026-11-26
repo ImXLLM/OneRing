@@ -1,17 +1,17 @@
-//! `kian-agents` — ناوگان ایجنت‌های کیان — نقش‌ها، A2A و MCP (M4).
+//! `kian-agents` — Kian's agent fleet — roles, A2A, and MCP (M4).
 //!
-//! قطعات خالص (بدون دیتابیس — سرور اجرا می‌کند، اینجا فقط قرارداد است):
-//! - [`roles`] — ۷ نقش ناوگان (همگی فعال — ناوگان ۷/۷) + ردیف‌های بذر
-//! - [`agent_reach`] — خوانندهٔ وب صفر-هزینهٔ کاوشگر + هندلر امنیت نگهبان
-//!   (پورت `Agent-Reach` + `starnet`)
-//! - [`kya`] — شناسنامهٔ Know-Your-Agent (ERC-8004/ES256) + دروازهٔ x402 v2
-//! - [`card`] — کارت کشف A2A (`/.well-known/agent-card.json`)
-//! - [`mcp`] — allowlist بستهٔ ابزارها + اعتبارسنجی آرگومان‌ها
+//! Pure parts (no database — the server executes; this is contracts only):
+//! - [`roles`] — the fleet's 7 roles (all active — a 7/7 fleet) + seed rows
+//! - [`agent_reach`] — the scout's zero-cost web reader + the guardian security handler
+//!   (port of `Agent-Reach` + `starnet`)
+//! - [`kya`] — the Know-Your-Agent identity registry (ERC-8004/ES256) + the x402 v2 gateway
+//! - [`card`] — the A2A discovery card (`/.well-known/agent-card.json`)
+//! - [`mcp`] — the closed tool allowlist + argument validation
 //!
-//! اصل صادق‌بودن: هیچ نقشی خودش را «فعال» نمی‌نامد مگر کرنل واقعاً از آن
-//! استفاده کند — نگهبان با هندلر راستی‌آزمایی واقعی
-//! [`agent_reach::GuardianSecurityHandler`] سیم شده و اینک ناوگان کامل
-//! ۷/۷ فعال است.
+//! The honesty principle: no role calls itself "active" unless the kernel actually
+//! uses it — the guardian is wired with the real verification handler
+//! [`agent_reach::GuardianSecurityHandler`], and the full fleet is
+//! now 7/7 active.
 #![forbid(unsafe_code)]
 
 pub mod agent_reach;
@@ -20,10 +20,10 @@ pub mod kya;
 pub mod mcp;
 pub mod roles;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate ID — for the smoke test and logs.
 pub const NAME: &str = "kian-agents";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use agent_reach::{

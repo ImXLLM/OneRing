@@ -1,26 +1,26 @@
-//! `kian-db` — لایهٔ ماندگاری KIAN (کرنل پول M2).
+//! `kian-db` — the KIAN persistence layer (the M2 money kernel).
 //!
-//! پل بین دامنهٔ خالص [`kian_domain`] و SQLite واقعی v3 — با «همان» اسکیمای
-//! Prisma (مهاجرت نسخه‌دار `migrations/0001_init.sql`) تا dual-run بدون تبدیل
-//! روی یک فایل بنشیند:
+//! The bridge between the pure domain [`kian_domain`] and real v3 SQLite — with the "same"
+//! Prisma schema (versioned migration `migrations/0001_init.sql`) so dual-run can sit
+//! on one file without conversion:
 //!
-//! - [`store`] — `V3Store`: بارگذاری → دامنهٔ خالص → درج، همه در
-//!   `sqlx::Transaction`؛ ترازها همیشه مشتق از `Posting` (ADR-003)
-//! - [`outbox`] — transactional outbox برای `DomainEvent`ها + audit
-//! - [`wire`] — شکل سیمی JSON رویدادها (یکسان با `JSON.stringify` در TS)
-//! - [`genesis`] — برنامهٔ خالص genesis + جدول گردکردن صریح ADR-002
-//! - [`legacy`] — خوانندهٔ فقط‌خواندنی دیتابیس لگاسی (SQL خام)
-//! - [`migrate`] — پورت `migrate-legacy.ts`: مهاجرت کاربران → `user:tg:<id>`،
-//!   genesis یک‌بارمصرف با کلید قطعی `legacy:genesis:v1`
-//! - [`proof`] — ممیزی خارجی با SQL خام — Σ کیف‌ها = 187,672 Đ · Σ ردیف‌ها = 0
-//! - [`queries`] — صف HITL، محصولات داشبورد، audit و بکاپ (M4/M5 روی همین می‌نشینند)
-//! - [`users`] — هویت M3: کاربران تلگرام، نشست‌های bearer، واریزهای TON
-//! - [`brain`] — مغز M4: مهارت‌ها/ران‌های هرمس، حافظهٔ ۷لایه، ناوگان، A2A، ادمین
-//! - [`nation`] — حاکمیت M5: لایحه‌ها و رأی‌های پارلمان HITL
-//! - [`wallet_chains`] — کیف پول M5: آدرس‌های چهارزنجیره و واریزهای USDT
+//! - [`store`] — `V3Store`: load → pure domain → insert, all inside
+//!   a `sqlx::Transaction`; balances always derived from `Posting` (ADR-003)
+//! - [`outbox`] — transactional outbox for `DomainEvent`s + audit
+//! - [`wire`] — the JSON wire shape of events (identical to `JSON.stringify` in TS)
+//! - [`genesis`] — the pure genesis plan + the ADR-002 explicit rounding table
+//! - [`legacy`] — read-only reader of the legacy database (raw SQL)
+//! - [`migrate`] — port of `migrate-legacy.ts`: user migration → `user:tg:<id>`,
+//!   one-shot genesis with the deterministic key `legacy:genesis:v1`
+//! - [`proof`] — external audit with raw SQL — Σ wallets = 187,672 Đ · Σ rows = 0
+//! - [`queries`] — HITL queue, dashboard products, audit and backup (M4/M5 sit on this)
+//! - [`users`] — M3 identity: Telegram users, bearer sessions, TON deposits
+//! - [`brain`] — the M4 brain: Hermes skills/runs, 7-layer memory, fleet, A2A, admin
+//! - [`nation`] — M5 governance: HITL parliament bills and votes
+//! - [`wallet_chains`] — M5 wallet: four-chain addresses and USDT deposits
 //!
-//! اصل ساختاری: این کرِیت به `kian-domain` بسته می‌شود، اما دامنه
-//! هیچ‌چیز از اینجا نمی‌داند.
+//! Structural principle: this crate depends on `kian-domain`, but the domain
+//! knows nothing from here.
 #![forbid(unsafe_code)]
 
 pub mod brain;
@@ -47,13 +47,13 @@ pub mod wire;
 #[cfg(test)]
 mod integration_tests;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate id — for smoke tests and logs.
 pub const NAME: &str = "kian-db";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-// ---------- re-exports اصلی (API آرگونومیک) ----------
+// ---------- main re-exports (ergonomic API) ----------
 pub use error::{DbError, DbResult};
 pub use genesis::{
     plan_genesis, GenesisCitizen, GenesisPlan, LegacyProductRow, LegacyUserRow, EXPECTED_SUPPLY,
@@ -68,41 +68,41 @@ pub use store::{
 };
 pub use wire::{event_kind, event_payload};
 
-// کوئری‌های صف HITL، محصولات داشبورد، audit و بکاپ + رأی ۵-ستارهٔ ترینیتی
+// HITL queue, dashboard product, audit and backup queries + the Trinity 5-star vote
 pub use queries::{
     deliver_order, AiUsageRow, AuditRowRead, BackupInfo, HitlDecision, HitlRow, ProductFilter,
     ProductReviewRow, ProductRow,
 };
 
-// هویت M3 — شهروندان تلگرام، نشست‌ها، واریز TON
+// M3 identity — Telegram citizens, sessions, TON deposits
 pub use users::{citizen_account_id, TonDepositRow, UserRow};
 
-// مغز M4 + سازندهٔ محصول HTML (فاز ۴)
+// M4 brain + HTML product builder (Phase 4)
 pub use brain::{
     A2aRow, AgentRow, BuilderMessageRow, BuilderSessionPatch, BuilderSessionRow, HermesRunRow,
     MemoryNoteRow, SkillRow, SkillSeed,
 };
 
-// حاکمیت M5 — پارلمان HITL
+// M5 governance — the HITL parliament
 pub use nation::{BillRow, VoteRow};
 
-// استودیوی ادراک‌سیار (Wave 5) — آفرینش‌های ۹-مدالیتی
+// Mobile-perception studio (Wave 5) — 9-modality creations
 pub use studio::StudioCreationRow;
 pub use supremacy::{AgentCheckpointRow, SweSandboxAuditRow, WorkflowDagRunRow};
 
-// Wave 9 — لاگِ آزمایشگاه، ثبتِ لوکال و رانِ رندرِ HUD
+// Wave 9 — lab log, local registration and the HUD render run
 pub use wave9::{LocalePatchRegistryRow, NeuralHudRenderJobRow, UserLabTelemetryLogRow};
 
-// اتاقِ جنگِ بنیان‌گذار (Wave 10) — گام‌هایِ روزِ صفر + دستورهایِ رئیس
+// Founder war room (Wave 10) — day-zero steps + boss directives
 pub use wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow};
 
-// کوانتِ علّی (Wave 6) — استراتژی‌های Vibe-Trading
+// Causal quant (Wave 6) — Vibe-Trading strategies
 pub use quant::QuantStrategyRow;
 
-// خزانهٔ حاکم (Wave 7) — تقسیم‌های اتمیِ روزِ اول روی Base
+// Sovereign treasury (Wave 7) — day-one atomic splits on Base
 pub use monopoly::SovereignTreasurySplitRow;
 
-// کیف پول M5 + درخواست‌های برداشت کریپتو (فاز ۶)
+// M5 wallet + crypto withdrawal requests (Phase 6)
 pub use wallet_chains::{UsdtDepositRow, WalletAddressRow, WithdrawalRequestRow};
 
 #[cfg(test)]
@@ -113,7 +113,7 @@ mod tests {
     fn smoke() {
         assert_eq!(NAME, "kian-db");
         assert_ne!(VERSION, "", "version string present");
-        // ثابت‌های قرارداد genesis — همان legacy (ارزش نقدشوندگی آغازین ثابت است)
+        // genesis contract constants — same as legacy (the initial liquidity value is fixed)
         assert_eq!(GENESIS_KEY, "legacy:genesis:v1");
         assert_eq!(GENESIS_TX_ID, "tx_legacy_genesis");
         assert_eq!(EXPECTED_SUPPLY, 187_672);

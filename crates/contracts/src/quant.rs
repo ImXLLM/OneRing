@@ -1,225 +1,225 @@
-//! قراردادهای کوانتِ علّی — هستهٔ `ccxt` و موتور `Vibe-Trading` (Wave 6 —
+//! Causal quant contracts — the `ccxt` core and the `Vibe-Trading` engine (Wave 6 —
 //! Step 3/4).
 //!
-//! سه DTO روی وایر:
-//! - [`QuantVenuesResponse`] — ماتریسِ ۸-مکانیِ بی‌کلید + خودآزمونِ تیکِ
-//!   `Precise` (درمانِ قضاییِ #1 سیسی‌اکس‌تا) + نشانِ گپِ ترتیبِ `OrderBook`
-//!   (درمانِ #2)؛
-//! - [`QuantVibeBacktestRequest`] / [`QuantVibeBacktestResponse`] — اجرایِ
-//!   DAG توپولوژیکِ ۵گرهی روی پرامپتِ طبیعیِ دوزبانه با بک‌تسترِ اکیداً
-//!   علّی، دفترِ ادعاها، گیتِ مایرون و فورجِ `SKILL.md`؛
-//! - [`QuantStrategiesResponse`] — فهرستِ استراتژی‌هایِ ماندگارِ
+//! three DTOs on the wire:
+//! - [`QuantVenuesResponse`] — the keyless 8-venue matrix + the `Precise` tick
+//!   self-test (ccxt's forensic remedy #1) + the `OrderBook` sequence-gap badge
+//!   (remedy #2);
+//! - [`QuantVibeBacktestRequest`] / [`QuantVibeBacktestResponse`] — running the
+//!   5-node topological DAG on a bilingual natural prompt with a strictly
+//!   causal backtester, a claims ledger, the Mairon gate, and `SKILL.md` forging;
+//! - [`QuantStrategiesResponse`] — the list of `quant_strategies`
 //!   `quant_strategies`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// یک نقطهٔ پایانیِ عمودی روی وایر.
+/// A venue endpoint on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantVenueEndpointView {
-    /// هدفِ کاربردی (`ticker24h`, `depth`, …).
+    /// Use-case purpose (`ticker24h`, `depth`, …).
     pub purpose: String,
-    /// متدِ HTTP.
+    /// HTTP method.
     pub method: String,
-    /// مسیر یا بدنهٔ نمونه.
+    /// Path or sample body.
     pub path: String,
-    /// وزنِ نرخ‌سنجیِ اعلامی (۰ = اعلام‌نشده).
+    /// Declared rate-limit weight (0 = undeclared).
     pub weight: u32,
 }
 
-/// یک مکانِ بی‌کلید روی وایر — صفر API key، صفر KYC.
+/// A keyless venue on the wire — zero API keys, zero KYC.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantVenueView {
-    /// شناسهٔ پایدار (`binance-spot`, …).
+    /// Stable id (`binance-spot`, …).
     pub id: String,
-    /// نام نمایشی.
+    /// Display name.
     pub display_name: String,
-    /// گونهٔ مکان (`cex-spot` | `cex-linear-perp` | `dex-perp` | `dex-amm`).
+    /// Venue kind (`cex-spot` | `cex-linear-perp` | `dex-perp` | `dex-amm`).
     pub venue_kind: String,
-    /// پایهٔ URL.
+    /// URL base.
     pub base_url: String,
-    /// احرازِ لازم — همیشه `none`.
+    /// Required auth — always `none`.
     pub auth: String,
-    /// نقاطِ پایانی.
+    /// Endpoints.
     pub endpoints: Vec<QuantVenueEndpointView>,
-    /// یادداشتِ کوتاه.
+    /// Short note.
     pub note: String,
 }
 
-/// یک ردیفِ خودآزمونِ تیکِ `Precise` — ورودی/تیک/خروجِ کانونیک.
+/// One `Precise` tick self-test row — canonical input/tick/output.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantTickSelftestView {
-    /// ورودی خام.
+    /// Raw input.
     pub input: String,
-    /// تیک خام.
+    /// Raw tick.
     pub tick: String,
-    /// خروجی کانونیک.
+    /// Canonical output.
     pub output: String,
 }
 
-/// `GET /quant/venues` — ماتریسِ بازارِ بی‌کلید + شواهدِ دو درمانِ قضایی.
+/// `GET /quant/venues` — the keyless market matrix + evidence of the two forensic remedies.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantVenuesResponse {
-    /// ۸ مکانِ عمودیِ صفر-کلید.
+    /// 8 zero-key venues.
     pub venues: Vec<QuantVenueView>,
-    /// خودآزمونِ تیک — صددرصد `Precise`، صفر ریزشِ شناور.
+    /// Tick self-test — 100% `Precise`, zero float drift.
     pub tick_selftest: Vec<QuantTickSelftestView>,
-    /// نشانِ گپِ ترتیب — `[Applied, IgnoredStale, SequenceGapDetected]`.
+    /// Sequence-gap badge — `[Applied, IgnoredStale, SequenceGapDetected]`.
     pub orderbook_gap_guard: Vec<String>,
-    /// امضای کور.
+    /// Blind signature.
     pub signature: String,
 }
 
-/// `POST /quant/vibe-backtest` — درخواستِ اجرایِ DAG کوانت.
+/// `POST /quant/vibe-backtest` — request to run the quant DAG.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantVibeBacktestRequest {
-    /// پرامپتِ طبیعی — فارسی یا انگلیسی.
+    /// Natural prompt — Persian or English.
     pub vibe_prompt: String,
-    /// نماد — پیش‌فرض `BTC-USDT`.
+    /// Symbol — default `BTC-USDT`.
     pub symbol: Option<String>,
-    /// تایم‌فریم — پیش‌فرض `1h`.
+    /// Timeframe — default `1h`.
     pub timeframe: Option<String>,
-    /// تعدادِ کندل‌هایِ مولدِ قطعی — پیش‌فرض ۷۲۰.
+    /// Number of deterministically generated candles — default 720.
     pub bars: Option<u32>,
-    /// بذرِ قطعی — پیش‌فرض ۲۰۲۶.
+    /// Deterministic seed — default 2026.
     pub seed: Option<u64>,
 }
 
-/// تلمتریِ یک گرهٔ DAG روی وایر.
+/// Telemetry of one DAG node on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantSwarmNodeView {
-    /// اندیسِ ۱-پایه.
+    /// 1-based index.
     pub index: u32,
-    /// نامِ کانونیکِ گره.
+    /// The node's canonical name.
     pub name: String,
-    /// وضعیت.
+    /// Status.
     pub status: String,
-    /// خلاصهٔ قطعی.
+    /// Deterministic summary.
     pub summary: String,
-    /// تیکِ قطعی.
+    /// Deterministic tick.
     pub deterministic_ticks: u64,
 }
 
-/// سنجه‌هایِ نهادیِ گزارشِ بک‌تست روی وایر.
+/// The backtest report's institutional metrics on the wire.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantMetricsView {
-    /// اثباتِ علّی — همیشه `true`.
+    /// Causal proof — always `true`.
     pub causal_slice_proof: bool,
-    /// شارپِ سالانه‌شده.
+    /// Annualized Sharpe.
     pub sharpe_ratio: f64,
-    /// سورتینو.
+    /// Sortino.
     pub sortino_ratio: f64,
-    /// بیشینهٔ دراودان (درصد، منفی).
+    /// Maximum drawdown (percent, negative).
     pub max_drawdown_pct: f64,
-    /// بازدهیِ کل (درصد).
+    /// Total return (percent).
     pub total_return_pct: f64,
-    /// بازدهیِ سالانه‌شدهٔ مرکب (درصد).
+    /// Annualized compound return (percent).
     pub cagr_pct: f64,
-    /// کالمر.
+    /// Calmar.
     pub calmar_ratio: f64,
-    /// نرخِ برد (درصد).
+    /// Win rate (percent).
     pub win_rate_pct: f64,
-    /// نسبتِ سود.
+    /// Profit factor.
     pub profit_factor: f64,
-    /// امگا.
+    /// Omega.
     pub omega_ratio: f64,
-    /// نسبتِ دُم.
+    /// Tail ratio.
     pub tail_ratio: f64,
-    /// چولگی.
+    /// Skewness.
     pub skewness: f64,
-    /// کشیدگیِ اضافی.
+    /// Excess kurtosis.
     pub kurtosis: f64,
-    /// گردشِ سرمایه.
+    /// Capital turnover.
     pub turnover_ratio: f64,
-    /// تعدادِ معامله‌ها.
+    /// Number of trades.
     pub total_trades: u32,
-    /// تعدادِ کندل‌ها.
+    /// Number of candles.
     pub bars: u32,
-    /// حقوقِ پایانی.
+    /// Final equity.
     pub final_equity: f64,
-    /// تسویهٔ اجباری؟
+    /// Forced liquidation?
     pub liquidated: bool,
-    /// کلیدِ توقف؟
+    /// Halt key?
     pub kill_switch_tripped: bool,
-    /// هشِ دفترِ ادعاها.
+    /// Claims ledger hash.
     pub claim_verification_hash: String,
 }
 
-/// واپسِ گیتِ مایرون روی وایر.
+/// The Mairon gate verdict on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantGateView {
-    /// تأییدِ فروش در مارکت‌پلیس.
+    /// Marketplace sale approval.
     pub approved: bool,
-    /// دلیلِ صادقانه.
+    /// Honest reason.
     pub reason: String,
-    /// گذرِ قطعیِ تنظیمِ رژیم به کار رفت؟
+    /// Was the deterministic regime boost applied?
     pub regime_boost_applied: bool,
 }
 
-/// `POST /quant/vibe-backtest` — پاسخِ کاملِ DAG.
+/// `POST /quant/vibe-backtest` — the complete DAG response.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantVibeBacktestResponse {
-    /// شناسهٔ استراتژی (`vibe:<hash>`).
+    /// Strategy id (`vibe:<hash>`).
     pub strategy_id: String,
-    /// AST تایپ‌دار — گردشِ کاملِ JSON.
+    /// Typed AST — full JSON round-trip.
     pub strategy_ast_json: serde_json::Value,
-    /// سنجه‌هایِ نهادی.
+    /// Institutional metrics.
     pub metrics: QuantMetricsView,
-    /// تلمتریِ ۵ گره به ترتیبِ توپولوژیک.
+    /// Telemetry of the 5 nodes in topological order.
     pub nodes: Vec<QuantSwarmNodeView>,
-    /// واپسِ گیتِ مایرون.
+    /// The Mairon gate verdict.
     pub gate: QuantGateView,
-    /// `SKILL.md` فورج‌شده.
+    /// The forged `SKILL.md`.
     pub skill_md: String,
-    /// شناسهٔ ردیفِ ماندگار (`quant:<uuid>`) — پس از درج.
+    /// Persisted row id (`quant:<uuid>`) — after insert.
     pub persisted_id: String,
-    /// امضای موتور کوانتِ علّی.
+    /// Signature of the causal quant engine.
     pub signature: String,
 }
 
-/// یک استراتژیِ ماندگار روی وایر.
+/// A persisted strategy on the wire.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantStrategyView {
-    /// شناسهٔ ردیف (`quant:<uuid>`).
+    /// Row id (`quant:<uuid>`).
     pub id: String,
-    /// شناسهٔ استراتژی (`vibe:<hash>`).
+    /// Strategy id (`vibe:<hash>`).
     pub strategy_id: String,
-    /// سازنده.
+    /// Creator.
     pub creator_user_id: String,
-    /// نامِ انسانی.
+    /// Human-readable name.
     pub name: String,
-    /// نماد.
+    /// Symbol.
     pub symbol: String,
-    /// تایم‌فریم.
+    /// Timeframe.
     pub timeframe: String,
-    /// شارپ.
+    /// Sharpe.
     pub sharpe_ratio: f64,
-    /// دراودان.
+    /// Drawdown.
     pub max_drawdown_pct: f64,
-    /// مُهرِ گیتِ مایرون.
+    /// Mairon gate stamp.
     pub mairon_approved: bool,
-    /// هشِ ادعاها.
+    /// Claims hash.
     pub claim_verification_hash: String,
-    /// مُهرِ زمانِ تولید.
+    /// Creation timestamp.
     pub created_at: String,
 }
 
-/// `GET /quant/strategies` — فهرستِ استراتژی‌هایِ ماندگار.
+/// `GET /quant/strategies` — the list of persisted strategies.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantStrategiesResponse {
-    /// ردیف‌ها به ترتیبِ نوترین.
+    /// Rows in newest-first order.
     pub strategies: Vec<QuantStrategyView>,
-    /// تعدادِ کل.
+    /// Total count.
     pub count: u32,
 }

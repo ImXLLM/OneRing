@@ -1,49 +1,49 @@
-//! `creator_dna_contract` — قلب DNA سازنده در کرنل هرمس.
+//! `creator_dna_contract` — the creator DNA heart in the Hermes kernel.
 //!
-//! پورت `KIA-BRAIN-OS/` (Wave 2 — Step 4/6): هویت سازنده (`01_DNAme`)، قوانین
-//! آهنین کار (`02_DNAwork`) و ذهن Aragon-4 (`03_DNAmind`) به‌صورت قرارداد
-//! نرم‌فروز (enforceable contract) در می‌آیند:
-//! - حاکمیت صفر-کارت/صفر-KYC همیشه `true` است — پیشنهاد API کارت‌دار وقتی
-//!   جایگزین بدون-کارت در رجیستری کیان هست، تخلف DNA است.
-//! - اولویت محصول #1 همیشه UX (تیر ۱) است — اسپلش مرده و stub خاموش ممنوع.
-//! - شخصیت استدلال «Aragon-4 Principal Architect» — صفر تملق، ادعای بی‌اثبات
-//!   (تست پاس‌شده بدون اجرا) تخلف است.
+//! Port of `KIA-BRAIN-OS/` (Wave 2 — Step 4/6): the creator identity (`01_DNAme`), the iron work
+//! rules (`02_DNAwork`), and the Aragon-4 mind (`03_DNAmind`) become an
+//! enforceable contract:
+//! - zero-card/zero-KYC sovereignty is always `true` — proposing a card-gated API while
+//!   a card-free alternative exists in the Kian registry is a DNA violation.
+//! - product priority #1 is always UX (tier 1) — dead splashes and silent stubs are forbidden.
+//! - reasoning persona "Aragon-4 Principal Architect" — zero flattery; unverified claims
+//!   (tests passing without a run) are a violation.
 //!
-//! لایهٔ audit قطعی و بدون شبکه است؛ فقط الگوها را روی متن می‌سنجد.
+//! The audit layer is deterministic and network-free; it only measures patterns against text.
 
 use serde::Serialize;
 
-/// هندل سازنده — از `KIA-BRAIN-OS/01_DNAme.md`.
+/// Creator handle — from `KIA-BRAIN-OS/01_DNAme.md`.
 pub const CREATOR_HANDLE: &str = "Kia / KiaAgentX";
 
-/// شخصیت استدلال الزامی — از `KIA-BRAIN-OS/03_DNAmind.md`.
+/// Required reasoning persona — from `KIA-BRAIN-OS/03_DNAmind.md`.
 pub const REASONING_PERSONA: &str = "Aragon-4 Principal Architect";
 
-/// پشتهٔ فونت فارسی الزامی برای خروجی RTL — از `01_DNAme` §3.
+/// The mandatory Persian font stack for RTL output — from `01_DNAme` §3.
 pub const PERSIAN_FONT_STACK: &str = "Vazirmatn, system-ui";
 
-/// نسخهٔ اسکیمای DNA — با frontmatter فایل‌های `KIA-BRAIN-OS/` هم‌شمار است.
+/// DNA schema version — kept in lockstep with the `KIA-BRAIN-OS/` file frontmatter.
 pub const DNA_SCHEMA_VERSION: &str = "1.0.0";
 
-/// خطاهای امضای قرارداد DNA.
+/// DNA contract-signature errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DnaContractError {
-    /// حاکمیت صفر-کارت نمی‌تواند خاموش شود — تخلف ساختاری.
+    /// Zero-card sovereignty cannot be switched off — a structural violation.
     SovereigntyMustStayTrue,
-    /// اولویت UX فقط تیر ۱ است — هیچ معماری اجازهٔ پایین‌آوردن ندارد.
+    /// The UX priority is tier 1 only — no architecture may lower it.
     UxPriorityMustBeTierOne,
-    /// شخصیت استدلال هرگز از Aragon-4 تغییر نمی‌کند.
+    /// The reasoning persona never changes from Aragon-4.
     PersonaIsImmutable,
 }
 
-/// قرارداد غیرقابل‌مذاکرهٔ DNA سازنده.
+/// The non-negotiable creator DNA contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct CreatorDnaContract {
-    /// `true` همیشگی — ریل‌های رسمی فقط TON و Telegram Stars هستند.
+    /// Always `true` — the official rails are TON and Telegram Stars only.
     pub zero_card_zero_kyc_sovereignty: bool,
-    /// تیر اولویت محصول — همیشه ۱ (UX).
+    /// Product priority tier — always 1 (UX).
     pub ux_priority_tier: u8,
-    /// شخصیت استدلال — ثابت زمان کامپایل.
+    /// Reasoning persona — a compile-time constant.
     pub reasoning_persona: &'static str,
 }
 
@@ -54,7 +54,7 @@ impl Default for CreatorDnaContract {
 }
 
 impl CreatorDnaContract {
-    /// تنها نسخهٔ مشروع قرارداد؛ هر تغییر صریح توسط `validate` رد می‌شود.
+    /// The single legitimate version of the contract; any explicit change is rejected by `validate`.
     #[must_use]
     pub const fn canonical() -> Self {
         Self {
@@ -64,12 +64,12 @@ impl CreatorDnaContract {
         }
     }
 
-    /// امضای قرارداد را می‌سنجد — نسخهٔ دست‌کاری‌شده را رد می‌کند.
+    /// Checks the contract signature — rejects a tampered version.
     ///
     /// # Errors
-    /// `SovereigntyMustStayTrue` اگر حاکمیت خاموش شده باشد،
-    /// `UxPriorityMustBeTierOne` اگر تیر UX غیر از ۱ باشد و
-    /// `PersonaIsImmutable` اگر شخصیت استدلال جایگزین شده باشد.
+    /// `SovereigntyMustStayTrue` if sovereignty has been switched off,
+    /// `UxPriorityMustBeTierOne` if the UX tier is anything but 1, and
+    /// `PersonaIsImmutable` if the reasoning persona has been replaced.
     pub fn validate(self) -> Result<(), DnaContractError> {
         if !self.zero_card_zero_kyc_sovereignty {
             return Err(DnaContractError::SovereigntyMustStayTrue);
@@ -84,20 +84,20 @@ impl CreatorDnaContract {
     }
 }
 
-/// جنس تخلف DNA — خروجی `audit_against_creator_dna`.
+/// The DNA violation kind — the output of `audit_against_creator_dna`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum DnaViolation {
-    /// پیشنهاد مسیرِ کارت‌دار/کارت‌نیاز با وجود وجود جایگزین بدون-کارت.
+    /// Proposing a card-gated/card-required path although a card-free alternative exists.
     CardGatedApiAssumption {
         snippet: String,
         guidance: String,
     },
-    /// ادعای تکمیل/سالمی بدون شاهد اجرا — نقض صفر تملق Aragon-4.
+    /// A completion/health claim without run evidence — violates Aragon-4 zero flattery.
     UnverifiedCompletionClaim {
         snippet: String,
         guidance: String,
     },
-    /// stub مردهٔ UI / اسپلش بازاریابی — نقض قانون فریم‌اول Astra.
+    /// A dead UI stub / marketing splash — violates the Astra first-frame rule.
     UxFirstViolation {
         snippet: String,
         guidance: String,
@@ -105,7 +105,7 @@ pub enum DnaViolation {
 }
 
 impl DnaViolation {
-    /// برچسب کوتاه برای گزارش‌های ماشینی.
+    /// A short label for machine-generated reports.
     #[must_use]
     pub fn kind(&self) -> &'static str {
         match self {
@@ -116,7 +116,7 @@ impl DnaViolation {
     }
 }
 
-/// الگوهای پیشنهادِ کارت‌دار — کافی است یکی ظاهر شود تا تخلف ثبت شود.
+/// Card-gated suggestion patterns — one hit is enough to record a violation.
 const CARD_GATED_PATTERNS: &[&str] = &[
     "requires a credit card",
     "credit card required",
@@ -130,12 +130,12 @@ const CARD_GATED_PATTERNS: &[&str] = &[
     "needs a paid plan",
     "card-gated",
     "requires billing info",
-    "نیازمند کارت",
-    "کارت بانکی لازم",
-    "کارت اعتباری",
+    "\u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{6a9}\u{627}\u{631}\u{62a}",
+    "\u{6a9}\u{627}\u{631}\u{62a} \u{628}\u{627}\u{646}\u{6a9}\u{6cc} \u{644}\u{627}\u{632}\u{645}",
+    "\u{6a9}\u{627}\u{631}\u{62a} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{6cc}",
 ];
 
-/// الگوهای ادعای بی‌اثبات — نقض «عدد بدون اجرا ممنوع».
+/// Unverified-claim patterns — violates "no numbers without a run".
 const UNVERIFIED_CLAIM_PATTERNS: &[&str] = &[
     "all tests pass",
     "everything works",
@@ -146,12 +146,12 @@ const UNVERIFIED_CLAIM_PATTERNS: &[&str] = &[
     "no bugs",
     "trust me",
     "production ready without running",
-    "همهٔ تست‌ها پاس",
-    "قطعاً کار می‌کند",
-    "بدون تست هم درست است",
+    "\u{647}\u{645}\u{647}\u{654} \u{62a}\u{633}\u{62a}‌\u{647}\u{627} \u{67e}\u{627}\u{633}",
+    "\u{642}\u{637}\u{639}\u{627}\u{64b} \u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}",
+    "\u{628}\u{62f}\u{648}\u{646} \u{62a}\u{633}\u{62a} \u{647}\u{645} \u{62f}\u{631}\u{633}\u{62a} \u{627}\u{633}\u{62a}",
 ];
 
-/// الگوهای stub مردهٔ UI — نقض قانون فریم‌اول تعاملی.
+/// Dead UI stub patterns — violates the interactive first-frame rule.
 const UX_FIRST_PATTERNS: &[&str] = &[
     "add the ui later",
     "ui comes later",
@@ -162,17 +162,17 @@ const UX_FIRST_PATTERNS: &[&str] = &[
     "skip the ui for now",
     "stub component with no handler",
     "wire it up later",
-    "بعداً وصل می‌شود",
-    "اسپلش شروع",
-    "پیج قالبی",
+    "\u{628}\u{639}\u{62f}\u{627}\u{64b} \u{648}\u{635}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}",
+    "\u{627}\u{633}\u{67e}\u{644}\u{634} \u{634}\u{631}\u{648}\u{639}",
+    "\u{67e}\u{6cc}\u{62c} \u{642}\u{627}\u{644}\u{628}\u{6cc}",
 ];
 
-const GUIDANCE_CARD: &str = "حاکمیت صفر-کارت (DNAme §2): مسیر بدون-کارت/بدون-کلید از رجیستری kian-ai (opencode_zen + free_llm_registry، آبشار ۳لایه) را پیشنهاد بده.";
-const GUIDANCE_CLAIM: &str = "صفر تملق (DNAmind §3): ادعا را با خروجی اجرا اثبات کن — `cargo test`/`clippy`/عدد چاپ‌شده؛ وگرنه «برآورد» برچسب بزن.";
-const GUIDANCE_UX: &str = "فریم‌اول تعاملی (DNAme §3 + دروازهٔ Astra): خروجی باید از فریم اول اپ زنده باشد؛ stub مرده یا اسپلش بازاریابی ممنوع است.";
+const GUIDANCE_CARD: &str = "\u{62d}\u{627}\u{6a9}\u{645}\u{6cc}\u{62a} \u{635}\u{641}\u{631}-\u{6a9}\u{627}\u{631}\u{62a} (DNAme §2): \u{645}\u{633}\u{6cc}\u{631} \u{628}\u{62f}\u{648}\u{646}-\u{6a9}\u{627}\u{631}\u{62a}/\u{628}\u{62f}\u{648}\u{646}-\u{6a9}\u{644}\u{6cc}\u{62f} \u{627}\u{632} \u{631}\u{62c}\u{6cc}\u{633}\u{62a}\u{631}\u{6cc} kian-ai (opencode_zen + free_llm_registry\u{60c} \u{622}\u{628}\u{634}\u{627}\u{631} \u{6f3}\u{644}\u{627}\u{6cc}\u{647}) \u{631}\u{627} \u{67e}\u{6cc}\u{634}\u{646}\u{647}\u{627}\u{62f} \u{628}\u{62f}\u{647}.";
+const GUIDANCE_CLAIM: &str = "\u{635}\u{641}\u{631} \u{62a}\u{645}\u{644}\u{642} (DNAmind §3): \u{627}\u{62f}\u{639}\u{627} \u{631}\u{627} \u{628}\u{627} \u{62e}\u{631}\u{648}\u{62c}\u{6cc} \u{627}\u{62c}\u{631}\u{627} \u{627}\u{62b}\u{628}\u{627}\u{62a} \u{6a9}\u{646} — `cargo test`/`clippy`/\u{639}\u{62f}\u{62f} \u{686}\u{627}\u{67e}‌\u{634}\u{62f}\u{647}\u{61b} \u{648}\u{6af}\u{631}\u{646}\u{647} «\u{628}\u{631}\u{622}\u{648}\u{631}\u{62f}» \u{628}\u{631}\u{686}\u{633}\u{628} \u{628}\u{632}\u{646}.";
+const GUIDANCE_UX: &str = "\u{641}\u{631}\u{6cc}\u{645}‌\u{627}\u{648}\u{644} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} (DNAme §3 + \u{62f}\u{631}\u{648}\u{627}\u{632}\u{647}\u{654} Astra): \u{62e}\u{631}\u{648}\u{62c}\u{6cc} \u{628}\u{627}\u{6cc}\u{62f} \u{627}\u{632} \u{641}\u{631}\u{6cc}\u{645} \u{627}\u{648}\u{644} \u{627}\u{67e} \u{632}\u{646}\u{62f}\u{647} \u{628}\u{627}\u{634}\u{62f}\u{61b} stub \u{645}\u{631}\u{62f}\u{647} \u{6cc}\u{627} \u{627}\u{633}\u{67e}\u{644}\u{634} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6cc}\u{627}\u{628}\u{6cc} \u{645}\u{645}\u{646}\u{648}\u{639} \u{627}\u{633}\u{62a}.";
 
-/// اسنیپت متنی اطراف نخستین الگوی یافته‌شده — برش امن روی مرز نویسه‌ها
-/// (برای متن فارسی/یونیکد، offsets روی نسخهٔ lowercase بریده می‌شوند).
+/// The text snippet around the first matched pattern — a safe cut on character boundaries
+/// (for Persian/Unicode text, offsets are cut on the lowercase version).
 fn bounded_snippet(lower: &str, match_idx: usize, pat_len: usize) -> String {
     let mut start = match_idx.saturating_sub(28);
     let mut end = (match_idx + pat_len + 28).min(lower.len());
@@ -197,8 +197,8 @@ fn find_first(payload: &str, patterns: &[&str]) -> Option<String> {
         .map(|(p, idx)| bounded_snippet(&lower, idx, p.len()))
 }
 
-/// لنگر سیستم (system prompt anchor) که هر ایجنت کیان بالای پرامپت می‌بیند —
-/// ترجمهٔ ماشینی `DNAme` + `DNAwork` به یک بلوک قطعی فارسی/انگلیسی.
+/// The system prompt anchor every Kian agent sees at the top of its prompt —
+/// a machine translation of `DNAme` + `DNAwork` into one deterministic Persian/English block.
 #[must_use]
 pub fn build_creator_dna_system_anchor() -> String {
     format!(
@@ -219,7 +219,7 @@ pub fn build_creator_dna_system_anchor() -> String {
     )
 }
 
-/// ممیزی قطعی متن علیه DNA سازنده — بدون شبکه، بدون مدل، فقط الگو.
+/// Deterministic text audit against the creator DNA — no network, no model, patterns only.
 #[must_use]
 pub fn audit_against_creator_dna(payload: &str) -> Vec<DnaViolation> {
     let mut out = Vec::new();
@@ -332,7 +332,7 @@ mod tests {
         );
         assert_eq!(dirty.len(), 3);
         let clean = audit_against_creator_dna(
-            "cargo test -p kian-ai → 12 green; clippy -D warnings → 0 warnings. RTL صفحه با dir=rtl ست شد.",
+            "cargo test -p kian-ai → 12 green; clippy -D warnings → 0 warnings. RTL \u{635}\u{641}\u{62d}\u{647} \u{628}\u{627} dir=rtl \u{633}\u{62a} \u{634}\u{62f}.",
         );
         assert!(clean.is_empty(), "clean verified text must not violate DNA: {clean:?}");
     }
@@ -340,10 +340,10 @@ mod tests {
     #[test]
     fn audit_is_bilingual_persian_english() {
         assert_eq!(
-            audit_against_creator_dna("این سرویس نیازمند کارت بانکی لازم است").len(),
+            audit_against_creator_dna("\u{627}\u{6cc}\u{646} \u{633}\u{631}\u{648}\u{6cc}\u{633} \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{6a9}\u{627}\u{631}\u{62a} \u{628}\u{627}\u{646}\u{6a9}\u{6cc} \u{644}\u{627}\u{632}\u{645} \u{627}\u{633}\u{62a}").len(),
             1
         );
-        assert_eq!(audit_against_creator_dna("قطعاً کار می‌کند بدون تست هم درست است").len(), 1);
-        assert_eq!(audit_against_creator_dna("دکمهٔ پرداخت بعداً وصل می‌شود").len(), 1);
+        assert_eq!(audit_against_creator_dna("\u{642}\u{637}\u{639}\u{627}\u{64b} \u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f} \u{628}\u{62f}\u{648}\u{646} \u{62a}\u{633}\u{62a} \u{647}\u{645} \u{62f}\u{631}\u{633}\u{62a} \u{627}\u{633}\u{62a}").len(), 1);
+        assert_eq!(audit_against_creator_dna("\u{62f}\u{6a9}\u{645}\u{647}\u{654} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{628}\u{639}\u{62f}\u{627}\u{64b} \u{648}\u{635}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}").len(), 1);
     }
 }

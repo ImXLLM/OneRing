@@ -1,58 +1,58 @@
-//! لایهٔ کیف پول چهارزنجیره M5 — آدرس‌های واریز کاربر و واریزهای USDT.
+//! M5 four-chain wallet layer — user deposit addresses and USDT deposits.
 //!
-//! همان قراردادهای M3 برای واریز TON، این‌بار روی TRX/SOL/TON/BSC:
-//!  * آدرس‌ها قبل از رسیدن اینجا با چک‌سام‌های رسمی زنجیره (kian-wallet)
-//!    اعتبارسنجی شده‌اند — این لایه هرگز آدرس بد را نمی‌پذیرد.
-//!  * هش واریز UNIQUE روی (chain, txHash) — «همان هش دوبار ضرب نمی‌شود».
-//!  * ضرب واقعی در هندلر سرور از مسیر مادهٔ ۳ می‌گذرد؛ اینجا فقط اثبات.
+//! The same M3 contracts as for TON deposits, now across TRX/SOL/TON/BSC:
+//!  * Addresses are validated against the official chain checksums (kian-wallet)
+//!    before reaching this layer — it never accepts a bad address.
+//!  * Deposit hash UNIQUE on (chain, txHash) — "the same hash is never minted twice".
+//!  * Actual minting happens in the server handler via the Article 3 path; only proof lives here.
 
 use crate::error::{DbError, DbResult};
 use crate::store::{V3Store, now_iso};
 use kian_domain::{DomainError, DomainErrorCode};
 
-/// ردیف آدرس واریز کاربر — جدول `WalletAddress` (PK: userId+chain).
+/// User deposit address row — `WalletAddress` table (PK: userId+chain).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WalletAddressRow {
-    /// کاربر مالک (`citizen:…`)
+    /// Owning user (`citizen:…`)
     pub user_id: String,
-    /// زنجیره: TRX / SOL / TON / BSC
+    /// Chain: TRX / SOL / TON / BSC
     pub chain: String,
-    /// آدرس اعتبارسنجی‌شده
+    /// Validated address
     pub address: String,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
 }
 
-/// ردیف واریز USDT — جدول `UsdtDeposit`.
+/// USDT deposit row — `UsdtDeposit` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UsdtDepositRow {
-    /// شناسه (`udep:{uuid}`)
+    /// ID (`udep:{uuid}`)
     pub id: String,
-    /// کاربر ثبت‌کننده
+    /// Depositing user
     pub user_id: String,
-    /// زنجیره: TRX / SOL / TON / BSC
+    /// Chain: TRX / SOL / TON / BSC
     pub chain: String,
-    /// هش تراکنش زنجیره — UNIQUE(chain, txHash)
+    /// On-chain transaction hash — UNIQUE(chain, txHash)
     pub tx_hash: String,
-    /// آدرس فرستنده
+    /// Sender address
     pub from_address: String,
-    /// مبلغ در مقیاس micro-USDT (صحیح، بدون float)
+    /// Amount in micro-USDT scale (integer, no float)
     pub amount_micro: i64,
-    /// رشتهٔ دهدهی اعلامی کاربر (≤۶ اعشار)
+    /// User-declared decimal string (≤6 decimals)
     pub amount_usdt: String,
     /// `PENDING` / `CONFIRMED` / `REJECTED`
     pub status: String,
-    /// زمان ثبت ISO
+    /// Registration time (ISO)
     pub created_at: String,
-    /// زمان تصمیم ISO — تا قبل از تکلیف `None`
+    /// Decision time (ISO) — `None` until resolved
     pub confirmed_at: Option<String>,
-    /// تصمیم‌گیرنده (ادمین) — تا قبل از تکلیف `None`
+    /// Deciding admin — `None` until resolved
     pub confirmed_by: Option<String>,
 }
 
 const ADDR_SELECT: &str = r#"SELECT "userId","chain","address","createdAt" FROM "WalletAddress""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern
 fn addr_row_from(row: sqlx::sqlite::SqliteRow) -> WalletAddressRow {
     use sqlx::Row as _;
     WalletAddressRow {
@@ -65,7 +65,7 @@ fn addr_row_from(row: sqlx::sqlite::SqliteRow) -> WalletAddressRow {
 
 const USDT_SELECT: &str = r#"SELECT "id","userId","chain","txHash","fromAddress","amountMicro","amountUsdt","status","createdAt","confirmedAt","confirmedBy" FROM "UsdtDeposit""#;
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern
 fn usdt_row_from(row: sqlx::sqlite::SqliteRow) -> UsdtDepositRow {
     use sqlx::Row as _;
     UsdtDepositRow {
@@ -84,11 +84,11 @@ fn usdt_row_from(row: sqlx::sqlite::SqliteRow) -> UsdtDepositRow {
 }
 
 impl V3Store {
-    /// ثبت/به‌روزرسانی آدرس واریز کاربر برای یک زنجیره — PK (userId, chain)
-    /// یعنی هر زنجیره فقط یک آدرس؛ آدرس جدید جایگزین می‌شود (تغییر ولت).
+    /// Upsert a user's deposit address for one chain — PK (userId, chain)
+    /// means one address per chain; a new address replaces the old one (wallet change).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn upsert_wallet_address(&self, row: &WalletAddressRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "WalletAddress" ("userId","chain","address","createdAt")
@@ -111,12 +111,12 @@ impl V3Store {
         Ok(())
     }
 
-    /// آدرس‌های یک کاربر — تا چهار زنجیره.
+    /// A user's addresses — up to four chains.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn wallet_addresses_for(&self, user_id: &str) -> DbResult<Vec<WalletAddressRow>> {
-        // حسابرسی‌شده: پیشوند const + bind
+        // audited: const prefix + bind
         let sql = format!("{ADDR_SELECT} WHERE \"userId\" = ? ORDER BY \"chain\" ASC");
         let rows = sqlx::query(sqlx::AssertSqlSafe(sql))
             .bind(user_id)
@@ -125,10 +125,10 @@ impl V3Store {
         Ok(rows.into_iter().map(addr_row_from).collect())
     }
 
-    /// درج واریز USDT — پیش‌چک (chain, txHash) در فراخواننده؛ قید UNIQUE پشتوانه.
+    /// Insert a USDT deposit — (chain, txHash) pre-checked by the caller; the UNIQUE constraint is the backstop.
     ///
     /// # Errors
-    /// هش تکراری هم‌زمان → خطای UNIQUE sqlx؛ خطای SQL.
+    /// Concurrent duplicate hash → sqlx UNIQUE error; SQL error.
     pub async fn insert_usdt_deposit(&self, d: &UsdtDepositRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "UsdtDeposit"
@@ -155,10 +155,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// جست‌وجوی واریز با (زنجیره، هش) — پیش‌چک replay ثبت دوباره.
+    /// Find a deposit by (chain, hash) — replay pre-check for re-registration.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_usdt_deposit_by_hash(
         &self,
         chain: &str,
@@ -173,10 +173,10 @@ impl V3Store {
         Ok(row.map(usdt_row_from))
     }
 
-    /// واریزهای یک کاربر — جدیدترین اول (۵۰ آخر).
+    /// A user's deposits — newest first (last 50).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_usdt_deposits_for(&self, user_id: &str) -> DbResult<Vec<UsdtDepositRow>> {
         let sql = format!(r#"{USDT_SELECT} WHERE "userId" = ? ORDER BY "createdAt" DESC LIMIT 50"#);
         let rows = sqlx::query(sqlx::AssertSqlSafe(sql))
@@ -186,10 +186,10 @@ impl V3Store {
         Ok(rows.into_iter().map(usdt_row_from).collect())
     }
 
-    /// خواندن یک واریز با شناسه.
+    /// Read one deposit by ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_usdt_deposit(&self, id: &str) -> DbResult<Option<UsdtDepositRow>> {
         let sql = format!("{USDT_SELECT} WHERE \"id\" = ?");
         let row = sqlx::query(sqlx::AssertSqlSafe(sql))
@@ -199,10 +199,10 @@ impl V3Store {
         Ok(row.map(usdt_row_from))
     }
 
-    /// تعیین تکلیف واریز — فقط از `PENDING` (گذار یک‌طرفه).
+    /// Resolve a deposit — only from `PENDING` (one-way transition).
     ///
     /// # Errors
-    /// ناشناخته → `EscrowNotFound`؛ غیر-PENDING → `InvalidTransition`.
+    /// Unknown → `EscrowNotFound`; non-PENDING → `InvalidTransition`.
     pub async fn set_usdt_deposit_status(
         &self,
         id: &str,
@@ -243,10 +243,10 @@ impl V3Store {
             .ok_or_else(|| DbError::Config(format!("usdt deposit {id} vanished after update")))
     }
 
-    /// ثبت درخواست برداشت جدید (`PENDING`) — پس از قفل/سوزاندن اتمی Din در دفتر.
+    /// Register a new withdrawal request (`PENDING`) — after the atomic Din lock/burn in the ledger.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_withdrawal_request(&self, row: &WithdrawalRequestRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "WithdrawalRequest"
@@ -269,10 +269,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// خواندن یک درخواست برداشت با شناسه.
+    /// Read one withdrawal request by ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_withdrawal_request(&self, id: &str) -> DbResult<Option<WithdrawalRequestRow>> {
         let row = sqlx::query(
             r#"SELECT "id","accountId","chain","asset","destinationAddress","amountDin",
@@ -285,10 +285,10 @@ impl V3Store {
         Ok(row.map(withdrawal_row_from))
     }
 
-    /// فهرست درخواست‌های برداشت یک حساب — جدیدترین اول (۵۰ آخر).
+    /// List an account's withdrawal requests — newest first (last 50).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_withdrawals_for_account(
         &self,
         account_id: &str,
@@ -307,10 +307,10 @@ impl V3Store {
         Ok(rows.into_iter().map(withdrawal_row_from).collect())
     }
 
-    /// فهرست ادمین درخواست‌های برداشت — فیلتر اختیاری روی وضعیت.
+    /// Admin list of withdrawal requests — optional status filter.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_withdrawals_all(
         &self,
         status: Option<&str>,
@@ -348,10 +348,10 @@ impl V3Store {
         Ok(rows.into_iter().map(withdrawal_row_from).collect())
     }
 
-    /// تعیین تکلیف یک‌طرفهٔ درخواست برداشت (`PENDING` → `CONFIRMED` یا `REJECTED`).
+    /// One-way resolution of a withdrawal request (`PENDING` → `CONFIRMED` or `REJECTED`).
     ///
     /// # Errors
-    /// ناشناخته → `EscrowNotFound`؛ قبلاً تصمیم‌گرفته‌شده → `InvalidTransition`.
+    /// Unknown → `EscrowNotFound`; already decided → `InvalidTransition`.
     pub async fn resolve_withdrawal_request(
         &self,
         id: &str,
@@ -403,28 +403,28 @@ impl V3Store {
     }
 }
 
-/// ردیف درخواست برداشت کریپتو — جدول `"WithdrawalRequest"` (فاز ۶).
+/// Crypto withdrawal request row — `"WithdrawalRequest"` table (Phase 6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WithdrawalRequestRow {
-    /// شناسهٔ یکتا (`wdr:{uuid}`)
+    /// Unique ID (`wdr:{uuid}`)
     pub id: String,
-    /// حساب شهروند (`citizen:{tg_id}`)
+    /// Citizen account (`citizen:{tg_id}`)
     pub account_id: String,
-    /// زنجیره مقصد (`TON`/`TRX`/`SOL`/`BSC`)
+    /// Destination chain (`TON`/`TRX`/`SOL`/`BSC`)
     pub chain: String,
-    /// دارایی (`TON`/`USDT`)
+    /// Asset (`TON`/`USDT`)
     pub asset: String,
-    /// آدرس مقصد اعتبارسنجی‌شده
+    /// Validated destination address
     pub destination_address: String,
-    /// مبلغ به دیین (در لحظهٔ ثبت از حساب کسر می‌شود)
+    /// Amount in Din (deducted from the account at registration time)
     pub amount_din: i64,
-    /// هش تراکنش پرداخت روی زنجیره (پس از تأیید ادمین)
+    /// On-chain payment transaction hash (after admin confirmation)
     pub tx_hash: Option<String>,
-    /// وضعیت (`PENDING`/`CONFIRMED`/`REJECTED`)
+    /// Status (`PENDING`/`CONFIRMED`/`REJECTED`)
     pub status: String,
-    /// زمان ثبت (Unix epoch ثانیه)
+    /// Registration time (Unix epoch seconds)
     pub created_at: i64,
-    /// زمان تصمیم ادمین (Unix epoch ثانیه)
+    /// Admin decision time (Unix epoch seconds)
     pub resolved_at: Option<i64>,
 }
 
@@ -484,7 +484,7 @@ mod tests {
             })
             .await
             .unwrap();
-        // همان زنجیره — آدرس جدید جایگزین، ردیف تکراری نمی‌شود
+        // same chain — the new address replaces; no duplicate row
         store
             .upsert_wallet_address(&WalletAddressRow {
                 user_id: "citizen:5".into(),
@@ -517,14 +517,14 @@ mod tests {
             .await
             .unwrap();
 
-        // همان هش روی همان زنجیره — replay رد می‌شود
+        // same hash on the same chain — replay rejected
         assert!(
             store
                 .insert_usdt_deposit(&deposit("udep:2", "TON", "hash111"))
                 .await
                 .is_err()
         );
-        // همان هش روی زنجیرهٔ دیگر — مجاز (فضای هش زنجیره‌ها جدا است)
+        // same hash on a different chain — allowed (chain hash namespaces are separate)
         store
             .insert_usdt_deposit(&deposit("udep:3", "BSC", "hash111"))
             .await
@@ -540,14 +540,14 @@ mod tests {
         assert_eq!(confirmed.status, "CONFIRMED");
         assert_eq!(confirmed.confirmed_by.as_deref(), Some("admin"));
 
-        // تصمیم دوباره — ۴۲۲
+        // second decision — 422
         assert!(
             store
                 .set_usdt_deposit_status("udep:1", "REJECTED", "admin")
                 .await
                 .is_err()
         );
-        // ناشناخته — 404-style دامنه
+        // unknown — 404-style domain error
         let missing = store
             .set_usdt_deposit_status("udep:x", "CONFIRMED", "admin")
             .await

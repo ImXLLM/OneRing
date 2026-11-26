@@ -1,71 +1,71 @@
-//! gateway — استخرِ چندلِین + فال‌بک + گیت کیفیت + redaction + ثبت تلاش‌ها.
+//! gateway — multi-lane pool + fallback + quality gate + redaction + attempt logging.
 //!
-//! معماری پورت‌شده از `brain.py` نسخهٔ ۱٫۲ هرمس (`ShopifyHermes`) — `battle-tested`:
-//! * **استخر تخت**: هر ورودی یک ترکیب `(url, key, model)` است؛ اسلات‌های منطقی و
-//!   تامین‌کننده‌های سبک هرمس با ضرب دکارتیِ «هر مدل × هر کلید» باز می‌شوند و
-//!   سه‌تایی‌های تکراری حذف می‌شوند (حفظ ترتیب).
-//! * **چسبندگی `last_good`**: برندهٔ آخر دفعهٔ بعد اول امتحان می‌شود
-//!   (`AtomicUsize` + `Relaxed`) — طرح دقیق `brain.py`: `[last_good] + بقیه`.
-//! * **گیت کیفیت `looks_broken`**: پاسخ خالی/خراب/بی‌معنی/اشتباه‌زبان = شکست
-//!   همان لِین؛ اولین پاسخِ «خراب اما موجود» به‌عنوان کم‌ضررترین ذخیره می‌شود و
-//!   فقط وقتی همه‌جا شکست، برگردانده می‌شود (چت) یا به سنتز محلی می‌رسد (سازنده).
+//! Architecture ported from `brain.py` v1.2 of Hermes (`ShopifyHermes`) — `battle-tested`:
+//! * **Flat pool**: every entry is one `(url, key, model)` combination; logical slots and
+//!   Hermes-style providers are expanded by the "every model × every key" Cartesian product, and
+//!   duplicate triples are dropped (order preserved).
+//! * **`last_good` stickiness**: the last winner is tried first next time
+//!   (`AtomicUsize` + `Relaxed`) — the exact `brain.py` scheme: `[last_good] + rest`.
+//! * **`looks_broken` quality gate**: an empty/corrupt/garbled/wrong-language reply = failure
+//!   for that lane; the first "broken but present" reply is stashed as least-bad and
+//!   returned only when everything fails (chat) or falls through to local synthesis (builder).
 //!
-//! قرارداد: ورودی اینجا redact می‌شود (قبل از دیدن هر لِین)، لِینِ بدون کانفیگ
-//! کامل (url+key+model) کلاً حذف است، پاکت خراب هر لِین = شکست همان لِین و رفتن
-//! به بعدی. هیچ مسیری متن خام یا کلید را به بیرون نمی‌فرستد.
+//! Contract: input is redacted here (before any lane sees it), a lane without complete
+//! config (url+key+model) is excluded outright, a malformed packet per lane = that lane fails and
+//! moves on to the next. No code path ever sends raw text or a key outward.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use crate::redaction::{redact, RedactionFinding};
 
-/// نام‌های اسلات منطقی — ترتیب فال‌بک.
+/// Logical slot names — fallback order.
 pub const SLOT_NAMES: [&str; 3] = ["primary", "secondary", "tertiary"];
 
-/// سقف توکن خروجی برای تولید آرتیفکت HTML کامل در سازندهٔ محصول.
+/// Output token cap for generating a complete HTML artifact in the product builder.
 ///
-/// شواهد بنچمارک زندهٔ `OpenRouter` (۲۴ نوامبر ۲۰۲۶): مدل‌های reasoning-محورِ
-/// لِین رایگان، سهم `reasoning_tokens` را از همین سقف می‌خورند؛ در ۴۰۹۶ یا
-/// محتوا خالی می‌ماند (`finish_reason=length` روی فکر کردن) یا سند وسط راه
-/// بریده می‌شود. ۱۶۳۸۴ سند کامل + بلوک CAST JSON را با فاصلهٔ امن جا می‌دهد
-/// و روی لِین‌های رایگان هزینهٔ صفر دارد.
+/// Live `OpenRouter` benchmark evidence (24 November 2026): reasoning-heavy models on
+/// free lanes draw their `reasoning_tokens` share from this same cap; at 4096 either
+/// the content comes back empty (`finish_reason=length` spent on thinking) or the document is cut
+/// off midway. 16384 fits a complete document plus the CAST JSON block with safe headroom
+/// and costs zero on free lanes.
 pub const BUILDER_MAX_TOKENS: u32 = 16_384;
 
-/// پایهٔ `OpenRouter` — پیش‌فرض تامین‌کنندهٔ سبک `KIAN_AI_OPENROUTER_*` (بدون URL).
+/// `OpenRouter` base — default for the `KIAN_AI_OPENROUTER_*` Hermes-style provider (no URL).
 pub const OPENROUTER_BASE_URL: &str = "https://openrouter.ai/api/v1";
 
-/// پایهٔ `Coarena` — اعتبار رایگان روزانه، سازگار با `OpenAI` (کشف‌شده در هرمس).
+/// `Coarena` base — daily free credit, `OpenAI`-compatible (discovered in Hermes).
 pub const COARENA_BASE_URL: &str = "https://coarena.ai/api/v1";
 
-/// پایهٔ پیش‌فرض ۹روتر — پروکسی رایجِ لِین‌های `oc/*`.
+/// Default `9router` base — common proxy for `oc/*` lanes.
 pub const ROUTER9_BASE_URL: &str = "https://9router-production-6f2225a3.up.railway.app/v1";
 
-/// پیکربندی یک لِین استخر.
+/// Configuration of one pool lane.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SlotConfig {
-    /// نام لِین — نام اسلات منطقی (`SLOT_NAMES`) یا تامین‌کنندهٔ سبک هرمس
-    /// (`coarena`/`openrouter`/`router9`) — روی سیم به‌عنوان provider گزارش می‌شود
+    /// Lane name — a logical slot name (`SLOT_NAMES`) or a Hermes-style provider
+    /// (`coarena`/`openrouter`/`router9`) — reported on the wire as provider
     pub name: String,
-    /// پایهٔ URL سازگار با `OpenAI` (`/chat/completions` append می‌شود)
+    /// `OpenAI`-compatible URL base (`/chat/completions` is appended)
     pub url: String,
-    /// کلید API — هرگز لاگ یا روی سیم نمی‌رود
+    /// API key — never logged or sent on the wire
     pub key: String,
-    /// نام مدل
+    /// Model name
     pub model: String,
 }
 
 impl SlotConfig {
-    /// لِین فقط با هر سهٔ url+key+model کامل فعال است — نیمه‌کانفیگ = خاموش.
+    /// A lane is enabled only with all three of url+key+model complete — half-configured = off.
     #[must_use]
     pub fn enabled(&self) -> bool {
         !self.url.is_empty() && !self.key.is_empty() && !self.model.is_empty()
     }
 }
 
-/// ضرب دکارتیِ `brain.py`: «برای هر مدل، برای هر کلید» — یک ورودی استخر برای
-/// هر ترکیب. ورودی‌های خالی (فاصله/جداشنندهٔ سرِ خالی) نادیده گرفته می‌شوند.
+/// `brain.py` Cartesian product: "for every model, for every key" — one pool entry for
+/// each combination. Empty items (whitespace / leading empty separator) are ignored.
 ///
-/// ترتیب دقیق: مدلِ بیرونی، کلیدِ درونی — یعنی `mA×(k1,k2), mB×(k1,k2)`.
+/// Exact order: model outer, key inner — i.e. `mA×(k1,k2), mB×(k1,k2)`.
 #[must_use]
 pub fn expand_models_times_keys(name: &str, url: &str, keys: &str, models: &str) -> Vec<SlotConfig> {
     let mut out = Vec::new();
@@ -82,7 +82,7 @@ pub fn expand_models_times_keys(name: &str, url: &str, keys: &str, models: &str)
     out
 }
 
-/// افزودن به استخر با حذف سه‌تایی تکراریِ `(url, key, model)` — حفظ اولین ترتیب.
+/// Pool insertion with duplicate `(url, key, model)` triple removal — first order kept.
 fn push_unique(pool: &mut Vec<SlotConfig>, entry: SlotConfig) {
     if !pool
         .iter()
@@ -92,56 +92,56 @@ fn push_unique(pool: &mut Vec<SlotConfig>, entry: SlotConfig) {
     }
 }
 
-/// پیکربندی گیت‌وی.
+/// Gateway configuration.
 ///
-/// `slots` **استخرِ تختِ اجرایی** است (همان `pool` در `brain.py`) — پس از
-/// بازکردن ضرب دکارتی، هر عضو یک ترکیب `(url, key, model)` است. [`AiConfig::pool`]
-/// همین برش را با نام روشن می‌دهد؛ `/ai/status` عضوها را بر اساس نام گروه می‌کند
-/// و اندازهٔ استخر را جداگانه گزارش می‌کند.
+/// `slots` is the **executable flat pool** (the `pool` in `brain.py`) — after
+/// Cartesian expansion, each member is one `(url, key, model)` combination. [`AiConfig::pool`]
+/// exposes the same slice under a clearer name; `/ai/status` groups members by name
+/// and reports the pool size separately.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AiConfig {
-    /// استخر تخت به ترتیب فال‌بک (اسلات‌های منطقی ← تامین‌کننده‌های سبک هرمس)
+    /// Flat pool in fallback order (logical slots ← Hermes-style providers)
     pub slots: Vec<SlotConfig>,
-    /// سقف روزانهٔ توکن هر کاربر
+    /// Per-user daily token cap
     pub daily_cap_tokens: i64,
 }
 
 impl AiConfig {
-    /// برش استخر تخت — نامی روشن‌تر برای همان [`AiConfig::slots`].
+    /// Flat pool slice — a clearer name for the same [`AiConfig::slots`].
     #[must_use]
     pub fn pool(&self) -> &[SlotConfig] {
         &self.slots
     }
 
-    /// خواندن از محیط — fail-closed: بدون env استخر خالی.
+    /// Read from the environment — fail-closed: without env the pool is empty.
     ///
-    /// اسلات‌های منطقی از `KIAN_AI_{PRIMARY|SECONDARY|TERTIARY}_{URL,KEY,MODEL}`
-    /// (یا میان‌برهای تک‌گیت‌وی) ساخته می‌شوند؛ `_KEY` و `_MODEL` (و میان‌برها)
-    /// می‌توانند **فهرست جداشده با کاما** باشند و با ضرب دکارتیِ `brain.py` باز
-    /// می‌شوند. تامین‌کننده‌های سبک هرمس اگر حاضر باشند به انتهای استخر افزوده
-    /// می‌شوند (ترتیب لاتنسیِ هرمس: coarena ← openrouter ← router9):
-    /// * `KIAN_AI_COARENA_URL` (پیش‌فرض [`COARENA_BASE_URL`]) + `KIAN_AI_COARENA_KEYS`
-    ///   (یا تک‌کلیدی `KIAN_AI_COARENA_KEY`) + `KIAN_AI_COARENA_MODELS`
-    /// * `KIAN_AI_OPENROUTER_URL` (پیش‌فرض [`OPENROUTER_BASE_URL`]) + `KIAN_AI_OPENROUTER_KEYS`
-    ///   (یا `KIAN_AI_OPENROUTER_KEY`) + `KIAN_AI_OPENROUTER_MODELS`
-    /// * `KIAN_AI_ROUTER9_URL` (پیش‌فرض [`ROUTER9_BASE_URL`]) + `KIAN_AI_ROUTER9_KEYS`
-    ///   (یا `KIAN_AI_ROUTER9_KEY`) + `KIAN_AI_ROUTER9_MODELS`
+    /// Logical slots are built from `KIAN_AI_{PRIMARY|SECONDARY|TERTIARY}_{URL,KEY,MODEL}`
+    /// (or the single-gateway shortcuts); `_KEY` and `_MODEL` (and the shortcuts)
+    /// may be **comma-separated lists** and are expanded by the `brain.py` Cartesian
+    /// product. Hermes-style providers, when present, are appended
+    /// to the end of the pool (Hermes latency order: coarena ← openrouter ← router9):
+    /// * `KIAN_AI_COARENA_URL` (default [`COARENA_BASE_URL`]) + `KIAN_AI_COARENA_KEYS`
+    ///   (or single-key `KIAN_AI_COARENA_KEY`) + `KIAN_AI_COARENA_MODELS`
+    /// * `KIAN_AI_OPENROUTER_URL` (default [`OPENROUTER_BASE_URL`]) + `KIAN_AI_OPENROUTER_KEYS`
+    ///   (or `KIAN_AI_OPENROUTER_KEY`) + `KIAN_AI_OPENROUTER_MODELS`
+    /// * `KIAN_AI_ROUTER9_URL` (default [`ROUTER9_BASE_URL`]) + `KIAN_AI_ROUTER9_KEYS`
+    ///   (or `KIAN_AI_ROUTER9_KEY`) + `KIAN_AI_ROUTER9_MODELS`
     ///
-    /// سقف روزانه از `KIAN_AI_DAILY_TOKENS` (پیش‌فرض ۵۰٬۰۰۰).
+    /// Daily cap from `KIAN_AI_DAILY_TOKENS` (default 50,000).
     ///
-    /// میان‌برهای «تک‌گیت‌وی» برای روترهای چندمدلی (مثل ۹روتر):
-    /// * `KIAN_AI_BASE_URL` + `KIAN_AI_API_KEY` + `KIAN_AI_MODEL` → اسلات primary
-    /// * `KIAN_AI_FALLBACK_MODEL` (+ اختیاری `KIAN_AI_FALLBACK_URL` / `KIAN_AI_FALLBACK_KEY`)
-    ///   → اسلات secondary روی همان گیت‌وی.
+    /// "Single-gateway" shortcuts for multi-model routers (e.g. 9router):
+    /// * `KIAN_AI_BASE_URL` + `KIAN_AI_API_KEY` + `KIAN_AI_MODEL` → primary slot
+    /// * `KIAN_AI_FALLBACK_MODEL` (+ optional `KIAN_AI_FALLBACK_URL` / `KIAN_AI_FALLBACK_KEY`)
+    ///   → secondary slot on the same gateway.
     #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_reader(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
     }
 
-    /// نسخهٔ تزریق‌پذیر [`AiConfig::from_env`] — خوانندهٔ env از بیرون می‌آید تا
-    /// تست‌ها بدون دست‌کاری متغیر سراسری فرایند، استخر و ترتیب میان‌برها را اثبات کنند.
+    /// Injectable version of [`AiConfig::from_env`] — the env reader comes from outside so
+    /// tests can prove the pool and shortcut order without mutating process-global variables.
     ///
-    /// اولویت هر فیلد: متغیر اختصاصیِ اسلات ← میان‌بر تک‌گیت‌وی ← خاموش (رشتهٔ خالی).
+    /// Priority per field: slot-specific variable ← single-gateway shortcut ← off (empty string).
     #[must_use]
     pub fn from_env_reader(get: impl Fn(&str) -> Option<String>) -> Self {
         let base_url = get("KIAN_AI_BASE_URL");
@@ -154,7 +154,7 @@ impl AiConfig {
                 model: model.unwrap_or_default(),
             }
         };
-        // اسلات‌های منطقی با مقادیر خام (شاید فهرست کاما) — فعال‌ها باز می‌شوند
+        // Logical slots with raw values (possibly comma lists) — enabled ones are expanded
         let logical = vec![
             slot(
                 SLOT_NAMES[0],
@@ -182,19 +182,19 @@ impl AiConfig {
         let mut pool: Vec<SlotConfig> = Vec::new();
         for s in logical {
             if s.enabled() {
-                // اسلات کامل — ضرب دکارتیِ «هر مدل × هر کلید» در استخر تخت
+                // Complete slot — "every model × every key" Cartesian product into the flat pool
                 for entry in expand_models_times_keys(&s.name, &s.url, &s.key, &s.model) {
                     push_unique(&mut pool, entry);
                 }
             } else {
-                // اسلات ناقص/خالی — خودش با flags خاموش در استخر می‌ماند تا
-                // /ai/status همانند گذشته سه ردیف صادقانه را نشان دهد؛
-                // اجرا فقط عضوهای enabled را لمس می‌کند. بدون dedup —
-                // نام‌های متفاوتِ primary/secondary/tertiary باید همه حاضر بمانند.
+                // Incomplete/empty slot — kept in the pool itself with off flags so that
+                // /ai/status still shows the same three honest rows as before;
+                // execution only touches enabled members. No dedup —
+                // the distinct primary/secondary/tertiary names must all stay present.
                 pool.push(s);
             }
         }
-        // تامین‌کننده‌های سبک هرمس — لِین‌های اضافه در انتهای استخر
+        // Hermes-style providers — extra lanes at the end of the pool
         // (name, url_var, default_url, keys_var, key_var, models_var)
         let providers: [(&str, &str, &str, &str, &str, &str); 3] = [
             (
@@ -237,113 +237,113 @@ impl AiConfig {
     }
 }
 
-/// یک پیام پاکت — نقش + محتوا (قبل از گیت‌وی redact نشده؛ اینجا انجام می‌شود).
+/// One packet message — role + content (not redacted before the gateway; redaction happens here).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PacketMessage {
     /// `system|user|assistant`
     pub role: String,
-    /// متن
+    /// Text
     pub content: String,
 }
 
-/// پاکت ارسالی به لِین استخر.
+/// Packet sent to a pool lane.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChatPacket {
-    /// مدل لِین
+    /// Lane model
     pub model: String,
-    /// پیام‌ها — پیام‌های کاربر همیشه پس از redaction
+    /// Messages — user messages always post-redaction
     pub messages: Vec<PacketMessage>,
-    /// سقف توکن خروجی اختیاری (مثلاً `Some(4096)` برای تولید HTML کامل)
+    /// Optional output token cap (e.g. `Some(4096)` for full HTML generation)
     pub max_tokens: Option<u32>,
 }
 
-/// پاکت موفق لِین.
+/// Successful lane packet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompletionPacket {
-    /// متن پاسخ
+    /// Response text
     pub content: String,
-    /// توکن ورودی
+    /// Prompt tokens
     pub prompt_tokens: i64,
-    /// توکن خروجی
+    /// Completion tokens
     pub completion_tokens: i64,
 }
 
-/// شکست یک تلاش — برای پاسخ صادقانهٔ همه‌جا-شکست.
+/// One attempt failure — for the honest all-failed response.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AttemptFailure {
-    /// نام لِین (اسلات منطقی یا تامین‌کنندهٔ سبک هرمس)
+    /// Lane name (logical slot or Hermes-style provider)
     pub slot: String,
-    /// جزئیات کوتاه — هرگز شامل متن درخواست/کلید نیست
+    /// Short detail — never includes request text or keys
     pub detail: String,
 }
 
-/// خطای گیت‌وی — تایپ‌شده؛ متن خام آپ‌استریم هرگز بالا نمی‌آید.
+/// Gateway error — typed; raw upstream text never bubbles up.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum GatewayError {
-    /// هیچ لِینی کانفیگ نشده — 503 `AI_DISABLED`
+    /// No lane configured — 503 `AI_DISABLED`
     #[error("AI gateway disabled — no complete slot configured")]
     Disabled,
-    /// همهٔ لِین‌های فعال شکست خوردند (و کم‌ضررینِ قابل‌قبولی نبود) — 502 `AI_UPSTREAM`
+    /// All enabled lanes failed (and no acceptable least-bad existed) — 502 `AI_UPSTREAM`
     #[error("all AI slots failed")]
     AllSlotsFailed {
-        /// ریز شکست‌ها به ترتیب تلاش
+        /// Per-attempt failures in attempt order
         attempts: Vec<AttemptFailure>,
     },
 }
 
-/// وضعیت یک گروه لِین (اسلات منطقی یا تامین‌کنندهٔ سبک هرمس) برای سیم — بدون کلید.
+/// Status of one lane group (logical slot or Hermes-style provider) for the wire — no keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SlotStatus {
-    /// شمارهٔ گروه در ترتیب استخر (۱ مبنا)
+    /// Group number in pool order (1-based)
     pub slot: u8,
-    /// نام
+    /// Name
     pub name: String,
-    /// مدل‌های گروه — فهرست جداشده با کاما (حفظ ترتیب اولین مشاهده، بدون تکرار)
+    /// Group models — comma-separated list (first-seen order kept, no duplicates)
     pub model: String,
-    /// فعال؟ (حداقل یک عضو گروه فعال)
+    /// Enabled? (at least one group member enabled)
     pub enabled: bool,
 }
 
-/// نتیجهٔ موفق گفت‌وگو.
+/// Successful chat result.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChatResult {
-    /// متن پاسخ
+    /// Response text
     pub content: String,
-    /// لِین برنده
+    /// Winning lane
     pub provider: String,
-    /// مدل برنده
+    /// Winning model
     pub model: String,
-    /// توکن ورودی
+    /// Prompt tokens
     pub prompt_tokens: i64,
-    /// توکن خروجی
+    /// Completion tokens
     pub completion_tokens: i64,
-    /// مجموع
+    /// Total
     pub total_tokens: i64,
-    /// دستهٔ یافته‌های redaction ورودی (بدون تکرار، به ترتیب اولین مشاهده)
+    /// Input redaction finding categories (no duplicates, first-seen order)
     pub redactions: Vec<String>,
 }
 
-/// نتیجهٔ یک کامل‌سازی — خطا رشتهٔ کوتاه بی‌راز (برای `AttemptFailure.detail`).
+/// Outcome of one completion — the error is a short secret-free string (for `AttemptFailure.detail`).
 pub type CompletionOutcome = Result<CompletionPacket, String>;
 
-/// کلاینت مدل — یک سطح بالاتر از HTTP تا تست‌ها اسکریپت‌شو باشند.
+/// Model client — one level above HTTP so tests can be scripted.
 #[async_trait::async_trait]
 pub trait ModelClient: Send + Sync {
-    /// یک کامل‌سازی — خطا رشتهٔ کوتاه بی‌راز (برای `AttemptFailure.detail`).
+    /// One completion — the error is a short secret-free string (for `AttemptFailure.detail`).
     ///
     /// # Errors
-    /// شکست شبکه/آپ‌استریم/پاکت خراب — به‌صورت رشتهٔ توضیحی.
+    /// Network/upstream/malformed-packet failure — as a descriptive string.
     async fn complete(&self, slot: &SlotConfig, packet: &ChatPacket) -> CompletionOutcome;
 }
 
-/// شمارش نویسه‌های فارسی/عربی (`\u{0600}..=\u{06FF}`).
+/// Counts Persian/Arabic characters (`\u{0600}..=\u{06FF}`).
 #[must_use]
 pub fn persian_char_count(text: &str) -> usize {
     text.chars().filter(|c| ('\u{0600}'..='\u{06FF}').contains(c)).count()
 }
 
-/// حذف بلوک‌های کد محصور (```` ```...``` ````) — برای سنجش زبانِ «متنِ واقعی»
-/// پاسخ، نه کدِ داخل بلوک (HTML/CSS طبیعتاً لاتین‌غالب است).
+/// Strips fenced code blocks (```` ```...``` ````) — to gauge the language of the "actual text"
+/// of the reply, not the code inside the block (HTML/CSS is naturally Latin-heavy).
 #[must_use]
 pub fn strip_fenced_code_blocks(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -362,8 +362,8 @@ pub fn strip_fenced_code_blocks(text: &str) -> String {
     out
 }
 
-/// حذف توکن‌های رنگ هگز (`#RGB`/`#RRGGBB`/`#RRGGBBAA`) پیش از اسکن زنجیره —
-/// رنگ‌های CSS واقعیِ آرتیفکت (مثل `#ffffff`) تباهی زبان نیستند.
+/// Removes hex color tokens (`#RGB`/`#RRGGBB`/`#RRGGBBAA`) before the run scan —
+/// real CSS colors of the artifact (e.g. `#ffffff`) are not language degeneration.
 fn scrub_hex_colors(text: &str) -> String {
     let chars: Vec<char> = text.chars().collect();
     let mut out = String::with_capacity(text.len());
@@ -375,7 +375,7 @@ fn scrub_hex_colors(text: &str) -> String {
                 j += 1;
             }
             if (3..=8).contains(&(j - i - 1)) {
-                i = j; // توکن کامل رنگ — حذف
+                i = j; // complete color token — removed
                 continue;
             }
         }
@@ -385,11 +385,11 @@ fn scrub_hex_colors(text: &str) -> String {
     out
 }
 
-/// آیا `min` نویسهٔ الفباییِ یکسانِ پشت‌سرهم هست؟
+/// Are there `min` identical consecutive alphabetic characters?
 ///
-/// نویسهٔ غیرالفبایی (فاصله، نقطه‌گذاری، رقم، ``` ```` ```، `---`، `====`) زنجیره
-/// را می‌شکند و رنگ‌های هگز (`#000000`، `#ffffff`) قبل از اسکن حذف می‌شوند —
-/// پس جداکننده‌های مارک‌داون و CSS سالم می‌مانند و «هههههه» یا «aaaaaa» گرفته می‌شود.
+/// A non-alphabetic character (whitespace, punctuation, digit, ``` ```` ```, `---`, `====`) breaks the run
+/// and hex colors (`#000000`, `#ffffff`) are removed before the scan —
+/// so Markdown separators and CSS stay intact while "hehehehe" or "aaaaaa" is caught.
 fn has_identical_alpha_run(text: &str, min: usize) -> bool {
     let mut prev: Option<char> = None;
     let mut run = 0usize;
@@ -412,34 +412,34 @@ fn has_identical_alpha_run(text: &str, min: usize) -> bool {
     false
 }
 
-/// گیت کیفیت به سبک `brain.py::_looks_broken` — پاسخ خراب = شکست لِین.
+/// Quality gate in the style of `brain.py::_looks_broken` — a broken reply = lane failure.
 ///
-/// * قانون ۱ (خالی/خیلی کوتاه): متن تریم‌شدهٔ پاسخ < ۵ نویسه — در حالت سازنده
-///   < ۶۴ (آرتیفکت HTML کامل هرگز این‌قدر کوتاه نیست).
-/// * قانون ۲ (خرابی انکودینگ): وجود `U+FFFD`.
-/// * قانون ۳ (تباهی زنجیره): ≥ ۵ نویسهٔ الفبایی یکسان پشت‌سرهم.
-/// * قانون ۴ (ناهماهنگی زبان):
-///   * چت عادی: پرامپت فارسی (≥ ۱۰ نویسهٔ فارسی/عربی) اما پس از حذف بلوک‌های کد،
-///     بیش از ۶۰٪ حروفِ پاسخ لاتینِ ASCII → پاسخ اشتباه‌زبان.
-///   * سازنده: پاسخ باید تگ `<html` یا `<!doctype html` داشته باشد (بی‌حس به
-///     بزرگی/کوچکی حروف) و اگر پرامپت فارسی است، حداقل ۵ نویسهٔ فارسی در پاسخ باشد —
-///     HTML/CSS طبیعتاً لاتین‌غالب است و نباید رد شود.
+/// * Rule 1 (empty/too short): trimmed reply text < 5 characters — in builder mode
+///   < 64 (a complete HTML artifact is never that short).
+/// * Rule 2 (encoding corruption): presence of `U+FFFD`.
+/// * Rule 3 (run degeneration): >= 5 identical consecutive alphabetic characters.
+/// * Rule 4 (language mismatch):
+///   * Plain chat: Persian prompt (>= 10 Persian/Arabic characters) but, after code blocks are stripped,
+///     more than 60% of the reply's letters are ASCII Latin → wrong-language reply.
+///   * Builder: the reply must carry an `<html` or `<!doctype html` tag (case-insensitive)
+///     and, for a Persian prompt, at least 5 Persian characters in the reply —
+///     HTML/CSS is naturally Latin-heavy and must not be rejected.
 #[must_use]
 pub fn looks_broken(prompt: &str, reply: &str, is_builder: bool) -> bool {
-    // ۱) خالی / خیلی کوتاه
+    // 1) Empty / too short
     let min_chars = if is_builder { 64 } else { 5 };
     if reply.trim().chars().count() < min_chars {
         return true;
     }
-    // ۲) خرابی انکودینگ
+    // 2) Encoding corruption
     if reply.contains('\u{FFFD}') {
         return true;
     }
-    // ۳) تباهی زنجیرهٔ نویسهٔ الفبایی
+    // 3) Alphabetic character run degeneration
     if has_identical_alpha_run(reply, 5) {
         return true;
     }
-    // ۴) ناهماهنگی زبان
+    // 4) Language mismatch
     let prompt_persian = persian_char_count(prompt) >= 10;
     if is_builder {
         let lower = reply.to_lowercase();
@@ -464,53 +464,53 @@ pub fn looks_broken(prompt: &str, reply: &str, is_builder: bool) -> bool {
     false
 }
 
-/// گیت‌وی AI — redaction → استخر تخت با چسبندگی برندهٔ آخر → گیت کیفیت →
-/// ذخیرهٔ کم‌ضررترین → نتیجهٔ تایپ‌شده.
+/// AI gateway — redaction → flat pool with last-winner stickiness → quality gate →
+/// least-bad stash → typed result.
 pub struct AiGateway {
-    /// پیکربندی بوت — `slots` استخر تخت اجرایی است
+    /// Boot configuration — `slots` is the executable flat pool
     pub config: AiConfig,
     client: Arc<dyn ModelClient>,
-    /// شاخص لِین برندهٔ آخر (`brain.py::last_good`) — دفعهٔ بعد اول امتحان می‌شود
+    /// Index of the last winning lane (`brain.py::last_good`) — tried first next time
     last_good: AtomicUsize,
 }
 
 impl std::fmt::Debug for AiGateway {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // کلاینت عمداً فاش نمی‌شود — پیکربندی کافی است و کلیدها در trace هرگز
+        // The client is deliberately not exposed — the config suffices and keys never appear in trace
         f.debug_struct("AiGateway").field("config", &self.config).finish_non_exhaustive()
     }
 }
 
 impl AiGateway {
-    /// ساخت — کلاینت تزریقی می‌شود (HTTP تولیدی یا اسکریپت‌شوی تست).
+    /// Build — the client is injected (production HTTP or a scripted test client).
     #[must_use]
     pub fn new(config: AiConfig, client: Arc<dyn ModelClient>) -> Self {
         Self { config, client, last_good: AtomicUsize::new(0) }
     }
 
-    /// گیت‌وی فعال؟ حداقل یک عضو استخر کامل.
+    /// Gateway enabled? At least one pool member is complete.
     #[must_use]
     pub fn enabled(&self) -> bool {
         self.config.slots.iter().any(SlotConfig::enabled)
     }
 
-    /// برش استخر تخت اجرایی — همان `config.pool()`.
+    /// Executable flat pool slice — same as `config.pool()`.
     #[must_use]
     pub fn pool(&self) -> &[SlotConfig] {
         self.config.pool()
     }
 
-    /// اندازهٔ استخر اجرایی — تعداد عضوهای فعال `(url, key, model)` پس از ضرب
-    /// دکارتی — برای `/ai/status` (عضوهای خاموشِ اسلات‌های ناقص شمرده نمی‌شوند).
+    /// Executable pool size — number of enabled `(url, key, model)` members after the
+    /// Cartesian expansion — for `/ai/status` (off members of incomplete slots are not counted).
     #[must_use]
     pub fn pool_size(&self) -> usize {
         self.config.slots.iter().filter(|s| s.enabled()).count()
     }
 
-    /// طرح اجرای `brain.py`: برندهٔ آخر اول، بقیه به ترتیب طبیعی استخر.
+    /// `brain.py` execution plan: last winner first, the rest in natural pool order.
     ///
-    /// دقیقاً `[last_good] + [i for i in range(len(pool)) if i != last_good]`
-    /// وقتی `last_good` معتبر باشد؛ در غیر این صورت ترتیب طبیعی.
+    /// Exactly `[last_good] + [i for i in range(len(pool)) if i != last_good]`
+    /// when `last_good` is valid; otherwise the natural order.
     fn plan(&self, pool_len: usize) -> Vec<usize> {
         let lg = self.last_good.load(Ordering::Relaxed);
         let mut plan = Vec::with_capacity(pool_len);
@@ -525,11 +525,11 @@ impl AiGateway {
         plan
     }
 
-    /// وضعیت گروه‌های استخر برای سیم — بدون هیچ کلیدی.
+    /// Pool group statuses for the wire — no keys at all.
     ///
-    /// عضوهای استخر بر اساس نام گروه می‌شوند (حفظ ترتیب اولین مشاهده)؛ مدل‌های
-    /// متمایز هر گروه با کاما می‌آیند و فعال بودن گروه = فعال بودن حداقل یک عضو.
-    /// برای استخرِ سه‌اسلاتهٔ تک‌مدلی، خروجی با رفتار قبلی یک‌به‌یک برابر است.
+    /// Pool members are grouped by name (first-seen order kept); each group's
+    /// distinct models are comma-joined and a group is enabled = at least one member enabled.
+    /// For a three-slot single-model pool the output is one-to-one with the previous behavior.
     #[must_use]
     pub fn slot_statuses(&self) -> Vec<SlotStatus> {
         let mut out: Vec<SlotStatus> = Vec::new();
@@ -552,23 +552,23 @@ impl AiGateway {
         out
     }
 
-    /// گفت‌وگو — پیام‌های کاربر redact می‌شوند، لِین‌های استخر به ترتیب طرح امتحان می‌شوند.
+    /// Chat — user messages are redacted, pool lanes are tried in plan order.
     ///
     /// # Errors
-    /// [`GatewayError::Disabled`] بدون لِین فعال؛ [`GatewayError::AllSlotsFailed`]
-    /// با ریز تلاش‌ها وقتی همهٔ لِین‌های فعال شکست خوردند و کم‌ضررینِ قابل‌قبولی نبود.
+    /// [`GatewayError::Disabled`] with no enabled lane; [`GatewayError::AllSlotsFailed`]
+    /// with per-attempt details when all enabled lanes failed and no acceptable least-bad existed.
     pub async fn chat(&self, messages: Vec<PacketMessage>) -> Result<ChatResult, GatewayError> {
         self.chat_with_max_tokens(messages, None).await
     }
 
-    /// گفت‌وگوی چندنوبتی با سقف توکن خروجی اختیاری (مثلاً `Some(4096)` برای تولید کد HTML).
+    /// Multi-turn chat with an optional output token cap (e.g. `Some(4096)` for HTML code generation).
     ///
-    /// اسکنر رازها روی پیام‌های `user` اجرا می‌شود تا کلید/توکن کاربر هرگز به بیرون نرود؛
-    /// پرامپت سیستمی و کد HTML خروجیِ نوبت‌های قبلی `assistant` دست‌نخورده می‌مانند.
+    /// The secret scanner runs on `user` messages so user keys/tokens never leave the system;
+    /// system prompts and HTML code from previous `assistant` turns are left untouched.
     ///
     /// # Errors
-    /// [`GatewayError::Disabled`] بدون لِین فعال؛ [`GatewayError::AllSlotsFailed`]
-    /// با ریز تلاش‌ها وقتی همهٔ لِین‌های فعال شکست خوردند.
+    /// [`GatewayError::Disabled`] with no enabled lane; [`GatewayError::AllSlotsFailed`]
+    /// with per-attempt details when all enabled lanes failed.
     pub async fn chat_with_max_tokens(
         &self,
         messages: Vec<PacketMessage>,
@@ -577,24 +577,24 @@ impl AiGateway {
         self.chat_with_quality(messages, max_tokens, false).await
     }
 
-    /// هستهٔ کامل گیت‌وی با گیت کیفیت به سبک `brain.py`.
+    /// Full gateway core with a `brain.py`-style quality gate.
     ///
-    /// `is_builder = true` یعنی نوبتِ تولید آرتیفکت HTML — پاسخ باید تگ سند HTML
-    /// داشته باشد و قانون کوتاهیِ ۶۴ نویسه روی آن اعمال می‌شود؛ در حالت چت، پاسخ
-    /// اشتباه‌زبان (پرامپت فارسی، پاسخ لاتین‌غالب) رد می‌شود.
+    /// `is_builder = true` means an HTML artifact generation turn — the reply must carry an HTML document
+    /// tag and the 64-character minimum applies; in chat mode a
+    /// wrong-language reply (Persian prompt, Latin-heavy reply) is rejected.
     ///
-    /// استخرِ کم‌ضررترین (`least_bad`): اولین پاسخِ HTTP 200 با متنِ غیروخالی که
-    /// گیت کیفیت را رد می‌کند، بلافاصله پذیرفته نمی‌شود — ذخیره می‌شود و لِین
-    /// بعدی امتحان می‌شود. اگر همهٔ لِین‌ها شکست خوردند:
-    /// * چت عادی → کم‌ضررترین برگردانده می‌شود (دسترس‌پذیری بر کیفیت — همان `brain.py`).
-    /// * سازنده → کم‌ضررترین فقط وقتی برگردانده می‌شود که سند HTML قابل‌استخراج
-    ///   (`<!DOCTYPE html` یا `<html`) داشته باشد؛ وگرنه [`GatewayError::AllSlotsFailed`]
-    ///   بالا می‌رود تا موتور سازنده به سنتز محلیِ تعیینی برسد.
+    /// Least-bad stash (`least_bad`): the first HTTP 200 reply with non-empty text that
+    /// fails the quality gate is not accepted immediately — it is stashed and the
+    /// next lane is tried. If every lane failed:
+    /// * Plain chat → the least-bad is returned (availability over quality — same as `brain.py`).
+    /// * Builder → the least-bad is returned only if it carries an extractable HTML
+    ///   document (`<!DOCTYPE html` or `<html`); otherwise [`GatewayError::AllSlotsFailed`]
+    ///   propagates so the builder engine falls through to deterministic local synthesis.
     ///
     /// # Errors
-    /// [`GatewayError::Disabled`] بدون لِین فعال؛ [`GatewayError::AllSlotsFailed`]
-    /// وقتی هیچ لِینی پاسخ قابل‌قبول نداد.
-    // طولِ مجاز برای تابعِ ارکستراسیون لِین‌ها — خواناییِ ترتیبِ مراحل بر پراکنده‌سازی مقدم است
+    /// [`GatewayError::Disabled`] with no enabled lane; [`GatewayError::AllSlotsFailed`]
+    /// when no lane produced an acceptable reply.
+    // Allowed length for the lane orchestration function — step-order readability outranks splitting it up
     #[allow(clippy::too_many_lines)]
     pub async fn chat_with_quality(
         &self,
@@ -602,7 +602,7 @@ impl AiGateway {
         max_tokens: Option<u32>,
         is_builder: bool,
     ) -> Result<ChatResult, GatewayError> {
-        // ۱) redaction — روی پیام‌های کاربر قبل از دیدن هر لِین؛ دسته‌ها بدون محتوا گزارش می‌شوند
+        // 1) redaction — on user messages before any lane sees them; categories are reported without content
         let mut findings: Vec<RedactionFinding> = Vec::new();
         let redacted: Vec<PacketMessage> = messages
             .into_iter()
@@ -625,14 +625,14 @@ impl AiGateway {
             }
         }
 
-        // ۲) استخر فعال + طرح اجرا (برندهٔ آخر اول)
+        // 2) Enabled pool + execution plan (last winner first)
         let pool: Vec<&SlotConfig> = self.config.slots.iter().filter(|s| s.enabled()).collect();
         if pool.is_empty() {
             return Err(GatewayError::Disabled);
         }
         let plan = self.plan(pool.len());
 
-        // مرجع زبان برای گیت کیفیت — آخرین پیام کاربر (همان `ref` در brain.py)
+        // Language reference for the quality gate — the last user message (the `ref` in brain.py)
         let prompt_ref = redacted
             .iter()
             .rev()
@@ -640,7 +640,7 @@ impl AiGateway {
             .or_else(|| redacted.last())
             .map_or("", |m| m.content.as_str());
 
-        // ۳) اسکن استخر — گیت کیفیت + ذخیرهٔ کم‌ضررترین
+        // 3) Pool scan — quality gate + least-bad stash
         let mut attempts: Vec<AttemptFailure> = Vec::new();
         let mut least_bad: Option<(usize, CompletionPacket)> = None;
         for idx in plan {
@@ -652,7 +652,7 @@ impl AiGateway {
             };
             match self.client.complete(slot, &packet).await {
                 Ok(done) => {
-                    // پاکت سخت‌گیرانه: محتوای خالی یا توکن منفی = پاکت خراب
+                    // Strict packet: empty content or negative tokens = malformed packet
                     if done.content.trim().is_empty()
                         || done.prompt_tokens < 0
                         || done.completion_tokens < 0
@@ -673,7 +673,7 @@ impl AiGateway {
                         }
                         continue;
                     }
-                    // برنده — چسبندگی: دفعهٔ بعد همین لِین اول امتحان می‌شود
+                    // Winner — stickiness: this lane is tried first next time
                     self.last_good.store(idx, Ordering::Relaxed);
                     return Ok(ChatResult {
                         content: done.content,
@@ -692,7 +692,7 @@ impl AiGateway {
             }
         }
 
-        // ۴) همه‌جا شکست — کم‌ضررترینِ قابل‌قبول یا خطای تایپ‌شده
+        // 4) All failed — acceptable least-bad or typed error
         if let Some((idx, done)) = least_bad {
             let salvage = if is_builder {
                 let lower = done.content.to_lowercase();
@@ -729,10 +729,10 @@ mod tests {
         AiConfig::from_env_reader(|k| env.get(k).cloned())
     }
 
-    // ── قانون ضرب دکارتی استخر ─────────────────────────────────────────────
+    // ── Pool Cartesian product rule ─────────────────────────────────────────────
 
-    /// فهرستِ کلید × فهرستِ مدل دقیقاً به ترتیب «هر مدل، هر کلید» باز می‌شود و
-    /// سه‌تایی تکراری حذف می‌شود (حفظ اولین ترتیب).
+    /// Key list × model list expands exactly in "every model, every key" order and
+    /// duplicate triples are dropped (first order kept).
     #[test]
     fn cross_product_expands_models_x_keys_ordered_with_dedup() {
         let cfg = cfg_from(&[
@@ -752,7 +752,7 @@ mod tests {
                 ("https://or.example/v1", "k2", "mA"),
                 ("https://or.example/v1", "k1", "mB"),
                 ("https://or.example/v1", "k2", "mB"),
-                // اسلات‌های secondary/tertiaryِ کانفیگ‌نشده — صادقانه خاموش می‌مانند
+                // Unconfigured secondary/tertiary slots — stay honestly off
                 ("", "", ""),
                 ("", "", ""),
             ],
@@ -762,8 +762,8 @@ mod tests {
         assert_eq!(cfg.pool().iter().filter(|s| s.enabled()).count(), 4);
     }
 
-    /// تامین‌کننده‌های سبک هرمس به انتهای استخر افزوده می‌شوند (ترتیب هرمس:
-    /// coarena ← openrouter ← router9)، URL پیش‌فرض دارند و تک‌کلیدی هم می‌پذیرند.
+    /// Hermes-style providers are appended to the end of the pool (Hermes order:
+    /// coarena ← openrouter ← router9); they carry default URLs and accept a single key too.
     #[test]
     fn hermes_style_providers_append_in_brain_py_order() {
         let cfg = cfg_from(&[
@@ -783,7 +783,7 @@ mod tests {
         assert_eq!(
             flat,
             vec![
-                // اسلات‌های منطقیِ کانفیگ‌نشده — صادقانه خاموش، بدون حذف
+                // Unconfigured logical slots — honestly off, not dropped
                 ("primary", "", "", ""),
                 ("secondary", "", "", ""),
                 ("tertiary", "", "", ""),
@@ -798,8 +798,8 @@ mod tests {
         );
     }
 
-    /// بدون تامین‌کنندهٔ هرمس و با اسلات‌های تک‌مقداری، استخر = رفتار قبلی
-    /// (سه اسلات به همان ترتیب) — سازگاری کامل به عقب.
+    /// Without Hermes providers and with single-value slots, the pool = previous behavior
+    /// (three slots in the same order) — full backward compatibility.
     #[test]
     fn single_value_slots_keep_legacy_layout() {
         let cfg = cfg_from(&[
@@ -817,8 +817,8 @@ mod tests {
         assert!(!cfg.slots[2].enabled(), "unconfigured tertiary stays disabled");
     }
 
-    /// اسلات ناقص (بدون کلید) باز نمی‌شود و گروه خاموش گزارش می‌شود؛ مدل‌های
-    /// چندتاییِ یک گروه در وضعیت با کاما می‌آیند.
+    /// An incomplete slot (no key) is not expanded and reports as an off group; the
+    /// multiple models of one group appear comma-joined in the status.
     #[test]
     fn status_groups_pool_entries_by_name() {
         let cfg = cfg_from(&[
@@ -826,7 +826,7 @@ mod tests {
             ("KIAN_AI_PRIMARY_KEY", "k1"),
             ("KIAN_AI_PRIMARY_MODEL", "m1,m2,m3"),
             ("KIAN_AI_TERTIARY_URL", "https://t/v1"),
-            ("KIAN_AI_TERTIARY_MODEL", "tm1,tm2"), // بدون کلید — خاموش
+            ("KIAN_AI_TERTIARY_MODEL", "tm1,tm2"), // no key — off
         ]);
         let st = AiGateway::new(cfg, Arc::new(ScriptedClient::default())).slot_statuses();
         assert_eq!(st.len(), 3);
@@ -841,10 +841,10 @@ mod tests {
         assert!(!st[2].enabled, "no key → group disabled");
     }
 
-    // ── چسبندگی last_good ──────────────────────────────────────────────────
+    // ── last_good stickiness ──────────────────────────────────────────────────
 
-    /// لِین ۰ شکست و لِین ۱ موفق در فراخوان اول؛ فراخوان دوم مستقیم لِین ۱ را
-    /// می‌زند و اصلاً لِین ۰ را لمس نمی‌کند (طرح `[last_good] + بقیه`).
+    /// Lane 0 fails and lane 1 succeeds on the first call; the second call hits lane 1
+    /// directly and never touches lane 0 (the `[last_good] + rest` plan).
     #[tokio::test]
     async fn last_good_sticky_entry_wins_next_call_without_retrying_broken() {
         let scripted = Arc::new(ScriptedClient::new(vec![
@@ -873,13 +873,13 @@ mod tests {
         );
         let msgs = vec![PacketMessage { role: "user".into(), content: "hello there".into() }];
 
-        // فراخوان ۱: primary شکست → secondary برنده
+        // Call 1: primary fails → secondary wins
         let r1 = gw.chat(msgs.clone()).await.expect("call 1 must succeed");
         assert_eq!(r1.provider, "secondary");
         assert_eq!(r1.model, "m2");
         assert_eq!(scripted.called_slots(), vec!["primary", "secondary"]);
 
-        // فراخوان ۲: مستقیم secondary — primary هرگز لمس نمی‌شود
+        // Call 2: straight to secondary — primary is never touched
         let r2 = gw.chat(msgs.clone()).await.expect("call 2 must succeed");
         assert_eq!(r2.provider, "secondary");
         assert_eq!(
@@ -889,28 +889,28 @@ mod tests {
         );
     }
 
-    /// اسلات ۳تایی چندمدلی: برندهٔ وسط استخر چسبنده می‌شود — طرح از برنده شروع
-    /// می‌شود و بعد بقیه به ترتیب طبیعی ادامه می‌دهند.
+    /// Triple-slot multi-model lane: the mid-pool winner becomes sticky — the plan starts
+    /// at the winner and then continues with the rest in natural order.
     #[tokio::test]
     async fn sticky_plan_covers_whole_pool_in_natural_order_after_winner() {
-        // استخر: primary×3 مدل؛ لِین ۱ (m2) برنده می‌شود
+        // Pool: primary×3 models; lane 1 (m2) wins
         let scripted = Arc::new(ScriptedClient::new(vec![
             Err("upstream status 502".into()), // m1
             Ok(CompletionPacket {
-                content: "پاسخ تمیز فارسی با جزئیات کافی".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{62a}\u{645}\u{6cc}\u{632} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{6a9}\u{627}\u{641}\u{6cc}".into(),
                 prompt_tokens: 4,
                 completion_tokens: 6,
-            }), // m2 برنده
+            }), // m2 wins
             Ok(CompletionPacket {
-                content: "پاسخ تمیز فارسی با جزئیات کافی".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{62a}\u{645}\u{6cc}\u{632} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{6a9}\u{627}\u{641}\u{6cc}".into(),
                 prompt_tokens: 4,
                 completion_tokens: 6,
             }), // m3
             Ok(CompletionPacket {
-                content: "پاسخ تمیز فارسی با جزئیات کافی".into(),
+                content: "\u{67e}\u{627}\u{633}\u{62e} \u{62a}\u{645}\u{6cc}\u{632} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{6a9}\u{627}\u{641}\u{6cc}".into(),
                 prompt_tokens: 4,
                 completion_tokens: 6,
-            }), // فراخوان ۲: m2
+            }), // Call 2: m2
         ]));
         let gw = AiGateway::new(
             cfg_from(&[
@@ -922,7 +922,7 @@ mod tests {
         );
         let msgs = vec![PacketMessage {
             role: "user".into(),
-            content: "یک سوال کاملاً فارسی برای پاسخ فارسی".into(),
+            content: "\u{6cc}\u{6a9} \u{633}\u{648}\u{627}\u{644} \u{6a9}\u{627}\u{645}\u{644}\u{627}\u{64b} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{67e}\u{627}\u{633}\u{62e} \u{641}\u{627}\u{631}\u{633}\u{6cc}".into(),
         }];
         let r1 = gw.chat(msgs.clone()).await.expect("call 1");
         assert_eq!(r1.model, "m2", "m1 failed, m2 won");
@@ -932,21 +932,21 @@ mod tests {
         assert_eq!(scripted.called_slots().len(), 3, "only one request in call 2");
     }
 
-    // ── گیت کیفیت ──────────────────────────────────────────────────────────
+    // ── Quality gate ──────────────────────────────────────────────────────────
 
-    /// قانون ۱ و ۲: خالی/خیلی کوتاه (چت <۵) و نویسهٔ خرابی انکودینگ.
+    /// Rules 1 and 2: empty/too short (chat <5) and the encoding corruption character.
     #[test]
     fn quality_gate_catches_empty_short_and_corrupt() {
-        assert!(looks_broken("سلام", "   ", false), "whitespace-only");
-        assert!(looks_broken("سلام", "ab", false), "2 chars < 5");
+        assert!(looks_broken("\u{633}\u{644}\u{627}\u{645}", "   ", false), "whitespace-only");
+        assert!(looks_broken("\u{633}\u{644}\u{627}\u{645}", "ab", false), "2 chars < 5");
         assert!(looks_broken("hi", "ok!", false), "3 chars < 5");
         assert!(
-            !looks_broken("سلام", "سلام دوست من", false),
+            !looks_broken("\u{633}\u{644}\u{627}\u{645}", "\u{633}\u{644}\u{627}\u{645} \u{62f}\u{648}\u{633}\u{62a} \u{645}\u{646}", false),
             "exactly at/over the 5-char floor passes"
         );
         assert!(looks_broken("hi", "\u{FFFD}\u{FFFD}\u{FFFD}\u{FFFD}\u{FFFD}\u{FFFD}", false));
-        // حالت سازنده: سقف ۶۴
-        assert!(looks_broken("سلام", "پاسخ کوتاه", true), "builder floor is 64");
+        // Builder mode: cap 64
+        assert!(looks_broken("\u{633}\u{644}\u{627}\u{645}", "\u{67e}\u{627}\u{633}\u{62e} \u{6a9}\u{648}\u{62a}\u{627}\u{647}", true), "builder floor is 64");
         assert!(
             !looks_broken(
                 "hi",
@@ -957,11 +957,11 @@ mod tests {
         );
     }
 
-    /// قانون ۳: زنجیرهٔ ≥۵ الفبایی یکسان گرفته می‌شود؛ جداکننده‌های مارک‌داون و
-    /// رنگ هگز و بلوک‌های کد سالم می‌مانند.
+    /// Rule 3: a run of >=5 identical alphabetic characters is caught; Markdown separators,
+    /// hex colors, and code blocks stay intact.
     #[test]
     fn quality_gate_char_run_vs_separators() {
-        assert!(looks_broken("hi", "هههههه چه جالب", false), "Persian degeneration");
+        assert!(looks_broken("hi", "\u{647}\u{647}\u{647}\u{647}\u{647}\u{647} \u{686}\u{647} \u{62c}\u{627}\u{644}\u{628}", false), "Persian degeneration");
         assert!(looks_broken("hi", "aaaaaa", false), "latin degeneration");
         assert!(!looks_broken("hi", "aaaa cc bb", false), "4-run is under the floor");
         assert!(
@@ -978,23 +978,23 @@ mod tests {
         );
     }
 
-    /// قانون ۴ چت: پاسخ لاتین‌غالب به پرامپت فارسی رد می‌شود؛ پاسخ فارسی و
-    /// پاسخِ کد-محورِ داخل fence با توضیح فارسی قبول است.
+    /// Chat rule 4: a Latin-heavy reply to a Persian prompt is rejected; a Persian reply and
+    /// a code-heavy reply inside a fence with Persian commentary are accepted.
     #[test]
     fn quality_gate_language_mismatch_chat() {
-        let fa_prompt = "این یک پرسش کاملاً فارسی است که بیش از ده نویسهٔ فارسی دارد";
+        let fa_prompt = "\u{627}\u{6cc}\u{646} \u{6cc}\u{6a9} \u{67e}\u{631}\u{633}\u{634} \u{6a9}\u{627}\u{645}\u{644}\u{627}\u{64b} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{627}\u{633}\u{62a} \u{6a9}\u{647} \u{628}\u{6cc}\u{634} \u{627}\u{632} \u{62f}\u{647} \u{646}\u{648}\u{6cc}\u{633}\u{647}\u{654} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{62f}\u{627}\u{631}\u{62f}";
         assert!(
             looks_broken(fa_prompt, "Sure! Here is a complete English answer about the topic", false),
             "English-only reply to a Persian question is broken"
         );
         assert!(
-            !looks_broken(fa_prompt, "پاسخ کامل فارسی با توضیح کافی برای کاربر", false),
+            !looks_broken(fa_prompt, "\u{67e}\u{627}\u{633}\u{62e} \u{6a9}\u{627}\u{645}\u{644} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6a9}\u{627}\u{641}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{6a9}\u{627}\u{631}\u{628}\u{631}", false),
             "Persian reply passes"
         );
         assert!(
             !looks_broken(
                 fa_prompt,
-                "توضیح فارسی:\n```html\n<html><body>latin heavy content</body></html>\n```\nپایان توضیح",
+                "\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{641}\u{627}\u{631}\u{633}\u{6cc}:\n```html\n<html><body>latin heavy content</body></html>\n```\n\u{67e}\u{627}\u{6cc}\u{627}\u{646} \u{62a}\u{648}\u{636}\u{6cc}\u{62d}",
                 false
             ),
             "fenced code is exempt from the language ratio"
@@ -1005,15 +1005,15 @@ mod tests {
         );
     }
 
-    /// قانون ۴ سازنده: سند HTML لازم است؛ با پرامپت فارسی حداقل ۵ نویسهٔ فارسی
-    /// هم؛ بدون پرامپت فارسی فقط تگ سند کافی است.
+    /// Builder rule 4: an HTML document is required; with a Persian prompt, at least 5 Persian
+    /// characters as well; without a Persian prompt the document tag alone suffices.
     #[test]
     fn quality_gate_builder_mode_requires_html_and_persian() {
-        let fa = "یک ماشین حساب سود ارز دیجیتال با تم تیره بساز";
-        let good = "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><body><h1>ماشین حساب سود مرکب</h1><script>let x=1;</script></body></html>";
+        let fa = "\u{6cc}\u{6a9} \u{645}\u{627}\u{634}\u{6cc}\u{646} \u{62d}\u{633}\u{627}\u{628} \u{633}\u{648}\u{62f} \u{627}\u{631}\u{632} \u{62f}\u{6cc}\u{62c}\u{6cc}\u{62a}\u{627}\u{644} \u{628}\u{627} \u{62a}\u{645} \u{62a}\u{6cc}\u{631}\u{647} \u{628}\u{633}\u{627}\u{632}";
+        let good = "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><body><h1>\u{645}\u{627}\u{634}\u{6cc}\u{646} \u{62d}\u{633}\u{627}\u{628} \u{633}\u{648}\u{62f} \u{645}\u{631}\u{6a9}\u{628}</h1><script>let x=1;</script></body></html>";
         assert!(!looks_broken(fa, good, true), "valid Persian RTL artifact passes");
         assert!(
-            looks_broken(fa, "توضیح کوتاه بدون هیچ کد اچ تی ام الی در پاسخ کاربر", true),
+            looks_broken(fa, "\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6a9}\u{648}\u{62a}\u{627}\u{647} \u{628}\u{62f}\u{648}\u{646} \u{647}\u{6cc}\u{686} \u{6a9}\u{62f} \u{627}\u{686} \u{62a}\u{6cc} \u{627}\u{645} \u{627}\u{644}\u{6cc} \u{62f}\u{631} \u{67e}\u{627}\u{633}\u{62e} \u{6a9}\u{627}\u{631}\u{628}\u{631}", true),
             "no HTML tag → broken"
         );
         let latin_doc = "<!DOCTYPE html><html><body><h1>Profit Calc</h1><script>let x=1;</script></body></html>";
@@ -1026,27 +1026,27 @@ mod tests {
             "non-Persian prompt skips the Persian-chars rule"
         );
         assert!(
-            looks_broken(fa, "<html><body>کوتاه</body></html>", true),
+            looks_broken(fa, "<html><body>\u{6a9}\u{648}\u{62a}\u{627}\u{647}</body></html>", true),
             "31 chars < 64 builder floor → broken"
         );
     }
 
-    // ── ذخیرهٔ کم‌ضررترین ───────────────────────────────────────────────────
+    // ── Least-bad stash ───────────────────────────────────────────────────
 
-    /// لِین ۰ خراب (پاسخ انگلیسی به پرسش فارسی) و لِین ۱ تمیز → لِین ۱ برنده است.
-    /// اگر لِین ۱ به‌جای پاسخ تمیز ۴۲۹ بدهد، کم‌ضررینِ ذخیره‌شده برای چت برمی‌گردد.
+    /// Lane 0 is broken (English reply to a Persian question) and lane 1 is clean → lane 1 wins.
+    /// If lane 1 returns 429 instead of a clean reply, the stashed least-bad is salvaged for chat.
     #[tokio::test]
     async fn least_bad_stash_prefers_clean_and_salvages_when_all_fail() {
-        let fa_q = "یک پرسش کاملاً فارسی با بیش از ده نویسهٔ فارسی برای گیت زبان";
+        let fa_q = "\u{6cc}\u{6a9} \u{67e}\u{631}\u{633}\u{634} \u{6a9}\u{627}\u{645}\u{644}\u{627}\u{64b} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{628}\u{6cc}\u{634} \u{627}\u{632} \u{62f}\u{647} \u{646}\u{648}\u{6cc}\u{633}\u{647}\u{654} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{6af}\u{6cc}\u{62a} \u{632}\u{628}\u{627}\u{646}";
         let garbled = "Totally unrelated English answer here for a Persian question";
-        let clean = "پاسخ تمیز فارسی با جزئیات کافی برای کاربر";
+        let clean = "\u{67e}\u{627}\u{633}\u{62e} \u{62a}\u{645}\u{6cc}\u{632} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{6a9}\u{627}\u{641}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{6a9}\u{627}\u{631}\u{628}\u{631}";
         let mk = |c: &str| Ok(CompletionPacket {
             content: c.to_owned(),
             prompt_tokens: 6,
             completion_tokens: 9,
         });
 
-        // حالت الف: خراب ← تمیز؛ تمیز برنده است
+        // Case A: broken ← clean; clean wins
         let scripted = Arc::new(ScriptedClient::new(vec![mk(garbled), mk(clean)]));
         let gw = AiGateway::new(
             cfg_from(&[
@@ -1065,7 +1065,7 @@ mod tests {
         assert_eq!(r.content, clean);
         assert_eq!(scripted.called_slots(), vec!["primary", "secondary"]);
 
-        // حالت ب: خراب ← ۴۲۹؛ کم‌ضررین ذخیره‌شده برای چت برگردانده می‌شود
+        // Case B: broken ← 429; the stashed least-bad is salvaged for chat
         let scripted = Arc::new(ScriptedClient::new(vec![
             mk(garbled),
             Err("upstream status 429 Too Many Requests".into()),
@@ -1091,14 +1091,14 @@ mod tests {
         );
     }
 
-    /// حالت سازنده: پاسخِ خرابِ دارای سند HTML قابل استخراج → کم‌ضررین برمی‌گردد
-    /// (موتور سازنده آن را استخراج می‌کند)؛ پاسخ خرابِ بدون HTML → خطا تا سنتز
-    /// محلیِ تعیینی اجرا شود.
+    /// Builder mode: a broken reply carrying an extractable HTML document → the least-bad is returned
+    /// (the builder engine extracts it); a broken reply without HTML → an error so that
+    /// deterministic local synthesis runs instead.
     #[tokio::test]
     async fn builder_least_bad_salvages_only_real_html_documents() {
-        let fa_q = "یک ابزار فروشگاهی با رابط فارسی بساز";
-        let corrupt_doc = "<!DOCTYPE html><html dir=\"rtl\"><body><main><h1>\u{FFFD}\u{FFFD}\u{FFFD}ابزار فروش\u{FFFD}\u{FFFD}</h1></main></body></html>";
-        let no_html = "توضیح کوتاه بدون هیچ سند اچ تی ام الی در پاسخ کاربر";
+        let fa_q = "\u{6cc}\u{6a9} \u{627}\u{628}\u{632}\u{627}\u{631} \u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647}\u{6cc} \u{628}\u{627} \u{631}\u{627}\u{628}\u{637} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{633}\u{627}\u{632}";
+        let corrupt_doc = "<!DOCTYPE html><html dir=\"rtl\"><body><main><h1>\u{FFFD}\u{FFFD}\u{FFFD}\u{627}\u{628}\u{632}\u{627}\u{631} \u{641}\u{631}\u{648}\u{634}\u{FFFD}\u{FFFD}</h1></main></body></html>";
+        let no_html = "\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6a9}\u{648}\u{62a}\u{627}\u{647} \u{628}\u{62f}\u{648}\u{646} \u{647}\u{6cc}\u{686} \u{633}\u{646}\u{62f} \u{627}\u{686} \u{62a}\u{6cc} \u{627}\u{645} \u{627}\u{644}\u{6cc} \u{62f}\u{631} \u{67e}\u{627}\u{633}\u{62e} \u{6a9}\u{627}\u{631}\u{628}\u{631}";
         let mk = |c: &str| Ok(CompletionPacket {
             content: c.to_owned(),
             prompt_tokens: 8,
@@ -1110,7 +1110,7 @@ mod tests {
             ("KIAN_AI_PRIMARY_MODEL", "m1"),
         ];
 
-        // سند HTML خراب → نجات برای سازنده
+        // Corrupt HTML document → salvage for the builder
         let scripted = Arc::new(ScriptedClient::new(vec![mk(corrupt_doc)]));
         let gw = AiGateway::new(cfg_from(pairs), scripted.clone());
         let msgs = vec![PacketMessage { role: "user".into(), content: fa_q.to_owned() }];
@@ -1120,7 +1120,7 @@ mod tests {
             .expect("doctype-bearing least-bad must be salvaged for builder");
         assert_eq!(r.content, corrupt_doc);
 
-        // بدون HTML → خطای تایپ‌شده تا BuilderEngine سنتز محلی را اجرا کند
+        // No HTML → typed error so BuilderEngine runs local synthesis
         let scripted = Arc::new(ScriptedClient::new(vec![mk(no_html)]));
         let gw = AiGateway::new(cfg_from(pairs), scripted.clone());
         let err = gw

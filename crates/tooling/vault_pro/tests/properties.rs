@@ -1,14 +1,14 @@
-//! property tests فاز ۸ — «proptest روی invariantها» (ADR-009 §۷ فاز ۸).
+//! Phase 8 property tests — "proptest on the invariants" (ADR-009 §7 phase 8).
 //!
-//! سه خاصیت مقدس روی ورودی‌های تصادفی:
-//! ۱. تقسیم ترافیک — هر bucket یا به Rust است یا TS؛ مرز `pct` دقیقاً رعایت
-//!    می‌شود و تخصیص تابع مسیر است (قطعی).
-//! ۲. دنبالهٔ تصادفی mint/burn/escrow از مرز HTTP — Σ همیشه صفر و ترازها
-//!    همیشه ≥ ۰ می‌مانند (عین خاصیت فاز ۱، این‌بار از درگاه وایر).
-//! ۳. نرمال‌ساز parity — روی هر JSON دلخواه ایدمپوتنت و فیلد فرّار را رد
-//!    می‌کند.
+//! Three sacred properties over random inputs:
+//! 1. Traffic split — every bucket is either Rust or TS; the `pct` boundary is respected
+//!    exactly and allocation is a function of the path (deterministic).
+//! 2. A random mint/burn/escrow sequence from the HTTP boundary — Σ is always zero and balances
+//!    always stay ≥ 0 (exactly the phase 1 property, this time through the wire gateway).
+//! 3. The parity normalizer — idempotent on any JSON and rejects volatile
+//!    fields.
 
-// proptest — unwrap در assert مجاز
+// proptest — unwrap allowed in asserts
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use axum::body::Body;
@@ -24,10 +24,10 @@ use proptest::strategy::ValueTree;
 use proptest::test_runner::TestRunner;
 use tower::ServiceExt;
 
-// ── خاصیت ۱ — تقسیم ترافیک ───────────────────────────────────────────────────
+// ── Property 1 — traffic split ───────────────────────────────────────────────────
 
 proptest! {
-    /// تخصیص دترمینیستیک + رعایت دقیق مرز درصد.
+    /// Deterministic allocation + exact respect of the percentage boundary.
     #[test]
     fn traffic_split_is_a_function_of_the_request(
         pct in 0u8..=100u8,
@@ -55,14 +55,14 @@ proptest! {
     }
 }
 
-// ── خاصیت ۲ — Σ=۰ از درگاه وایر ─────────────────────────────────────────────
+// ── Property 2 — Σ=0 through the wire gateway ─────────────────────────────────────────────
 
-/// استراتژی: دنبالهٔ عملیات پولی (mint/burn/escrow full cycle).
+/// Strategy: a sequence of money operations (mint/burn/escrow full cycle).
 fn ops_strategy() -> impl Strategy<Value = Vec<(u8, i64)>> {
     proptest::collection::vec((0u8..3, 1i64..5_000), 1..40)
 }
 
-/// بوت درون‌حافظه‌ای برای property پولی.
+/// In-memory boot for the money property.
 async fn boot_money() -> (Router, V3Store) {
     let cfg = ServerConfig {
         admin_key: Some("prop-admin-key-0123456789".into()),
@@ -96,7 +96,7 @@ async fn send_json(
     (status, serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null))
 }
 
-/// Σ همهٔ پستینگ‌ها و Σ کیف کاربران از SQL خام — ممیزی مستقل.
+/// Σ of all postings and Σ of user wallets from raw SQL — independent audit.
 async fn ledger_sums(store: &V3Store) -> (i64, i64) {
     use sqlx::Row;
     let pool = store.pool_ref();
@@ -116,8 +116,8 @@ async fn ledger_sums(store: &V3Store) -> (i64, i64) {
 
 #[tokio::test]
 async fn random_money_sequences_via_wire_keep_ledger_sacred() {
-    // نسخهٔ runtime نمونه‌ها — proptest با tokio runtime ترکیب نمی‌شود؛
-    // به‌جای آن ۸ دنبالهٔ قطعی از strategy نمونه‌گیری می‌شود.
+    // runtime version of the samples — proptest does not compose with a tokio runtime;
+    // instead, 8 deterministic sequences are sampled from the strategy.
     let mut rng = TestRunner::deterministic();
     for case in 0..8u64 {
         let ops =
@@ -134,7 +134,7 @@ async fn random_money_sequences_via_wire_keep_ledger_sacred() {
                 1 => {
                     let body = format!(r#"{{"accountId":"user:pa","amount":{amount}}}"#);
                     send_json(&router, "POST", "/api/v1/wallet/burn", &body).await;
-                    // overdraft → رد
+                    // overdraft → rejected
                 }
                 _ => {
                     let id = format!("escrow:prop{case}_{idx}");
@@ -150,23 +150,23 @@ async fn random_money_sequences_via_wire_keep_ledger_sacred() {
                 }
             }
             let (sum_all, sum_users) = ledger_sums(&store).await;
-            assert_eq!(sum_all, 0, "Σ پستینگ‌ها باید صفر بماند — case {case} step {idx}");
-            assert!(sum_users >= 0, "Σ کیف کاربران هرگز منفی نمی‌شود");
+            assert_eq!(sum_all, 0, "Σ \u{67e}\u{633}\u{62a}\u{6cc}\u{646}\u{6af}‌\u{647}\u{627} \u{628}\u{627}\u{6cc}\u{62f} \u{635}\u{641}\u{631} \u{628}\u{645}\u{627}\u{646}\u{62f} — case {case} step {idx}");
+            assert!(sum_users >= 0, "Σ \u{6a9}\u{6cc}\u{641} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{627}\u{646} \u{647}\u{631}\u{6af}\u{632} \u{645}\u{646}\u{641}\u{6cc} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
         }
     }
 }
 
-// ── خاصیت ۳ — نرمال‌ساز parity ──────────────────────────────────────────────
+// ── Property 3 — parity normalizer ──────────────────────────────────────────────
 
 proptest! {
-    /// نرمال‌ساز روی هر JSON معتبر ایدمپوتنت است و فقط فیلدهای فرّار را رد می‌کند.
+    /// The normalizer is idempotent on any valid JSON and rejects only volatile fields.
     #[test]
     fn parity_normalizer_is_idempotent(
         depth in 0u8..5u8,
         width in 0usize..6usize,
         seed in any::<u64>(),
     ) {
-        // ساخت JSON دلخواه — مقادیر رشته‌ای بعضاً timestamp
+        // build arbitrary JSON — some string values are timestamps
         let mut root = serde_json::Map::new();
         for i in 0..width {
             let key = format!("k{i}");

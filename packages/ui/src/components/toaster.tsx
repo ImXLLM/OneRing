@@ -19,14 +19,14 @@ const BORDER: Record<ToastVariant, string> = {
   gold: "border-gold-400/50",
 };
 
-/** ظرف توست‌های سراسری — در RootLayout سوار می‌شود؛ RTL و پایین صفحه */
+/** Container for global toasts — mounted in RootLayout; RTL, bottom of the page */
 export function Toaster() {
   const { toasts } = useToast();
 
   return (
     <div
       role="region"
-      aria-label="اعلان‌ها"
+      aria-label="&#x627;&#x639;&#x644;&#x627;&#x646;‌&#x647;&#x627;"
       className="pointer-events-none fixed inset-x-0 bottom-4 z-[100] flex flex-col items-center gap-2 px-4"
     >
       <AnimatePresence initial={false}>
@@ -54,7 +54,7 @@ export function Toaster() {
             <button
               type="button"
               onClick={() => dismiss(t.id)}
-              aria-label="بستن اعلان"
+              aria-label="\u0628\u0633\u062a\u0646 \u0627\u0639\u0644\u0627\u0646"
               className="mt-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="size-4" aria-hidden />

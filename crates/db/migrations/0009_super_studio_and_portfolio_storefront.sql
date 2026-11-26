@@ -1,15 +1,15 @@
--- 0009_super_studio_and_portfolio_storefront — استودیوی ادراک‌سیارِ
--- سه‌لایه (Age 9 ↔ Age 28)، ابراستودیوی ۹-مدالیتیِ صفر-هزینه و ویترینِ
--- سازندهٔ پورتفولیو (Wave 5 — Step 2/4).
+-- 0009_super_studio_and_portfolio_storefront — the three-tier cognitive
+-- studio (Age 9 ↔ Age 28), the 9-modality zero-cost super-studio, and the
+-- portfolio-builder storefront (Wave 5 — Step 2/4).
 --
--- قواعد (همان قرارداد 0005/0007/0008):
---  * جدولِ تازهٔ `studio_creations` — هر آفرینشِ استودیو با لایهٔ شناختیِ
---    مورف‌شده، مدالیتیِ مولد، کارتِ ویترینِ JSON و قیمت‌گذاریِ قطعی ماندگار
---    می‌شود؛ هیچ جدولِ موجود لمس نمی‌شود تا همهٔ ناورنی‌های دفتر
---    (User=466، Product=20، Posting SUM=0) دست‌نخورده بمانند.
---  * `rea_score` پیش‌فرضِ ۹۲ — بالای گیتِ فورجِ مایرون (>= 85).
---  * `price_xtr_stars` پیش‌فرضِ ۵۰ و `price_ukian` پیش‌فرضِ ۱٬۰۰۰٬۰۰۰ —
---    قفلِ قیمتِ یک‌کلیکیِ ToySpark.
+-- Rules (same convention as 0005/0007/0008):
+--  * the new `studio_creations` table persists every studio creation with its morphed
+--    cognitive tier, generative modality, JSON storefront card, and deterministic pricing;
+--    no existing table is touched so that every ledger invariant
+--    (User=466, Product=20, Posting SUM=0) stays untouched.
+--  * `rea_score` defaults to 92 — above the Mairon forge gate (>= 85).
+--  * `price_xtr_stars` defaults to 50 and `price_ukian` defaults to 1,000,000 —
+--    the ToySpark one-click price lock.
 
 CREATE TABLE IF NOT EXISTS "studio_creations" (
     "id" TEXT PRIMARY KEY,

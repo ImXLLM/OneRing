@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 
-/** ثبت Service Worker — PWA آفلاین‌اول */
+/** Service Worker registration — offline-first PWA */
 export function SwRegister() {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       const onLoad = () => {
         navigator.serviceWorker.register("/sw.js").catch(() => {
-          /* PWA اختیاری است — شکست ثبت صفحه را نمی‌شکند */
+          /* The PWA is optional — registration failure must not break the page */
         });
       };
       if (document.readyState === "complete") onLoad();

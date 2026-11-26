@@ -143,7 +143,7 @@ th, td { text-align: start; }  th.num, td.num { text-align: end; }  /* numeric c
 **Other rules:**
 - Choose the digit policy explicitly. Use `Intl.NumberFormat('en-US')` for Latin digits in financial values, and `fa-IR` only if Persian digits are wanted. Use the `fa-IR-u-ca-persian` locale for Jalali dates.
 - Use ZWNJ (U+200C) in compound words. Never apply `letter-spacing` or `text-transform` to Persian. Avoid synthetic italics.
-- Verify the digits and `ي`/`ك` vs `ی`/`ک` in user-supplied text.
+- Verify digit shapes and the Arabic-script `U+064A`/`U+0643` versus Persian `U+06CC`/`U+06A9` variants in user-supplied text.
 - JS scroll math: `scrollLeft` is negative in RTL containers in modern browsers.
 
 **Top 3 RTL bugs I commit if logical properties aren't enforced:**

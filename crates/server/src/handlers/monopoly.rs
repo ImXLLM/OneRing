@@ -1,20 +1,20 @@
-//! هندلرهای انحصارِ حاکم — ژنومِ پنتامدلی، منشورِ روزِ اول و خزانهٔ Base
-//! (Wave 7 — Step 4/4 + Commit #27 پنتا-مدل و انتخابِ دومُد).
+//! Sovereign monopoly handlers — the penta-model genome, the day-one charter, and the Base
+//! treasury (Wave 7 — Step 4/4 + Commit #27 penta-model and dual-mode selection).
 //!
-//! چهار مسیر additive:
-//! - `GET /monopoly/genome-matrix` — ماتریسِ ۵مدل × ۹فایل با تأییدِ
-//!   دیسکیِ fail-closed (۴۵ فایل) + قواعدِ مسیریابی + هر دو حالتِ انتخابِ
-//!   دومُد — عمومی؛
-//! - `POST /monopoly/route-model` — اجرایِ `ManualOverride` یا
-//!   `AgentAutoDecision` روی ۵ مدلِ حاکم؛ خروجی: مدلِ انتخاب‌شده،
-//!   پرامپتِ کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی و rationale تصمیم؛
-//! - `GET /monopoly/charter-and-base` — منشورِ چهارجریانیِ روزِ اول +
-//!   پیکربندیِ Base Mainnet (`8453`) + خلاصهٔ ممیزیِ `ZeroXKiaToken.sol` و
-//!   `KiaBaseEscrowTreasury.sol` — عمومی؛
-//! - `POST /monopoly/simulate-split` — اجرایِ `compute_day_one_atomic_split`
-//!   (فروشِ معرف‌دار / فروشِ مستقیمِ بی‌معرف با قانونِ `2000 bps` /
-//!   بوستِ ۱۰۰٪)، ماندگاری در `sovereign_treasury_splits` و بازگشتِ
-//!   اثباتِ صفرجمع + URI پرداختِ EIP-681.
+//! Four additive routes:
+//! - `GET /monopoly/genome-matrix` — the 5-model × 9-file matrix with fail-closed
+//!   disk verification (45 files) + routing rules + both dual-mode selection
+//!   states — public;
+//! - `POST /monopoly/route-model` — executes `ManualOverride` or
+//!   `AgentAutoDecision` over the 5 sovereign models; output: the selected model,
+//!   the distilled clone prompt, the 9-file approval proof, and the decision rationale;
+//! - `GET /monopoly/charter-and-base` — the four-stream day-one charter +
+//!   Base Mainnet configuration (`8453`) + audit summaries of `ZeroXKiaToken.sol` and
+//!   `KiaBaseEscrowTreasury.sol` — public;
+//! - `POST /monopoly/simulate-split` — executes `compute_day_one_atomic_split`
+//!   (affiliate sale / direct unaffiliated sale under the `2000 bps` rule /
+//!   the 100% boost), persists into `sovereign_treasury_splits`, and returns
+//!   the zero-sum proof + an EIP-681 payment URI.
 
 use std::sync::Arc;
 
@@ -46,7 +46,7 @@ use crate::handlers::parse_body;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// نگاشتِ داراییِ وایر — شناسهٔ `wire_id` به enum؛ ناشناخته → خطای ۴۰۰.
+/// Map a wire asset — `wire_id` to enum; unknown → a 400 error.
 fn parse_asset(wire_id: &str) -> Result<SettlementAsset, ApiFailure> {
     SettlementAsset::ALL
         .iter()
@@ -55,7 +55,7 @@ fn parse_asset(wire_id: &str) -> Result<SettlementAsset, ApiFailure> {
         .ok_or_else(|| ApiFailure::from(kian_contracts::HttpFailure::invalid_request(1)))
 }
 
-/// نگاشتِ لایهٔ بوستِ وایر.
+/// Maps the wire boost tier.
 fn parse_boost_tier(wire_id: &str) -> Result<BoostTier, ApiFailure> {
     match wire_id.trim() {
         "featured-slot-24h" => Ok(BoostTier::FeaturedSlot24h),
@@ -65,15 +65,15 @@ fn parse_boost_tier(wire_id: &str) -> Result<BoostTier, ApiFailure> {
     }
 }
 
-/// روترِ ژنومِ آمادهٔ هندلر — تأییدِ دیسکی با fallback به رجیستریِ builtin.
+/// The handler-ready genome router — disk verification with fallback to the builtin registry.
 fn genome_router() -> QuadModelGenomeRouter {
     QuadModelGenomeRouter::production()
 }
 
-/// `GET /monopoly/genome-matrix` — ماتریسِ ژنومِ پنتامدلی (عمومی).
+/// `GET /monopoly/genome-matrix` — the penta-model genome matrix (public).
 ///
 /// # Errors
-/// رخ نمی‌دهد — خروجیِ قطعی از رجیستریِ تأییدشده.
+/// Cannot happen — deterministic output from the verified registry.
 #[allow(clippy::too_many_lines)]
 pub async fn genome_matrix() -> Json<MonopolyGenomeMatrixResponse> {
     let router = genome_router();
@@ -113,29 +113,29 @@ pub async fn genome_matrix() -> Json<MonopolyGenomeMatrixResponse> {
         signature: SOVEREIGN_MONOPOLY_SIGNATURE.to_owned(),
         total_files_verified: router.total_files_verified(),
         expected_file_count: SOVEREIGN_GENOME_FILE_COUNT,
-        // انتخابِ دومُد — هر دو قابلیت روی این ماتریس حاضرند (Commit #27).
+        // Dual-mode selection — both capabilities are present on this matrix (Commit #27).
         selection_modes: vec!["manual_override".to_owned(), "agent_auto_decision".to_owned()],
         models,
         routing_rules,
     })
 }
 
-/// `POST /monopoly/route-model` — انتخابِ دومُدِ مدل روی ۵ مدلِ حاکم
-/// (نشستِ شهروند).
+/// `POST /monopoly/route-model` — dual-mode model selection over the 5 sovereign models
+/// (citizen session).
 ///
-/// `manualModelOverride` غیرِ خالی و غیرِ `"auto"` → `ManualOverride`
-/// (alias هایِ هر ۵ مدل حل می‌شوند؛ ناشناخته ۴۰۰)؛ در Agent Mode یا آوریِ
-/// غایب/`"auto"` → `AgentAutoDecision` با تحلیلِ تلمتریِ `taskPrompt`.
-/// خروجی: مدلِ انتخاب‌شده، پرامپتِ کلونِ تقطیرشده، اثباتِ تأییدِ ۹فایلی
-/// و rationale تصمیم.
+/// A non-empty `manualModelOverride` that is not `"auto"` → `ManualOverride`
+/// (aliases of all 5 models resolve; unknown → 400); in Agent Mode or a missing
+/// or `"auto"` input → `AgentAutoDecision` with `taskPrompt` telemetry analysis.
+/// Output: the selected model, the distilled clone prompt, the 9-file approval proof,
+/// and the decision rationale.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ آوریِ دستیِ ناشناخته.
+/// 401 missing session; 400 unknown manual input.
 ///
 /// # Panics
-/// تنها روی نقضِ ناورنِ داخلیِ رجیستری — مدلِ انتخاب‌شده همیشه در
-/// رجیستریِ پنتا حاضر است؛ این `expect` روی دادهٔ DB نیست و برای هر ورودیِ
-/// واقعی غیرِممکن است.
+/// Only on an internal registry invariant violation — the selected model is always
+/// present in the penta registry; this `expect` is not on DB data and is impossible
+/// for any real input.
 #[allow(clippy::too_many_lines)]
 pub async fn route_model(
     State(state): State<Arc<AppState>>,
@@ -167,12 +167,12 @@ pub async fn route_model(
     }))
 }
 
-/// بندِ ممیزی — کلید/مقدار.
+/// Audit clause — key/value.
 fn audit_point(key: &str, value: impl Into<String>) -> MonopolyAuditPoint {
     MonopolyAuditPoint { key: key.to_owned(), value: value.into() }
 }
 
-/// descriptor ممیزیِ `ZeroXKiaToken.sol`.
+/// The audit descriptor of `ZeroXKiaToken.sol`.
 #[allow(clippy::too_many_lines)]
 fn token_audit_view() -> MonopolyContractAuditView {
     let a = kian_wallet::base_treasury::ZeroXKiaTokenAudit::canonical();
@@ -195,7 +195,7 @@ fn token_audit_view() -> MonopolyContractAuditView {
     }
 }
 
-/// descriptor ممیزیِ `KiaBaseEscrowTreasury.sol`.
+/// The audit descriptor of `KiaBaseEscrowTreasury.sol`.
 fn escrow_audit_view() -> MonopolyContractAuditView {
     let a = kian_wallet::base_treasury::KiaBaseEscrowTreasuryAudit::canonical();
     MonopolyContractAuditView {
@@ -216,14 +216,14 @@ fn escrow_audit_view() -> MonopolyContractAuditView {
     }
 }
 
-/// `GET /monopoly/charter-and-base` — منشور + Base + ممیزیِ قراردادها (عمومی).
+/// `GET /monopoly/charter-and-base` — charter + Base + contract audits (public).
 ///
 /// # Errors
-/// رخ نمی‌دهد — خروجیِ قطعی از descriptor هایِ کانونیک.
+/// Cannot happen — deterministic output from the canonical descriptors.
 pub async fn charter_and_base() -> Json<MonopolyCharterAndBaseResponse> {
     Json(MonopolyCharterAndBaseResponse {
         signature: BASE_TREASURY_SIGNATURE.to_owned(),
-        charter_motto: "جنگ اول به از صلح آخر".to_owned(),
+        charter_motto: "\u{62c}\u{646}\u{6af} \u{627}\u{648}\u{644} \u{628}\u{647} \u{627}\u{632} \u{635}\u{644}\u{62d} \u{622}\u{62e}\u{631}".to_owned(),
         streams: vec![
             MonopolyCharterStreamView {
                 stream: 1,
@@ -274,15 +274,15 @@ pub async fn charter_and_base() -> Json<MonopolyCharterAndBaseResponse> {
     })
 }
 
-/// `POST /monopoly/simulate-split` — تقسیمِ اتمیِ روزِ اول (نشستِ شهروند).
+/// `POST /monopoly/simulate-split` — the day-one atomic split (citizen session).
 ///
-/// سناریوها: فروشِ معرف‌دار (`1000..=5000 bps` پایش)، فروشِ مستقیمِ بی‌معرف
-/// (قانونِ `2000 bps` به خزانهٔ حاکم / `8000 bps` به سازنده) و بوستِ
-/// لحظه‌ای (`10000 bps` به خزانه). خروجی ماندگار می‌شود و اثباتِ صفرجمع +
-/// EIP-681 (دارایی‌های on-chain با `recipientAddress`) برمی‌گردد.
+/// Scenarios: affiliate sale (`1000..=5000 bps` monitored), direct unaffiliated sale
+/// (`2000 bps` to the sovereign treasury / `8000 bps` to the builder) and a
+/// momentary boost (`10000 bps` to the treasury). The output persists, and the zero-sum proof +
+/// EIP-681 (on-chain assets with `recipientAddress`) are returned.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ سناریو/دارایی/لایهٔ نامعتبر یا مبلغِ نامجاز.
+/// 401 missing session; 400 invalid scenario/asset/tier or a disallowed amount.
 #[allow(clippy::too_many_lines)]
 pub async fn simulate_split(
     State(state): State<Arc<AppState>>,
@@ -317,7 +317,7 @@ pub async fn simulate_split(
         _ => return Err(ApiFailure::from(kian_contracts::HttpFailure::invalid_request(1))),
     };
 
-    // ماندگاری — شناسهٔ قطعی از uuid v7.
+    // Persistence — a deterministic ID from uuid v7.
     let split_id = format!("split:{}", uuid::Uuid::now_v7());
     let row = kian_db::monopoly::SovereignTreasurySplitRow {
         id: split_id.clone(),
@@ -340,7 +340,7 @@ pub async fn simulate_split(
     };
     state.store.create_sovereign_split(&row).await?;
 
-    // URI پرداختِ EIP-681 — فقط دارایی‌های on-chain با آدرسِ گیرنده.
+    // The EIP-681 payment URI — only on-chain assets with a recipient address.
     let eip681 = match (&req.recipient_address, asset.is_onchain_settleable()) {
         (Some(addr), true) if !addr.trim().is_empty() && addr.trim().starts_with("0x") => {
             build_base_eip681_payment_uri(asset, addr.trim(), split.gross_amount_micros).ok()
@@ -348,7 +348,7 @@ pub async fn simulate_split(
         _ => None,
     };
 
-    // اثباتِ صفرجمع — متنِ قابلِ ممیزی از جمعِ دقیقِ پاها.
+    // The zero-sum proof — auditable text of the exact posting sums.
     let leg_sum: i128 = split.legs.iter().map(|l| l.amount_micros).sum();
     let zero_sum_proof = format!(
         "double-entry: buyer_debit({}) + kia_treasury({}) + affiliate({}) + creator({}) = {} == 0 \

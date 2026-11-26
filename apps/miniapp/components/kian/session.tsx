@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * KIAN miniapp — فراهم‌کنندهٔ نشست (لایهٔ @kian/sdk).
+ * KIAN miniapp — session provider (@kian/sdk layer).
  *
- * جریان fail-closed با تجربهٔ ورود بدون اصطکاک:
- * 1. توکن ذخیره‌شدهٔ معتبر → مستقیم /me.
- * 2. initData تلگرام (WebApp یا fragment مرورگر) → POST /auth/telegram → توکن.
- * 3. هیچ‌کدام → دروازهٔ مهمان با بنر تمیز «🧪 ورود سریع آزمایشی / مرورگر» —
- *    نه صفحهٔ قفل‌شده و نه خطای خشک فنی.
+ * Fail-closed flow with a friction-free sign-in experience:
+ * 1. A valid stored token → straight to /me.
+ * 2. Telegram initData (WebApp or browser fragment) → POST /auth/telegram → token.
+ * 3. Neither → guest gate with a clean "🧪 Quick experimental sign-in / Browser" banner —
+ *    not a locked screen or a dry technical error.
  *
- * حالت مرورگر آزمایشی فقط اندپوینت‌های عمومی (بازار و اقتصاد ملی) را باز
- * می‌کند؛ هویت همچنان فقط از HMAC کرنل می‌آید و هیچ ادعای هویتی ساخته نمی‌شود.
+ * The experimental browser mode opens only public endpoints (market and national economy);
+ * identity still comes only from the kernel HMAC and no identity claim is fabricated.
  */
 
 import {
@@ -39,7 +39,7 @@ import {
 
 const PREVIEW_KEY = "kian.browser.preview";
 
-/** پرسونای دموی فعال را از شناسهٔ تلگرامی می‌سازد — خارج از پرسوناها null. */
+/** Builds the active demo persona from the Telegram ID — null outside the personas. */
 function personaFromTgId(tgId: string): DemoPersona | null {
   const entry = (Object.entries(DEMO_PERSONAS) as [DemoPersona, { tgUserId: string }][]).find(
     ([, seed]) => seed.tgUserId === tgId,
@@ -57,17 +57,17 @@ type SessionContextValue = {
   state: SessionState;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
-  /** ورود به حالت مرورگر آزمایشی (فقط اندپوینت‌های عمومی). */
+  /** Enter the experimental browser mode (public endpoints only). */
   enterPreview: () => void;
-  /** خروج از حالت مرورگر و تلاش دوباره برای احراز تلگرام. */
+  /** Leave browser mode and retry Telegram authentication. */
   exitPreview: () => void;
   /**
-   * ورود یک‌کلیکی با پرسونای دمو — فقط وقتی کرنل در حالت dev است (وگرنه
-   * ۴۰۳ صادقانه). لینک رفرال مرورگر (`?startapp=p_..._r_...`) هم همین‌جا
-   * گرفته و ذخیره می‌شود تا خریدِ بعدی با معرف ثبت شود.
+   * One-click sign-in with a demo persona — only when the kernel is in dev mode (otherwise
+   * an honest 403). The browser referral link (`?startapp=p_..._r_...`) is also captured
+   * and stored here so the next purchase is recorded with the referrer.
    */
   loginAsDemoPersona: (persona: DemoPersona, startParam?: string | null) => Promise<void>;
-  /** پرسونای دموی فعال — وقتی کاربرِ نشست‌دار یکی از سه پرسونای دمو باشد. */
+  /** Active demo persona — when the sessioned user is one of the three demo personas. */
   activePersona: DemoPersona | null;
 };
 
@@ -87,7 +87,7 @@ function writePreviewFlag(on: boolean): void {
     if (on) window.sessionStorage.setItem(PREVIEW_KEY, "1");
     else window.sessionStorage.removeItem(PREVIEW_KEY);
   } catch {
-    /* حالت محدود مرورگر — پیش‌نمایش فقط در همین باز شدن معتبر است */
+    /* Restricted browser mode — the preview is valid only for this opening */
   }
 }
 
@@ -98,7 +98,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   });
 
   const authenticate = useCallback(async () => {
-    // ۱) توکن ذخیره‌شده — اگر زنده بود همین کافی است
+    // 1) Stored token — if still alive, that alone suffices
     const token = loadToken();
     if (token) {
       try {
@@ -106,15 +106,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setState({ phase: "ready", me, token });
         return;
       } catch {
-        clearToken(); // نشست مرده — احراز دوباره
+        clearToken(); // Dead session — re-authenticate
       }
     }
-    // ۲) اگر کاربر قبلاً حالت مرورگر را انتخاب کرده، همان را نگه دار (بدون پرش)
+    // 2) If the user already chose browser mode, keep it (no jumping)
     if (readPreviewFlag()) {
       setState({ phase: "preview" });
       return;
     }
-    // ۳) احراز با initData تلگرام
+    // 3) Authenticate with Telegram initData
     const initData = extractInitData();
     if (!initData) {
       setState({ phase: "guest", reason: "outside-telegram" });
@@ -154,7 +154,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await api.logout(state.token);
       } catch {
-        /* نشست شاید قبلاً مرده باشد */
+        /* The session may already be dead */
       }
     }
     clearToken();
@@ -176,7 +176,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loginAsDemoPersona = useCallback(
     async (persona: DemoPersona, startParam?: string | null) => {
       const seed = DEMO_PERSONAS[persona];
-      // گرفتن لینک رفرال مرورگر: پارامتر صریح، وگرنه `?startapp=` همین صفحه
+      // Grab the browser referral link: explicit parameter, otherwise this page's `?startapp=`
       const raw =
         startParam?.trim() ||
         (typeof window !== "undefined"
@@ -203,7 +203,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           detail:
             err instanceof Error
               ? err.message
-              : "ورود آزمایشی در این سرور فعال نیست",
+              : "\u0648\u0631\u0648\u062f \u0622\u0632\u0645\u0627\u06cc\u0634\u06cc \u062f\u0631 \u0627\u06cc\u0646 \u0633\u0631\u0648\u0631 \u0641\u0639\u0627\u0644 \u0646\u06cc\u0633\u062a",
         });
         throw err;
       }

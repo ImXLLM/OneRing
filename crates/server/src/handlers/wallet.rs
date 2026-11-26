@@ -1,6 +1,6 @@
-//! هندلرهای کیف پول — ضرب (مادهٔ ۳: سقف سالانه) و سوزاندن (مادهٔ ۴: overdraft
-//! ناممکن). هر فرمان از مسیر دامنهٔ خالص + `apply` می‌گذرد؛ replay هرگز دوبار
-//! پول جابه‌جا نمی‌کند (قید UNIQUE + پیش‌چک).
+//! Wallet handlers — minting (Article 3: annual cap) and burning (Article 4: overdraft
+//! impossible). Every command goes through the pure domain path + `apply`; replay never moves
+//! money twice (UNIQUE constraint + pre-check).
 
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -27,8 +27,8 @@ use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 use crate::views::wire_din;
 
-/// شروع سال UTC جاری — قرارداد سقف منشور (مادهٔ ۳). مقایسهٔ رشته‌ای RFC3339
-/// با فرمت یکسان millis+Z معادل مقایسهٔ زمانی است.
+/// Start of the current UTC year — charter cap contract (Article 3). String comparison of RFC3339
+/// values in the same millis+Z format is equivalent to time comparison.
 fn year_start_iso() -> String {
     use chrono::{Datelike, TimeZone};
     let y = chrono::Utc::now().year();
@@ -38,8 +38,8 @@ fn year_start_iso() -> String {
     )
 }
 
-/// ضرب سال جاری از وضعیت لودشده داخل تراکنش — دقیق و بدون مسابقه: هر فرمان
-/// کل دفتر را در همان تراکنش می‌بیند (الگوی فاز ۲).
+/// Year-to-date minting from the state loaded inside the transaction — precise and race-free: every command
+/// sees the whole ledger within the same transaction (Phase 2 pattern).
 fn minted_this_year_locked(ledger: &LedgerState) -> i64 {
     let year_start = year_start_iso();
     let mut sum = 0i64;
@@ -55,7 +55,7 @@ fn minted_this_year_locked(ledger: &LedgerState) -> i64 {
     sum
 }
 
-/// بدنهٔ فرمان ضرب/سوزاندن.
+/// Mint/burn command body.
 struct MoveCmd {
     account_id: String,
     amount: Din,
@@ -85,8 +85,8 @@ async fn wallet_move(store: &V3Store, cmd: MoveCmd, mint: bool) -> Result<ApplyR
                 idempotency_key: key.clone(),
             },
             |ledger: &LedgerState, _reg: &EscrowRegistry| -> DomainResult<CommandOutcome> {
-                // مادهٔ ۳ — سقف ضرب سالانه فقط روی مسیر mint؛ خوانش از همان
-                // وضعیتِ لودشده داخل تراکنش — دو ضرب هم‌زمان هرگز از سقف می‌گذرند.
+                // Article 3 — the annual mint cap applies only on the mint path; the read comes from the
+                // state loaded inside the transaction — two concurrent mints can never exceed the cap.
                 if mint {
                     let minted = minted_this_year_locked(ledger);
                     assert_mint_within_cap(Din::new(minted)?, amount)?;
@@ -113,7 +113,7 @@ async fn wallet_move(store: &V3Store, cmd: MoveCmd, mint: bool) -> Result<ApplyR
                     },
                 )?;
                 let event = TransactionPostedEvent::new(&posted.tx.id, &posted.tx.at);
-                // memo/key/correlation را کامل می‌کنیم — شکل سیمی رویداد فاز ۵
+                // complete memo/key/correlation — the Phase 5 event wire shape
                 let event = TransactionPostedEvent {
                     memo: posted.tx.memo.clone(),
                     idempotency_key: posted.tx.idempotency_key.clone(),
@@ -131,10 +131,10 @@ async fn wallet_move(store: &V3Store, cmd: MoveCmd, mint: bool) -> Result<ApplyR
     Ok(outcome)
 }
 
-/// `POST /wallet/mint` — ضرب دیین به یک حساب. ادمین.
+/// `POST /wallet/mint` — mint Din to an account. Admin.
 ///
 /// # Errors
-/// ۴۲۲ `MINT_CAP_EXCEEDED` (مادهٔ ۳)؛ 404 `UNKNOWN_ACCOUNT`؛ 400 بدنهٔ نامعتبر.
+/// 422 `MINT_CAP_EXCEEDED` (Article 3); 404 `UNKNOWN_ACCOUNT`; 400 invalid body.
 pub async fn mint(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -153,10 +153,10 @@ pub async fn mint(
     to_move_response(&result, req.account_id.get())
 }
 
-/// `POST /wallet/burn` — سوزاندن دیین از یک حساب؛ overdraft ناممکن (مادهٔ ۴).
+/// `POST /wallet/burn` — burn Din from an account; overdraft impossible (Article 4).
 ///
 /// # Errors
-/// ۴۲۲ `ACCOUNT_OVERDRAFT`؛ 404 `UNKNOWN_ACCOUNT`؛ 400 بدنهٔ نامعتبر.
+/// 422 `ACCOUNT_OVERDRAFT`; 404 `UNKNOWN_ACCOUNT`; 400 invalid body.
 pub async fn burn(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -175,11 +175,11 @@ pub async fn burn(
     to_move_response(&result, req.account_id.get())
 }
 
-/// ضرب داخلی M3 — فقط برای تأیید واریز TON (مادهٔ ۳ با نرخ تبدیل). بدون هدر
-/// ادمین؛ هویت فراخواننده سمت سرور ثابت است. همان مسیر دامنهٔ ضرب با سقف سالانه.
+/// Internal M3 mint — only for confirming a TON deposit (Article 3 with a conversion rate). No
+/// admin header; the caller identity is fixed server-side. The same mint domain path with the annual cap.
 ///
 /// # Errors
-/// ۴۲۲ `MINT_CAP_EXCEEDED`؛ ۴۲۲ `DIN_OUT_OF_RANGE` اگر amount ≤ 0؛ 500 خطای داخلی.
+/// 422 `MINT_CAP_EXCEEDED`; 422 `DIN_OUT_OF_RANGE` if amount ≤ 0; 500 internal error.
 pub(crate) async fn mint_to_account(
     state: &Arc<AppState>,
     account_id: &str,
@@ -198,14 +198,14 @@ pub(crate) async fn mint_to_account(
     to_move_response(&result, account_id)
 }
 
-/// `POST /wallet/faucet` — شیرِ اعتبار آزمایشی برای تستِ محلی (فقط حالت dev).
+/// `POST /wallet/faucet` — test credit faucet for local testing (dev mode only).
 ///
-/// ۵٬۰۰۰ KIAN پیش‌فرض (سقف ۵۰٬۰۰۰ KIAN) از مسیر رسمی ضرب مادهٔ ۳ به حساب
-/// شهروند نشست‌دار می‌رسد — همان `wallet::mint_to_account`؛ خارج از حالت dev
-/// صادقانه ۴۰۳ می‌دهد تا هیچ شیری به تولید نشت کند.
+/// 5,000 KIAN by default (cap 50,000 KIAN) via the official Article 3 mint path to the
+/// sessioned citizen's account — the same `wallet::mint_to_account`; outside dev mode
+/// it honestly returns 403 so no faucet leaks into production.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۳ `DEV_MODE_DISABLED`؛ ۴۰۰ مبلغ خارج از بازه؛ ۴۲۲ `MINT_CAP_EXCEEDED`.
+/// 401 session; 403 `DEV_MODE_DISABLED`; 400 amount out of range; 422 `MINT_CAP_EXCEEDED`.
 pub async fn faucet(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -263,7 +263,7 @@ fn map_wallet_err(e: WalletError) -> ApiFailure {
     }
 }
 
-/// بازگرداندن وجه یک درخواست برداشت ردشده از `burn:void` به حساب شهروند بدون مصرف سقف ضرب سالانه.
+/// Refund a rejected withdrawal request from `burn:void` to the citizen account without consuming the annual mint cap.
 async fn refund_burned_withdrawal(
     store: &V3Store,
     account_id: &str,
@@ -313,10 +313,10 @@ async fn refund_burned_withdrawal(
     Ok(outcome)
 }
 
-/// `POST /wallet/withdrawals` — ثبت درخواست برداشت کریپتو با قفل/سوزاندن اتمی موجودی (ضد دابل‌اسپند).
+/// `POST /wallet/withdrawals` — register a crypto withdrawal request with an atomic balance lock/burn (anti double-spend).
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ ورودی نامعتبر؛ ۴۲۲ آدرس نامعتبر یا موجودی ناکافی (`ACCOUNT_OVERDRAFT`).
+/// 401 session; 400 invalid input; 422 invalid address or insufficient balance (`ACCOUNT_OVERDRAFT`).
 pub async fn create_withdrawal(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -344,7 +344,7 @@ pub async fn create_withdrawal(
     let id = format!("wdr:{}", uuid::Uuid::now_v7());
     let amount = Din::new(req.amount_din.get())?;
 
-    // قفل/سوزاندن اتمی Din در لحظهٔ ثبت — اگر موجودی ناکافی باشد ۴۲۲ و هیچ رکوردی ساخته نمی‌شود
+    // atomic Din lock/burn at registration time — if the balance is insufficient, 422 and no record is created
     let _burn = wallet_move(
         &state.store,
         MoveCmd {
@@ -377,10 +377,10 @@ pub async fn create_withdrawal(
     Ok((StatusCode::CREATED, Json(withdrawal_view(&row))))
 }
 
-/// `GET /wallet/withdrawals` — فهرست درخواست‌های برداشت شهروند نشست‌دار.
+/// `GET /wallet/withdrawals` — list the sessioned citizen's withdrawal requests.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۵۰۰ خطای SQL.
+/// 401 session; 500 SQL error.
 pub async fn list_my_withdrawals(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -396,17 +396,17 @@ pub async fn list_my_withdrawals(
     }))
 }
 
-/// پارامتر کوئری فهرست ادمین برداشت‌ها.
+/// Admin withdrawals list query parameters.
 #[derive(Debug, Default, Deserialize)]
 pub struct AdminWithdrawalQuery {
-    /// فیلتر وضعیت (`PENDING` / `CONFIRMED` / `REJECTED`)
+    /// Status filter (`PENDING` / `CONFIRMED` / `REJECTED`)
     pub status: Option<String>,
 }
 
-/// `GET /admin/withdrawals` — فهرست همهٔ درخواست‌های برداشت برای پنل ادمین.
+/// `GET /admin/withdrawals` — list all withdrawal requests for the admin panel.
 ///
 /// # Errors
-/// ۴۰۱ کلید ادمین؛ ۵۰۰ خطای SQL.
+/// 401 admin key; 500 SQL error.
 pub async fn admin_list_withdrawals(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -423,10 +423,10 @@ pub async fn admin_list_withdrawals(
     }))
 }
 
-/// `POST /wallet/withdrawals/{id}/confirm` — تأیید پرداخت روی زنجیره توسط ادمین + ثبت `txHash`.
+/// `POST /wallet/withdrawals/{id}/confirm` — admin confirms the on-chain payment + records the `txHash`.
 ///
 /// # Errors
-/// ۴۰۱ کلید ادمین؛ ۴۰۰ هش نامعتبر؛ ۴۰۴ ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته‌شده.
+/// 401 admin key; 400 invalid hash; 404 unknown; 422 already decided.
 pub async fn confirm_withdrawal(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -451,12 +451,12 @@ pub async fn confirm_withdrawal(
     Ok(Json(withdrawal_view(&updated)))
 }
 
-/// `POST /wallet/withdrawals/{id}/reject` — رد درخواست برداشت و بازگشت اتمی Din به حساب شهروند.
+/// `POST /wallet/withdrawals/{id}/reject` — reject a withdrawal request and atomically return the Din to the citizen account.
 ///
-/// ترتیب ایمن: اول بازگشت وجه با کلید یکتای `withdrawal:{id}:refund`، سپس تغییر وضعیت به `REJECTED`.
+/// Safe order: first refund with the idempotency key `withdrawal:{id}:refund`, then transition the status to `REJECTED`.
 ///
 /// # Errors
-/// ۴۰۱ کلید ادمین؛ ۴۰۴ ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته‌شده.
+/// 401 admin key; 404 unknown; 422 already decided.
 pub async fn reject_withdrawal(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -503,7 +503,7 @@ mod withdrawal_tests {
 
     const BOT: &str = "123456:TEST-BOT-TOKEN-WDR";
     const ADMIN: &str = "test-admin-key-0123456789";
-    // آدرس معتبر بایننس‌چین EIP-55 (تمام حروف کوچک نیز در EIP-55 پذیرفته می‌شود)
+    // a valid BNB Chain EIP-55 address (all-lowercase is also accepted under EIP-55)
     const VALID_BSC: &str = "0x742d35cc6634c0532925a3b844bc454e4438f44e";
 
     async fn app() -> axum::Router {
@@ -544,7 +544,7 @@ mod withdrawal_tests {
         let app = app().await;
         let tok = auth(&app, "901", "seller_wdr").await;
 
-        // شارژ ۵۰۰ Đ
+        // top up 500 Đ
         let res = app
             .clone()
             .oneshot(
@@ -559,7 +559,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(res.status(), 200);
 
-        // آدرس نامعتبر → ۴۲۲ INVALID_ADDRESS
+        // invalid address → 422 INVALID_ADDRESS
         let res = app
             .clone()
             .oneshot(
@@ -582,7 +582,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(res.status(), 422);
 
-        // برداشت ۱ (۳۰۰ Đ) → موجودی بلافاصله به ۲۰۰ Đ کاهش می‌یابد
+        // withdrawal 1 (300 Đ) → the balance immediately drops to 200 Đ
         let res = app
             .clone()
             .oneshot(
@@ -608,7 +608,7 @@ mod withdrawal_tests {
         let w1_id = w1["id"].as_str().unwrap().to_owned();
         assert_eq!(w1["status"], "PENDING");
 
-        // تلاش برای دابل‌اسپند (برداشت دوبارهٔ ۳۰۰ Đ از موجودی ۲۰۰ Đ) → ۴۲۲ ACCOUNT_OVERDRAFT
+        // double-spend attempt (another 300 Đ withdrawal against a 200 Đ balance) → 422 ACCOUNT_OVERDRAFT
         let res = app
             .clone()
             .oneshot(
@@ -632,7 +632,7 @@ mod withdrawal_tests {
         assert_eq!(res.status(), 422);
         assert_eq!(json_body(res).await["error"]["code"], "ACCOUNT_OVERDRAFT");
 
-        // رد توسط ادمین → بازگشت ۳۰۰ Đ به شهروند (موجودی دوباره ۵۰۰ Đ)
+        // admin rejects → 300 Đ returned to the citizen (balance back to 500 Đ)
         let res = app
             .clone()
             .oneshot(
@@ -661,7 +661,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(json_body(res).await["balance"], 500);
 
-        // برداشت ۲ (۴۰۰ Đ) + تأیید ادمین با txHash → موجودی نهایی ۱۰۰ Đ و دفتر متوازن
+        // withdrawal 2 (400 Đ) + admin confirmation with txHash → final balance 100 Đ and a balanced ledger
         let res = app
             .clone()
             .oneshot(
@@ -716,9 +716,9 @@ mod withdrawal_tests {
         assert_eq!(eco["balanced"], true);
     }
 
-    // ── شیرِ اعتبار آزمایشی (faucet — فقط حالت dev) + فهرست ادمین برداشت‌ها ──
+    // ── Test credit faucet (faucet — dev mode only) + admin withdrawals list ──
 
-    /// ورود دمو برای تست‌های فاست — ۲۰۱ و توکن.
+    /// Demo login for faucet tests — 201 and a token.
     async fn dev_auth(app: &axum::Router, tg_id: &str, username: &str) -> String {
         let res = app
             .clone()
@@ -740,10 +740,10 @@ mod withdrawal_tests {
 
     #[tokio::test]
     async fn faucet_mints_default_five_kian_and_validates_range() {
-        let app = app().await; // dev_mode = true (پایهٔ تست)
+        let app = app().await; // dev_mode = true (test basis)
         let tok = dev_auth(&app, "2002", "buyer_demo").await;
 
-        // فاست پیش‌فرض — ۵٬۰۰۰ KIAN = ۵٬۰۰۰٬۰۰۰٬۰۰۰ micro
+        // default faucet — 5,000 KIAN = 5,000,000,000 micro
         let res = app
             .clone()
             .oneshot(
@@ -762,7 +762,7 @@ mod withdrawal_tests {
         assert_eq!(body["balance"], 5_000_000_000i64);
         assert_eq!(body["replayed"], false);
 
-        // /me همین تراز را می‌بیند
+        // /me shows the same balance
         let res = app
             .clone()
             .oneshot(
@@ -776,7 +776,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(json_body(res).await["balance"], 5_000_000_000i64);
 
-        // مبلغ سفارشی معتبر — ۱٬۰۰۰ KIAN دیگر
+        // valid custom amount — another 1,000 KIAN
         let res = app
             .clone()
             .oneshot(
@@ -792,7 +792,7 @@ mod withdrawal_tests {
         assert_eq!(res.status(), 200);
         assert_eq!(json_body(res).await["balance"], 6_000_000_000i64);
 
-        // بالای سقف — ۴۰۰
+        // above the cap — 400
         let res = app
             .clone()
             .oneshot(
@@ -809,7 +809,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(res.status(), 400);
 
-        // بدون نشست — ۴۰۱
+        // without a session — 401
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -823,7 +823,7 @@ mod withdrawal_tests {
         assert_eq!(res.status(), 401);
     }
 
-    /// فاست خارج از حالت dev — ۴۰۳ `DEV_MODE_DISABLED` (هیچ شیری به تولید نشت نمی‌کند).
+    /// Faucet outside dev mode — 403 `DEV_MODE_DISABLED` (no faucet leaks into production).
     #[tokio::test]
     async fn faucet_is_forbidden_when_dev_mode_off() {
         let store = V3Store::connect_in_memory().await.unwrap();
@@ -848,13 +848,13 @@ mod withdrawal_tests {
         assert_eq!(res.status(), 401, "no session yet");
     }
 
-    /// مسیر مستقیم پنل بنیان‌گذار — GET /admin/wallet/withdrawals همهٔ درخواست‌ها را می‌بیند.
+    /// Founder panel direct path — GET /admin/wallet/withdrawals sees all requests.
     #[tokio::test]
     async fn admin_wallet_withdrawals_route_lists_all_requests() {
         let app = app().await;
         let tok = dev_auth(&app, "901", "creator_wdr").await;
 
-        // شارژ ۵۰۰ Đ با کلید ادمین
+        // Top-up of 500 Đ with the admin key
         let res = app
             .clone()
             .oneshot(
@@ -871,7 +871,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(res.status(), 200);
 
-        // برداشت ۳۰۰ Đ
+        // withdraw 300 Đ
         let res = app
             .clone()
             .oneshot(
@@ -894,7 +894,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(res.status(), 201);
 
-        // فهرست ادمین — مسیر جدید /admin/wallet/withdrawals
+        // admin list — the new /admin/wallet/withdrawals route
         let res = app
             .clone()
             .oneshot(
@@ -911,7 +911,7 @@ mod withdrawal_tests {
         assert_eq!(list["items"].as_array().map(Vec::len), Some(1));
         assert_eq!(list["items"][0]["status"], "PENDING");
 
-        // فیلتر وضعیت
+        // status filter
         let res = app
             .clone()
             .oneshot(
@@ -925,7 +925,7 @@ mod withdrawal_tests {
             .unwrap();
         assert_eq!(json_body(res).await["items"].as_array().map(Vec::len), Some(1));
 
-        // بدون کلید ادمین — ۴۰۱
+        // without the admin key — 401
         let res = app
             .oneshot(
                 axum::http::Request::builder()

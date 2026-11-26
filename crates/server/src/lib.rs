@@ -1,17 +1,17 @@
-//! `kian-server` — دروازهٔ axum کرنل پول KIAN (M2).
+//! `kian-server` — the axum gateway of the KIAN money kernel (M2).
 //!
-//! لایهٔ HTTP روی [`kian_db`] و [`kian_domain`]: امنیت چندلایه (نرخ + گارد
-//! fail-closed `X-KIAN-Key`)، اعتبارسنجی بدنهٔ وایر در لبه، اجرای دامنه از
-//! مسیر خالص داخل `V3Store::apply` (نقطهٔ واحد audit/outbox) و نگاشت صادقانهٔ
-//! خطاها به `{error:{code,message,meta?}}`.
+//! HTTP layer over [`kian_db`] and [`kian_domain`]: layered security (rate + the
+//! fail-closed `X-KIAN-Key` guard), wire-body validation at the edge, domain execution through
+//! the pure path inside `V3Store::apply` (the single audit/outbox point) and honest
+//! error mapping to `{error:{code,message,meta?}}`.
 //!
-//! - [`config`] — پیکربندی فقط-env (بدون secret در کد)
-//! - [`state`] — `AppState` مشترک
-//! - [`middleware`] — نرخ + گارد ادمین
-//! - [`routes`] — سیم‌کشی `/api/v1`
-//! - [`handlers`] — هندلرها (system/accounts/escrows)
-//! - [`views`] — دامنه → وایر
-//! - [`error`] — پاکت خطای HTTP
+//! - [`config`] — env-only configuration (no secrets in code)
+//! - [`state`] — the shared `AppState`
+//! - [`middleware`] — rate limit + admin guard
+//! - [`routes`] — `/api/v1` wiring
+//! - [`handlers`] — handlers (system/accounts/escrows)
+//! - [`views`] — domain → wire
+//! - [`error`] — the HTTP error envelope
 #![forbid(unsafe_code)]
 
 pub mod config;
@@ -22,10 +22,10 @@ pub mod routes;
 pub mod state;
 pub mod views;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate ID — for the smoke test and logs.
 pub const NAME: &str = "kian-server";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use config::ServerConfig;

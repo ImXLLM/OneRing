@@ -1,8 +1,8 @@
-//! هندلرهای امانت — ستون فقرات مارکت‌پلیس (ADR-004 + مادهٔ ۸ منشور).
+//! Escrow handlers — the marketplace backbone (ADR-004 + Charter Article 8).
 //!
-//! همهٔ گذارها از ماشین وضعیت دامنهٔ خالص می‌گذرند: replay با کلید یکسان‌سازی
-//! هرگز دوبار پول جابه‌جا نمی‌کند، گذار نامعتبر ۴۲۲ است و مادهٔ ۷ برای
-//! مبالغ ≥ ۵۰٬۰۰۰ Đ تأیید صریح ادمین می‌خواهد (یا مسیر HITL).
+//! Every transition passes through the pure domain state machine: a replay with an idempotency
+//! key never moves money twice, an invalid transition is 422, and Article 7 requires
+//! explicit admin approval for amounts ≥ 50,000 Đ (or the HITL path).
 
 use axum::Json;
 use axum::extract::{Path, State};
@@ -27,7 +27,7 @@ use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 use crate::views::escrow_view;
 
-/// وضعیت وایر → وضعیت دامنه (واسطِ صریح به‌جای impl خارجی — قانون orphan).
+/// Wire status → domain status (an explicit shim instead of a foreign impl — the orphan rule).
 fn wire_status_to_domain(s: kian_contracts::EscrowStatus) -> EscrowStatus {
     match s {
         kian_contracts::EscrowStatus::Created => EscrowStatus::Created,
@@ -41,7 +41,7 @@ fn wire_status_to_domain(s: kian_contracts::EscrowStatus) -> EscrowStatus {
     }
 }
 
-/// فیلتر وضعیت فهرست — رشتهٔ نامعتبر = 400 `INVALID_REQUEST` (مثل zod enum).
+/// List status filter — an invalid string = 400 `INVALID_REQUEST` (like a zod enum).
 fn parse_status_filter(raw: &str) -> ApiResult<EscrowStatus> {
     serde_json::from_value::<kian_contracts::EscrowStatus>(serde_json::Value::String(
         raw.to_owned(),
@@ -50,7 +50,7 @@ fn parse_status_filter(raw: &str) -> ApiResult<EscrowStatus> {
     .map_err(|_| kian_contracts::HttpFailure::invalid_request(1).into())
 }
 
-/// خروجی دامنه → خروجی فرمان فروشگاه. M5 (nation) هم از همین می‌گذرد.
+/// Domain output → store command output. M5 (nation) goes through the same one.
 pub(crate) fn into_outcome(o: EscrowOutcome) -> CommandOutcome {
     CommandOutcome {
         ledger: o.ledger,
@@ -60,7 +60,7 @@ pub(crate) fn into_outcome(o: EscrowOutcome) -> CommandOutcome {
     }
 }
 
-/// پاسخ استاندارد یک اقدام امانت — نمای امانت پس از گذار.
+/// Standard response for an escrow action — the escrow view after the transition.
 fn action_response(result: &ApplyResult) -> ApiResult<EscrowActionResponse> {
     let escrow = result
         .escrow
@@ -73,8 +73,8 @@ fn action_response(result: &ApplyResult) -> ApiResult<EscrowActionResponse> {
     })
 }
 
-/// اجرای یک گذار اسکرو از مسیر دامنهٔ خالص داخل `apply` — نقطهٔ واحد audit/outbox.
-/// M5 (nation) هم از همین نقطهٔ واحد اجرا می‌کند — هیچ مسیر جانبی برای پول نیست.
+/// Execute one escrow transition through the pure domain path inside `apply` — the single audit/outbox point.
+/// M5 (nation) executes through this same single point — no side path for money.
 pub(crate) async fn apply_escrow<F>(
     state: &AppState,
     escrow_id: &str,
@@ -101,16 +101,16 @@ where
         .map_err(ApiFailure::from)
 }
 
-/// زمان انقضا از TTL ساعت — RFC3339 UTC با millis.
+/// Expiry time from the TTL in hours — RFC3339 UTC with millis.
 fn expires_from_ttl(ttl_hours: i64) -> String {
     (chrono::Utc::now() + chrono::Duration::hours(ttl_hours))
         .to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
 }
 
-/// `POST /escrows` — ساخت امانت (CREATED؛ پول هنوز جابه‌جا نشده). ادمین. ۲۰۱.
+/// `POST /escrows` — create an escrow (CREATED; no money moved yet). Admin. 201.
 ///
 /// # Errors
-/// ۴۲۲ `ESCROW_ALREADY_EXISTS` / `INVALID_ACCOUNT_KIND`؛ 404 حساب ناشناخته.
+/// 422 `ESCROW_ALREADY_EXISTS` / `INVALID_ACCOUNT_KIND`; 404 unknown account.
 pub async fn create(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -151,11 +151,11 @@ pub async fn create(
     Ok((StatusCode::CREATED, Json(response)))
 }
 
-/// `GET /escrows` — فهرست امانت‌ها با فیلتر وضعیت اختیاری. ادمین.
+/// `GET /escrows` — list escrows with an optional status filter. Admin.
 ///
 /// # Errors
-/// فیلتر نامعتبر → 400؛ خطای SQL.
-#[allow(clippy::implicit_hasher)] // هندلرهای axum باید تایپ کانکریت باشند — router ژنریک نمی‌پذیرد
+/// Invalid filter → 400; SQL error.
+#[allow(clippy::implicit_hasher)] // axum handlers must be concrete types — the router does not accept generics
 pub async fn list(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -176,14 +176,14 @@ pub async fn list(
     Ok(Json(EscrowListResponse { items }))
 }
 
-/// `GET /escrows/{id}` — خواندن یک امانت؛ عمومی (شفافیت مادهٔ ۶).
+/// `GET /escrows/{id}` — read one escrow; public (Article 6 transparency).
 ///
 /// # Errors
 /// 404 `ESCROW_NOT_FOUND`.
-/// `GET /escrows/{id}` — جزئیات یک امانت؛ فقط ادمین یا طرفین معامله (`buyer` / `seller` / `referrer`).
+/// `GET /escrows/{id}` — one escrow’s details; admin or the transaction parties only (`buyer` / `seller` / `referrer`).
 ///
 /// # Errors
-/// ۴۰۱ بدون نشست/کلید ادمین؛ ۴۰۳ کاربر غیرمرتبط؛ ۴۰۴ `ESCROW_NOT_FOUND`.
+/// 401 without a session/admin key; 403 unrelated user; 404 `ESCROW_NOT_FOUND`.
 pub async fn get_one(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -213,10 +213,10 @@ pub async fn get_one(
     Ok(Json(escrow_view(&escrow)))
 }
 
-/// `POST /escrows/{id}/fund` — قفل کردن پول خریدار در حساب اسکرو. ادمین.
+/// `POST /escrows/{id}/fund` — lock the buyer’s money in the escrow account. Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر / overdraft؛ 404 امانت ناشناخته.
+/// 422 invalid transition / overdraft; 404 unknown escrow.
 pub async fn fund(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -244,10 +244,10 @@ pub async fn fund(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/deliver` — ثبت تحویل؛ پول هنوز قفل است. ادمین.
+/// `POST /escrows/{id}/deliver` — record delivery; the money is still locked. Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر؛ 404 ناشناخته.
+/// 422 invalid transition; 404 unknown.
 pub async fn deliver(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -277,11 +277,11 @@ pub async fn deliver(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/release` — تسویهٔ ۹۰/۱۰ (مادهٔ ۲)؛ مادهٔ ۷: مبالغ
-/// ≥ ۵۰٬۰۰۰ Đ بدون `approvedByAdmin: true` صریح رد می‌شوند (۴۲۲).
+/// `POST /escrows/{id}/release` — 90/10 settlement (Article 2); Article 7: amounts
+/// ≥ 50,000 Đ without explicit `approvedByAdmin: true` are rejected (422).
 ///
 /// # Errors
-/// ۴۲۲ `REQUIRES_HUMAN_APPROVAL` / گذار نامعتبر؛ 404 ناشناخته.
+/// 422 `REQUIRES_HUMAN_APPROVAL` / invalid transition; 404 unknown.
 pub async fn release(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -311,10 +311,10 @@ pub async fn release(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/dispute` — اختلاف؛ اسکرو قفل می‌ماند. ادمین.
+/// `POST /escrows/{id}/dispute` — dispute; the escrow stays locked. Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر / دلیل خالی؛ 404 ناشناخته.
+/// 422 invalid transition / empty reason; 404 unknown.
 pub async fn dispute(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -344,10 +344,10 @@ pub async fn dispute(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/refund` — بازگشت کامل به خریدار، بدون مالیات. ادمین.
+/// `POST /escrows/{id}/refund` — full refund to the buyer, tax-free. Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر (باید DISPUTED باشد)؛ 404 ناشناخته.
+/// 422 invalid transition (must be DISPUTED); 404 unknown.
 pub async fn refund(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -375,10 +375,10 @@ pub async fn refund(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/cancel` — لغو CREATED؛ هیچ پولی حرکت نکرده. ادمین.
+/// `POST /escrows/{id}/cancel` — cancel a CREATED escrow; no money has moved. Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر؛ 404 ناشناخته.
+/// 422 invalid transition; 404 unknown.
 pub async fn cancel(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -406,10 +406,10 @@ pub async fn cancel(
     Ok(Json(action_response(&result)?))
 }
 
-/// `POST /escrows/{id}/expire` — sweep TTL؛ بازگشت خودکار FUNDED (مادهٔ ۹). ادمین.
+/// `POST /escrows/{id}/expire` — TTL sweep; automatic FUNDED refund (Article 9). Admin.
 ///
 /// # Errors
-/// ۴۲۲ گذار نامعتبر (باید FUNDED باشد)؛ 404 ناشناخته.
+/// 422 invalid transition (must be FUNDED); 404 unknown.
 pub async fn expire(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,

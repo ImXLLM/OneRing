@@ -1,79 +1,79 @@
-//! ماندگاریِ موتورِ برتریِ رقابتی (Wave 8 — Commit #28).
+//! Competitive-supremacy engine persistence (Wave 8 — Commit #28).
 //!
-//! سه عملیاتِ قطعی روی مهاجرتِ `0012`: درج/خوانشِ چک‌پوینت‌هایِ ایجنت
-//! (`AgentCheckpoint`)، درجِ ران‌هایِ DAG (`WorkflowDagRun`) و درجِ ممیزی‌های
-//! سندباکسِ SWE (`SweSandboxAudit`). هیچ جدولِ دفتریِ دوطرفه لمس نمی‌شود —
-//! این‌ها «دفترِ برتری» است نه خودِ پول.
+//! Three deterministic operations on migration `0012`: insert/read agent checkpoints
+//! (`AgentCheckpoint`), insert DAG runs (`WorkflowDagRun`), and insert SWE sandbox
+//! audits (`SweSandboxAudit`). No double-entry ledger table is touched —
+//! these are the "supremacy ledger", not money itself.
 
 use sqlx::Row;
 
 use crate::error::{DbError, DbResult};
 use crate::store::V3Store;
 
-/// ردیفِ چک‌پوینتِ ایجنت — همان ستون‌هایِ `AgentCheckpoint`.
+/// Agent checkpoint row — the `AgentCheckpoint` columns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AgentCheckpointRow {
-    /// شناسهٔ چک‌پوینت (`ckpt:…`).
+    /// Checkpoint ID (`ckpt:…`).
     pub id: String,
-    /// والد — `None` برای ریشهٔ گردش‌کار.
+    /// Parent — `None` for the workflow root.
     pub parent_id: Option<String>,
-    /// شناسهٔ گردش‌کار.
+    /// Workflow ID.
     pub workflow_id: String,
-    /// شمارهٔ گام.
+    /// Step number.
     pub step_index: i64,
-    /// نقشِ ایجنت.
+    /// Agent role.
     pub agent_role: String,
-    /// وضعیتِ JSON.
+    /// JSON state.
     pub state_json: String,
-    /// SHA-256 وضعیت.
+    /// SHA-256 of the state.
     pub state_sha256: String,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// ردیفِ رانِ DAG — همان ستون‌هایِ `WorkflowDagRun`.
+/// DAG run row — the `WorkflowDagRun` columns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WorkflowDagRunRow {
-    /// شناسهٔ ران (`dagrun:…`).
+    /// Run ID (`dagrun:…`).
     pub id: String,
-    /// شناسهٔ DAG.
+    /// DAG ID.
     pub dag_id: String,
-    /// نوعِ تریگر (`manual` | `cron` | `webhook`).
+    /// Trigger type (`manual` | `cron` | `webhook`).
     pub trigger_kind: String,
-    /// ترتیبِ توپولوژیک به JSON.
+    /// Topological order as JSON.
     pub topo_order_json: String,
-    /// وضعیتِ ران (`completed`).
+    /// Run status (`completed`).
     pub status: String,
-    /// امتیاز REA.
+    /// REA score.
     pub rea_score: i64,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// ردیفِ ممیزیِ سندباکسِ SWE — همان ستون‌هایِ `SweSandboxAudit`.
+/// SWE sandbox audit row — the `SweSandboxAudit` columns.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SweSandboxAuditRow {
-    /// شناسهٔ ممیزی (`sweaudit:…`).
+    /// Audit ID (`sweaudit:…`).
     pub id: String,
-    /// SHA-256 آرتیفکت.
+    /// SHA-256 of the artifact.
     pub artifact_sha256: String,
-    /// زبان (`rust` | `typescript` | `solidity` | `html`).
+    /// Language (`rust` | `typescript` | `solidity` | `html`).
     pub language: String,
-    /// تلاش‌هایِ مصرف‌شده.
+    /// Consumed attempts.
     pub attempts_used: i64,
-    /// عبور؟
+    /// Passed?
     pub passed: bool,
-    /// تشخیص‌ها به JSON.
+    /// Diagnostics as JSON.
     pub diagnostics_json: String,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
 impl V3Store {
-    /// درجِ چک‌پوینتِ ایجنت — ایدمپوتنت روی `id`.
+    /// Insert an agent checkpoint — idempotent on `id`.
     ///
     /// # Errors
-    /// خطای SQL یا نقضِ ناورنیِ والد (والدِ غایب با [`DbError::Corrupt`] رد می‌شود).
+    /// SQL error or a parent-invariant violation (a missing parent is rejected with [`DbError::Corrupt`]).
     pub async fn create_agent_checkpoint(&self, row: &AgentCheckpointRow) -> DbResult<()> {
         if let Some(parent) = row.parent_id.as_deref().filter(|p| !p.is_empty()) {
             let known = self.get_agent_checkpoint(parent).await?;
@@ -102,10 +102,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// خوانشِ یک چک‌پوینت با شناسه.
+    /// Read one checkpoint by ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_agent_checkpoint(&self, id: &str) -> DbResult<Option<AgentCheckpointRow>> {
         let rows = sqlx::query(
             r#"SELECT "id","parent_id","workflow_id","step_index","agent_role",
@@ -118,10 +118,10 @@ impl V3Store {
         Ok(rows.first().map(checkpoint_row_from))
     }
 
-    /// چک‌پوینت‌هایِ یک گردش‌کار — به ترتیبِ گام (صعودی).
+    /// Checkpoints of one workflow — in step order (ascending).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_agent_checkpoints(
         &self,
         workflow_id: &str,
@@ -141,10 +141,10 @@ impl V3Store {
         Ok(rows.iter().map(checkpoint_row_from).collect())
     }
 
-    /// درجِ رانِ DAG.
+    /// Insert a DAG run.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn create_workflow_dag_run(&self, row: &WorkflowDagRunRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "WorkflowDagRun"
@@ -163,10 +163,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// درجِ ممیزیِ سندباکسِ SWE.
+    /// Insert an SWE sandbox audit.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn create_swe_sandbox_audit(&self, row: &SweSandboxAuditRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "SweSandboxAudit"
@@ -239,7 +239,7 @@ mod tests {
             .expect("root row");
         assert_eq!(got, root_row());
         assert!(got.parent_id.is_none());
-        // والدِ غایب → ردِ قطعی
+        // Missing parent → deterministic rejection
         let orphan = AgentCheckpointRow {
             id: "ckpt:wf-1:1:orphan".to_owned(),
             parent_id: Some("ckpt:missing".to_owned()),
@@ -252,7 +252,7 @@ mod tests {
         };
         let err = store.create_agent_checkpoint(&orphan).await.unwrap_err();
         assert!(err.to_string().contains("unknown parent"), "{err}");
-        // ردیفِ سالم با والدِ حاضر
+        // Healthy row with the parent present
         let child = AgentCheckpointRow {
             parent_id: Some("ckpt:wf-1:0:root".to_owned()),
             id: "ckpt:wf-1:1:child".to_owned(),

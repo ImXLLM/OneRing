@@ -178,7 +178,7 @@ Do not call an artifact complete until:\
 &#x20; \<body>\
 &#x20;   \<main class="app-shell">\
 &#x20;     \<section class="financial-panel">\
-&#x20;       \<h2>گزارش مالی\</h2>\
+&#x20;       \<h2>Financial Report\</h2>\
 &#x20;       \<bdi class="numeric" dir="ltr">−1,250.75 USD\</bdi>\
 &#x20;       \<code class="code-block" dir="ltr">const total = 1250;\</code>\
 &#x20;     \</section>\

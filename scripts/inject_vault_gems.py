@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""inject_vault_gems.py — تزریق گنجینهٔ Hidden Gems به KIAN v2 (STEP 2 مأموریت ۹پوشه‌ای).
+"""inject_vault_gems.py — \u062a\u0632\u0631\u06cc\u0642 \u06af\u0646\u062c\u06cc\u0646\u0647\u0654 Hidden Gems \u0628\u0647 KIAN v2 (STEP 2 \u0645\u0623\u0645\u0648\u0631\u06cc\u062a \u06f9\u067e\u0648\u0634\u0647‌\u0627\u06cc).
 
 Sections:
   1. Static mount verification/patch for apps/web/public/products/trinity/
@@ -40,131 +40,131 @@ AFFILIATE_BPS = 2500  # 25% affiliate commission
 PRODUCTS: list[dict] = [
     dict(
         id="prod:trinity-sc-workbench",
-        title="میز کار هوشمند SC (نسخهٔ کامل RTL)",
+        title="\u0645\u06cc\u0632 \u06a9\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f SC (\u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 RTL)",
         file="sc.html",
         price=1_200_000_000,
         category="AI Tool",
-        tagline="از ایده تا نیازمندی روشن — میزکار کامل استودیو SC",
+        tagline="\u0627\u0632 \u0627\u06cc\u062f\u0647 \u062a\u0627 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0631\u0648\u0634\u0646 — \u0645\u06cc\u0632\u06a9\u0627\u0631 \u06a9\u0627\u0645\u0644 \u0627\u0633\u062a\u0648\u062f\u06cc\u0648 SC",
         accent="#22d3ee",
         icon="🧭",
         features=[
-            "تبدیل ایدهٔ خام به نیازمندی ساختاریافته و تست‌پذیر",
-            "پشتیبانی کامل RTL فارسی و قالب‌های آمادهٔ محصول",
-            "خروجی مستقیم برای استودیوی ساخت هرمس",
+            "\u062a\u0628\u062f\u06cc\u0644 \u0627\u06cc\u062f\u0647\u0654 \u062e\u0627\u0645 \u0628\u0647 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0633\u0627\u062e\u062a\u0627\u0631\u06cc\u0627\u0641\u062a\u0647 \u0648 \u062a\u0633\u062a‌\u067e\u0630\u06cc\u0631",
+            "\u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u06a9\u0627\u0645\u0644 RTL \u0641\u0627\u0631\u0633\u06cc \u0648 \u0642\u0627\u0644\u0628‌\u0647\u0627\u06cc \u0622\u0645\u0627\u062f\u0647\u0654 \u0645\u062d\u0635\u0648\u0644",
+            "\u062e\u0631\u0648\u062c\u06cc \u0645\u0633\u062a\u0642\u06cc\u0645 \u0628\u0631\u0627\u06cc \u0627\u0633\u062a\u0648\u062f\u06cc\u0648\u06cc \u0633\u0627\u062e\u062a \u0647\u0631\u0645\u0633",
         ],
-        desc="میز کار هوشمند SC کامل‌ترین ابزار مدیریت ایده و نیازمندی است؛ ایده را وارد می‌کنید و خروجی، نیازمندی روشن و قابل اجراست. نسخهٔ کامل RTL با تم تیره و رابط فارسی.",
+        desc="\u0645\u06cc\u0632 \u06a9\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f SC \u06a9\u0627\u0645\u0644‌\u062a\u0631\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0627\u06cc\u062f\u0647 \u0648 \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0627\u0633\u062a\u061b \u0627\u06cc\u062f\u0647 \u0631\u0627 \u0648\u0627\u0631\u062f \u0645\u06cc‌\u06a9\u0646\u06cc\u062f \u0648 \u062e\u0631\u0648\u062c\u06cc\u060c \u0646\u06cc\u0627\u0632\u0645\u0646\u062f\u06cc \u0631\u0648\u0634\u0646 \u0648 \u0642\u0627\u0628\u0644 \u0627\u062c\u0631\u0627\u0633\u062a. \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 RTL \u0628\u0627 \u062a\u0645 \u062a\u06cc\u0631\u0647 \u0648 \u0631\u0627\u0628\u0637 \u0641\u0627\u0631\u0633\u06cc.",
     ),
     dict(
         id="prod:trinity-fishkal-game",
-        title="بازی آرکید فیزیکی FISHKAL — Deep Catch",
+        title="\u0628\u0627\u0632\u06cc \u0622\u0631\u06a9\u06cc\u062f \u0641\u06cc\u0632\u06cc\u06a9\u06cc FISHKAL — Deep Catch",
         file="fishkal.html",
         price=640_000_000,
         category="Game",
-        tagline="شیرجه بزن، عمیق‌ترین شکار را بکن!",
+        tagline="\u0634\u06cc\u0631\u062c\u0647 \u0628\u0632\u0646\u060c \u0639\u0645\u06cc\u0642‌\u062a\u0631\u06cc\u0646 \u0634\u06a9\u0627\u0631 \u0631\u0627 \u0628\u06a9\u0646!",
         accent="#38bdf8",
         icon="🐟",
         features=[
-            "فیزیک واقعی شنا و پرتاب قلاب با آب‌شناسی زنده",
-            "بیش از ۳۰ گونهٔ ماهی با رفتار هوشمند فرار",
-            "جدول رکورد محلی و ارتقای قلاب و طعمه",
+            "\u0641\u06cc\u0632\u06cc\u06a9 \u0648\u0627\u0642\u0639\u06cc \u0634\u0646\u0627 \u0648 \u067e\u0631\u062a\u0627\u0628 \u0642\u0644\u0627\u0628 \u0628\u0627 \u0622\u0628‌\u0634\u0646\u0627\u0633\u06cc \u0632\u0646\u062f\u0647",
+            "\u0628\u06cc\u0634 \u0627\u0632 \u06f3\u06f0 \u06af\u0648\u0646\u0647\u0654 \u0645\u0627\u0647\u06cc \u0628\u0627 \u0631\u0641\u062a\u0627\u0631 \u0647\u0648\u0634\u0645\u0646\u062f \u0641\u0631\u0627\u0631",
+            "\u062c\u062f\u0648\u0644 \u0631\u06a9\u0648\u0631\u062f \u0645\u062d\u0644\u06cc \u0648 \u0627\u0631\u062a\u0642\u0627\u06cc \u0642\u0644\u0627\u0628 \u0648 \u0637\u0639\u0645\u0647",
         ],
-        desc="FISHKAL یک بازی آرکید فیزیکی تک‌صفحه‌ای است؛ با قلاب شیرجه می‌زنی، ماهی‌ها را شکار می‌کنی و ارتقا می‌گیری. گرافیک Canvas کامل و آفلاین.",
+        desc="FISHKAL \u06cc\u06a9 \u0628\u0627\u0632\u06cc \u0622\u0631\u06a9\u06cc\u062f \u0641\u06cc\u0632\u06cc\u06a9\u06cc \u062a\u06a9‌\u0635\u0641\u062d\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0628\u0627 \u0642\u0644\u0627\u0628 \u0634\u06cc\u0631\u062c\u0647 \u0645\u06cc‌\u0632\u0646\u06cc\u060c \u0645\u0627\u0647\u06cc‌\u0647\u0627 \u0631\u0627 \u0634\u06a9\u0627\u0631 \u0645\u06cc‌\u06a9\u0646\u06cc \u0648 \u0627\u0631\u062a\u0642\u0627 \u0645\u06cc‌\u06af\u06cc\u0631\u06cc. \u06af\u0631\u0627\u0641\u06cc\u06a9 Canvas \u06a9\u0627\u0645\u0644 \u0648 \u0622\u0641\u0644\u0627\u06cc\u0646.",
     ),
     dict(
         id="prod:trinity-trading-arena-v10",
-        title="شبیه‌ساز معاملاتی Trading God Arena v10",
+        title="\u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632 \u0645\u0639\u0627\u0645\u0644\u0627\u062a\u06cc Trading God Arena v10",
         file="trading-god-arena.html",
         price=980_000_000,
         category="Trading",
-        tagline="ویرایش Elon Musk — آوردگاه آموزش معامله",
+        tagline="\u0648\u06cc\u0631\u0627\u06cc\u0634 Elon Musk — \u0622\u0648\u0631\u062f\u06af\u0627\u0647 \u0622\u0645\u0648\u0632\u0634 \u0645\u0639\u0627\u0645\u0644\u0647",
         accent="#fbbf24",
         icon="📈",
         features=[
-            "شبیه‌سازی کندل، مارجین و مدیریت ریسک بدون ریسک واقعی",
-            "حالت دسکتاپ بهینه با میان‌برهای صفحه‌کلید",
-            "آمار جلسه، اشتباهات رایج و بازخورد آموزشی",
+            "\u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632\u06cc \u06a9\u0646\u062f\u0644\u060c \u0645\u0627\u0631\u062c\u06cc\u0646 \u0648 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0631\u06cc\u0633\u06a9 \u0628\u062f\u0648\u0646 \u0631\u06cc\u0633\u06a9 \u0648\u0627\u0642\u0639\u06cc",
+            "\u062d\u0627\u0644\u062a \u062f\u0633\u06a9\u062a\u0627\u067e \u0628\u0647\u06cc\u0646\u0647 \u0628\u0627 \u0645\u06cc\u0627\u0646‌\u0628\u0631\u0647\u0627\u06cc \u0635\u0641\u062d\u0647‌\u06a9\u0644\u06cc\u062f",
+            "\u0622\u0645\u0627\u0631 \u062c\u0644\u0633\u0647\u060c \u0627\u0634\u062a\u0628\u0627\u0647\u0627\u062a \u0631\u0627\u06cc\u062c \u0648 \u0628\u0627\u0632\u062e\u0648\u0631\u062f \u0622\u0645\u0648\u0632\u0634\u06cc",
         ],
-        desc="Trading God Arena v10 شبیه‌ساز معاملاتی حرفه‌ای است؛ استراتژی‌ات را بدون پول واقعی تست می‌کنی و با بازخورد لحظه‌ای یاد می‌گیری.",
+        desc="Trading God Arena v10 \u0634\u0628\u06cc\u0647‌\u0633\u0627\u0632 \u0645\u0639\u0627\u0645\u0644\u0627\u062a\u06cc \u062d\u0631\u0641\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0627\u0633\u062a\u0631\u0627\u062a\u0698\u06cc‌\u0627\u062a \u0631\u0627 \u0628\u062f\u0648\u0646 \u067e\u0648\u0644 \u0648\u0627\u0642\u0639\u06cc \u062a\u0633\u062a \u0645\u06cc‌\u06a9\u0646\u06cc \u0648 \u0628\u0627 \u0628\u0627\u0632\u062e\u0648\u0631\u062f \u0644\u062d\u0638\u0647‌\u0627\u06cc \u06cc\u0627\u062f \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.",
     ),
     dict(
         id="prod:trinity-nova-messenger",
-        title="پیام‌رسان فوق‌پویا Nova Messenger RTL",
+        title="\u067e\u06cc\u0627\u0645‌\u0631\u0633\u0627\u0646 \u0641\u0648\u0642‌\u067e\u0648\u06cc\u0627 Nova Messenger RTL",
         file="nova-messenger.html",
         price=450_000_000,
         category="UI Kit",
-        tagline="رابط چت پویا با انیمیشن‌های نرم",
+        tagline="\u0631\u0627\u0628\u0637 \u0686\u062a \u067e\u0648\u06cc\u0627 \u0628\u0627 \u0627\u0646\u06cc\u0645\u06cc\u0634\u0646‌\u0647\u0627\u06cc \u0646\u0631\u0645",
         accent="#a78bfa",
         icon="💬",
         features=[
-            "انیمیشن ورود پیام، تایپینگ و واکنش‌های زنده",
-            "تم تیره و روشن با پشتیبانی کامل RTL",
-            "نمونه‌های چت، گروه و پاسخ سریع آماده",
+            "\u0627\u0646\u06cc\u0645\u06cc\u0634\u0646 \u0648\u0631\u0648\u062f \u067e\u06cc\u0627\u0645\u060c \u062a\u0627\u06cc\u067e\u06cc\u0646\u06af \u0648 \u0648\u0627\u06a9\u0646\u0634‌\u0647\u0627\u06cc \u0632\u0646\u062f\u0647",
+            "\u062a\u0645 \u062a\u06cc\u0631\u0647 \u0648 \u0631\u0648\u0634\u0646 \u0628\u0627 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u06a9\u0627\u0645\u0644 RTL",
+            "\u0646\u0645\u0648\u0646\u0647‌\u0647\u0627\u06cc \u0686\u062a\u060c \u06af\u0631\u0648\u0647 \u0648 \u067e\u0627\u0633\u062e \u0633\u0631\u06cc\u0639 \u0622\u0645\u0627\u062f\u0647",
         ],
-        desc="Nova Messenger یک رابط پیام‌رسان فوق‌پویا است؛ برای پروژه‌های چت خودت از آن به‌عنوان پایهٔ رابط استفاده کن و ساعت‌ها طراحی را هدر نده.",
+        desc="Nova Messenger \u06cc\u06a9 \u0631\u0627\u0628\u0637 \u067e\u06cc\u0627\u0645‌\u0631\u0633\u0627\u0646 \u0641\u0648\u0642‌\u067e\u0648\u06cc\u0627 \u0627\u0633\u062a\u061b \u0628\u0631\u0627\u06cc \u067e\u0631\u0648\u0698\u0647‌\u0647\u0627\u06cc \u0686\u062a \u062e\u0648\u062f\u062a \u0627\u0632 \u0622\u0646 \u0628\u0647‌\u0639\u0646\u0648\u0627\u0646 \u067e\u0627\u06cc\u0647\u0654 \u0631\u0627\u0628\u0637 \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u06a9\u0646 \u0648 \u0633\u0627\u0639\u062a‌\u0647\u0627 \u0637\u0631\u0627\u062d\u06cc \u0631\u0627 \u0647\u062f\u0631 \u0646\u062f\u0647.",
     ),
     dict(
         id="prod:trinity-liquid-glass",
-        title="رابط شیشه‌ای مایع Liquid Glass UI (۵ بوم Canvas)",
+        title="\u0631\u0627\u0628\u0637 \u0634\u06cc\u0634\u0647‌\u0627\u06cc \u0645\u0627\u06cc\u0639 Liquid Glass UI (\u06f5 \u0628\u0648\u0645 Canvas)",
         file="liquid-glass.html",
         price=520_000_000,
         category="UI Kit",
-        tagline="پنج بوم شیشه‌ای مایع با فیزیک واقعی",
+        tagline="\u067e\u0646\u062c \u0628\u0648\u0645 \u0634\u06cc\u0634\u0647‌\u0627\u06cc \u0645\u0627\u06cc\u0639 \u0628\u0627 \u0641\u06cc\u0632\u06cc\u06a9 \u0648\u0627\u0642\u0639\u06cc",
         accent="#34d399",
         icon="🫧",
         features=[
-            "۵ بوم Canvas مستقل با دینامیک سیال و شکست نور",
-            "کنترل زندهٔ گرانروی، رنگ و شدت انعکاس",
-            "کد تمیز برای استفادهٔ مستقیم در محصول خودت",
+            "\u06f5 \u0628\u0648\u0645 Canvas \u0645\u0633\u062a\u0642\u0644 \u0628\u0627 \u062f\u06cc\u0646\u0627\u0645\u06cc\u06a9 \u0633\u06cc\u0627\u0644 \u0648 \u0634\u06a9\u0633\u062a \u0646\u0648\u0631",
+            "\u06a9\u0646\u062a\u0631\u0644 \u0632\u0646\u062f\u0647\u0654 \u06af\u0631\u0627\u0646\u0631\u0648\u06cc\u060c \u0631\u0646\u06af \u0648 \u0634\u062f\u062a \u0627\u0646\u0639\u06a9\u0627\u0633",
+            "\u06a9\u062f \u062a\u0645\u06cc\u0632 \u0628\u0631\u0627\u06cc \u0627\u0633\u062a\u0641\u0627\u062f\u0647\u0654 \u0645\u0633\u062a\u0642\u06cc\u0645 \u062f\u0631 \u0645\u062d\u0635\u0648\u0644 \u062e\u0648\u062f\u062a",
         ],
-        desc="پکیج Liquid Glass پنج بوم تعاملی شیشهٔ مایع می‌دهد؛ برای لندینگ، مینی‌اپ و داشبورد، جلوه‌ای مدرن و سبک می‌سازد.",
+        desc="\u067e\u06a9\u06cc\u062c Liquid Glass \u067e\u0646\u062c \u0628\u0648\u0645 \u062a\u0639\u0627\u0645\u0644\u06cc \u0634\u06cc\u0634\u0647\u0654 \u0645\u0627\u06cc\u0639 \u0645\u06cc‌\u062f\u0647\u062f\u061b \u0628\u0631\u0627\u06cc \u0644\u0646\u062f\u06cc\u0646\u06af\u060c \u0645\u06cc\u0646\u06cc‌\u0627\u067e \u0648 \u062f\u0627\u0634\u0628\u0648\u0631\u062f\u060c \u062c\u0644\u0648\u0647‌\u0627\u06cc \u0645\u062f\u0631\u0646 \u0648 \u0633\u0628\u06a9 \u0645\u06cc‌\u0633\u0627\u0632\u062f.",
     ),
     dict(
         id="prod:trinity-ocean-webgl",
-        title="آزمایشگاه فیزیک دریا و شیدر WebGL (Ocean Test Lab)",
+        title="\u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u0641\u06cc\u0632\u06cc\u06a9 \u062f\u0631\u06cc\u0627 \u0648 \u0634\u06cc\u062f\u0631 WebGL (Ocean Test Lab)",
         file="ocean-test-lab.html",
         price=480_000_000,
         category="3D/WebGL",
-        tagline="آزمایشگاه شیدر آب، موج و نور خورشید",
+        tagline="\u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u0634\u06cc\u062f\u0631 \u0622\u0628\u060c \u0645\u0648\u062c \u0648 \u0646\u0648\u0631 \u062e\u0648\u0631\u0634\u06cc\u062f",
         accent="#2dd4bf",
         icon="🌊",
         features=[
-            "شیدر آب با کنترل موج، باد و عمق به‌صورت زنده",
-            "تنظیمات نور، افق و متریال با خروجی کد GLSL",
-            "مخصوص توسعه‌دهندگان WebGL و بازی‌سازها",
+            "\u0634\u06cc\u062f\u0631 \u0622\u0628 \u0628\u0627 \u06a9\u0646\u062a\u0631\u0644 \u0645\u0648\u062c\u060c \u0628\u0627\u062f \u0648 \u0639\u0645\u0642 \u0628\u0647‌\u0635\u0648\u0631\u062a \u0632\u0646\u062f\u0647",
+            "\u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u0646\u0648\u0631\u060c \u0627\u0641\u0642 \u0648 \u0645\u062a\u0631\u06cc\u0627\u0644 \u0628\u0627 \u062e\u0631\u0648\u062c\u06cc \u06a9\u062f GLSL",
+            "\u0645\u062e\u0635\u0648\u0635 \u062a\u0648\u0633\u0639\u0647‌\u062f\u0647\u0646\u062f\u06af\u0627\u0646 WebGL \u0648 \u0628\u0627\u0632\u06cc‌\u0633\u0627\u0632\u0647\u0627",
         ],
-        desc="Ocean Test Lab آزمایشگاه تعاملی فیزیک دریاست؛ پارامترهای شیدر آب را زنده تغییر می‌دهی و کد GLSL آماده می‌گیری.",
+        desc="Ocean Test Lab \u0622\u0632\u0645\u0627\u06cc\u0634\u06af\u0627\u0647 \u062a\u0639\u0627\u0645\u0644\u06cc \u0641\u06cc\u0632\u06cc\u06a9 \u062f\u0631\u06cc\u0627\u0633\u062a\u061b \u067e\u0627\u0631\u0627\u0645\u062a\u0631\u0647\u0627\u06cc \u0634\u06cc\u062f\u0631 \u0622\u0628 \u0631\u0627 \u0632\u0646\u062f\u0647 \u062a\u063a\u06cc\u06cc\u0631 \u0645\u06cc‌\u062f\u0647\u06cc \u0648 \u06a9\u062f GLSL \u0622\u0645\u0627\u062f\u0647 \u0645\u06cc‌\u06af\u06cc\u0631\u06cc.",
     ),
     dict(
         id="prod:trinity-fable-bazaar-3d",
-        title="بازار سه‌بعدی تعاملی Fable Bazaar 3D",
+        title="\u0628\u0627\u0632\u0627\u0631 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u062a\u0639\u0627\u0645\u0644\u06cc Fable Bazaar 3D",
         file="fable-bazaar.html",
         price=760_000_000,
         category="3D/WebGL",
-        tagline="قدم بزن در بازار سنتی سه‌بعدی و قصه بساز",
+        tagline="\u0642\u062f\u0645 \u0628\u0632\u0646 \u062f\u0631 \u0628\u0627\u0632\u0627\u0631 \u0633\u0646\u062a\u06cc \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0648 \u0642\u0635\u0647 \u0628\u0633\u0627\u0632",
         accent="#f472b6",
         icon="🏰",
         features=[
-            "دنیای سه‌بعدی با کنترل قدم‌زدن و نمای اول‌شخص",
-            "دکان‌ها، بازیگران و دیالوگ‌های تعاملی",
-            "ساخت با Three.js و رابط فارسی کامل",
+            "\u062f\u0646\u06cc\u0627\u06cc \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0628\u0627 \u06a9\u0646\u062a\u0631\u0644 \u0642\u062f\u0645‌\u0632\u062f\u0646 \u0648 \u0646\u0645\u0627\u06cc \u0627\u0648\u0644‌\u0634\u062e\u0635",
+            "\u062f\u06a9\u0627\u0646‌\u0647\u0627\u060c \u0628\u0627\u0632\u06cc\u06af\u0631\u0627\u0646 \u0648 \u062f\u06cc\u0627\u0644\u0648\u06af‌\u0647\u0627\u06cc \u062a\u0639\u0627\u0645\u0644\u06cc",
+            "\u0633\u0627\u062e\u062a \u0628\u0627 Three.js \u0648 \u0631\u0627\u0628\u0637 \u0641\u0627\u0631\u0633\u06cc \u06a9\u0627\u0645\u0644",
         ],
-        desc="Fable Bazaar یک بازار سنتیِ سه‌بعدی قابل قدم‌زدن است؛ بین دکان‌ها بگرد، با فروشنده‌ها حرف بزن و فضای قصه‌ای را تجربه کن.",
+        desc="Fable Bazaar \u06cc\u06a9 \u0628\u0627\u0632\u0627\u0631 \u0633\u0646\u062a\u06cc\u0650 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0642\u0627\u0628\u0644 \u0642\u062f\u0645‌\u0632\u062f\u0646 \u0627\u0633\u062a\u061b \u0628\u06cc\u0646 \u062f\u06a9\u0627\u0646‌\u0647\u0627 \u0628\u06af\u0631\u062f\u060c \u0628\u0627 \u0641\u0631\u0648\u0634\u0646\u062f\u0647‌\u0647\u0627 \u062d\u0631\u0641 \u0628\u0632\u0646 \u0648 \u0641\u0636\u0627\u06cc \u0642\u0635\u0647‌\u0627\u06cc \u0631\u0627 \u062a\u062c\u0631\u0628\u0647 \u06a9\u0646.",
     ),
     dict(
         id="prod:trinity-dropagentx-suite",
-        title="پکیج کامل ۱۲ صفحه‌ای سوپراپ و مغز سه‌بعدی DropAgentX",
+        title="\u067e\u06a9\u06cc\u062c \u06a9\u0627\u0645\u0644 \u06f1\u06f2 \u0635\u0641\u062d\u0647‌\u0627\u06cc \u0633\u0648\u067e\u0631\u0627\u067e \u0648 \u0645\u063a\u0632 \u0633\u0647‌\u0628\u0639\u062f\u06cc DropAgentX",
         file="dropagentx/showcase3d.html",
         price=1_100_000_000,
         category="Super-App",
-        tagline="سوپراپ ۱۲ صفحه‌ای + نمایش سه‌بعدی محصولات",
+        tagline="\u0633\u0648\u067e\u0631\u0627\u067e \u06f1\u06f2 \u0635\u0641\u062d\u0647‌\u0627\u06cc + \u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a",
         accent="#fb7185",
         icon="🚀",
         features=[
-            "۱۲ صفحهٔ کامل: لندینگ، فروشگاه، ادمین، لایو و اینسایت",
-            "نمایش سه‌بعدی محصولات با Three.js و فونت وزیرمتن",
-            "PWA با manifest و سرویس‌ورکر آفلاین",
+            "\u06f1\u06f2 \u0635\u0641\u062d\u0647\u0654 \u06a9\u0627\u0645\u0644: \u0644\u0646\u062f\u06cc\u0646\u06af\u060c \u0641\u0631\u0648\u0634\u06af\u0627\u0647\u060c \u0627\u062f\u0645\u06cc\u0646\u060c \u0644\u0627\u06cc\u0648 \u0648 \u0627\u06cc\u0646\u0633\u0627\u06cc\u062a",
+            "\u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a \u0628\u0627 Three.js \u0648 \u0641\u0648\u0646\u062a \u0648\u0632\u06cc\u0631\u0645\u062a\u0646",
+            "PWA \u0628\u0627 manifest \u0648 \u0633\u0631\u0648\u06cc\u0633‌\u0648\u0631\u06a9\u0631 \u0622\u0641\u0644\u0627\u06cc\u0646",
         ],
-        desc="سوئیت DropAgentX یک سوپراپ کامل دوازده‌صفحه‌ای است؛ همراه نمایش سه‌بعدی محصولات، مغز SenPai و اپ آفلاین‌پذیر PWA.",
+        desc="\u0633\u0648\u0626\u06cc\u062a DropAgentX \u06cc\u06a9 \u0633\u0648\u067e\u0631\u0627\u067e \u06a9\u0627\u0645\u0644 \u062f\u0648\u0627\u0632\u062f\u0647‌\u0635\u0641\u062d\u0647‌\u0627\u06cc \u0627\u0633\u062a\u061b \u0647\u0645\u0631\u0627\u0647 \u0646\u0645\u0627\u06cc\u0634 \u0633\u0647‌\u0628\u0639\u062f\u06cc \u0645\u062d\u0635\u0648\u0644\u0627\u062a\u060c \u0645\u063a\u0632 SenPai \u0648 \u0627\u067e \u0622\u0641\u0644\u0627\u06cc\u0646‌\u067e\u0630\u06cc\u0631 PWA.",
     ),
 ]
 
@@ -175,7 +175,7 @@ LAUNCHER_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — پیش‌نمایش بازار کیان</title>
+<title>{title} — \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646</title>
 <style>
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{font-family:Vazirmatn,Tahoma,'Segoe UI',sans-serif;background:#0b0e14;color:#e6edf3;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}}
@@ -205,37 +205,37 @@ li b{{color:{accent}}}
 </head>
 <body>
 <main class="card">
-  <span class="badge">{icon} {category} — محصول پرچم‌دار ترینیتی</span>
+  <span class="badge">{icon} {category} — \u0645\u062d\u0635\u0648\u0644 \u067e\u0631\u0686\u0645‌\u062f\u0627\u0631 \u062a\u0631\u06cc\u0646\u06cc\u062a\u06cc</span>
   <h1>{title}</h1>
   <p class="tagline">{tagline}</p>
-  <div class="preview"><iframe id="pv" title="پیش‌نمایش زنده" src="{launch_url}" loading="lazy" referrerpolicy="no-referrer"></iframe><span class="zoom">پیش‌نمایش زندهٔ تعاملی</span></div>
-  <div class="zoom-ctrl"><span>بزرگ‌نمایی پیش‌نمایش:</span><button type="button" onclick="zm(-.1)">−</button><span id="zv">۳۲۰</span><button type="button" onclick="zm(.1)">+</button></div>
+  <div class="preview"><iframe id="pv" title="\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647" src="{launch_url}" loading="lazy" referrerpolicy="no-referrer"></iframe><span class="zoom">\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647\u0654 \u062a\u0639\u0627\u0645\u0644\u06cc</span></div>
+  <div class="zoom-ctrl"><span>\u0628\u0632\u0631\u06af‌\u0646\u0645\u0627\u06cc\u06cc \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634:</span><button type="button" onclick="zm(-.1)">−</button><span id="zv">\u06f3\u06f2\u06f0</span><button type="button" onclick="zm(.1)">+</button></div>
   <ul>
     {features}
   </ul>
   <div class="meta">
-    <div class="price">{price_din} Đ<small>{price_fa} — آزادسازی آنی اسکرو، بدون توقف انسانی</small></div>
-    <a class="btn" href="{launch_url}" target="_blank" rel="noopener">اجرای فوری محصول ↗</a>
+    <div class="price">{price_din} Đ<small>{price_fa} — \u0622\u0632\u0627\u062f\u0633\u0627\u0632\u06cc \u0622\u0646\u06cc \u0627\u0633\u06a9\u0631\u0648\u060c \u0628\u062f\u0648\u0646 \u062a\u0648\u0642\u0641 \u0627\u0646\u0633\u0627\u0646\u06cc</small></div>
+    <a class="btn" href="{launch_url}" target="_blank" rel="noopener">\u0627\u062c\u0631\u0627\u06cc \u0641\u0648\u0631\u06cc \u0645\u062d\u0635\u0648\u0644 ↗</a>
   </div>
-  <p class="foot">این پیش‌نمایش زنده مستقیماً محصول واقعی را اجرا می‌کند؛ پس از خرید، نسخهٔ کامل تحویل داده می‌شود. فروشنده: <span>@ImXforevr</span> — پورسانت معرف: <span>۲۵٪</span></p>
+  <p class="foot">\u0627\u06cc\u0646 \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647 \u0645\u0633\u062a\u0642\u06cc\u0645\u0627\u064b \u0645\u062d\u0635\u0648\u0644 \u0648\u0627\u0642\u0639\u06cc \u0631\u0627 \u0627\u062c\u0631\u0627 \u0645\u06cc‌\u06a9\u0646\u062f\u061b \u067e\u0633 \u0627\u0632 \u062e\u0631\u06cc\u062f\u060c \u0646\u0633\u062e\u0647\u0654 \u06a9\u0627\u0645\u0644 \u062a\u062d\u0648\u06cc\u0644 \u062f\u0627\u062f\u0647 \u0645\u06cc‌\u0634\u0648\u062f. \u0641\u0631\u0648\u0634\u0646\u062f\u0647: <span>@ImXforevr</span> — \u067e\u0648\u0631\u0633\u0627\u0646\u062a \u0645\u0639\u0631\u0641: <span>\u06f2\u06f5\u066a</span></p>
 </main>
 <script>
 var h=320;
 function zm(d){{h=Math.max(200,Math.min(700,Math.round(h*(1+d))));document.getElementById('pv').style.height=h+'px';document.getElementById('zv').textContent=fa(h);}}
-function fa(n){{return String(n).replace(/\\d/g,function(d){{return '۰۱۲۳۴۵۶۷۸۹'[d];}});}}
-document.getElementById('pv').addEventListener('error',function(){{document.querySelector('.preview').innerHTML='<p style="padding:24px;color:#94a3b8;font-size:13px;line-height:2">پیش‌نمایش در این محیط در دسترس نیست؛ دکمهٔ «اجرای فوری محصول» را باز کنید.</p>';}});
+function fa(n){{return String(n).replace(/\\d/g,function(d){{return '\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9'[d];}});}}
+document.getElementById('pv').addEventListener('error',function(){{document.querySelector('.preview').innerHTML='<p style="padding:24px;color:#94a3b8;font-size:13px;line-height:2">\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u062f\u0631 \u0627\u06cc\u0646 \u0645\u062d\u06cc\u0637 \u062f\u0631 \u062f\u0633\u062a\u0631\u0633 \u0646\u06cc\u0633\u062a\u061b \u062f\u06a9\u0645\u0647\u0654 «\u0627\u062c\u0631\u0627\u06cc \u0641\u0648\u0631\u06cc \u0645\u062d\u0635\u0648\u0644» \u0631\u0627 \u0628\u0627\u0632 \u06a9\u0646\u06cc\u062f.</p>';}});
 </script>
 </body>
 </html>"""
 
 
 def _fa_num(n: int) -> str:
-    digits = "۰۱۲۳۴۵۶۷۸۹"
+    digits = "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9"
     return "".join(digits[int(c)] if c.isdigit() else c for c in str(n))
 
 
 def _price_fa(price: int) -> str:
-    return f"{_fa_num(price // 1_000_000)} دیین (Đ) از بازار کیان"
+    return f"{_fa_num(price // 1_000_000)} \u062f\u06cc\u06cc\u0646 (Đ) \u0627\u0632 \u0628\u0627\u0632\u0627\u0631 \u06a9\u06cc\u0627\u0646"
 
 
 def build_launcher(p: dict) -> str:
@@ -479,7 +479,7 @@ def _kb_items() -> list[tuple[str, str, str]]:
         name, desc = parse_frontmatter(body)
         slug = d.name
         title = desc if desc else (name or slug)
-        items.append((f"kb:skill:{slug}", f"مهارت تجاری: {title}", body))
+        items.append((f"kb:skill:{slug}", f"\u0645\u0647\u0627\u0631\u062a \u062a\u062c\u0627\u0631\u06cc: {title}", body))
 
     skills09 = VAULT / "09_recovered_playbooks_skills_valuation" / "kia_skills"
     for d in sorted((skills09 / "skills").iterdir()):
@@ -490,18 +490,18 @@ def _kb_items() -> list[tuple[str, str, str]]:
         name, desc = parse_frontmatter(body)
         slug = d.name
         title = desc if desc else (name or slug)
-        items.append((f"kb:eng:{slug}", f"مهارت مهندسی کیا: {title}", body))
+        items.append((f"kb:eng:{slug}", f"\u0645\u0647\u0627\u0631\u062a \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627: {title}", body))
 
     for extra_id, extra_title, path in [
-        ("kb:eng:soul", "منشور هویتی SOUL — روح مهندسی کیا", skills09 / "SOUL.md"),
-        ("kb:eng:pricing", "قیمت‌گذاری مهندسی کیا (PRICING)", skills09 / "PRICING.md"),
-        ("kb:playbook:day1-sales-kit", "کیف فروش روز اول (DAY1 Sales Kit)",
+        ("kb:eng:soul", "\u0645\u0646\u0634\u0648\u0631 \u0647\u0648\u06cc\u062a\u06cc SOUL — \u0631\u0648\u062d \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627", skills09 / "SOUL.md"),
+        ("kb:eng:pricing", "\u0642\u06cc\u0645\u062a‌\u06af\u0630\u0627\u0631\u06cc \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627 (PRICING)", skills09 / "PRICING.md"),
+        ("kb:playbook:day1-sales-kit", "\u06a9\u06cc\u0641 \u0641\u0631\u0648\u0634 \u0631\u0648\u0632 \u0627\u0648\u0644 (DAY1 Sales Kit)",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "DAY1-SALES-KIT.md"),
-        ("kb:playbook:marketing-fa", "بازی‌نامهٔ بازاریابی فارسی",
+        ("kb:playbook:marketing-fa", "\u0628\u0627\u0632\u06cc‌\u0646\u0627\u0645\u0647\u0654 \u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628\u06cc \u0641\u0627\u0631\u0633\u06cc",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "docs" / "MARKETING-PLAYBOOK-FA.md"),
-        ("kb:playbook:v3-blueprint", "نقشهٔ راه یکپارچهٔ V3",
+        ("kb:playbook:v3-blueprint", "\u0646\u0642\u0634\u0647\u0654 \u0631\u0627\u0647 \u06cc\u06a9\u067e\u0627\u0631\u0686\u0647\u0654 V3",
          VAULT / "09_recovered_playbooks_skills_valuation" / "legacy_python_v5" / "V3_UNIFIED_BLUEPRINT.md"),
-        ("kb:playbook:valuation", "ارزش‌گذاری پرتفوی مهندسی کیا (~$758K)",
+        ("kb:playbook:valuation", "\u0627\u0631\u0632\u0634‌\u06af\u0630\u0627\u0631\u06cc \u067e\u0631\u062a\u0641\u0648\u06cc \u0645\u0647\u0646\u062f\u0633\u06cc \u06a9\u06cc\u0627 (~$758K)",
          VAULT / "09_recovered_playbooks_skills_valuation" / "portfolio" / "VALUATION.md"),
     ]:
         body = read_text_lenient(path)
@@ -549,7 +549,7 @@ def verify(db: sqlite3.Connection) -> dict:
     trial = cur.execute("SELECT COALESCE(SUM(amount),0) FROM Posting").fetchone()[0]
     credits = cur.execute("SELECT COALESCE(SUM(amount),0) FROM Posting WHERE amount>0").fetchone()[0]
     timings = []
-    for q in ("اسکرو", "پورسانت", "تتر", "قیمت‌گذاری", "persian-rtl"):
+    for q in ("\u0627\u0633\u06a9\u0631\u0648", "\u067e\u0648\u0631\u0633\u0627\u0646\u062a", "\u062a\u062a\u0631", "\u0642\u06cc\u0645\u062a‌\u06af\u0630\u0627\u0631\u06cc", "persian-rtl"):
         t0 = time.perf_counter()
         rows = cur.execute(
             'SELECT COUNT(*) FROM "KbEntry" WHERE "title" LIKE ? OR "body" LIKE ?',

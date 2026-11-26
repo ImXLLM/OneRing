@@ -1,12 +1,12 @@
-//! قراردادهای شفافیت اقتصاد — مادهٔ ۶ منشور — پورت `economy.ts`.
-//! فقط‌خواندنی و عمومی: ملت همیشه می‌تواند پول خودش را ممیزی کند.
+//! Economy transparency contracts — charter article 6 — port of `economy.ts`.
+//! Read-only and public: the nation can always audit its own money.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::Din;
 
-/// واحد پول — literal روی وایر.
+/// Currency unit — literal on the wire.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum Currency {
     /// `"DNX"`
@@ -14,7 +14,7 @@ pub enum Currency {
     Dnx,
 }
 
-/// نماد پول — literal روی وایر.
+/// Currency symbol — literal on the wire.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum DinSymbol {
     /// `"Đ"`
@@ -22,39 +22,39 @@ pub enum DinSymbol {
     Dinar,
 }
 
-/// `economySummarySchema` — خلاصهٔ اقتصاد ملی.
+/// `economySummarySchema` — the national economy summary.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EconomySummary {
-    /// واحد پول (همیشه `"DNX"`)
+    /// Currency unit (always `"DNX"`)
     pub currency: Currency,
-    /// نماد (همیشه `"Đ"`)
+    /// Symbol (always `"Đ"`)
     pub symbol: DinSymbol,
-    /// عرضهٔ در گردش
+    /// Circulating supply
     pub circulating_supply: Din,
-    /// موجودی خزانه
+    /// Treasury balance
     pub treasury_balance: Din,
-    /// قفل‌شده در اسکروها
+    /// Locked in escrows
     pub escrow_locked: Din,
-    /// کل ضرب‌شده از آغاز
+    /// Total minted since genesis
     pub minted_all_time: Din,
-    /// کل سوزانده‌شده از آغاز
+    /// Total burned since genesis
     pub burned_all_time: Din,
-    /// ضرب امسال
+    /// Minted this year
     pub minted_this_year: Din,
-    /// سقف ضرب سالانه (مادهٔ ۳)
+    /// Annual mint cap (article 3)
     pub yearly_mint_cap: Din,
-    /// عرضهٔ جنسیس (ADR-002)
+    /// Genesis supply (ADR-002)
     pub genesis_supply: Din,
-    /// مجموع تراز آزمایشی (باید ۰ باشد)
+    /// Trial balance total (must be 0)
     #[schema(minimum = -9_007_199_254_740_991_i64, maximum = 9_007_199_254_740_991_i64)]
     pub trial_balance_sum: i64,
-    /// آیا دفتر متوازن است؟
+    /// Is the ledger balanced?
     pub balanced: bool,
-    /// تعداد حساب‌ها
+    /// Account count
     #[schema(minimum = -9_007_199_254_740_991_i64, maximum = 9_007_199_254_740_991_i64)]
     pub account_count: i64,
-    /// اسکروهای باز
+    /// Open escrows
     #[schema(minimum = -9_007_199_254_740_991_i64, maximum = 9_007_199_254_740_991_i64)]
     pub open_escrows: i64,
 }

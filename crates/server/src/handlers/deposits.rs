@@ -1,10 +1,10 @@
-//! هندلرهای واریز TON M3 — ثبت اثبات کاربر و تعیین تکلیف ادمین با ضرب مادهٔ ۳.
+//! TON deposit handlers (M3) — user proof registration and admin adjudication with the Article 3 mint.
 //!
-//! جریان صادقانهٔ پول از زنجیره به دفتر: کاربر با TON Connect به خزانهٔ KIAN
-//! انتقال می‌دهد، هش را ثبت می‌کند (`PENDING`)، ادمین پس از راستی‌آزمایی
-//! روی‌زنجیره‌ای آن را `CONFIRMED` می‌کند و همان لحظه مسیر ضرب مادهٔ ۳
-//! (سقف سالانه + حساب mint) دیین به حساب شهروند می‌زند. ضرب **هرگز** خودکار
-//! و بی‌ادمین نیست — حتی اگر فرانت منتظر بماند.
+//! Honest money flow from chain to ledger: the user sends via TON Connect to the KIAN treasury,
+//! submits the hash (`PENDING`), the admin verifies it on-chain and marks it
+//! `CONFIRMED`, and the Article 3 minting path (annual cap + mint account)
+//! credits Din to the citizen account at that very moment. Minting is **never**
+//! automatic and admin-free — even if the frontend waits.
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -20,7 +20,7 @@ use crate::handlers::parse_body;
 use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 
-/// نمای واریز وایر از ردیف db — نقطهٔ واحد ساخت `TonDepositView`.
+/// Wire deposit view from a db row — the single construction point for `TonDepositView`.
 #[must_use]
 fn deposit_view(d: &TonDepositRow) -> TonDepositView {
     TonDepositView {
@@ -34,8 +34,8 @@ fn deposit_view(d: &TonDepositRow) -> TonDepositView {
     }
 }
 
-/// اعتبارسنجی رشتهٔ مبلغ TON — دهدهی با حداکثر ۶ رقم اعشار و مقدار > 0.
-/// خروجی: مقدار در مقیاس microTON (۱ TON = ۱٬۰۰۰٬۰۰۰).
+/// TON amount string validation — decimal with at most 6 fractional digits and value > 0.
+/// Output: value in microTON scale (1 TON = 1,000,000).
 fn parse_micro_ton(amount_ton: &str) -> Result<i64, ApiFailure> {
     let invalid = || kian_contracts::HttpFailure::invalid_request(1);
     let (whole, frac) = amount_ton.split_once('.').map_or((amount_ton, ""), |(w, f)| (w, f));
@@ -46,7 +46,7 @@ fn parse_micro_ton(amount_ton: &str) -> Result<i64, ApiFailure> {
         return Err(invalid().into());
     }
     if frac.len() > 6 {
-        return Err(invalid().into()); // TON ۹ رقم اعشار دارد؛ سیم ما ۶ رقم قطع می‌کند
+        return Err(invalid().into()); // TON has 9 fractional digits; our wire cuts at 6
     }
     let whole_val: u64 = if whole.is_empty() { 0 } else { whole.parse().map_err(|_| invalid())? };
     let mut micro: u128 = u128::from(whole_val) * 1_000_000;
@@ -57,11 +57,11 @@ fn parse_micro_ton(amount_ton: &str) -> Result<i64, ApiFailure> {
     if micro == 0 || micro > i64::MAX as u128 {
         return Err(invalid().into());
     }
-    #[allow(clippy::cast_possible_truncation)] // بالای i64 چک شد
+    #[allow(clippy::cast_possible_truncation)] // checked above i64
     Ok(micro as i64)
 }
 
-/// اعتبارسنجی هش تراکنش و آدرس ولت — طول و کاراکترهای مجاز زنجیرهٔ TON.
+/// Transaction hash and wallet address validation — TON chain length and allowed characters.
 fn validate_deposit_fields(
     tx_hash: &str,
     wallet_address: &str,
@@ -77,11 +77,11 @@ fn validate_deposit_fields(
     }
 }
 
-/// `POST /wallet/ton-deposits` — ثبت واریز به‌عنوان اثبات کاربر. ۲۰۱ `PENDING`.
+/// `POST /wallet/ton-deposits` — register a deposit as user proof. 201 `PENDING`.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ هش تکراری (`InvalidTransition` — همان
-/// واریز دوبار ضرب نمی‌شود)؛ 500 خطای SQL.
+/// 401 session; 400 invalid body; 422 duplicate hash (`InvalidTransition` — the
+/// same deposit never gets minted twice); 500 SQL error.
 pub async fn create_deposit(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -90,7 +90,7 @@ pub async fn create_deposit(
     let user = require_session(&state, &headers).await?;
     let req: TonDepositCreateRequest = parse_body(&body)?;
     validate_deposit_fields(&req.tx_hash, &req.wallet_address)?;
-    let _micro = parse_micro_ton(&req.amount_ton)?; // فقط اعتبارسنجی شکل — نرخ ضرب با ادمین
+    let _micro = parse_micro_ton(&req.amount_ton)?; // shape validation only — the mint rate is the admin’s business
 
     if state
         .store
@@ -121,10 +121,10 @@ pub async fn create_deposit(
     Ok((StatusCode::CREATED, Json(deposit_view(&row))))
 }
 
-/// `GET /wallet/ton-deposits` — واریزهای من (۵۰ آخر).
+/// `GET /wallet/ton-deposits` — my deposits (latest 50).
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 500 خطای SQL.
+/// 401 session; 500 SQL error.
 pub async fn list_mine(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -141,14 +141,14 @@ pub async fn list_mine(
     Ok(Json(TonDepositListResponse { items }))
 }
 
-/// `POST /wallet/ton-deposits/{id}/confirm` — ادمین: راستی‌آزمایی + ضرب مادهٔ ۳.
+/// `POST /wallet/ton-deposits/{id}/confirm` — admin: verification + Article 3 mint.
 ///
-/// نرخ تبدیل از `KIAN_TON_TO_DIN` (دیین به ازای هر TON؛ پیش‌فرض ۱۰۰۰ Đ) —
-/// تبدیل با صحیح microTON، بدون float روی پول.
+/// Conversion rate from `KIAN_TON_TO_DIN` (Din per TON; default 1000 Đ) —
+/// conversion in microTON integers, no floats on money.
 ///
 /// # Errors
-/// 404 واریز ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته یا زیر حداقل ضرب؛
-/// ۴۲۲ `MINT_CAP_EXCEEDED` (مادهٔ ۳)؛ 500 خطای SQL.
+/// 404 unknown deposit; 422 already decided or below the mint minimum;
+/// 422 `MINT_CAP_EXCEEDED` (Article 3); 500 SQL error.
 pub async fn confirm(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -176,7 +176,7 @@ pub async fn confirm(
         .into());
     }
 
-    // مبلغ دیین = microTON × نرخ ÷ ۱٬۰۰۰٬۰۰۰ — در i128 با checked_mul برای جلوگیری از overflow i64
+    // Din amount = microTON × rate ÷ 1,000,000 — in i128 with checked_mul to prevent i64 overflow
     let micro = parse_micro_ton(&deposit.amount_ton)?;
     let rate = state.config.ton_to_din_rate;
     let din_128 = i128::from(micro)
@@ -224,8 +224,8 @@ pub async fn confirm(
             .into()
         })?;
 
-    // ترتیب ایمن: اول ضرب با کلید یکسان‌سازی؛ فقط پس از موفقیت ضرب (یا replay
-    // موفق)، وضعیت واریز به CONFIRMED تغییر می‌کند تا در خطای سقف ضرب پول نسوزد.
+    // Safe ordering: mint first with the idempotency key; only after the mint succeeds (or a successful
+    // replay) does the deposit become CONFIRMED, so money never burns on a mint-cap error.
     let _mint = crate::handlers::wallet::mint_to_account(
         &state,
         &user.account_id,
@@ -243,10 +243,10 @@ pub async fn confirm(
     Ok(Json(deposit_view(&updated)))
 }
 
-/// `POST /wallet/ton-deposits/{id}/reject` — ادمین: رد اثبات (بدون ضرب).
+/// `POST /wallet/ton-deposits/{id}/reject` — admin: reject the proof (no mint).
 ///
 /// # Errors
-/// 404 واریز ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته؛ 500 خطای SQL.
+/// 404 unknown deposit; 422 already decided; 500 SQL error.
 pub async fn reject(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -298,15 +298,15 @@ mod tests {
         assert_eq!(parse_micro_ton("0.5").unwrap(), 500_000);
         assert_eq!(parse_micro_ton("2").unwrap(), 2_000_000);
         assert_eq!(parse_micro_ton("1.234567").unwrap(), 1_234_567);
-        assert!(parse_micro_ton("0.1234567").is_err(), "بیش از ۶ رقم اعشار");
-        assert!(parse_micro_ton("0").is_err(), "صفر بی‌معناست");
-        assert!(parse_micro_ton("-1").is_err(), "منفی هرگز");
+        assert!(parse_micro_ton("0.1234567").is_err(), "\u{628}\u{6cc}\u{634} \u{627}\u{632} \u{6f6} \u{631}\u{642}\u{645} \u{627}\u{639}\u{634}\u{627}\u{631}");
+        assert!(parse_micro_ton("0").is_err(), "\u{635}\u{641}\u{631} \u{628}\u{6cc}‌\u{645}\u{639}\u{646}\u{627}\u{633}\u{62a}");
+        assert!(parse_micro_ton("-1").is_err(), "\u{645}\u{646}\u{641}\u{6cc} \u{647}\u{631}\u{6af}\u{632}");
         assert!(parse_micro_ton("1e3").is_err());
         assert!(parse_micro_ton("").is_err());
     }
 
     #[tokio::test]
-    #[allow(clippy::too_many_lines)] // چرخهٔ کامل واریز→تأیید→ضرب — خوانایی تست مهم‌تر از شکستن
+    #[allow(clippy::too_many_lines)] // the full deposit→confirm→mint cycle — test readability beats breaking
     async fn deposit_confirm_mints_through_charter_path() {
         let app = app().await;
         let init_data = make_test_init_data(BOT, "7", Some("buyer"));
@@ -323,7 +323,7 @@ mod tests {
             .unwrap();
         let token = json_body(res).await["token"].as_str().unwrap().to_owned();
 
-        // ثبت واریز
+        // deposit registration
         let res = app
             .clone()
             .oneshot(
@@ -349,7 +349,7 @@ mod tests {
         assert_eq!(body["confirmedAt"], serde_json::Value::Null);
         let dep_id = body["id"].as_str().unwrap().to_owned();
 
-        // بدون ادمین — ۴۰۱
+        // no admin — 401
         let res = app
             .clone()
             .oneshot(
@@ -363,7 +363,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // ادمین تأیید می‌کند — نرخ پیش‌فرض ۱۰۰۰ Đ/TON → ۵۰۰ Đ
+        // admin confirms — default rate 1000 Đ/TON → 500 Đ
         let res = app
             .clone()
             .oneshot(
@@ -380,7 +380,7 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["status"], "CONFIRMED");
 
-        // تراز شهروند باید ۵۰۰ شده باشد
+        // citizen balance must become 500
         let res = app
             .clone()
             .oneshot(
@@ -395,7 +395,7 @@ mod tests {
         let me = json_body(res).await;
         assert_eq!(me["balance"], 500, "0.5 TON × 1000 Đ/TON");
 
-        // هش تکراری — ۴۲۲
+        // duplicate hash — 422
         let res = app
             .clone()
             .oneshot(
@@ -417,7 +417,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422, "same chain hash must never mint twice");
 
-        // تعیین تکلیف دوباره — ۴۲۲ (گذار یک‌طرفه)
+        // deciding again — 422 (one-way transition)
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -449,8 +449,8 @@ mod tests {
             .unwrap();
         let token = json_body(res).await["token"].as_str().unwrap().to_owned();
 
-        // ۲۰۰۰ TON × ۱۰۰۰ Đ/TON = ۲٬۰۰۰٬۰۰۰ Đ؛ برای عبور از سقف سالانهٔ ۵۰۰ میلیارد Đ:
-        // ۶۰۰٬۰۰۰٬۰۰۰ TON × ۱۰۰۰ = ۶۰۰ میلیارد Đ > سقف
+        // 2000 TON × 1000 Đ/TON = 2,000,000 Đ; to exceed the 500 billion Đ annual cap:
+        // 600,000,000 TON × 1000 = 600 billion Đ > cap
         let res = app
             .clone()
             .oneshot(
@@ -473,7 +473,7 @@ mod tests {
         assert_eq!(res.status(), 201);
         let dep_id = json_body(res).await["id"].as_str().unwrap().to_owned();
 
-        // تأیید باید با خطای سقف ضرب رد شود
+        // confirm must be rejected with the mint-cap error
         let res = app
             .clone()
             .oneshot(
@@ -489,7 +489,7 @@ mod tests {
         assert_eq!(res.status(), 422);
         assert_eq!(json_body(res).await["error"]["code"], "MINT_CAP_EXCEEDED");
 
-        // وضعیت واریز باید همچنان PENDING مانده باشد (نه CONFIRMED سوخته)
+        // deposit status must still be PENDING (not a burned CONFIRMED)
         let res = app
             .oneshot(
                 axum::http::Request::builder()

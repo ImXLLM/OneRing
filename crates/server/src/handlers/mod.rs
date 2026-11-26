@@ -1,9 +1,9 @@
-//! هندلرهای HTTP — هر هندلر سه گام دارد: امنیت (گارد ادمین/نرخ از middleware
-//! و [`require_admin`])، اعتبارسنجی بدنهٔ وایر ([`parse_body`] — مثل zod در
-//! لبهٔ HTTP)، و اجرای دامنه از مسیر خالص + [`V3Store`].
+//! HTTP handlers — every handler has three stages: security (admin guard/rate from middleware
+//! and [`require_admin`]), wire body validation ([`parse_body`] — like zod at
+//! the HTTP edge), and domain execution via the pure path + [`V3Store`].
 //!
-//! هیچ هندلری مستقیم JSON نمی‌سازد — پاسخ‌ها از DTOهای فاز ۳ ساخته می‌شوند تا
-//! قرارداد هرگز از هندلر فاصله نگیرد (ADR-005).
+//! No handler builds JSON directly — responses are built from the Phase 3 DTOs so that
+//! the contract never drifts from the handler (ADR-005).
 
 pub mod accounts;
 pub mod admin;
@@ -31,8 +31,8 @@ use sha2::{Digest, Sha256};
 
 use crate::error::ApiFailure;
 
-/// پالایش نویسه‌های وایر — هر نویسهٔ بیرون از `^[A-Za-z0-9:_.-]+$` به `_`
-/// تبدیل می‌شود تا خروجی همیشه الگوی `Id` را پاس کند (D2 — بازرسی فارنزیک).
+/// Wire character sanitization — every character outside `^[A-Za-z0-9:_.-]+$` becomes `_`
+/// so the output always passes the `Id` pattern (D2 — forensic inspection).
 fn sanitize_wire_chars(input: &str) -> String {
     input
         .chars()
@@ -46,22 +46,22 @@ fn sanitize_wire_chars(input: &str) -> String {
         .collect()
 }
 
-/// پسوند قطعی ۱۶-رقمی SHA-256 برای شناسه‌های سرریز — تابع خالص از ورودی،
-/// پس برای یک `raw_id` ثابت همیشه همان پسوند تولید می‌شود (بدون رانش اتمی).
+/// Deterministic 16-digit SHA-256 suffix for overflow ids — a pure function of the input,
+/// so a fixed `raw_id` always yields the same suffix (no atomic drift).
 fn deterministic_id_suffix(raw_id: &str) -> String {
     let digest = Sha256::digest(raw_id.as_bytes());
     let hex = format!("{digest:x}");
     hex.chars().take(16).collect()
 }
 
-/// D2 — شناسهٔ وایرِ امن با پیشوند — جایگزینِ `format!("{prefix}:{id}")`.
+/// D2 — safe prefixed wire id — replaces `format!("{prefix}:{id}")`.
 ///
-/// شناسهٔ DB-مبدأ می‌تواند تا ۱۲۸ کاراکتر باشد؛ افزودن پیشوندِ `hitl:` بر
-/// آن، سقف `Id::new` را می‌شکند و `.expect` در `admin.rs` کل سرور را
-/// panic می‌کند. این تابع تضمین می‌کند خروجی در `1..=128` کاراکتر و منطبق
-/// بر الگوی `^[A-Za-z0-9:_.-]+$` است:
-/// - اگر `prefix:sanitized` جا شود، همان برگردانده می‌شود؛
-/// - وگرنه سرِ برش‌خوردهٔ ≤۱۰۰ کاراکتر + `_{sha256_hex16}` قطعی.
+/// A DB-originated id can be up to 128 characters; adding the `hitl:` prefix
+/// breaks the `Id::new` cap and the `.expect` in `admin.rs` would panic
+/// the whole server. This function guarantees the output is `1..=128` characters and matches
+/// the `^[A-Za-z0-9:_.-]+$` pattern:
+/// - if `prefix:sanitized` fits, it is returned as-is;
+/// - otherwise the truncated head of ≤100 characters + the deterministic `_{sha256_hex16}`.
 #[must_use]
 pub fn safe_prefixed_wire_id(prefix: &str, raw_id: &str) -> String {
     let p = sanitize_wire_chars(prefix);
@@ -70,24 +70,24 @@ pub fn safe_prefixed_wire_id(prefix: &str, raw_id: &str) -> String {
     if (1..=128).contains(&direct.chars().count()) {
         return direct;
     }
-    // سرِ برش‌خورده: حداکثر ۱۰۰ نویسه از `prefix:body` + پسوند ۱۷ نویسه‌ای
-    // (`_` + ۱۶ hex) → کل همیشه ≤ ۱۱۷ و ≥ ۱ — همیشه معتبر برای `Id::new`.
+    // truncated head: at most 100 characters of `prefix:body` + a 17-character suffix
+    // (`_` + 16 hex) → total always ≤ 117 and ≥ 1 — always valid for `Id::new`.
     let head: String = direct.chars().take(100).collect();
     format!("{head}_{}", deterministic_id_suffix(raw_id))
 }
 
-/// D2 — تبدیل امنِ هر شناسهٔ DB-مبدأ به `Id` بدون هیچ `.expect` روی دادهٔ
-/// ناهمگون. رشتهٔ خالی/سفید → شناسهٔ ایستای `id:{fallback_tag}`؛ نویسه‌ها
-/// پالایش می‌شوند؛ سرریز طول با پسوند قطعی ۱۶-hex نجات می‌یابد — سرور هرگز
-/// روی ردیفِ خرابِ DB از کار نمی‌افتد.
+/// D2 — safely convert any DB-originated id to `Id` with no `.expect` on
+/// malformed data. An empty/whitespace string → the static id `id:{fallback_tag}`; characters
+/// are sanitized; length overflow is rescued with a deterministic 16-hex suffix — the server
+/// never halts on a corrupted DB row.
 ///
-/// `raw` به‌صورت `impl Into<String>` پذیرفته می‌شود — فراخوانیِ با `String`
-/// (شناسه‌هایِ DB-مبدأ) بدون تغییر کار می‌کند.
+/// `raw` is accepted as `impl Into<String>` — callers passing a `String`
+/// (DB-originated ids) work unchanged.
 ///
 /// # Panics
-/// تنها در مسیرِ غیرقابلِ رسیدنِ fallback ایستا — وقتی حتی
-/// `id:sanitized-fallback` (که الگو و طولش ثابت و معتبر است) رد شود؛
-/// برای هر ورودیِ واقعی غیرِممکن است.
+/// Only on the unreachable static fallback path — when even
+/// `id:sanitized-fallback` (whose pattern and length are fixed and valid) is rejected;
+/// impossible for any real input.
 #[must_use]
 pub fn safe_wire_id(raw: impl Into<String>, fallback_tag: &str) -> kian_contracts::Id {
     let raw = raw.into();
@@ -104,17 +104,17 @@ pub fn safe_wire_id(raw: impl Into<String>, fallback_tag: &str) -> kian_contract
     if let Some(id) = kian_contracts::Id::new(sanitized.clone()) {
         return id;
     }
-    // پس از پالایش، تنها حالتِ نامعتبر سرریزِ طول است — نجاتِ قطعی:
+    // after sanitization the only invalid case is length overflow — deterministic rescue:
     let salvaged = safe_prefixed_wire_id("id", &sanitized);
     kian_contracts::Id::new(salvaged).unwrap_or_else(static_fallback)
 }
 
-/// اعتبارسنجی بدنهٔ وایر — همان نقطهٔ zod در TS: بدنهٔ نامعتبر → 400
-/// `INVALID_REQUEST` با شمارش issue (serde یک خطای ریشه‌ای می‌دهد — حداقلِ
-/// صادقانه ۱). بدنهٔ خالی برای فرم‌های all-optional مثل `{}` تفسیر می‌شود.
+/// Wire body validation — the same spot zod holds in TS: invalid body → 400
+/// `INVALID_REQUEST` with an issue count (serde yields one root error —
+/// honestly at least 1). An empty body is interpreted as `{}` for all-optional shapes.
 ///
 /// # Errors
-/// [`HttpFailure::invalid_request`] — وضعیت ۴۰۰ با `meta.issues`.
+/// [`HttpFailure::invalid_request`] — status 400 with `meta.issues`.
 pub fn parse_body<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, ApiFailure> {
     let raw: &[u8] = if bytes.iter().all(u8::is_ascii_whitespace) {
         b"{}"
@@ -142,13 +142,13 @@ mod tests {
         assert_eq!(err.envelope().error.code, "INVALID_REQUEST");
     }
 
-    // ── D2 — بازرسی فارنزیک: شناسهٔ وایر امن ────────────────────────────────
+    // ── D2 — forensic inspection: safe wire id ────────────────────────────────
 
-    /// شناسهٔ ۱۲۸-کاراکتری اسکرو (سقف قانونی `Id::new`) با پیشوند `hitl:`
-    /// می‌شکند ۱۳۳ — باید قطعی و بدون panic نجات یابد و `Id::new` پاس شود.
+    /// A 128-character escrow id (the legal `Id::new` cap) with the `hitl:` prefix
+    /// makes 133 — it must be rescued deterministically without panic and pass `Id::new`.
     #[test]
     fn hitl_wire_id_survives_128_char_escrow_id_without_panicking() {
-        let escrow_id = format!("escrow:{}", "a1".repeat(61)); // ۱۲۹ کاراکتر، سپس برش به سقفِ قانونی ۱۲۸
+        let escrow_id = format!("escrow:{}", "a1".repeat(61)); // 129 characters, then a cut to the legal cap of 128
         let escrow_id = escrow_id.chars().take(128).collect::<String>();
         assert_eq!(escrow_id.chars().count(), 128);
         let hitl = safe_prefixed_wire_id("hitl", &escrow_id);
@@ -159,9 +159,9 @@ mod tests {
         );
         let parsed = kian_contracts::Id::new(hitl.clone());
         assert!(parsed.is_some(), "sanitized HITL id must parse as wire Id: {hitl}");
-        // قطعیت: ورودی ثابت → خروجی ثابت
+        // determinism: fixed input → fixed output
         assert_eq!(hitl, safe_prefixed_wire_id("hitl", &escrow_id));
-        // پیشوندِ معنایی حفظ می‌شود تا اپراتور HITL هنوز آن را می‌شناسد
+        // the semantic prefix is kept so the HITL operator still recognizes it
         assert!(hitl.starts_with("hitl:"));
     }
 
@@ -173,17 +173,17 @@ mod tests {
 
     #[test]
     fn hostile_chars_are_sanitized_and_oversize_ids_recovered_deterministically() {
-        let hostile = "escrow/id با فاصله و یونیکد!";
+        let hostile = "escrow/id \u{628}\u{627} \u{641}\u{627}\u{635}\u{644}\u{647} \u{648} \u{6cc}\u{648}\u{646}\u{6cc}\u{6a9}\u{62f}!";
         let safe = safe_prefixed_wire_id("hitl", hostile);
         assert!(safe.starts_with("hitl:"));
         assert!(kian_contracts::Id::new(safe).is_some());
-        // سرریز ۵۰۰ کاراکتری → ≤ ۱۲۸ با پسوند قطعی ۱۶-hex
+        // a 500-character overflow → ≤ 128 with a deterministic 16-hex suffix
         let huge = "x".repeat(500);
         let salvaged = safe_wire_id(huge.clone(), "audit");
         assert!(salvaged.get().chars().count() <= 128);
         assert!(salvaged.get().chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, ':' | '_' | '.' | '-')));
         assert_eq!(safe_wire_id(huge, "audit"), salvaged, "salvage must be deterministic");
-        // رشتهٔ تهی → fallback ایستای معتبر، بدون panic
+        // an empty string → valid static fallback, no panic
         assert_eq!(safe_wire_id(String::new(), "deposit").get(), "id:deposit");
     }
 }

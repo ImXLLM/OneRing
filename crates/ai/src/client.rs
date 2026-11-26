@@ -1,9 +1,9 @@
-//! کلاینت‌های مدل — HTTP تولیدی سازگار با `OpenAI` + دابل تست اسکریپت‌شو.
+//! Model clients — production `OpenAI`-compatible HTTP + a scripted test double.
 //!
-//! [`HttpModelClient`] فقط به نقطهٔ `{url}/chat/completions` با Bearer زنگ
-//! می‌زند و پاسخ را سخت‌گیرانه پارس می‌کند (`choices[0].message.content` +
-//! `usage.*`). جزئیات خطا رشتهٔ کوتاه بی‌راز است — کلید و متن درخواست هرگز
-//! به detail نمی‌رود.
+//! [`HttpModelClient`] only calls `{url}/chat/completions` with a Bearer
+//! and parses the response strictly (`choices[0].message.content` +
+//! `usage.*`). Error details are a short secret-free string — the key and request text never
+//! reach the detail.
 
 use std::collections::VecDeque;
 use std::sync::Mutex;
@@ -11,24 +11,24 @@ use std::time::Duration;
 
 use crate::gateway::{ChatPacket, CompletionOutcome, CompletionPacket, ModelClient, SlotConfig};
 
-/// سرصفحهٔ `HTTP-Referer` — شناسهٔ اپ روی روترهای attribution-محور (`OpenRouter`).
+/// `HTTP-Referer` header — app identity on attribution-centric routers (`OpenRouter`).
 pub const SITE_URL: &str = "https://kian.app";
 
-/// سرصفحهٔ `X-Title` — نام اپ روی روترهای attribution-محور (`OpenRouter`).
+/// `X-Title` header — app name on attribution-centric routers (`OpenRouter`).
 pub const SITE_TITLE: &str = "KIAN Studio";
 
-/// کلاینت HTTP تولیدی — rustls + webpki-roots، بدون openssl سیستمی.
+/// Production HTTP client — rustls + webpki-roots, no system openssl.
 #[derive(Debug, Clone)]
 pub struct HttpModelClient {
-    /// کلاینت reqwest با تایم‌اوت ثابت
+    /// reqwest client with a fixed timeout
     http: reqwest::Client,
 }
 
 impl HttpModelClient {
-    /// ساخت با تایم‌اوت مشخص (پیشنهاد: ۳۰ ثانیه).
+    /// Build with an explicit timeout (suggested: 30 seconds).
     ///
     /// # Errors
-    /// ساخت کلاینت reqwest ممکن است شکست بخورد (TLS backend).
+    /// reqwest client construction can fail (TLS backend).
     pub fn new(timeout: Duration) -> Result<Self, String> {
         let http = reqwest::Client::builder()
             .timeout(timeout)
@@ -67,7 +67,7 @@ impl ModelClient for HttpModelClient {
             .map_err(|e| format!("http: {e}"))?;
         let status = resp.status();
         if !status.is_success() {
-            // فقط کد وضعیت — بدنهٔ آپ‌استریم ممکن است محتوای کاربر را برگرداند
+            // status code only — the upstream body may contain user content
             return Err(format!("upstream status {status}"));
         }
         let json: serde_json::Value =
@@ -93,7 +93,7 @@ impl ModelClient for HttpModelClient {
 }
 
 
-/// کلاینت همیشه-رد — وقتی کلاینت HTTP بوت نشد؛ گیت‌وی صادقانه Disabled می‌دهد.
+/// Always-rejecting client — when the HTTP client failed to boot; the gateway honestly reports Disabled.
 #[derive(Debug, Default)]
 pub struct UnavailableClient;
 
@@ -104,8 +104,8 @@ impl ModelClient for UnavailableClient {
     }
 }
 
-/// دابل تست — صف پاسخ‌های آماده؛ هر `complete` یک آیتم مصرف می‌کند و
-/// ترتیب تلاش‌ها را ضبط می‌کند (برای اثبات فال‌بک).
+/// Test double — a queue of canned responses; each `complete` consumes one item and
+/// records the attempt order (to prove fallback).
 #[derive(Debug, Default)]
 pub struct ScriptedClient {
     script: Mutex<VecDeque<Result<CompletionPacket, String>>>,
@@ -113,13 +113,13 @@ pub struct ScriptedClient {
 }
 
 impl ScriptedClient {
-    /// ساخت با صف پاسخ‌ها به ترتیب.
+    /// Build with the response queue in order.
     #[must_use]
     pub fn new(script: Vec<Result<CompletionPacket, String>>) -> Self {
         Self { script: Mutex::new(script.into()), calls: Mutex::new(Vec::new()) }
     }
 
-    /// نام اسلات‌هایی که تا حالا صدا زده شده‌اند — برای اثبات ترتیب فال‌بک.
+    /// Slot names called so far — to prove the fallback order.
     #[must_use]
     pub fn called_slots(&self) -> Vec<String> {
         self.calls.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
@@ -150,8 +150,8 @@ mod tests {
     use super::*;
     use crate::gateway::PacketMessage;
 
-    /// سرصفحه‌های attribution و Bearer باید روی سیم حاضر باشند — با سرور لوپ‌بک
-    /// محلی اثبات می‌شود (بدون شبکهٔ بیرونی، بدون راز واقعی).
+    /// The attribution and Bearer headers must be present on the wire — proven with a local
+    /// loopback server (no external network, no real secrets).
     #[tokio::test]
     async fn http_client_sends_attribution_headers() {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -171,7 +171,7 @@ mod tests {
                 }
                 read += n;
                 if buf[..read].windows(4).any(|w| w == b"\r\n\r\n") {
-                    break; // پایان سرصفحه‌ها — بدنهٔ JSON مهم نیست
+                    break; // end of headers — the JSON body does not matter
                 }
             }
             let head = String::from_utf8_lossy(&buf[..read]).to_lowercase();
@@ -185,7 +185,7 @@ mod tests {
                 "Bearer key must be sent: {head}"
             );
             let payload = serde_json::json!({
-                "choices": [{"message": {"content": "سلام"}}],
+                "choices": [{"message": {"content": "\u{633}\u{644}\u{627}\u{645}"}}],
                 "usage": {"prompt_tokens": 1, "completion_tokens": 2}
             })
             .to_string();
@@ -207,33 +207,33 @@ mod tests {
         };
         let packet = ChatPacket {
             model: "m".into(),
-            messages: vec![PacketMessage { role: "user".into(), content: "سلام".into() }],
+            messages: vec![PacketMessage { role: "user".into(), content: "\u{633}\u{644}\u{627}\u{645}".into() }],
             max_tokens: None,
         };
         let out = client.complete(&slot, &packet).await.expect("loopback must answer");
-        assert_eq!(out.content, "سلام");
+        assert_eq!(out.content, "\u{633}\u{644}\u{627}\u{645}");
         assert_eq!((out.prompt_tokens, out.completion_tokens), (1, 2));
         server.await.expect("server task");
     }
 
-    /// کلاینت HTTP فقط با URL بد — خطای کوتاه، بدون راز.
+    /// HTTP client with a bad URL only — short error, no secrets.
     #[tokio::test]
     async fn http_client_error_is_short_and_secret_free() {
         let client = HttpModelClient::new(Duration::from_secs(2)).expect("client");
         let slot = SlotConfig {
             name: "primary".into(),
-            url: "http://127.0.0.1:1".into(), // پورت بسته — اتصال فوری رد می‌شود
+            url: "http://127.0.0.1:1".into(), // closed port — the connection is refused immediately
             key: "super-secret-key".into(),
             model: "m".into(),
         };
         let packet = ChatPacket {
             model: "m".into(),
-            messages: vec![PacketMessage { role: "user".into(), content: "سلام".into() }],
+            messages: vec![PacketMessage { role: "user".into(), content: "\u{633}\u{644}\u{627}\u{645}".into() }],
             max_tokens: None,
         };
         let err = client.complete(&slot, &packet).await.unwrap_err();
         assert!(!err.contains("super-secret"), "key must never leak into detail: {err}");
-        assert!(!err.contains("سلام"), "user content must never leak: {err}");
+        assert!(!err.contains("\u{633}\u{644}\u{627}\u{645}"), "user content must never leak: {err}");
         assert!(err.len() < 200, "detail must stay short");
     }
 }

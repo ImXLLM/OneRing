@@ -1,1 +1,1 @@
-# @kian/contracts — قراردادهای وایر (Zod 4) — mirror امن از DTOهای Rust
+# @kian/contracts — Wire Contracts (Zod 4) — the Safe Mirror of the Rust DTOs

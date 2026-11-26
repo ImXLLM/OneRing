@@ -1,15 +1,15 @@
-//! هندلرهای کوانتِ علّی — هستهٔ `ccxt` و موتور `Vibe-Trading`
+//! Causal quant handlers — the `ccxt` core and the `Vibe-Trading` engine.
 //! (Wave 6 — Step 3/4).
 //!
-//! سه مسیر additive:
-//! - `GET /quant/venues` — ماتریسِ ۸-مکانیِ بی‌کلید + خودآزمونِ تیکِ
-//!   `Precise` (درمانِ #1 سیسی‌اکس‌تا) + نشانِ گپِ ترتیبِ `OrderBook`
-//!   (درمانِ #2) — عمومی و قطعی؛
-//! - `POST /quant/vibe-backtest` — DAG توپولوژیکِ ۵گرهی روی پرامپتِ
-//!   طبیعیِ دوزبانه: مولدِ قطعیِ بازار → بک‌تسترِ اکیداً علّی
-//!   (`&candles[0..=t]` → `open(t+1)`) → دفترِ ادعای عددی → گیتِ مایرون →
-//!   ماندگاری در `quant_strategies`؛
-//! - `GET /quant/strategies` — فهرستِ استراتژی‌هایِ ماندگار.
+//! Three additive routes:
+//! - `GET /quant/venues` — the keyless 8-venue matrix + the `Precise` tick
+//!   self-test (ccxt fix #1) + the `OrderBook` ordering-gap marker
+//!   (fix #2) — public and deterministic;
+//! - `POST /quant/vibe-backtest` — a 5-node topological DAG over the bilingual
+//!   natural-language prompt: deterministic market generator → strictly causal backtester
+//!   (`&candles[0..=t]` → `open(t+1)`) → numeric claims ledger → Mairon gate →
+//!   persistence in `quant_strategies`;
+//! - `GET /quant/strategies` — the persisted strategy list.
 
 use std::sync::Arc;
 
@@ -36,10 +36,10 @@ use crate::handlers::parse_body;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// سقفِ اندازهٔ پرامپتِ Vibe روی سیم — همان ۸ کیلوبایتِ استودیو.
+/// Vibe prompt size cap on the wire — the same 8 KB as the studio.
 const VIBE_PROMPT_MAX_BYTES: usize = 8_192;
 
-/// نگاشتِ مکانِ بی‌کلید به نمای وایر.
+/// Map a keyless venue to the wire view.
 #[must_use]
 pub fn venue_view(
     v: &kian_wallet::ccxt_core::KeylessMarketVenue,
@@ -64,7 +64,7 @@ pub fn venue_view(
     }
 }
 
-/// نگاشتِ ردیفِ خودآزمونِ تیک به نمای وایر.
+/// Map a tick self-test row to the wire view.
 #[must_use]
 pub fn tick_selftest_view(
     r: &kian_wallet::ccxt_core::TickSelftestRow,
@@ -76,7 +76,7 @@ pub fn tick_selftest_view(
     }
 }
 
-/// نگاشتِ تلمتریِ گرهٔ DAG به نمای وایر.
+/// Map DAG node telemetry to the wire view.
 #[must_use]
 pub fn node_view(t: &kian_hermes::vibe_trading_engine::SwarmNodeTelemetry) -> QuantSwarmNodeView {
     QuantSwarmNodeView {
@@ -88,7 +88,7 @@ pub fn node_view(t: &kian_hermes::vibe_trading_engine::SwarmNodeTelemetry) -> Qu
     }
 }
 
-/// نگاشتِ گزارشِ بک‌تست به نمایِ سنجه‌ها.
+/// Map the backtest report to the metrics view.
 #[must_use]
 pub fn metrics_view(
     r: &kian_hermes::vibe_trading_engine::CausalBacktestReport,
@@ -117,10 +117,10 @@ pub fn metrics_view(
     }
 }
 
-/// `GET /quant/venues` — ماتریسِ بازارِ بی‌کلید + شواهدِ درمان‌ها (عمومی).
+/// `GET /quant/venues` — the keyless market matrix + fix evidence (public).
 ///
 /// # Errors
-/// رخ نمی‌دهد — خروجیِ قطعیِ کورهای خالص.
+/// Cannot happen — deterministic output of the pure cores.
 pub async fn venues() -> Json<QuantVenuesResponse> {
     let matrix = keyless_public_market_matrix();
     let count = matrix.len();
@@ -135,14 +135,14 @@ pub async fn venues() -> Json<QuantVenuesResponse> {
     })
 }
 
-/// `POST /quant/vibe-backtest` — اجرایِ کاملِ DAG کوانت (نشستِ شهروند).
+/// `POST /quant/vibe-backtest` — the full quant DAG run (citizen session).
 ///
-/// خط لوله: مولدِ قطعیِ بازار → تجزیه‌گرِ دوزبانهٔ Vibe (صفر اجرای پویا)
-/// → بک‌تسترِ اکیداً علّی → دفترِ ادعای عددی → گیتِ مایرون (+ گذرِ قطعیِ
-/// تنظیمِ رژیم) → ماندگاری در `quant_strategies` → پاسخِ کامل + `SKILL.md`.
+/// Pipeline: deterministic market generator → bilingual Vibe parser (zero dynamic execution)
+/// → strictly causal backtester → numeric claims ledger → Mairon gate (+ a deterministic
+/// regime-fit pass) → persistence in `quant_strategies` → full response + `SKILL.md`.
 ///
 /// # Errors
-/// ۴۰۱ نشستِ غایب؛ ۴۰۰ بدنهٔ نامعتبر / پرامپتِ خالی / طولِ بیش از سقف.
+/// 401 missing session; 400 invalid body / empty prompt / length above the cap.
 #[allow(clippy::too_many_lines)]
 pub async fn vibe_backtest(
     State(state): State<Arc<AppState>>,
@@ -164,7 +164,7 @@ pub async fn vibe_backtest(
 
     let dag = run_vibe_quant_swarm_dag(&prompt, &symbol, &timeframe, usize::try_from(bars).unwrap_or(SWARM_DAG_DEFAULT_BARS), seed);
 
-    // ماندگاری — هر اجرا یک ردیف؛ پرچمِ گیتِ مایرون صادقانه ثبت می‌شود.
+    // persistence — one row per run; the Mairon gate flag is recorded honestly.
     let row_id = format!("quant:{}", uuid::Uuid::now_v7());
     let ast_json = serde_json::to_string(&dag.ast)
         .map_err(|_| ApiFailure::from(kian_contracts::HttpFailure::invalid_request(1)))?;
@@ -206,7 +206,7 @@ pub async fn vibe_backtest(
     }))
 }
 
-/// نگاشتِ ردیفِ ماندگار به نمای وایر — شناسهٔ استراتژی از AST JSON.
+/// Map a persisted row to the wire view — strategy id from the AST JSON.
 #[must_use]
 pub fn strategy_view(row: &kian_db::quant::QuantStrategyRow) -> QuantStrategyView {
     let strategy_id = serde_json::from_str::<serde_json::Value>(&row.strategy_ast_json)
@@ -228,10 +228,10 @@ pub fn strategy_view(row: &kian_db::quant::QuantStrategyRow) -> QuantStrategyVie
     }
 }
 
-/// `GET /quant/strategies` — فهرستِ استراتژی‌هایِ ماندگار (عمومی).
+/// `GET /quant/strategies` — the persisted strategy list (public).
 ///
 /// # Errors
-/// ۵۰۰ خطای SQL.
+/// 500 SQL error.
 pub async fn strategies(State(state): State<Arc<AppState>>) -> ApiResult<Json<QuantStrategiesResponse>> {
     let rows = state.store.list_quant_strategies(100).await?;
     let count = rows.len();

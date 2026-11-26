@@ -1,8 +1,8 @@
-//! تست‌های یکپارچگی وایر M2 — چرخهٔ کامل پول روی HTTP واقعی (بدون شبکه).
+//! M2 wire integration tests — the full money cycle over real HTTP (no network).
 //!
-//! هر سناریو سه لایه را هم‌زمان می‌آزماید: گارد `X-KIAN-Key` fail-closed،
-//! اعتبارسنجی وایر، و ماشین وضعیت امانت روی دفتر دوطرفه با مالیات ۱۰٪ منشور.
-//! معادل `app.inject` فستیفای در legacy — `tower::ServiceExt::oneshot`.
+//! Each scenario exercises three layers at once: the fail-closed `X-KIAN-Key` guard,
+//! wire validation, and the escrow state machine over the double-entry ledger with the Charter 10% tax.
+//! The equivalent of Fastify’s `app.inject` in legacy — `tower::ServiceExt::oneshot`.
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
@@ -13,14 +13,14 @@ use tower::ServiceExt;
 
 const KEY: &str = "kian-admin-key-0123456789";
 
-/// ساخت روتر با فروشگاه درون‌حافظهٔ مهاجرت‌شده + حساب‌های سیستمی.
+/// Build the router with the migrated in-memory store + system accounts.
 async fn router_with_key(admin_key: Option<&str>) -> axum::Router {
     let store = V3Store::connect_in_memory().await.unwrap();
     store.migrate().await.unwrap();
     store.ensure_system_accounts().await.unwrap();
     let mut config = ServerConfig::base();
     config.admin_key = admin_key.map(str::to_owned);
-    // M3 هویت تلگرام — در تست‌های M2 غیرفعال؛ M4 اسلات AI خاموش
+    // M3 Telegram identity — disabled in the M2 tests; M4 AI slot off
     config.bot_token = None;
     config.cors_origins = vec!["http://localhost:3000".into(), "http://127.0.0.1:3000".into()];
     config.rate_limit = 120;
@@ -74,45 +74,45 @@ async fn call_empty(
     (status, json)
 }
 
-// ── گارد ادمین — ماتریس fail-closed روی سیم واقعی ────────────────────────────
+// ── Admin guard — fail-closed matrix over the real wire ────────────────────────────
 
 #[tokio::test]
 async fn admin_guard_fail_closed_over_the_wire() {
-    // سرور بدون کلید → 503 همیشه (هرگز open)
+    // server without a key → 503 always (never open)
     let (status, body) =
         call_empty(router_with_key(None).await, "POST", "/api/v1/wallet/mint", None).await;
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
     assert_eq!(body["error"]["code"], "ADMIN_DISABLED");
 
     let router = router_with_key(Some(KEY)).await;
-    // هدر غایب → 401
+    // missing header → 401
     let (status, body) = call_empty(router.clone(), "POST", "/api/v1/wallet/mint", None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
     assert_eq!(body["error"]["code"], "ADMIN_KEY_REQUIRED");
-    // هدر نادرست → 401
+    // wrong header → 401
     let (status, body) =
         call_empty(router.clone(), "POST", "/api/v1/wallet/mint", Some("wrong-key-0123456")).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
     assert_eq!(body["error"]["code"], "INVALID_ADMIN_KEY");
-    // مسیر ناشناخته → پاکت 404 additive-only
+    // unknown path → 404 additive-only envelope
     let (status, body) = call_empty(router.clone(), "GET", "/api/v1/nope", Some(KEY)).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(body["error"]["code"], "NOT_FOUND");
 }
 
-// ── چرخهٔ کامل امانت با مالیات ۱۰٪ منشور ─────────────────────────────────────
+// ── Full escrow cycle with the Charter 10% tax ─────────────────────────────────────
 
 #[tokio::test]
 async fn full_escrow_lifecycle_with_charter_tax_split() {
     let router = router_with_key(Some(KEY)).await;
 
-    // حساب خریدار و فروشنده
+    // buyer and seller accounts
     let (status, _) = call(
         router.clone(),
         "POST",
         "/api/v1/accounts",
         Some(KEY),
-        json!({"id": "user:kia", "label": "کیا"}),
+        json!({"id": "user:kia", "label": "\u{6a9}\u{6cc}\u{627}"}),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
@@ -121,12 +121,12 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
         "POST",
         "/api/v1/accounts",
         Some(KEY),
-        json!({"id": "user:ada", "label": "آدا"}),
+        json!({"id": "user:ada", "label": "\u{622}\u{62f}\u{627}"}),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
 
-    // ضرب ۱۰۰۰ Đ برای خریدار (داخل سقف سالانهٔ منشور)
+    // mint 1000 Đ for the buyer (within the Charter annual cap)
     let (status, minted) = call(
         router.clone(),
         "POST",
@@ -137,7 +137,7 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
     .await;
     assert_eq!(status, StatusCode::OK, "mint body: {minted}");
 
-    // ساخت امانت ۴۰۰ Đ — CREATED؛ پول هنوز جابه‌جا نشده
+    // create a 400 Đ escrow — CREATED; no money moved yet
     let (status, escrow) = call(
         router.clone(),
         "POST",
@@ -149,12 +149,12 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
     assert_eq!(status, StatusCode::CREATED, "create body: {escrow}");
     assert_eq!(escrow["escrow"]["status"], "CREATED");
 
-    // تامین → تحویل → آزادسازی
+    // fund → deliver → release
     let (status, funded) = call_empty(router.clone(), "POST", "/api/v1/escrows/e1/fund", Some(KEY)).await;
     assert_eq!(status, StatusCode::OK, "fund body: {funded}");
     assert_eq!(funded["escrow"]["status"], "FUNDED");
     let buyer_locked = call_empty(router.clone(), "GET", "/api/v1/accounts/user:kia/balance", Some(KEY)).await;
-    assert_eq!(buyer_locked.1["balance"], 600, "فاند: ۱۰۰۰ − ۴۰۰ به اسکرو قفل شد");
+    assert_eq!(buyer_locked.1["balance"], 600, "\u{641}\u{627}\u{646}\u{62f}: \u{6f1}\u{6f0}\u{6f0}\u{6f0} − \u{6f4}\u{6f0}\u{6f0} \u{628}\u{647} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{642}\u{641}\u{644} \u{634}\u{62f}");
 
     let (status, delivered) = call_empty(router.clone(), "POST", "/api/v1/escrows/e1/deliver", Some(KEY)).await;
     assert_eq!(status, StatusCode::OK);
@@ -164,21 +164,21 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
     assert_eq!(status, StatusCode::OK, "release body: {released}");
     assert_eq!(released["escrow"]["status"], "RELEASED");
 
-    // مادهٔ ۸ — تسویه: فروشنده خالص (۹۰٪) + خزانه مالیات ۱۰٪
+    // Article 8 — settlement: seller net (90%) + treasury tax 10%
     let (_, seller) = call_empty(router.clone(), "GET", "/api/v1/accounts/user:ada/balance", Some(KEY)).await;
     assert_eq!(seller["balance"], 360);
     let (_, treasury) =
         call_empty(router.clone(), "GET", "/api/v1/accounts/treasury:nation/balance", Some(KEY)).await;
     assert_eq!(treasury["balance"], 40);
 
-    // شفافیت اقتصاد — تراز آزمایشی باید تقدس داشته باشد
+    // economy transparency — the trial balance must remain inviolate
     let (status, economy) = call_empty(router.clone(), "GET", "/api/v1/economy", None).await;
-    assert_eq!(status, StatusCode::OK, "economy عمومی و بدون کلید است (مادهٔ ۶)");
+    assert_eq!(status, StatusCode::OK, "economy \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{648} \u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{644}\u{6cc}\u{62f} \u{627}\u{633}\u{62a} (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6})");
     assert_eq!(economy["balanced"], true);
     assert_eq!(economy["circulatingSupply"], 1000);
 }
 
-// ── گذار نامعتبر → ۴۲۲ صادقانه ──────────────────────────────────────────────
+// ── Invalid transition → honest 422 ──────────────────────────────────────────────
 
 #[tokio::test]
 async fn invalid_transition_is_422() {
@@ -202,13 +202,13 @@ async fn invalid_transition_is_422() {
     )
     .await;
 
-    // آزادسازی پیش از تامین — نقض ماشین وضعیت
+    // release before funding — a state machine violation
     let (status, body) = call_empty(router.clone(), "POST", "/api/v1/escrows/e2/release", Some(KEY)).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(body["error"]["code"], "INVALID_TRANSITION");
 }
 
-// ── کلید یکسان‌سازی — replay هرگز دوبار پول جابه‌جا نمی‌کند ──────────────────
+// ── Idempotency key — a replay never moves money twice ──────────────────
 
 #[tokio::test]
 async fn idempotent_fund_replays_without_double_money() {
@@ -250,14 +250,14 @@ async fn idempotent_fund_replays_without_double_money() {
     )
     .await;
     assert_eq!(s2, StatusCode::OK);
-    // همان تراکنش — replay عیناً همان نتیجه
+    // same transaction — a replay returns exactly the same result
     assert_eq!(r1["txId"], r2["txId"]);
     assert_eq!(r2["replayed"], true);
     let (_, buyer) = call_empty(router.clone(), "GET", "/api/v1/accounts/user:kia/balance", Some(KEY)).await;
-    assert_eq!(buyer["balance"], 40, "دو بار fund = یک بار کم‌شدن ۶۰");
+    assert_eq!(buyer["balance"], 40, "\u{62f}\u{648} \u{628}\u{627}\u{631} fund = \u{6cc}\u{6a9} \u{628}\u{627}\u{631} \u{6a9}\u{645}‌\u{634}\u{62f}\u{646} \u{6f6}\u{6f0}");
 }
 
-// ── تزریق SQL روی فیلتر وضعیت — گارد sqlsafe قرارداد را رد می‌کند ────────────
+// ── SQL injection on the status filter — the sqlsafe guard rejects the contract ────────────
 
 #[tokio::test]
 async fn injection_attempt_on_status_filter_is_400() {
@@ -268,7 +268,7 @@ async fn injection_attempt_on_status_filter_is_400() {
     assert_eq!(body["error"]["code"], "INVALID_REQUEST");
 }
 
-// ── نرخ‌سنجی — پنجرهٔ لغزان روی سیم ──────────────────────────────────────────
+// ── Rate limiting — the sliding window on the wire ──────────────────────────────────────────
 
 #[tokio::test]
 async fn rate_limit_429_with_exact_meta() {
@@ -277,10 +277,10 @@ async fn rate_limit_429_with_exact_meta() {
     store.ensure_system_accounts().await.unwrap();
     let mut config = ServerConfig::base();
     config.admin_key = Some(KEY.into());
-    config.rate_limit = 2; // سقف شدید برای تست
+    config.rate_limit = 2; // tight cap for the test
     config.backup_dir = "data/backups".into();
     let router = build_router(AppState::new(store, config).shared());
-    // باکت admin — دو تماس اول می‌گذرد، سومی 429 با meta.limit دقیق
+    // admin bucket — the first two calls pass, the third gets 429 with the exact meta.limit
     let (_, _) = call_empty(router.clone(), "GET", "/api/v1/economy", Some(KEY)).await;
     let (_, _) = call_empty(router.clone(), "GET", "/api/v1/economy", Some(KEY)).await;
     let (status, body) = call_empty(router.clone(), "GET", "/api/v1/economy", Some(KEY)).await;
@@ -289,7 +289,7 @@ async fn rate_limit_429_with_exact_meta() {
     assert_eq!(body["error"]["meta"]["limit"], 2);
 }
 
-/// CORS فقط برای اوریجین‌های allowlist — preflight اوریجین ناشناخته بدون ACAO (M3).
+/// CORS for allowlisted origins only — an unknown origin’s preflight gets no ACAO (M3).
 #[tokio::test]
 async fn cors_preflight_only_for_allowed_origins() {
     let router = router_with_key(Some(KEY)).await;

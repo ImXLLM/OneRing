@@ -1,12 +1,12 @@
-//! `kian-contracts` — قراردادهای وایر KIAN — ADR-005/ADR-009.
+//! `kian-contracts` — the KIAN wire contracts — ADR-005/ADR-009.
 //!
-//! منبع واحد حقیقتِ سیم: DTOهای serde با deriveهای utoipa، طبقه‌بندی خطای HTTP
-//! و لایهٔ امنیت قراردادی (X-KIAN-Key با مقایسهٔ زمان‌ثابت + احراز initData
-//! تلگرام برای M3). سازگاری وایر با TS با همان قواعد legacy (camelCase،
-//! null صریح، صحیح تا 2^53−1) حفظ می‌شود.
+//! The single source of truth for the wire: serde DTOs with utoipa derives, HTTP error
+//! classification, and the contractual security layer (X-KIAN-Key with constant-time comparison + initData
+//! authentication of Telegram for M3). Wire compatibility with TS follows the same legacy rules (camelCase,
+//! explicit null, integers up to 2^53−1).
 //!
-//! M2 — زیرمجموعهٔ کرنل پول: common/error/security/accounts/escrows/economy/system.
-//! M3 — هویت تلگرام، نشست‌ها، بازار و واریز TON: auth/market.
+//! M2 — the money kernel subset: common/error/security/accounts/escrows/economy/system.
+//! M3 — Telegram identity, sessions, market, and TON deposits: auth/market.
 #![forbid(unsafe_code)]
 
 pub mod accounts;
@@ -32,10 +32,10 @@ pub mod wave10;
 pub mod wave9;
 pub mod wallet;
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate ID — for the smoke test and logs.
 pub const NAME: &str = "kian-contracts";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use accounts::{AccountListResponse, AccountView, BalanceResponse, CreateAccountRequest};
@@ -147,7 +147,7 @@ mod tests {
         assert_ne!(VERSION, "", "version string present");
     }
 
-    /// کلید ادمین — fail-closed با نام جدید X-KIAN-Key.
+    /// Admin key — fail-closed, renamed to X-KIAN-Key.
     #[test]
     fn kian_key_fail_closed() {
         const KEY: &str = "kian-admin-key-0123456789";
@@ -161,7 +161,7 @@ mod tests {
         ));
     }
 
-    /// مالیات ۱۰٪ منشور از مسیر دامنه — قرارداد وایر روی آن سوار است.
+    /// The charter's 10% tax from the domain path — the wire contract is built on it.
     #[test]
     fn envelope_wire_is_camel_case_with_explicit_codes() {
         let f = HttpFailure::rate_limited(120);

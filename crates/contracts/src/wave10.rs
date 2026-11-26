@@ -1,294 +1,294 @@
-//! قراردادهای وایرِ Wave 10 (Commit #30) — اتاق جنگِ بنیان‌گذارِ حاکم و
-//! موتورِ شبیه‌سازیِ واقعیِ زمانیِ «روزِ ۰ → روزِ ۱».
+//! Wire contracts of Wave 10 (Commit #30) — the sovereign founder war room and
+//! the real-time "Day 0 → Day 1" simulation engine.
 //!
-//! DTOهای روی وایر برای چهار اندپوینتِ تازه:
-//! - `GET  /api/v1/war-room/state` — وضعیتِ کاملِ روزِ صفر + سناریویِ
-//!   کانونیِ ۲۴ تیک ([`WarRoomStateResponse`])؛
-//! - `POST /api/v1/war-room/step` — پیشرویِ علّیِ تک‌گام
-//!   ([`WarRoomStepRequest`], [`WarRoomStepResponse`])؛
-//! - `POST /api/v1/war-room/directive` — دستورِ تاکتیکیِ رئیس + سه پاسخِ
-//!   در-شخصیت ([`WarRoomDirectiveRequest`], [`WarRoomDirectiveResponse`])؛
-//! - `GET  /api/v1/war-room/explain-simple` — توضیحِ «۰ تا ۱۰۰» برای
-//!   سوادِ صفر ([`WarRoomExplainResponse`]).
+//! On-wire DTOs for the four new endpoints:
+//! - `GET  /api/v1/war-room/state` — the complete Day-0 state + the
+//!   canonical 24-tick scenario ([`WarRoomStateResponse`]);
+//! - `POST /api/v1/war-room/step` — single-step causal advance
+//!   ([`WarRoomStepRequest`], [`WarRoomStepResponse`]);
+//! - `POST /api/v1/war-room/directive` — the boss's tactical directive + three
+//!   in-character replies ([`WarRoomDirectiveRequest`], [`WarRoomDirectiveResponse`]);
+//! - `GET  /api/v1/war-room/explain-simple` — the "0-to-100" explanation for
+//!   zero-literacy audiences ([`WarRoomExplainResponse`]).
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// نمایِ یک پرسونایِ هم‌بنیان‌گذار روی وایر.
+/// Wire view of a co-founder persona.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FounderView {
-    /// شناسهٔ وایر — `elon_musk` | `cz_binance` | `jeff_bezos` | `chairman`.
+    /// Wire ID — `elon_musk` | `cz_binance` | `jeff_bezos` | `chairman`.
     pub persona_id: String,
-    /// هندلِ X.
+    /// X handle.
     pub handle: String,
-    /// نامِ نمایشی — انگلیسی.
+    /// Display name — English.
     pub display_name_en: String,
-    /// نامِ نمایشی — فارسی.
+    /// Display name — Persian.
     pub display_name_fa: String,
-    /// مأموریت — انگلیسی.
+    /// Mission — English.
     pub mandate_en: String,
-    /// مأموریت — فارسی.
+    /// Mission — Persian.
     pub mandate_fa: String,
-    /// رنگِ accent به هگز.
+    /// Accent color as hex.
     pub accent_hex: String,
-    /// عضوِ شبکهٔ ۲۴/۷؟
+    /// 24/7 network member?
     pub is_co_founder: bool,
 }
 
-/// نمایِ دفترِ ولتِ سازمان روی وایر — همهٔ ارقامِ صادقانهٔ روزِ صفر.
+/// Wire view of the org wallet ledger — every honest Day-0 figure.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletLedgerView {
-    /// بذرِ کریپتو (`µUSDC`) — `33_000_000`.
+    /// Crypto seed (`µUSDC`) — `33_000_000`.
     pub crypto_seed_micros: i64,
-    /// بذرِ نقد (سنت) — `1_500`.
+    /// Cash seed (cents) — `1_500`.
     pub cash_seed_cents: i64,
-    /// ذخیرهٔ کاغذیِ قفل‌شده (سنت) — `35_000`.
+    /// Locked paper reserve (cents) — `35_000`.
     pub paper_reserve_locked_cents: i64,
-    /// درآمدِ خالصِ پلتفرم (`µUSDC`) — از صفر.
+    /// Platform net revenue (`µUSDC`) — starting from zero.
     pub earned_revenue_micros: i64,
-    /// پرداخت‌هایِ ۸۰٪ سازنده (`µUSDC`).
+    /// 80% creator payouts (`µUSDC`).
     pub creator_payouts_micros: i64,
-    /// پرداخت‌هایِ آفیلیت (`µUSDC`).
+    /// Affiliate payouts (`µUSDC`).
     pub affiliate_payouts_micros: i64,
-    /// سطلِ مالیاتِ بازار (`µUSDC`).
+    /// Marketplace tax bucket (`µUSDC`).
     pub stream_marketplace_tax_micros: i64,
-    /// سطلِ روتینگِ آفیلیت (`µUSDC`).
+    /// Affiliate routing bucket (`µUSDC`).
     pub stream_affiliate_routing_micros: i64,
-    /// سطلِ بوستِ ویژه (`µUSDC`).
+    /// Featured boost bucket (`µUSDC`).
     pub stream_featured_boost_micros: i64,
-    /// سطلِ اختلافِ تسویه (`µUSDC`).
+    /// Settlement variance bucket (`µUSDC`).
     pub stream_settlement_spread_micros: i64,
-    /// کاربرانِ فعال.
+    /// Active users.
     pub active_users: i64,
-    /// قیفِ بازدید.
+    /// Visit funnel.
     pub funnel_visits: i64,
-    /// قیفِ ثبت‌نام.
+    /// Signup funnel.
     pub funnel_signups: i64,
-    /// قیفِ خرید.
+    /// Purchase funnel.
     pub funnel_purchases: i64,
-    /// درآمد به رشتهٔ دلار — `$9.55`.
+    /// Revenue as a dollar string — `$9.55`.
     pub earned_revenue_usd: String,
-    /// بذرِ کریپتو به رشتهٔ دلار — `$33.00`.
+    /// Crypto seed as a dollar string — `$33.00`.
     pub crypto_seed_usd: String,
-    /// بذرِ نقد به رشتهٔ دلار — `$15.00`.
+    /// Cash seed as a dollar string — `$15.00`.
     pub cash_seed_usd: String,
-    /// ذخیرهٔ کاغذی به رشتهٔ دلار — `$350.00`.
+    /// Paper reserve as a dollar string — `$350.00`.
     pub paper_reserve_usd: String,
 }
 
-/// نمایِ یک تیکِ شبیه‌سازی روی وایر.
+/// Wire view of one simulation tick.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomTickView {
-    /// شمارهٔ تیک.
+    /// Tick number.
     pub tick_index: i64,
-    /// ثانیهٔ شبیه‌سازی.
+    /// Simulation seconds.
     pub simulation_second: i64,
-    /// شناسهٔ سخنران.
+    /// Speaker ID.
     pub speaker_id: String,
-    /// نامِ نمایشیِ سخنران — انگلیسی.
+    /// Speaker display name — English.
     pub speaker_name_en: String,
-    /// نامِ نمایشیِ سخنران — فارسی.
+    /// Speaker display name — Persian.
     pub speaker_name_fa: String,
-    /// رنگِ accent سخنران.
+    /// Speaker accent color.
     pub speaker_accent_hex: String,
-    /// پیامِ فارسی.
+    /// Persian message.
     pub message_fa: String,
-    /// پیامِ انگلیسی.
+    /// English message.
     pub message_en: String,
-    /// فرمانِ ترمینال — در صورتِ اجرا.
+    /// Terminal command — if executed.
     pub terminal_cmd: Option<String>,
-    /// پستِ اجتماعی به JSON — در صورتِ انتشار.
+    /// Social post as JSON — if published.
     pub social_post_json: Option<String>,
-    /// دلتایِ خزانه (`µUSDC`).
+    /// Treasury delta (`µUSDC`).
     pub wallet_delta_usdc_micros: i64,
-    /// جمعِ ولت پس از تیک (`µUSDC`).
+    /// Wallet total after the tick (`µUSDC`).
     pub wallet_total_usdc_micros: i64,
-    /// مرحلهٔ فعال.
+    /// Active stage.
     pub active_pipeline_stage: String,
-    /// جریانِ درآمدِ فعال.
+    /// Active revenue stream.
     pub revenue_stream: String,
-    /// حجمِ ناخالص (`µUSDC`).
+    /// Gross volume (`µUSDC`).
     pub sale_volume_micros: i64,
-    /// پرداختِ سازنده (`µUSDC`).
+    /// Creator payout (`µUSDC`).
     pub creator_payout_micros: i64,
-    /// فروشِ با رفرال؟
+    /// Referred sale?
     pub referred: bool,
 }
 
-/// پاسخِ `GET /api/v1/war-room/state` — وضعیتِ کاملِ اتاقِ جنگ.
+/// Response of `GET /api/v1/war-room/state` — the complete war-room state.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomStateResponse {
-    /// امضایِ اتاقِ جنگ.
+    /// War-room signature.
     pub signature: String,
-    /// مخزنِ هدف.
+    /// Target repository.
     pub github_repo: String,
-    /// هشِ کوتاهِ کمیتِ شاخص.
+    /// Short hash of the flagship metric.
     pub github_commit_short: String,
-    /// شناسهٔ زنجیرهٔ Base.
+    /// Base chain ID.
     pub base_chain_id: i64,
-    /// قراردادِ USDC بومیِ Base.
+    /// Base-native USDC contract.
     pub base_usdc_contract: String,
-    /// نمادِ استارزِ تلگرام.
+    /// Telegram Stars symbol.
     pub telegram_stars_currency: String,
-    /// ساعتِ شبیه‌سازی — ثانیهٔ سپری‌شده.
+    /// Simulation clock — elapsed seconds.
     pub elapsed_seconds: i64,
-    /// نشانگرِ تیکِ بعدی.
+    /// Next-tick pointer.
     pub tick_cursor: i64,
-    /// درصدِ پیشرفت.
+    /// Progress percentage.
     pub progress_percent: i64,
-    /// پخشِ خودکار روشن؟
+    /// Autoplay enabled?
     pub playing: bool,
-    /// ضریبِ سرعت — ۱ | ۲ | ۵.
+    /// Speed multiplier — 1 | 2 | 5.
     pub speed_multiplier: i64,
-    /// دفترِ ولتِ سازمان.
+    /// Org wallet ledger.
     pub wallet: WalletLedgerView,
-    /// پرسوناهایِ اتاقِ جنگ.
+    /// War-room personas.
     pub founders: Vec<FounderView>,
-    /// سناریویِ کانونیِ ۲۴ تیک — منبعِ واحدِ حقیقتِ اپِ HTML.
+    /// The canonical 24-tick scenario — the single source of truth for the HTML app.
     pub scenario: Vec<WarRoomTickView>,
-    /// ثابت‌هایِ منشور برایِ UI (bps).
+    /// Charter constants for the UI (bps).
     pub charter_unreferred_take_bps: i64,
-    /// `8000 bps` سهمِ همیشگیِ سازنده.
+    /// `8000 bps` perpetual creator share.
     pub charter_creator_bps: i64,
-    /// سقفِ ضدِ-جهش (ثانیه).
+    /// Anti-jump cap (seconds).
     pub max_tick_delta_seconds: i64,
-    /// کلِ صادقانهٔ درآمدِ روزِ اول (`µUSDC`) — `9_550_000`.
+    /// The honest Day-1 revenue total (`µUSDC`) — `9_550_000`.
     pub day1_total_earned_micros: i64,
 }
 
-/// درخواستِ `POST /api/v1/war-room/step`.
+/// Request of `POST /api/v1/war-room/step`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomStepRequest {
-    /// تعدادِ تیک‌هایِ اجراشده تا حالا — `0..=24`.
+    /// Ticks executed so far — `0..=24`.
     pub tick_cursor: i64,
-    /// ضریبِ سرعتِ انتخابی — فقط ۱، ۲ و ۵.
+    /// Selected speed multiplier — only 1, 2, and 5.
     pub speed_multiplier: i64,
 }
 
-/// پاسخِ `POST /api/v1/war-room/step` — تیکِ اجراشده + وضعیتِ تازه.
+/// Response of `POST /api/v1/war-room/step` — the executed tick + fresh state.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomStepResponse {
-    /// تیکِ اجراشده — کامل.
+    /// The executed tick — full.
     pub executed: WarRoomTickView,
-    /// نشانگرِ تیک پس از اجرا.
+    /// Tick pointer after execution.
     pub tick_cursor: i64,
-    /// درصدِ پیشرفت.
+    /// Progress percentage.
     pub progress_percent: i64,
-    /// ثانیهٔ شبیه‌سازی.
+    /// Simulation seconds.
     pub elapsed_seconds: i64,
-    /// دفترِ ولت پس از اجرا.
+    /// Wallet ledger after execution.
     pub wallet: WalletLedgerView,
-    /// سناریو تمام شد؟
+    /// Is the scenario finished?
     pub scenario_exhausted: bool,
 }
 
-/// درخواستِ `POST /api/v1/war-room/directive`.
+/// Request of `POST /api/v1/war-room/directive`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomDirectiveRequest {
-    /// متنِ دستورِ رئیس — فارسی یا انگلیسی، سقفِ ۲۰۰۰ نویسه.
+    /// Boss directive text — Persian or English, 2000-character cap.
     pub directive_text: String,
-    /// لوکالِ پاسخ‌ها — `fa` | `en`.
+    /// Reply locale — `fa` | `en`.
     pub locale: String,
-    /// تیکِ فعالِ زمانِ تزریق (برایِ ثبتِ علّی).
+    /// Tick active at injection time (for causal logging).
     pub triggered_tick: i64,
 }
 
-/// یک پاسخِ در-شخصیت روی وایر.
+/// One in-character reply on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FounderReplyView {
-    /// شناسهٔ پاسخ‌دهنده.
+    /// Responder ID.
     pub speaker_id: String,
-    /// نامِ انگلیسی.
+    /// English name.
     pub speaker_name_en: String,
-    /// نامِ فارسی.
+    /// Persian name.
     pub speaker_name_fa: String,
-    /// رنگِ accent.
+    /// Accent color.
     pub accent_hex: String,
-    /// پاسخِ فارسی.
+    /// Persian reply.
     pub message_fa: String,
-    /// پاسخِ انگلیسی.
+    /// English reply.
     pub message_en: String,
-    /// فرمانِ ترمینالِ پیشنهادی.
+    /// Suggested terminal command.
     pub terminal_cmd: Option<String>,
-    /// پستِ اجتماعیِ پیشنهادی به JSON.
+    /// Suggested social post as JSON.
     pub social_post_json: Option<String>,
 }
 
-/// پاسخِ `POST /api/v1/war-room/directive`.
+/// Response of `POST /api/v1/war-room/directive`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomDirectiveResponse {
-    /// متنِ دستور — پس از پالایش.
+    /// Directive text — after sanitization.
     pub directive_text: String,
-    /// قصدِ تشخیص‌داده‌شده.
+    /// Detected intent.
     pub intent_id: String,
-    /// برچسبِ فارسیِ قصد.
+    /// Persian intent label.
     pub intent_label_fa: String,
-    /// برچسبِ انگلیسیِ قصد.
+    /// English intent label.
     pub intent_label_en: String,
-    /// سه پاسخِ در-شخصیت: ایلان، CZ، جف.
+    /// Three in-character replies: Elon, CZ, Jeff.
     pub replies: Vec<FounderReplyView>,
-    /// تیکِ فعالِ زمانِ تزریق.
+    /// Tick active at injection time.
     pub triggered_tick: i64,
-    /// ثانیهٔ شبیه‌سازی.
+    /// Simulation seconds.
     pub simulation_second: i64,
 }
 
-/// پاسخِ `GET /api/v1/war-room/explain-simple` — «۰ تا ۱۰۰» برای سوادِ صفر.
+/// Response of `GET /api/v1/war-room/explain-simple` — the "0-to-100" explanation for zero-literacy audiences.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomExplainResponse {
-    /// امضایِ اتاقِ جنگ.
+    /// War-room signature.
     pub signature: String,
-    /// لوکالِ بسته — `fa` | `en`.
+    /// Bundle locale — `fa` | `en`.
     pub locale: String,
-    /// سرخط — فارسی.
+    /// Headline — Persian.
     pub headline_fa: String,
-    /// سرخط — انگلیسی.
+    /// Headline — English.
     pub headline_en: String,
-    /// منشورِ پول — فارسی.
+    /// Money charter — Persian.
     pub charter_fa: String,
-    /// منشورِ پول — انگلیسی.
+    /// Money charter — English.
     pub charter_en: String,
-    /// چهار گام — شناسه‌ها به ترتیبِ الف تا د.
+    /// Four steps — IDs in alphabetical order.
     pub step_ids: Vec<String>,
-    /// عنوانِ فارسیِ هر گام.
+    /// Persian title of each step.
     pub step_titles_fa: Vec<String>,
-    /// عنوانِ انگلیسیِ هر گام.
+    /// English title of each step.
     pub step_titles_en: Vec<String>,
-    /// بدنهٔ فارسیِ هر گام.
+    /// Persian body of each step.
     pub step_bodies_fa: Vec<String>,
-    /// بدنهٔ انگلیسیِ هر گام.
+    /// English body of each step.
     pub step_bodies_en: Vec<String>,
 }
 
-/// پاسخِ `POST /api/v1/war-room/reset` — بازگشتِ علایی به روزِ صفر.
+/// Response of `POST /api/v1/war-room/reset` — causal rollback to Day 0.
 ///
-/// تیک‌هایِ ثبت‌شده و دستورهایِ رئیس از دفترِ فرمان پاک می‌شوند تا
-/// `POST /war-room/step` بدونِ برخورد بهِ اتمامِ سناریو از نو رانده شود.
+/// Recorded ticks and boss directives are cleared from the command ledger so that
+/// `POST /war-room/step` can be re-run without colliding with the end of the scenario.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WarRoomResetResponse {
-    /// امضایِ اتاقِ جنگ.
+    /// War-room signature.
     pub signature: String,
-    /// تعدادِ تیک‌هایِ پاک‌شده.
+    /// Number of cleared ticks.
     pub deleted_ticks: i64,
-    /// تعدادِ دستورهایِ رئیسِ پاک‌شده.
+    /// Number of cleared boss directives.
     pub deleted_directives: i64,
-    /// نشانگرِ تیک پس از بازنشانی — همیشه صفر.
+    /// Tick pointer after reset — always zero.
     pub tick_cursor: i64,
-    /// درصدِ پیشرفت پس از بازنشانی — همیشه صفر.
+    /// Progress percentage after reset — always zero.
     pub progress_percent: i64,
-    /// پیامِ فارسی.
+    /// Persian message.
     pub message_fa: String,
-    /// پیامِ انگلیسی.
+    /// English message.
     pub message_en: String,
 }

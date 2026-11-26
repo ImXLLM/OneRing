@@ -1,6 +1,6 @@
-# @kian/miniapp — مینی‌اپ تلگرام
+# @kian/miniapp — The Telegram Mini App
 
-Telegram Mini App: ولت، بازار، کوئست، معرفی.
-- TON Connect 5 برای اتصال کیف پول کاربر
-- auth از طریق initData تلگرام (اعتبارسنجی سمت کرنل `crates/server`)
+Telegram Mini App: wallet, marketplace, quests, referrals.
+- TON Connect 5 for connecting the user's wallet
+- auth via Telegram initData (validated kernel-side in `crates/server`)
 - Next.js 16.4 + zustand 5 + TanStack Query 5

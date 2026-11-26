@@ -1,44 +1,44 @@
-//! redaction — اسکن قطعی رازها روی متن ورودی/خروجی AI.
+//! redaction — deterministic secret scanning over AI input/output text.
 //!
-//! فلسفه: هرگز راز به ارائه‌دهندهٔ بیرونی یا روی سیم پاسخ نمی‌رود. خروجی این
-//! ماژول فقط «دستهٔ یافته» را گزارش می‌کند (`private_key_hex`، `bot_token`،…)
-//! و متن را با جای‌نشان `[REDACTED:<kind>]` عوض می‌کند.
+//! Philosophy: a secret never reaches an external provider or the wire. This module's
+//! output only reports the finding category (`private_key_hex`, `bot_token`, …)
+//! and replaces the text with the `[REDACTED:<kind>]` placeholder.
 //!
-//! الگوها (بدون regex — اسکن بایتی قطعی و replayable):
-//! * `pem_key` — بلوک `-----BEGIN … -----END …`
-//! * `jwt` — سه قطعهٔ base64url دور نقطه، شروع با `eyJ`
-//! * `private_key_hex` — `0x` + ۶۴ کاراکتر هگز
-//! * `bot_token` — قالب توکن بات تلگرام: ۸..=۱۲ رقم + `:` + ≥۳۰ کاراکتر
-//! * `long_hex` — هر رشتهٔ هگز ≥۳۲ کاراکتر (توکن/نشست نشتی)
-//! * `mnemonic` — ۱۲..=۲۴ واژهٔ ASCII کوچک پی‌درپی با فاصلهٔ تکی
+//! Patterns (no regex — deterministic, replayable byte scanning):
+//! * `pem_key` — a `-----BEGIN … -----END …` block
+//! * `jwt` — three base64url segments around dots, starting with `eyJ`
+//! * `private_key_hex` — `0x` + 64 hex characters
+//! * `bot_token` — the Telegram bot token format: 8..=12 digits + `:` + ≥30 characters
+//! * `long_hex` — any hex string of ≥32 characters (a leaked token/session)
+//! * `mnemonic` — 12..=24 consecutive lowercase ASCII words with single spaces
 //!
-//! محدودیت اعلام‌شده: رازهای «متن‌محور» (کلید ادمین انسانی مثل
-//! `kian-admin-key-...`) ساختار قابل‌تشخیص قطعی ندارند — سپر هرمس و قاعدهٔ
-//! «کلید فقط در هدر» جلوی آن‌ها را می‌گیرد، نه این اسکنر.
+//! Declared limitation: text-shaped secrets (a human admin key such as
+//! `kian-admin-key-...`) have no deterministically detectable structure — the Hermes shield
+//! and the "key only in headers" rule stop those, not this scanner.
 
-/// یک یافته — دسته + جای بایتی در متن اصلی (برای ممیزی، بدون محتوا).
+/// One finding — category + byte offset in the original text (for audit, no content).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RedactionFinding {
-    /// دستهٔ راز
+    /// Secret category
     pub kind: &'static str,
-    /// جای شروع در متن اصلی (بایت)
+    /// Start offset in the original text (bytes)
     pub start: usize,
 }
 
-/// گزارش redaction — متن پاک‌شده + فهرست یافته‌ها.
+/// The redaction report — sanitized text + the findings list.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RedactionReport {
-    /// متن پس از جای‌نشان‌گذاری
+    /// Text after placeholder substitution
     pub text: String,
-    /// یافته‌ها به ترتیب مکان
+    /// Findings in positional order
     pub findings: Vec<RedactionFinding>,
 }
 
-/// اولویت الگوها — پهن‌ترین/سخت‌گیرانه‌ترین اول رزرو می‌شود.
+/// Pattern priority — the broadest/strictest reserves first.
 const PATTERNS: [&str; 6] =
     ["pem_key", "jwt", "private_key_hex", "bot_token", "long_hex", "mnemonic"];
 
-/// امضای اسکنر — بازه‌های (شروع، پایان) هر الگو.
+/// Scanner signature — the (start, end) ranges per pattern.
 type SpanScanner = fn(&[u8]) -> Vec<(usize, usize)>;
 
 fn is_hex(b: u8) -> bool {
@@ -66,12 +66,12 @@ fn find_all(hay: &[u8], needle: &[u8]) -> Vec<usize> {
     out
 }
 
-/// طول اجرای کاراکترهای مجاز از `start` — برای اسکن رشته‌های ساختاری.
+/// The run length of allowed characters from `start` — for scanning structural strings.
 fn run_len(hay: &[u8], start: usize, pred: impl Fn(u8) -> bool) -> usize {
     hay[start..].iter().take_while(|&&b| pred(b)).count()
 }
 
-// ── اسکنرهای هر الگو — بازگشت: (start, end_exclusive) ───────────────────────
+// ── Per-pattern scanners — returns: (start, end_exclusive) ───────────────────────
 
 fn scan_pem(hay: &[u8]) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
@@ -83,7 +83,7 @@ fn scan_pem(hay: &[u8]) -> Vec<(usize, usize)> {
         else {
             continue;
         };
-        // تا انتهای خطِ END
+        // Up to the end of the END line
         let mut end = end_rel + 9;
         while end < hay.len() && hay[end] != b'\n' {
             end += 1;
@@ -99,9 +99,9 @@ fn scan_jwt(hay: &[u8]) -> Vec<(usize, usize)> {
     for start in find_all(hay, b"eyJ") {
         let len = run_len(hay, start, is_base64url_dot);
         let seg = &hay[start..start + len];
-        #[allow(clippy::naive_bytecount)] // شمارش یک‌بارهٔ قطعی — بدون وابستگی bytecount
+        #[allow(clippy::naive_bytecount)] // A single-pass deterministic count — no bytecount dependency
         let dots = seg.iter().filter(|&&b| b == b'.').count();
-        // JWT = header.payload.signature — حداقل دو نقطه و طول معقول
+        // JWT = header.payload.signature — at least two dots and a reasonable length
         if dots >= 2 && len >= 32 {
             out.push((start, start + len));
         }
@@ -127,12 +127,12 @@ fn scan_hex64(hay: &[u8]) -> Vec<(usize, usize)> {
 
 fn scan_bot_token(hay: &[u8]) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
-    // رقم‌ها سپس ':' سپس بدنهٔ توکن
+    // Digits, then ':', then the token body
     for i in 0..hay.len() {
         if hay[i] != b':' {
             continue;
         }
-        // شمارش رقم قبل از ':'
+        // Count the digits before ':'
         let mut d = i;
         while d > 0 && hay[d - 1].is_ascii_digit() {
             d -= 1;
@@ -168,17 +168,17 @@ fn scan_long_hex(hay: &[u8]) -> Vec<(usize, usize)> {
 
 fn scan_mnemonic(hay: &[u8]) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
-    // واژه = [a-z]{3,}؛ دنباله = واژه‌ها با فاصلهٔ تکی
+    // Word = [a-z]{3,}; sequence = words with single spaces
     let mut i = 0;
     while i < hay.len() {
-        // شروع واژهٔ کوچک ASCII
+        // The start of a lowercase ASCII word
         let is_word_start = hay[i].is_ascii_lowercase()
             && (i == 0 || hay[i - 1] == b' ' || !hay[i - 1].is_ascii_alphanumeric());
         if !is_word_start {
             i += 1;
             continue;
         }
-        // اندازه‌گیری طول دنباله از این واژه
+        // Measure the sequence length from this word
         let mut j = i;
         let mut words = 0usize;
         let mut end = i;
@@ -190,7 +190,7 @@ fn scan_mnemonic(hay: &[u8]) -> Vec<(usize, usize)> {
             words += 1;
             end = j + len;
             j = end;
-            // فقط فاصلهٔ تکی واژهٔ بعدی
+            // Only a single space to the next word
             if j + 1 < hay.len() && hay[j] == b' ' && hay[j + 1].is_ascii_lowercase() {
                 j += 1;
             } else {
@@ -207,17 +207,17 @@ fn scan_mnemonic(hay: &[u8]) -> Vec<(usize, usize)> {
     out
 }
 
-/// متن را اسکن می‌کند و هر راز را با `[REDACTED:<kind>]` عوض می‌کند.
+/// Scans the text and replaces every secret with `[REDACTED:<kind>]`.
 ///
-/// اسکن یک‌بارمصرف و قطعی است: الگوها به ترتیب اولویت رزرو می‌شوند و
-/// هم‌پوشانی‌ها به نفع الگوی سخت‌گیرانه‌تر حذف می‌شوند.
+/// The scan is single-pass and deterministic: patterns reserve in priority order and
+/// overlaps are pruned in favor of the stricter pattern.
 #[must_use]
 pub fn redact(input: &str) -> RedactionReport {
     let hay = input.as_bytes();
     let scanners: [SpanScanner; 6] =
         [scan_pem, scan_jwt, scan_hex64, scan_bot_token, scan_long_hex, scan_mnemonic];
 
-    // رزرو با اولویت؛ هم‌پوشانی = رد
+    // Reserve by priority; overlap = reject
     let mut reserved: Vec<(usize, usize, &'static str)> = Vec::new();
     for (pattern_idx, scanner) in scanners.iter().enumerate() {
         'spans: for (start, end) in scanner(hay) {
@@ -231,7 +231,7 @@ pub fn redact(input: &str) -> RedactionReport {
     }
     reserved.sort_by_key(|(s, e, _)| (*s, *e));
 
-    // بازسازی متن با جای‌نشان — لبه‌ها به مرز کاراکتر امن می‌روند
+    // Rebuild the text with placeholders — edges move to safe character boundaries
     let mut text = String::with_capacity(input.len());
     let mut findings = Vec::new();
     let mut cursor = 0usize;
@@ -239,7 +239,7 @@ pub fn redact(input: &str) -> RedactionReport {
         let start = floor_boundary(input, start);
         let end = ceil_boundary(input, end);
         if start < cursor {
-            continue; // مرزِ پرشده — هم‌پوشانی پس از تنظیم مرز
+            continue; // Occupied boundary — overlap after boundary adjustment
         }
         text.push_str(&input[cursor..start]);
         text.push_str("[REDACTED:");
@@ -272,7 +272,7 @@ fn ceil_boundary(s: &str, mut i: usize) -> usize {
 mod tests {
     use super::*;
 
-    /// کلید خصوصی EVM — دقیقاً ۶۴ هگز پس از 0x.
+    /// EVM private key — exactly 64 hex after 0x.
     #[test]
     fn private_key_hex_is_redacted_without_echo() {
         let key = "0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318";
@@ -283,7 +283,7 @@ mod tests {
         assert!(!r.text.contains("4c0883"), "secret must not echo");
     }
 
-    /// توکن بات تلگرام — الگوی رسمی رقم+دو+بدنهٔ بلند.
+    /// Telegram bot token — the official digits+colon+long-body pattern.
     #[test]
     fn bot_token_is_redacted() {
         let r = redact("token 123456789:AAHdqTcvbCHB1WUqptGffZfjHlXgMbGfRcE broken");
@@ -292,7 +292,7 @@ mod tests {
         assert!(!r.text.contains("AAHdqTcv"));
     }
 
-    /// بلوک PEM — از BEGIN تا انتهای خط END کامل پوشیده می‌شود.
+    /// PEM block — fully covered from BEGIN to the end of the END line.
     #[test]
     fn pem_block_is_redacted() {
         let pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJBAK\n-----END RSA PRIVATE KEY-----";
@@ -301,7 +301,7 @@ mod tests {
         assert!(!r.text.contains("MIIBOg"), "body must go: {}", r.text);
     }
 
-    /// JWT — سه قطعه دور نقطه.
+    /// JWT — three segments around dots.
     #[test]
     fn jwt_is_redacted() {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jGWNHk2ZjBzd3AQA1n9cFSTOvQncf4o";
@@ -310,7 +310,7 @@ mod tests {
         assert!(!r.text.contains("eyJhbGci"));
     }
 
-    /// عبارت حافظهٔ ۱۲واژه‌ای — هشدار رایج کیف‌ها.
+    /// A 12-word seed phrase — the common wallet warning.
     #[test]
     fn twelve_word_mnemonic_is_redacted() {
         let m = "legal winner thank year wave sausage worth useful legal winner thank yellow";
@@ -319,22 +319,22 @@ mod tests {
         assert!(!r.text.contains("sausage"), "seed words must go: {}", r.text);
     }
 
-    /// متن سالم فارسی — بدون یافتهٔ کاذب.
+    /// Healthy Persian text — no false positives.
     #[test]
     fn clean_persian_text_is_untouched() {
-        let r = redact("سلام، تراز کیف من چقدر است؟ محصول بازار را نشان بده.");
+        let r = redact("\u{633}\u{644}\u{627}\u{645}\u{60c} \u{62a}\u{631}\u{627}\u{632} \u{6a9}\u{6cc}\u{641} \u{645}\u{646} \u{686}\u{642}\u{62f}\u{631} \u{627}\u{633}\u{62a}\u{61f} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{627}\u{632}\u{627}\u{631} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}.");
         assert!(r.findings.is_empty(), "no false positives: {:?}", r.findings);
-        assert_eq!(r.text, "سلام، تراز کیف من چقدر است؟ محصول بازار را نشان بده.");
+        assert_eq!(r.text, "\u{633}\u{644}\u{627}\u{645}\u{60c} \u{62a}\u{631}\u{627}\u{632} \u{6a9}\u{6cc}\u{641} \u{645}\u{646} \u{686}\u{642}\u{62f}\u{631} \u{627}\u{633}\u{62a}\u{61f} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{627}\u{632}\u{627}\u{631} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}.");
     }
 
-    /// هگز بلند غیر-EVM — `long_hex`.
+    /// Long non-EVM hex — `long_hex`.
     #[test]
     fn long_hex_session_token_is_redacted() {
         let r = redact("session=5f1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff0");
         assert_eq!(r.findings[0].kind, "long_hex");
     }
 
-    /// اولویت: hex64 داخل بازهٔ `long_hex` — فقط یک یافتهٔ سخت‌گیرانه‌تر.
+    /// Priority: hex64 inside a `long_hex` range — only the stricter finding survives.
     #[test]
     fn overlapping_spans_deduplicate() {
         let key = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

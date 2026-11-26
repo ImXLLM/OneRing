@@ -10,14 +10,14 @@ const _docPage = (icon, title, sub, bodyHtml) => async (view) => {
 
 DGX.pages.settings = async (view) => {
   const rows = [
-    ['user', 'حساب من', DGX.user ? `@${DGX.user.username || DGX.user.id}` : 'لاگین نشده', '#/profile-edit'],
-    ['wallet', 'کیف پول و پرداخت', 'شارژ، برداشت، تراکنش‌ها', '#/transactions'],
-    ['bell', 'اعلان‌ها', 'فعالیت فروش و کیف پول', '#/notifications'],
-    ['shield', 'امنیت', 'ورود فقط از تلگرام — بدون رمز جدا', '#/about'],
-    ['palette', 'ظاهر', 'تم NEON — تنها تم رسمی', '#/settings'],
-    ['info', 'راهنما و پشتیبانی', 'سؤالات پرتکرار', '#/help'],
-    ['doc', 'قوانین و حریم خصوصی', 'متن کامل', '#/terms'],
-    ['rocket', 'نقشه‌ی راه', 'از v1.0 تا v2.0 و بعدش', '#/roadmap'],
+    ['user', '\u062d\u0633\u0627\u0628 \u0645\u0646', DGX.user ? `@${DGX.user.username || DGX.user.id}` : '\u0644\u0627\u06af\u06cc\u0646 \u0646\u0634\u062f\u0647', '#/profile-edit'],
+    ['wallet', '\u06a9\u06cc\u0641 \u067e\u0648\u0644 \u0648 \u067e\u0631\u062f\u0627\u062e\u062a', '\u0634\u0627\u0631\u0698\u060c \u0628\u0631\u062f\u0627\u0634\u062a\u060c \u062a\u0631\u0627\u06a9\u0646\u0634‌\u0647\u0627', '#/transactions'],
+    ['bell', '\u0627\u0639\u0644\u0627\u0646‌\u0647\u0627', '\u0641\u0639\u0627\u0644\u06cc\u062a \u0641\u0631\u0648\u0634 \u0648 \u06a9\u06cc\u0641 \u067e\u0648\u0644', '#/notifications'],
+    ['shield', '\u0627\u0645\u0646\u06cc\u062a', '\u0648\u0631\u0648\u062f \u0641\u0642\u0637 \u0627\u0632 \u062a\u0644\u06af\u0631\u0627\u0645 — \u0628\u062f\u0648\u0646 \u0631\u0645\u0632 \u062c\u062f\u0627', '#/about'],
+    ['palette', '\u0638\u0627\u0647\u0631', '\u062a\u0645 NEON — \u062a\u0646\u0647\u0627 \u062a\u0645 \u0631\u0633\u0645\u06cc', '#/settings'],
+    ['info', '\u0631\u0627\u0647\u0646\u0645\u0627 \u0648 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc', '\u0633\u0624\u0627\u0644\u0627\u062a \u067e\u0631\u062a\u06a9\u0631\u0627\u0631', '#/help'],
+    ['doc', '\u0642\u0648\u0627\u0646\u06cc\u0646 \u0648 \u062d\u0631\u06cc\u0645 \u062e\u0635\u0648\u0635\u06cc', '\u0645\u062a\u0646 \u06a9\u0627\u0645\u0644', '#/terms'],
+    ['rocket', '\u0646\u0642\u0634\u0647‌\u06cc \u0631\u0627\u0647', '\u0627\u0632 v1.0 \u062a\u0627 v2.0 \u0648 \u0628\u0639\u062f\u0634', '#/roadmap'],
   ];
   view.innerHTML = `
     <div class="post" style="padding:6px 0">
@@ -27,75 +27,75 @@ DGX.pages.settings = async (view) => {
           <div style="flex:1"><b>${t}</b><span class="p-sub">${d}</span></div>
           <span class="cc-go">${DGX.icon('chevron-l','ic-s')}</span></a>`).join('')}
     </div>
-    <p class="page-hint" style="text-align:center;margin-top:14px">DropAgentX v${(window.DGX_VERSION || '2.0.0')} «گrand Bazaar» · ۵۰ صفحه</p>`;
+    <p class="page-hint" style="text-align:center;margin-top:14px">DropAgentX v${(window.DGX_VERSION || '2.0.0')} «\u06afrand Bazaar» · \u06f5\u06f0 \u0635\u0641\u062d\u0647</p>`;
 };
 
-DGX.pages.help = _docPage('info', 'راهنما', 'سؤالات پرتکرار', `
-  ${[['چطور محصول بخرم؟', 'کارت محصول → «خرید فوری» → شییت تأیید → دانلود. موجودی کردیت لازم است؛ از صفحه‌ی واریز شارژ کن.'],
-     ['چطور بفروشم؟', 'دکمه‌ی + در نوار پایین → ویزارد ۴ مرحله‌ای (اطلاعات، قیمت، ۳ عکس، انتشار). ادمین تأیید می‌کند و در بازار می‌نشیند.'],
-     ['کردیت چطور شارژ می‌شود؟', 'از بات با /deposit — معادل دلاری همان لحظه نشان داده می‌شود.'],
-     ['فایل خریدم را کجا پیدا کنم؟', 'صفحه‌ی «کتابخانه‌ی من» — همه‌ی دانلودهای همیشگی آنجاست.'],
-     ['دراپ چیست؟', 'موج فروش محدود برای یک محصول — از «ساخت دراپ» راه می‌افتد و در صفحه‌ی دراپ‌ها می‌نشیند.'],
-     ['پشتیبانی؟', 'همان بات: /support — معمولاً زیر چند ساعت پاسخ.']]
+DGX.pages.help = _docPage('info', '\u0631\u0627\u0647\u0646\u0645\u0627', '\u0633\u0624\u0627\u0644\u0627\u062a \u067e\u0631\u062a\u06a9\u0631\u0627\u0631', `
+  ${[['\u0686\u0637\u0648\u0631 \u0645\u062d\u0635\u0648\u0644 \u0628\u062e\u0631\u0645\u061f', '\u06a9\u0627\u0631\u062a \u0645\u062d\u0635\u0648\u0644 → «\u062e\u0631\u06cc\u062f \u0641\u0648\u0631\u06cc» → \u0634\u06cc\u06cc\u062a \u062a\u0623\u06cc\u06cc\u062f → \u062f\u0627\u0646\u0644\u0648\u062f. \u0645\u0648\u062c\u0648\u062f\u06cc \u06a9\u0631\u062f\u06cc\u062a \u0644\u0627\u0632\u0645 \u0627\u0633\u062a\u061b \u0627\u0632 \u0635\u0641\u062d\u0647‌\u06cc \u0648\u0627\u0631\u06cc\u0632 \u0634\u0627\u0631\u0698 \u06a9\u0646.'],
+     ['\u0686\u0637\u0648\u0631 \u0628\u0641\u0631\u0648\u0634\u0645\u061f', '\u062f\u06a9\u0645\u0647‌\u06cc + \u062f\u0631 \u0646\u0648\u0627\u0631 \u067e\u0627\u06cc\u06cc\u0646 → \u0648\u06cc\u0632\u0627\u0631\u062f \u06f4 \u0645\u0631\u062d\u0644\u0647‌\u0627\u06cc (\u0627\u0637\u0644\u0627\u0639\u0627\u062a\u060c \u0642\u06cc\u0645\u062a\u060c \u06f3 \u0639\u06a9\u0633\u060c \u0627\u0646\u062a\u0634\u0627\u0631). \u0627\u062f\u0645\u06cc\u0646 \u062a\u0623\u06cc\u06cc\u062f \u0645\u06cc‌\u06a9\u0646\u062f \u0648 \u062f\u0631 \u0628\u0627\u0632\u0627\u0631 \u0645\u06cc‌\u0646\u0634\u06cc\u0646\u062f.'],
+     ['\u06a9\u0631\u062f\u06cc\u062a \u0686\u0637\u0648\u0631 \u0634\u0627\u0631\u0698 \u0645\u06cc‌\u0634\u0648\u062f\u061f', '\u0627\u0632 \u0628\u0627\u062a \u0628\u0627 /deposit — \u0645\u0639\u0627\u062f\u0644 \u062f\u0644\u0627\u0631\u06cc \u0647\u0645\u0627\u0646 \u0644\u062d\u0638\u0647 \u0646\u0634\u0627\u0646 \u062f\u0627\u062f\u0647 \u0645\u06cc‌\u0634\u0648\u062f.'],
+     ['\u0641\u0627\u06cc\u0644 \u062e\u0631\u06cc\u062f\u0645 \u0631\u0627 \u06a9\u062c\u0627 \u067e\u06cc\u062f\u0627 \u06a9\u0646\u0645\u061f', '\u0635\u0641\u062d\u0647‌\u06cc «\u06a9\u062a\u0627\u0628\u062e\u0627\u0646\u0647‌\u06cc \u0645\u0646» — \u0647\u0645\u0647‌\u06cc \u062f\u0627\u0646\u0644\u0648\u062f\u0647\u0627\u06cc \u0647\u0645\u06cc\u0634\u06af\u06cc \u0622\u0646\u062c\u0627\u0633\u062a.'],
+     ['\u062f\u0631\u0627\u067e \u0686\u06cc\u0633\u062a\u061f', '\u0645\u0648\u062c \u0641\u0631\u0648\u0634 \u0645\u062d\u062f\u0648\u062f \u0628\u0631\u0627\u06cc \u06cc\u06a9 \u0645\u062d\u0635\u0648\u0644 — \u0627\u0632 «\u0633\u0627\u062e\u062a \u062f\u0631\u0627\u067e» \u0631\u0627\u0647 \u0645\u06cc‌\u0627\u0641\u062a\u062f \u0648 \u062f\u0631 \u0635\u0641\u062d\u0647‌\u06cc \u062f\u0631\u0627\u067e‌\u0647\u0627 \u0645\u06cc‌\u0646\u0634\u06cc\u0646\u062f.'],
+     ['\u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc\u061f', '\u0647\u0645\u0627\u0646 \u0628\u0627\u062a: /support — \u0645\u0639\u0645\u0648\u0644\u0627\u064b \u0632\u06cc\u0631 \u0686\u0646\u062f \u0633\u0627\u0639\u062a \u067e\u0627\u0633\u062e.']]
     .map(([q, a]) => `<details class="acc"><summary>${q}</summary><p>${a}</p></details>`).join('')}`);
 
-DGX.pages.about = _docPage('spark', 'درباره‌ی DropAgentX', 'بازار محصولات دیجیتال داخل تلگرام', `
+DGX.pages.about = _docPage('spark', '\u062f\u0631\u0628\u0627\u0631\u0647‌\u06cc DropAgentX', '\u0628\u0627\u0632\u0627\u0631 \u0645\u062d\u0635\u0648\u0644\u0627\u062a \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644 \u062f\u0627\u062e\u0644 \u062a\u0644\u06af\u0631\u0627\u0645', `
   <p style="line-height:2.2;color:var(--dim)">
-    DropAgentX یک <b style="color:var(--txt)">مارکت‌پلیس اجتماعی</b> است که کامل داخل تلگرام زندگی می‌کند:
-    بات برای پرداخت و فروش، و همین وب‌اپ برای گشتن و خرید.<br><br>
-    ${DGX.icon('flame','ic-s')} فید «برای تو» با سیگنال‌های واقعی تو شخصی‌سازی می‌شود<br>
-    ${DGX.icon('shop','ic-s')} هر کاربر می‌تواند فروشگاه بسازد<br>
-    ${DGX.icon('bot','ic-s')} هرمسا، ایجنت هوشمند، همیشه آنلاین است<br>
-    ${DGX.icon('shield','ic-s')} پرداخت با کردیت و تسویه‌ی شفاف
+    DropAgentX \u06cc\u06a9 <b style="color:var(--txt)">\u0645\u0627\u0631\u06a9\u062a‌\u067e\u0644\u06cc\u0633 \u0627\u062c\u062a\u0645\u0627\u0639\u06cc</b> \u0627\u0633\u062a \u06a9\u0647 \u06a9\u0627\u0645\u0644 \u062f\u0627\u062e\u0644 \u062a\u0644\u06af\u0631\u0627\u0645 \u0632\u0646\u062f\u06af\u06cc \u0645\u06cc‌\u06a9\u0646\u062f:
+    \u0628\u0627\u062a \u0628\u0631\u0627\u06cc \u067e\u0631\u062f\u0627\u062e\u062a \u0648 \u0641\u0631\u0648\u0634\u060c \u0648 \u0647\u0645\u06cc\u0646 \u0648\u0628‌\u0627\u067e \u0628\u0631\u0627\u06cc \u06af\u0634\u062a\u0646 \u0648 \u062e\u0631\u06cc\u062f.<br><br>
+    ${DGX.icon('flame','ic-s')} \u0641\u06cc\u062f «\u0628\u0631\u0627\u06cc \u062a\u0648» \u0628\u0627 \u0633\u06cc\u06af\u0646\u0627\u0644‌\u0647\u0627\u06cc \u0648\u0627\u0642\u0639\u06cc \u062a\u0648 \u0634\u062e\u0635\u06cc‌\u0633\u0627\u0632\u06cc \u0645\u06cc‌\u0634\u0648\u062f<br>
+    ${DGX.icon('shop','ic-s')} \u0647\u0631 \u06a9\u0627\u0631\u0628\u0631 \u0645\u06cc‌\u062a\u0648\u0627\u0646\u062f \u0641\u0631\u0648\u0634\u06af\u0627\u0647 \u0628\u0633\u0627\u0632\u062f<br>
+    ${DGX.icon('bot','ic-s')} \u0647\u0631\u0645\u0633\u0627\u060c \u0627\u06cc\u062c\u0646\u062a \u0647\u0648\u0634\u0645\u0646\u062f\u060c \u0647\u0645\u06cc\u0634\u0647 \u0622\u0646\u0644\u0627\u06cc\u0646 \u0627\u0633\u062a<br>
+    ${DGX.icon('shield','ic-s')} \u067e\u0631\u062f\u0627\u062e\u062a \u0628\u0627 \u06a9\u0631\u062f\u06cc\u062a \u0648 \u062a\u0633\u0648\u06cc\u0647‌\u06cc \u0634\u0641\u0627\u0641
   </p>
   <div class="stat-grid" style="margin-top:12px">
-    <div class="stat-card"><span>صفحات اپ</span><b class="num">۵۰</b></div>
-    <div class="stat-card"><span>آیکون SVG</span><b class="num">۵۴</b></div>
-    <div class="stat-card"><span>تم</span><b>NEON</b></div>
-    <div class="stat-card"><span>نسخه</span><b class="num">2.0.0</b></div>
+    <div class="stat-card"><span>\u0635\u0641\u062d\u0627\u062a \u0627\u067e</span><b class="num">\u06f5\u06f0</b></div>
+    <div class="stat-card"><span>\u0622\u06cc\u06a9\u0648\u0646 SVG</span><b class="num">\u06f5\u06f4</b></div>
+    <div class="stat-card"><span>\u062a\u0645</span><b>NEON</b></div>
+    <div class="stat-card"><span>\u0646\u0633\u062e\u0647</span><b class="num">2.0.0</b></div>
   </div>`);
 
-DGX.pages.terms = _docPage('doc', 'قوانین', 'استفاده از DropAgentX', `
-  ${['فقط محصول دیجیتالِ متعلق به خودت؛ فایل دارای کپی‌رایت دیگران ممنوع.',
-     'قیمت‌گذاری با کردیت؛ کارمزد بازار در لحظه‌ی فروش شفاف کسر می‌شود.',
-     'ادمین می‌تواند محصول غیرمجاز را رد یا حذف کند.',
-     'بازگشت وجه در صورت خرابی فایل، تا ۴۸ ساعت.',
-     'اسپم و دستکاری الگوریتم فید (سایکلایک) = مسدودی.',
-     'برداشت از ۱۰۰ کردیت، تا ۲۴ ساعت پردازش.']
-    .map((t, i) => `<div class="sumrow"><span>ماده‌ی ${i + 1}</span><b style="max-width:75%;text-align:start;font-weight:500;line-height:1.9">${t}</b></div>`).join('')}
-  <a class="btn btn-ghost" style="margin-top:8px" href="#/privacy">حریم خصوصی ←</a>`);
+DGX.pages.terms = _docPage('doc', '\u0642\u0648\u0627\u0646\u06cc\u0646', '\u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u0627\u0632 DropAgentX', `
+  ${['\u0641\u0642\u0637 \u0645\u062d\u0635\u0648\u0644 \u062f\u06cc\u062c\u06cc\u062a\u0627\u0644\u0650 \u0645\u062a\u0639\u0644\u0642 \u0628\u0647 \u062e\u0648\u062f\u062a\u061b \u0641\u0627\u06cc\u0644 \u062f\u0627\u0631\u0627\u06cc \u06a9\u067e\u06cc‌\u0631\u0627\u06cc\u062a \u062f\u06cc\u06af\u0631\u0627\u0646 \u0645\u0645\u0646\u0648\u0639.',
+     '\u0642\u06cc\u0645\u062a‌\u06af\u0630\u0627\u0631\u06cc \u0628\u0627 \u06a9\u0631\u062f\u06cc\u062a\u061b \u06a9\u0627\u0631\u0645\u0632\u062f \u0628\u0627\u0632\u0627\u0631 \u062f\u0631 \u0644\u062d\u0638\u0647‌\u06cc \u0641\u0631\u0648\u0634 \u0634\u0641\u0627\u0641 \u06a9\u0633\u0631 \u0645\u06cc‌\u0634\u0648\u062f.',
+     '\u0627\u062f\u0645\u06cc\u0646 \u0645\u06cc‌\u062a\u0648\u0627\u0646\u062f \u0645\u062d\u0635\u0648\u0644 \u063a\u06cc\u0631\u0645\u062c\u0627\u0632 \u0631\u0627 \u0631\u062f \u06cc\u0627 \u062d\u0630\u0641 \u06a9\u0646\u062f.',
+     '\u0628\u0627\u0632\u06af\u0634\u062a \u0648\u062c\u0647 \u062f\u0631 \u0635\u0648\u0631\u062a \u062e\u0631\u0627\u0628\u06cc \u0641\u0627\u06cc\u0644\u060c \u062a\u0627 \u06f4\u06f8 \u0633\u0627\u0639\u062a.',
+     '\u0627\u0633\u067e\u0645 \u0648 \u062f\u0633\u062a\u06a9\u0627\u0631\u06cc \u0627\u0644\u06af\u0648\u0631\u06cc\u062a\u0645 \u0641\u06cc\u062f (\u0633\u0627\u06cc\u06a9\u0644\u0627\u06cc\u06a9) = \u0645\u0633\u062f\u0648\u062f\u06cc.',
+     '\u0628\u0631\u062f\u0627\u0634\u062a \u0627\u0632 \u06f1\u06f0\u06f0 \u06a9\u0631\u062f\u06cc\u062a\u060c \u062a\u0627 \u06f2\u06f4 \u0633\u0627\u0639\u062a \u067e\u0631\u062f\u0627\u0632\u0634.']
+    .map((t, i) => `<div class="sumrow"><span>\u0645\u0627\u062f\u0647‌\u06cc ${i + 1}</span><b style="max-width:75%;text-align:start;font-weight:500;line-height:1.9">${t}</b></div>`).join('')}
+  <a class="btn btn-ghost" style="margin-top:8px" href="#/privacy">\u062d\u0631\u06cc\u0645 \u062e\u0635\u0648\u0635\u06cc ←</a>`);
 
-DGX.pages.privacy = _docPage('shield', 'حریم خصوصی', 'داده‌ی حداقلی', `
+DGX.pages.privacy = _docPage('shield', '\u062d\u0631\u06cc\u0645 \u062e\u0635\u0648\u0635\u06cc', '\u062f\u0627\u062f\u0647‌\u06cc \u062d\u062f\u0627\u0642\u0644\u06cc', `
   <p style="line-height:2.2;color:var(--dim)">
-    فقط چیزی که برای کار لازم است ذخیره می‌شود: شناسه‌ی تلگرام، نام، تراکنش‌ها و فایل‌های خودت.
-    نه شماره‌ی تلفن می‌خواهیم، نه ایمیل، نه کوکی ردیاب.<br><br>
-    پسندها و ذخیره‌ها روی <b style="color:var(--txt)">دستگاه خودت</b> نگه‌داری می‌شوند (localStorage) و با پاک‌کردن مرورگر حذف می‌شوند.
+    \u0641\u0642\u0637 \u0686\u06cc\u0632\u06cc \u06a9\u0647 \u0628\u0631\u0627\u06cc \u06a9\u0627\u0631 \u0644\u0627\u0632\u0645 \u0627\u0633\u062a \u0630\u062e\u06cc\u0631\u0647 \u0645\u06cc‌\u0634\u0648\u062f: \u0634\u0646\u0627\u0633\u0647‌\u06cc \u062a\u0644\u06af\u0631\u0627\u0645\u060c \u0646\u0627\u0645\u060c \u062a\u0631\u0627\u06a9\u0646\u0634‌\u0647\u0627 \u0648 \u0641\u0627\u06cc\u0644‌\u0647\u0627\u06cc \u062e\u0648\u062f\u062a.
+    \u0646\u0647 \u0634\u0645\u0627\u0631\u0647‌\u06cc \u062a\u0644\u0641\u0646 \u0645\u06cc‌\u062e\u0648\u0627\u0647\u06cc\u0645\u060c \u0646\u0647 \u0627\u06cc\u0645\u06cc\u0644\u060c \u0646\u0647 \u06a9\u0648\u06a9\u06cc \u0631\u062f\u06cc\u0627\u0628.<br><br>
+    \u067e\u0633\u0646\u062f\u0647\u0627 \u0648 \u0630\u062e\u06cc\u0631\u0647‌\u0647\u0627 \u0631\u0648\u06cc <b style="color:var(--txt)">\u062f\u0633\u062a\u06af\u0627\u0647 \u062e\u0648\u062f\u062a</b> \u0646\u06af\u0647‌\u062f\u0627\u0631\u06cc \u0645\u06cc‌\u0634\u0648\u0646\u062f (localStorage) \u0648 \u0628\u0627 \u067e\u0627\u06a9‌\u06a9\u0631\u062f\u0646 \u0645\u0631\u0648\u0631\u06af\u0631 \u062d\u0630\u0641 \u0645\u06cc‌\u0634\u0648\u0646\u062f.
   </p>`);
 
-DGX.pages.roadmap = _docPage('rocket', 'نقشه‌ی راه', 'از ۱.۰ تا ۲.۰', `
-  ${[['v1.0', 'پلتفرم کامل: بات، کیف، تسک، پنل ادمین'],
-     ['v1.1', 'موبایل‌فرست: UI نقش‌محور، اسکلتون، پول‌ریفرش'],
-     ['v1.2.1', 'لایه‌ی اینستاگرام: فید «برای تو» شخصی، Share-to-DM'],
-     ['v1.2.1+', '۵۰ آیکون SVG — خداحافظ اموجی'],
-     ['v1.3.0', 'تم NEON + شییت تأیید خرید + اورلی موفقیت'],
-     ['v2.0.0', 'گرند بازار: ۵۰ صفحه، ریلز، استوری، دراپ، داشبورد فروشنده']]
+DGX.pages.roadmap = _docPage('rocket', '\u0646\u0642\u0634\u0647‌\u06cc \u0631\u0627\u0647', '\u0627\u0632 \u06f1.\u06f0 \u062a\u0627 \u06f2.\u06f0', `
+  ${[['v1.0', '\u067e\u0644\u062a\u0641\u0631\u0645 \u06a9\u0627\u0645\u0644: \u0628\u0627\u062a\u060c \u06a9\u06cc\u0641\u060c \u062a\u0633\u06a9\u060c \u067e\u0646\u0644 \u0627\u062f\u0645\u06cc\u0646'],
+     ['v1.1', '\u0645\u0648\u0628\u0627\u06cc\u0644‌\u0641\u0631\u0633\u062a: UI \u0646\u0642\u0634‌\u0645\u062d\u0648\u0631\u060c \u0627\u0633\u06a9\u0644\u062a\u0648\u0646\u060c \u067e\u0648\u0644‌\u0631\u06cc\u0641\u0631\u0634'],
+     ['v1.2.1', '\u0644\u0627\u06cc\u0647‌\u06cc \u0627\u06cc\u0646\u0633\u062a\u0627\u06af\u0631\u0627\u0645: \u0641\u06cc\u062f «\u0628\u0631\u0627\u06cc \u062a\u0648» \u0634\u062e\u0635\u06cc\u060c Share-to-DM'],
+     ['v1.2.1+', '\u06f5\u06f0 \u0622\u06cc\u06a9\u0648\u0646 SVG — \u062e\u062f\u0627\u062d\u0627\u0641\u0638 \u0627\u0645\u0648\u062c\u06cc'],
+     ['v1.3.0', '\u062a\u0645 NEON + \u0634\u06cc\u06cc\u062a \u062a\u0623\u06cc\u06cc\u062f \u062e\u0631\u06cc\u062f + \u0627\u0648\u0631\u0644\u06cc \u0645\u0648\u0641\u0642\u06cc\u062a'],
+     ['v2.0.0', '\u06af\u0631\u0646\u062f \u0628\u0627\u0632\u0627\u0631: \u06f5\u06f0 \u0635\u0641\u062d\u0647\u060c \u0631\u06cc\u0644\u0632\u060c \u0627\u0633\u062a\u0648\u0631\u06cc\u060c \u062f\u0631\u0627\u067e\u060c \u062f\u0627\u0634\u0628\u0648\u0631\u062f \u0641\u0631\u0648\u0634\u0646\u062f\u0647']]
     .map(([v, t]) => `<div class="notif-row"><span class="rank-badge">${v.split('.')[0] === '1' ? '1' : v[1]}</span>
       <div style="flex:1"><b>${v}</b><span class="p-sub" style="display:block">${t}</span></div>
-      ${v === 'v2.0.0' ? '<span class="pill p-live">همین حالا</span>' : '<span class="p-sub">✓</span>'}</div>`).join('')}
-  <p class="page-hint" style="margin-top:10px">بعدی: استوری نوتیف‌کرافت، treasury خودکار، موتور اسکرو</p>`);
+      ${v === 'v2.0.0' ? '<span class="pill p-live">\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627</span>' : '<span class="p-sub">✓</span>'}</div>`).join('')}
+  <p class="page-hint" style="margin-top:10px">\u0628\u0639\u062f\u06cc: \u0627\u0633\u062a\u0648\u0631\u06cc \u0646\u0648\u062a\u06cc\u0641‌\u06a9\u0631\u0627\u0641\u062a\u060c treasury \u062e\u0648\u062f\u06a9\u0627\u0631\u060c \u0645\u0648\u062a\u0648\u0631 \u0627\u0633\u06a9\u0631\u0648</p>`);
 
 DGX.pages.bot = async (view) => {
   const cmds = [
-    ['/start', 'شروع + منوی کامل + ۵۰ کردیت خوش‌آمدگانی'],
-    ['/deposit N', 'شارژ N کردیت'],
-    ['/withdraw', 'درخواست برداشت'],
-    ['/profile', 'تغییر نام و بایو'],
-    ['/drop …', 'ثبت دراپ ویژه'],
-    ['/referral', 'کد دعوت و پاداش‌ها'],
-    ['/support', 'پشتیبانی انسانی'],
+    ['/start', '\u0634\u0631\u0648\u0639 + \u0645\u0646\u0648\u06cc \u06a9\u0627\u0645\u0644 + \u06f5\u06f0 \u06a9\u0631\u062f\u06cc\u062a \u062e\u0648\u0634‌\u0622\u0645\u062f\u06af\u0627\u0646\u06cc'],
+    ['/deposit N', '\u0634\u0627\u0631\u0698 N \u06a9\u0631\u062f\u06cc\u062a'],
+    ['/withdraw', '\u062f\u0631\u062e\u0648\u0627\u0633\u062a \u0628\u0631\u062f\u0627\u0634\u062a'],
+    ['/profile', '\u062a\u063a\u06cc\u06cc\u0631 \u0646\u0627\u0645 \u0648 \u0628\u0627\u06cc\u0648'],
+    ['/drop …', '\u062b\u0628\u062a \u062f\u0631\u0627\u067e \u0648\u06cc\u0698\u0647'],
+    ['/referral', '\u06a9\u062f \u062f\u0639\u0648\u062a \u0648 \u067e\u0627\u062f\u0627\u0634‌\u0647\u0627'],
+    ['/support', '\u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u0627\u0646\u0633\u0627\u0646\u06cc'],
   ];
   view.innerHTML = `
-    <p class="page-hint">${DGX.icon('send','ic-s')} بات، مغز مالی DropAgentX است — همه‌ی پرداخت‌ها آنجا</p>
+    <p class="page-hint">${DGX.icon('send','ic-s')} \u0628\u0627\u062a\u060c \u0645\u063a\u0632 \u0645\u0627\u0644\u06cc DropAgentX \u0627\u0633\u062a — \u0647\u0645\u0647‌\u06cc \u067e\u0631\u062f\u0627\u062e\u062a‌\u0647\u0627 \u0622\u0646\u062c\u0627</p>
     ${cmds.map(([c, d]) => `
       <div class="notif-row" onclick="DGX.openBot('${c.split(' ')[0]}')">
         <span class="nr-ic">${DGX.icon('bot')}</span>
@@ -107,23 +107,23 @@ DGX.pages.bot = async (view) => {
 DGX.pages.status = async (view) => {
   view.innerHTML = DGX.skelCards(1);
   const checks = [];
-  try { const h = await DGX.api('/healthz'); checks.push(['سرور اپ', h.version || '?', true]); }
-  catch (e) { checks.push(['سرور اپ', 'بی‌پاسخ', false]); }
+  try { const h = await DGX.api('/healthz'); checks.push(['\u0633\u0631\u0648\u0631 \u0627\u067e', h.version || '?', true]); }
+  catch (e) { checks.push(['\u0633\u0631\u0648\u0631 \u0627\u067e', '\u0628\u06cc‌\u067e\u0627\u0633\u062e', false]); }
   try { const i = await DGX.api('/api/pub/info');
-    checks.push(['بات', i.bot_username || 'DropAgentXBot', true]);
-    checks.push(['دسته‌های فعال', String((i.categories || []).length), true]); }
-  catch (_) { checks.push(['اطلاعات عمومی', 'خطا', false]); }
-  try { await DGX.api('/api/app/categories'); checks.push(['API دسته‌ها', 'سالم', true]); }
-  catch (_) { checks.push(['API دسته‌ها', 'خطا', false]); }
-  try { await DGX.api('/api/app/trending?limit=3'); checks.push(['API ترندها', 'سالم', true]); }
-  catch (_) { checks.push(['API ترندها', 'خطا', false]); }
+    checks.push(['\u0628\u0627\u062a', i.bot_username || 'DropAgentXBot', true]);
+    checks.push(['\u062f\u0633\u062a\u0647‌\u0647\u0627\u06cc \u0641\u0639\u0627\u0644', String((i.categories || []).length), true]); }
+  catch (_) { checks.push(['\u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0639\u0645\u0648\u0645\u06cc', '\u062e\u0637\u0627', false]); }
+  try { await DGX.api('/api/app/categories'); checks.push(['API \u062f\u0633\u062a\u0647‌\u0647\u0627', '\u0633\u0627\u0644\u0645', true]); }
+  catch (_) { checks.push(['API \u062f\u0633\u062a\u0647‌\u0647\u0627', '\u062e\u0637\u0627', false]); }
+  try { await DGX.api('/api/app/trending?limit=3'); checks.push(['API \u062a\u0631\u0646\u062f\u0647\u0627', '\u0633\u0627\u0644\u0645', true]); }
+  catch (_) { checks.push(['API \u062a\u0631\u0646\u062f\u0647\u0627', '\u062e\u0637\u0627', false]); }
   view.innerHTML = `
-    <p class="page-hint">${DGX.icon('live','ic-s')} وضعیت زنده‌ی سرویس‌ها — همین لحجه چک شد</p>
+    <p class="page-hint">${DGX.icon('live','ic-s')} \u0648\u0636\u0639\u06cc\u062a \u0632\u0646\u062f\u0647‌\u06cc \u0633\u0631\u0648\u06cc\u0633‌\u0647\u0627 — \u0647\u0645\u06cc\u0646 \u0644\u062d\u062c\u0647 \u0686\u06a9 \u0634\u062f</p>
     ${checks.map(([t, v, ok]) => `
       <div class="notif-row">
         <span class="nr-ic" style="${ok ? '' : 'color:var(--red)'}">${DGX.icon(ok ? 'check' : 'info')}</span>
         <div style="flex:1"><b>${t}</b></div>
         <b style="color:${ok ? 'var(--em)' : 'var(--red)'}">${DGX.esc(String(v))}</b>
       </div>`).join('')}
-    <p class="page-hint" style="margin-top:10px;text-align:center">آپتایم رسمی روی UptimeRobot /healthz</p>`;
+    <p class="page-hint" style="margin-top:10px;text-align:center">\u0622\u067e\u062a\u0627\u06cc\u0645 \u0631\u0633\u0645\u06cc \u0631\u0648\u06cc UptimeRobot /healthz</p>`;
 };

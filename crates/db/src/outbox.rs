@@ -1,18 +1,18 @@
-//! Outbox — پل رویدادهای دامنه به مصرف‌کننده‌های بعدی (بات فاز ۵).
+//! Outbox — the bridge from domain events to later consumers (the phase 5 bot).
 //!
-//! الگوی transactional outbox: رویدادها در همان تراکنشِ تغییر وضعیت مالی
-//! درج می‌شوند — «اتفاق افتاده اما اعلام‌نشده» غیرممکن است. دیسپچ بعداً با
-//! خواندن `published = 0` و علامت‌زدن انجام می‌شود.
+//! The transactional outbox pattern: events are inserted in the same transaction as the
+//! money-state change — "happened but unannounced" is impossible. Dispatch happens later by
+//! reading `published = 0` and marking them done.
 
 use crate::error::DbResult;
 use crate::store::{insert_audit, insert_outbox_events, OutboxRow};
 use kian_domain::DomainEvent;
 use sqlx::Row;
 
-/// درج رویدادها در outbox — داخل تراکنش جاری فراخوانی می‌شود.
+/// Insert events into the outbox — called inside the current transaction.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub(crate) async fn enqueue(
     exec: &mut sqlx::SqliteConnection,
     events: &[DomainEvent],
@@ -20,10 +20,10 @@ pub(crate) async fn enqueue(
     insert_outbox_events(exec, events).await
 }
 
-/// یک ردیف audit — داخل تراکنش جاری فراخوانی می‌شود.
+/// One audit row — called inside the current transaction.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub(crate) async fn audit(
     exec: &mut sqlx::SqliteConnection,
     actor: &str,
@@ -35,10 +35,10 @@ pub(crate) async fn audit(
 }
 
 impl crate::store::V3Store {
-    /// رویدادهای منتظرِ ارسال به ترتیب درج (rowid — ترتیب واقعی تولید).
+    /// Events awaiting dispatch in insertion order (rowid — the real production order).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn pending_outbox(&self, limit: i64) -> DbResult<Vec<OutboxRow>> {
         let mut out = Vec::new();
         for r in sqlx::query(
@@ -60,10 +60,10 @@ impl crate::store::V3Store {
         Ok(out)
     }
 
-    /// علامت‌زدن رویدادها به‌عنوان ارسال‌شده — تعداد ردیف‌های تغییر یافته.
+    /// Mark events as dispatched — returns the number of changed rows.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn mark_outbox_published(&self, ids: &[String]) -> DbResult<u64> {
         let mut n = 0;
         let mut tx = self.pool_ref().begin().await?;
@@ -78,10 +78,10 @@ impl crate::store::V3Store {
         Ok(n)
     }
 
-    /// ثبت audit مستقل (خارج از `apply`) — مثل `legacy.adjustment`.
+    /// Standalone audit record (outside `apply`) — e.g. `legacy.adjustment`.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn audit(
         &self,
         actor: &str,

@@ -1,20 +1,20 @@
--- 0006_legacy_migration — ستون‌های هویت لگاسی dropagent + جدول نسبِ رفرال کمپین ۳۰روزه
+-- 0006_legacy_migration — dropagent legacy identity columns + the 30-day campaign referral lineage table
 --
--- زمینه: مهاجرت جامعهٔ زندهٔ dropagent (۴۶۶ کاربر، ۲۴۷ لینک رفرال) به KIAN v2.
--- قواعد همان 0002/0005:
---  * ALTERها ستون nullable با بدون مقدار پیش‌فرض افزوده می‌شوند تا ردیف‌های
---    قدیمی دست‌نخورده بمانند (در SQLite ADD COLUMN با NULL پیش‌فرض امن است).
---  * جدول‌ها IF NOT EXISTS — idempotent روی هر دیتابیسی.
---  * هویت «پول» نمی‌داند — تراز فقط از Posting مشتق می‌شود (ADR-003).
+-- Context: migrating the live dropagent community (466 users, 247 referral links) to KIAN v2.
+-- Rules are the same as 0002/0005:
+--  * ALTERs add nullable columns without a default so that old rows stay
+--    untouched (in SQLite, ADD COLUMN with a NULL default is safe).
+--  * tables are IF NOT EXISTS — idempotent on any database.
+--  * identity never knows about "money" — the balance is derived only from Posting (ADR-003).
 
--- نام کوچک پروفایل لگاسی (first_name تلگرام) — فقط نمایشی
+-- legacy profile first name (Telegram first_name) — display only
 ALTER TABLE "User" ADD COLUMN "firstName" TEXT;
 
--- معرف مستقیم شهروند — شناسهٔ حساب شهروندی معرف (`citizen:{tg}`) یا NULL
+-- the citizen's direct referrer — the referrer's citizen account id (`citizen:{tg}`) or NULL
 ALTER TABLE "User" ADD COLUMN "referredBy" TEXT;
 
--- آرشیو کامل و قطعی ۲۴۷ لینک رفرال کمپین ۳۰روزه X — هر ردیف یک لینک لگاسی
--- (tgUserId = شناسهٔ عددی تلگرام کاربرِ معرف‌شده به‌صورت رشته؛ هرگز float)
+-- complete, deterministic archive of the 247 referral links of the 30-day X campaign — one legacy link per row
+-- (tgUserId = the referred user's numeric Telegram id as a string; never float)
 CREATE TABLE IF NOT EXISTS "ReferralLineage" (
     "tgUserId" TEXT NOT NULL PRIMARY KEY,
     "referredByTgId" TEXT NOT NULL,

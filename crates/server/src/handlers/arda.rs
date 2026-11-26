@@ -1,13 +1,13 @@
-//! هندلرهای ARDA — بومی‌سازیِ سیاره‌ایِ ۲۴ساعته روی معماری اصیل `Fishkal`
+//! ARDA handlers — planetary 24-hour localization on the original `Fishkal` architecture.
 //! (Wave 4 — Step 1/4).
 //!
-//! دو مسیر additive:
-//! - `GET /arda/flags` — کاتالوگِ عمومیِ ۲۰ زبانِ سیاره‌ای با SVG وکتورِ
-//!   حفظ‌شدهٔ حرف‌به‌حرف و نشانِ دایره‌ای (شفافیت مادهٔ ۶؛ بدون نشست)؛
-//! - `POST /arda/localize-now` — اجرای زندهٔ ARDA روی HTML خام یا شناسهٔ
-//!   محصول: تشخیصِ مبدأ، تولیدِ باندل، تزریقِ ایدمپوتنت، نوارِ پرچمِ
-//!   دایره‌ای، گزارشِ توازنِ مکانیکی و مُهرِ محتوا؛ اگر شناسهٔ محصول داده
-//!   شود، فقط خودِ سازنده مجاز به مُهر است.
+//! Two additive routes:
+//! - `GET /arda/flags` — the public catalog of the 20 planetary languages with verbatim vector
+//!   SVGs and circular badges (Article 6 transparency; no session);
+//! - `POST /arda/localize-now` — live ARDA run on raw HTML or a product
+//!   id: origin detection, bundle generation, idempotent injection, the circular flag
+//!   strip, the mechanical-balance report and the content seal; if a product id is given,
+//!   only the product’s own builder may seal it.
 
 use std::sync::Arc;
 
@@ -32,20 +32,20 @@ use crate::handlers::parse_body;
 use crate::middleware::require_session;
 use crate::state::AppState;
 
-/// خوانشِ JSON زبان‌های پشتیبانی‌شده — خرابی → نوارِ پیش‌فرضِ مهاجرت 0008.
+/// Read the supported-languages JSON — on failure → the migration 0008 default strip.
 #[must_use]
 pub fn parse_supported_locales(json: &str) -> Vec<String> {
     serde_json::from_str::<Vec<String>>(json)
         .unwrap_or_else(|_| vec!["en".to_owned(), "fa".to_owned(), "ar".to_owned()])
 }
 
-/// `GET /arda/flags` — کاتالوگِ کاملِ ۲۰ زبانِ سیاره‌ای (عمومی).
+/// `GET /arda/flags` — the full 20-language planetary catalog (public).
 ///
-/// SVGها verbatim از فیشکال (L2690–2704) و نشانِ دایره‌ایِ هر زبان آمادهٔ
-/// رندر روی کارتِ بازار و سوییچرِ درون‌برنامه‌ای.
+/// SVGs verbatim from Fishkal (L2690–2704) and each language’s circular badge, ready to
+/// render on the market card and the in-app switcher.
 ///
 /// # Errors
-/// خطای SQL برای شمارشِ پرچم‌ها رخ نمی‌دهد — این هندلر قطعی است.
+/// No SQL error can occur while counting flags — this handler is deterministic.
 pub async fn flags_catalog() -> Json<ArdaFlagsCatalogResponse> {
     let locales = kian_hermes::arda_fishkal_engine::FISHKAL_VECTOR_FLAGS
         .iter()
@@ -69,17 +69,17 @@ pub async fn flags_catalog() -> Json<ArdaFlagsCatalogResponse> {
     })
 }
 
-/// `POST /arda/localize-now` — اجرای زندهٔ ARDA روی HTML خام یا محصول.
+/// `POST /arda/localize-now` — live ARDA run on raw HTML or a product.
 ///
-/// ورودی: `html` یا `product_id` (هر دو → HTML خام اولویت دارد؛ هیچ‌کدام →
-/// ۴۰۰). مبدأ: `origin_locale` معتبر یا تشخیصِ قطعیِ اسکریپت. هدف: معتبرِ
-/// `target_locales` یا هر ۲۰ زبان منهای مبدأ. اگر محصول داده شود، فقط
-/// فروشنده مجاز است و زبان‌ها + مُهرِ زمان مُهر می‌شوند (مهارت فورج‌شدهٔ
-/// موجود `COALESCE` محفوظ می‌ماند). ۲۰۰.
+/// Input: `html` or `product_id` (both → raw HTML takes priority; neither →
+/// 400). Origin: a valid `origin_locale` or deterministic script detection. Target: valid
+/// `target_locales` or all 20 languages minus the origin. If a product is given, only
+/// the seller is authorized, and languages + timestamp are sealed (the forged
+/// `COALESCE` skill is preserved). 200.
 ///
 /// # Errors
-/// ۴۰۱ نشست غایب؛ ۴۰۰ بدنهٔ نامعتبر/ورودی غایب/HTML کلان؛ ۴۰۳ غیرِ فروشنده؛
-/// ۴۰۴ محصول ناموجود.
+/// 401 missing session; 400 invalid body/missing input/oversized HTML; 403 non-seller;
+/// 404 missing product.
 #[allow(clippy::too_many_lines)]
 pub async fn localize_now(
     State(state): State<Arc<AppState>>,
@@ -115,7 +115,7 @@ pub async fn localize_now(
         return Err(kian_contracts::HttpFailure::invalid_request(1).into());
     };
 
-    // مبدأ — داده‌شدهٔ معتبر یا تشخیصِ قطعی.
+    // origin — a valid provided value or deterministic detection.
     let origin = req
         .origin_locale
         .as_deref()
@@ -123,7 +123,7 @@ pub async fn localize_now(
         .filter(|c| is_planetary_locale(c))
         .map_or_else(|| detect_origin_locale(&html).to_owned(), str::to_owned);
 
-    // هدف‌ها — معتبرها به ترتیبِ ورودی، یا همهٔ ۲۰ منهای مبدأ.
+    // targets — the valid ones in input order, or all 20 minus the origin.
     let targets: Vec<String> = match req.target_locales.as_deref() {
         Some(list) if !list.is_empty() => list
             .iter()
@@ -143,7 +143,7 @@ pub async fn localize_now(
     let strip_codes: Vec<&str> = bundle.locales.iter().map(String::as_str).collect();
     let strip = render_product_flag_strip(&origin, &strip_codes[1..]).unwrap_or_default();
 
-    // توازنِ مکانیکیِ کاتالوگِ یکپارچهٔ ۶-دامنه‌ای — گیتِ ۱۰۰٪.
+    // mechanical balance of the unified 6-domain catalog — a 100% gate.
     let parity = validate_catalog_parity(&kian_hermes::arda_fishkal_engine::default_planetary_catalog());
     let parity_view = ArdaParityReportView {
         base_locale: parity.base_locale.clone(),
@@ -194,7 +194,7 @@ pub async fn localize_now(
     }))
 }
 
-/// شمارشِ زبان‌های سیاره‌ای — گیتِ آزمونِ هندلر.
+/// Count of planetary languages — the handler test gate.
 #[must_use]
 pub fn planetary_locale_count() -> usize {
     PLANETARY_LOCALE_COUNT
@@ -232,7 +232,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// احراز کاربر تلگرام و گرفتن توکن.
+    /// Authenticate the Telegram user and obtain a token.
     async fn auth(app: &axum::Router, tg_id: &str, username: &str) -> String {
         let init_data = make_test_init_data(BOT, tg_id, Some(username));
         let res = app
@@ -287,16 +287,16 @@ mod tests {
         let locales = body["locales"].as_array().unwrap();
         assert_eq!(locales.len(), 20);
         let fa = locales.iter().find(|l| l["code"] == "fa").unwrap();
-        assert_eq!(fa["strCode"], "فا");
-        assert_eq!(fa["nativeName"], "فارسی");
+        assert_eq!(fa["strCode"], "\u{641}\u{627}");
+        assert_eq!(fa["nativeName"], "\u{641}\u{627}\u{631}\u{633}\u{6cc}");
         assert_eq!(fa["dir"], "rtl");
         assert_eq!(fa["intlLocale"], "fa-IR");
-        // SVG verbatim فیشکال — پرچم ایران با سبز `#239f40`.
+        // Fishkal verbatim SVG — the Iran flag with green `#239f40`.
         assert!(fa["svg"].as_str().unwrap().contains("viewBox=\"0 0 20 14\""));
         assert!(fa["svg"].as_str().unwrap().contains("#239f40"));
         assert!(fa["circularBadgeHtml"].as_str().unwrap().contains("border-radius:50%"));
         let ur = locales.iter().find(|l| l["code"] == "ur").unwrap();
-        assert_eq!(ur["strCode"], "اردو");
+        assert_eq!(ur["strCode"], "\u{627}\u{631}\u{62f}\u{648}");
         let en = locales.iter().find(|l| l["code"] == "en").unwrap();
         assert_eq!(en["dir"], "ltr");
     }
@@ -341,7 +341,7 @@ mod tests {
     async fn localize_now_injects_fishkal_runtime_into_raw_html() {
         let app = app().await;
         let token = auth(&app, "777002", "arda_raw").await;
-        let html = "<!DOCTYPE html><html><head><title>محاسبه‌گر سود بانکی</title></head><body><p>گزارش ماهانه</p></body></html>";
+        let html = "<!DOCTYPE html><html><head><title>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{628}\u{627}\u{646}\u{6a9}\u{6cc}</title></head><body><p>\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</p></body></html>";
         let res = app
             .clone()
             .oneshot(
@@ -360,10 +360,10 @@ mod tests {
         assert_eq!(body["injected"], true);
         assert_eq!(body["productId"], serde_json::Value::Null);
         assert!(body["lastLocalizedAt"].is_null());
-        // هر ۲۰ زبان منهای مبدأ در باندل فعال شده‌اند.
+        // all 20 languages minus the origin are enabled in the bundle.
         assert_eq!(body["supportedLocales"].as_array().unwrap().len(), 20);
         let localized = body["localizedHtml"].as_str().unwrap();
-        // تزریقِ ایدمپوتنت پیش از `</head>` — باندلِ کاملِ فیشکالِ درمان‌شده.
+        // idempotent injection before `</head>` — the full treated Fishkal bundle.
         assert!(localized.contains("data-arda-runtime=\"on\""));
         assert!(localized.contains("root.lang=l; root.dir=DIR[l]; root.dataset.lang=l;"));
         assert!(localized.contains(":root[data-lang=\"fa\"]"));
@@ -373,7 +373,7 @@ mod tests {
         let head_idx = localized.to_lowercase().rfind("</head>").unwrap();
         let style_idx = localized.find("<style").unwrap();
         assert!(style_idx < head_idx);
-        // نوارِ پرچمِ دایره‌ای — مبدأ + ۱۹ ترجمه.
+        // circular flag strip — origin + 19 translations.
         assert_eq!(
             body["circularFlagStripHtml"]
                 .as_str()
@@ -382,11 +382,11 @@ mod tests {
                 .count(),
             20
         );
-        // توازنِ مکانیکیِ کاتالوگ — ۱۰۰٪.
+        // catalog mechanical balance — 100%.
         assert_eq!(body["parityReport"]["fullyParity"], true);
         assert_eq!(body["parityReport"]["coverageScore"], serde_json::json!(1.0));
         assert_eq!(body["parityReport"]["totalKeys"], 7);
-        // مهرِ sha256 — ۶۴ رقمِ هگز.
+        // sha256 seal — 64 hex digits.
         let sha = body["contentSha256"].as_str().unwrap();
         assert_eq!(sha.len(), 64);
         assert!(sha.chars().all(|c| c.is_ascii_hexdigit()));
@@ -397,7 +397,7 @@ mod tests {
         let app = app().await;
         let seller = auth(&app, "777003", "arda_seller").await;
         let stranger = auth(&app, "777004", "arda_stranger").await;
-        // محصولِ فارسیِ سازنده.
+        // the builder’s Persian product.
         let res = app
             .clone()
             .oneshot(
@@ -407,10 +407,10 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "حسابدار — محاسبه‌گر سود کریپتو",
-                            "description": "ابزار تعاملی تک‌صفحه‌ای فارسی",
+                            "title": "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
+                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}",
                             "priceDin": 2_000,
-                            "previewHtml": "<html lang=\"fa\" dir=\"rtl\"><body><h1>محاسبه‌گر سود</h1><p>گزارش مالی ماهانه</p></body></html>"
+                            "previewHtml": "<html lang=\"fa\" dir=\"rtl\"><body><h1>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f}</h1><p>\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{644}\u{6cc} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</p></body></html>"
                         })
                         .to_string(),
                     ))
@@ -421,7 +421,7 @@ mod tests {
         assert_eq!(res.status(), 201);
         let pid = json_body(res).await["id"].as_str().unwrap().to_owned();
 
-        // غریبه → ۴۰۳.
+        // a stranger → 403.
         let res = app
             .clone()
             .oneshot(
@@ -436,7 +436,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 403);
 
-        // خودِ فروشنده → ۲۰۰ با مُهرِ ماندگار.
+        // the seller themselves → 200 with a persistent seal.
         let res = app
             .clone()
             .oneshot(

@@ -1,48 +1,48 @@
-//! پورت خالص-راستِ پایه‌های `ccxt/ccxt` — Wave 6 (Step 3/4).
+//! Pure-Rust port of the `ccxt/ccxt` bases — Wave 6 (Step 3/4).
 //!
-//! سه کور کانونیک + ماتریس بازارِ بی‌کلید، همه بدون float روی پول و قیمت:
-//!  * [`Precise`] + [`decimal_to_precision`] — عدد دهدهی مقیاس‌دار `i128`
-//!    (`ts/src/base/Precise.ts`) با **درمانِ قضاییِ #1**: `TICK_SIZE` در
-//!    حالتِ `Round` هم صددرصد با تقسیم/باقیماندهٔ صحیحِ `Precise` انجام
-//!    می‌شود — فال‌بکِ `f64 %` سیسی‌اکس‌تا (`number.ts:7–243`) کور می‌شود و
-//!    ریزشِ شناور روی تیکِ `0.0001`/`0.05` از ساختار حذف می‌گردد.
-//!  * [`CcxtThrottler`] — دو الگوریتمِ `throttle.ts`: سطلِ سوراخ و پنجرهٔ
-//!    لغزانِ `VecDeque` با هزینهٔ $O(1)$ (بدون shift آرایه).
-//!  * [`OrderBook`]/[`OrderBookSide`] — کتابِ L2 مرتب‌سازی‌شده با جست‌وجوی
-//!    دودویی + **درمانِ قضاییِ #2**: گپِ ترتیبِ nonce (`incoming > nonce+1`)
-//!    دیگر بی‌صدا قبول نمی‌شود — `SequenceGapDetected` بدونِ دست‌زدن به
-//!    لِیول‌ها برمی‌گردد تا resync فوریِ REST snapshot علامت بخورد.
-//!  * [`SafeExtractor`] + [`omit_zero`] — استخراجِ دفاعیِ فیلدهای صرافی
-//!    (`type.ts`) و [`CcxtErrorKind`] — رده‌بندیِ خطا با `is_retryable`
-//!    و backoff نمایی (`errors.ts`).
-//!  * [`keyless_public_market_matrix`] — ۸ مکانِ عمودیِ صفر-کلیدِ
-//!    صفر-KYC (تأییدشدهٔ Arena) با مسیرها و وزن‌های واقعی.
+//! Three canonical cores + the keyless market matrix, all with no float on money or price:
+//!  * [`Precise`] + [`decimal_to_precision`] — the scaled `i128` decimal number
+//!    (`ts/src/base/Precise.ts`) with **forensic fix #1**: `TICK_SIZE` in
+//!    `Round` mode is also done 100% with `Precise` integer division/remainder —
+//!    the ccxt `f64 %` fallback (`number.ts:7–243`) is bypassed and
+//!    float drift on the `0.0001`/`0.05` ticks is removed from the structure.
+//!  * [`CcxtThrottler`] — the two `throttle.ts` algorithms: the leaky bucket and the
+//!    `VecDeque` sliding window at $O(1)$ cost (no array shift).
+//!  * [`OrderBook`]/[`OrderBookSide`] — a sorted L2 book with binary search +
+//!    **forensic fix #2**: the nonce order gap (`incoming > nonce+1`) is
+//!    no longer silently accepted — `SequenceGapDetected` comes back without
+//!    touching the levels, to signal an immediate REST snapshot resync.
+//!  * [`SafeExtractor`] + [`omit_zero`] — defensive extraction of exchange fields
+//!    (`type.ts`), and [`CcxtErrorKind`] — error classification with `is_retryable`
+//!    and exponential backoff (`errors.ts`).
+//!  * [`keyless_public_market_matrix`] — 8 zero-key, zero-KYC vertical
+//!    venues (Arena-verified) with real paths and weights.
 //!
-//! قانونِ شمول: هیچ شناوری روی قیمت/مبلغ/نوچه وارد نمی‌شود؛ فقط در
-//! مرزهای آماریِ خالص (`bps`، `vwap`) برای مصرف‌کنندهٔ UI.
+//! Inclusion rule: no float enters price/amount/notional; floats appear only in
+//! pure statistical boundaries (`bps`, `vwap`) for the UI consumer.
 
 use std::collections::VecDeque;
 use std::fmt;
 
-// ── خطای دقت ────────────────────────────────────────────────────────────────
+// ── Precision error ────────────────────────────────────────────────────────────────
 
-/// خطای موتور دقت — fail-closed روی سرریز/تجزیه؛ هرگز مقدارِ نادرست نمی‌دهد.
+/// Precision-engine error — fail-closed on overflow/parse; never returns a wrong value.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum PreciseError {
-    /// رشتهٔ ورودی عدد دهدهی معتبر نیست.
+    /// The input string is not a valid decimal number.
     #[error("precise parse error: {0}")]
     Parse(String),
-    /// سرریزِ `i128` یا جدولِ توان‌ده — عملیات رد می‌شود.
+    /// `i128` overflow or the power-of-ten table — the operation is rejected.
     #[error("precise overflow: value out of i128/10^37 operating range")]
     Overflow,
 }
 
-/// نتیجهٔ استانداردِ دقتِ دهدهی.
+/// The standard decimal-precision result.
 pub type PreciseResult<T> = Result<T, PreciseError>;
 
 // ── Precise ─────────────────────────────────────────────────────────────────
 
-/// جدول توانِ ۱۰ در زمان کامپایل — `POW10[n] = 10^n` تا `10^37` (سقف `i128`).
+/// Compile-time power-of-10 table — `POW10[n] = 10^n` up to `10^37` (the `i128` cap).
 pub const POW10: [i128; 38] = {
     let mut table = [1i128; 38];
     let mut i = 1;
@@ -53,59 +53,59 @@ pub const POW10: [i128; 38] = {
     table
 };
 
-/// توانِ ۱۰ با گیتِ محدوده — بیرون `[0, 37]` خطا می‌دهد (fail-closed).
+/// Power of 10 with a range gate — outside `[0, 37]` it errors (fail-closed).
 ///
 /// # Errors
-/// [`PreciseError::Overflow`] روی نمایِ بیرونِ جدول.
+/// [`PreciseError::Overflow`] for an exponent outside the table.
 pub fn pow10_checked(exp: i32) -> PreciseResult<i128> {
     let idx = usize::try_from(exp).map_err(|_| PreciseError::Overflow)?;
     POW10.get(idx).copied().ok_or(PreciseError::Overflow)
 }
 
-/// عدد دهدهی دقیقِ مقیاس‌دار — مقدار همیشه `coeff × 10^(−decimals)`.
+/// Exact scaled decimal number — the value is always `coeff × 10^(−decimals)`.
 ///
-/// پورت `Precise.ts` با `i128` به‌جای `BigInt`؛ دامنهٔ عملیاتی:
-/// `|coeff| < i128::MAX` و `decimals ∈ [0, 37]`. صفر همیشه کانونیک است
-/// (`coeff == 0, decimals == 0`) — همان `reduce()` مرجع.
+/// Port of `Precise.ts` with `i128` instead of `BigInt`; operating range:
+/// `|coeff| < i128::MAX` and `decimals ∈ [0, 37]`. Zero is always canonical
+/// (`coeff == 0, decimals == 0`) — same as the upstream `reduce()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Precise {
-    /// ضریب صحیحِ مقیاس‌دار.
+    /// The scaled integer coefficient.
     pub coeff: i128,
-    /// تعداد اعشار — مقدار = `coeff / 10^decimals`.
+    /// Decimal count — value = `coeff / 10^decimals`.
     pub decimals: i32,
 }
 
 impl Precise {
-    /// صفرِ کانونیک.
+    /// The canonical zero.
     #[must_use]
     pub const fn zero() -> Self {
         Self { coeff: 0, decimals: 0 }
     }
 
-    /// عدد صحیحِ مقیاس‌دار از `i128`.
+    /// A scaled integer from `i128`.
     #[must_use]
     pub const fn from_i128(v: i128) -> Self {
         Self { coeff: v, decimals: 0 }
     }
 
-    /// تجزیهٔ هر رشتهٔ دهدهی/علمی — `"0.00012300"`, `"-42.5"`, `"1e-6"`.
-    /// صفرهای انتهایی با `reduce()` خودکار نرمال می‌شوند.
+    /// Parses any decimal/scientific string — `"0.00012300"`, `"-42.5"`, `"1e-6"`.
+    /// Trailing zeros are automatically normalized with `reduce()`.
     ///
     /// # Errors
-    /// [`PreciseError::Parse`] روی شکل نامعتبر؛ [`PreciseError::Overflow`]
-    /// روی مقادیر بیرون دامنهٔ `i128/10^37`.
+    /// [`PreciseError::Parse`] on a malformed shape; [`PreciseError::Overflow`]
+    /// for values outside the `i128/10^37` range.
     pub fn parse(input: &str) -> PreciseResult<Self> {
         let s = input.trim();
         if s.is_empty() {
             return Err(PreciseError::Parse("empty input".into()));
         }
-        // علامت
+        // sign
         let (sign, body) = match s.as_bytes()[0] {
             b'-' => (-1i128, &s[1..]),
             b'+' => (1i128, &s[1..]),
             _ => (1i128, s),
         };
-        // نم علمی — حداکثر یک e/E
+        // scientific exponent — at most one e/E
         let (mantissa, exp_str) = match body.split_once(['e', 'E']) {
             Some((m, e)) if !e.is_empty() && !e.contains(['e', 'E']) => (m, e),
             Some(_) => return Err(PreciseError::Parse("malformed exponent".into())),
@@ -118,7 +118,7 @@ impl Precise {
                 .parse()
                 .map_err(|_| PreciseError::Parse(format!("bad exponent {exp_str:?}")))?
         };
-        // مانتیس — حداکثر یک نقطه؛ همه رقم
+        // mantissa — at most one dot; all digits
         let (int_part, frac_part) = match mantissa.split_once('.') {
             Some((i, f)) if !i.contains('.') && !f.contains('.') => (i, f),
             Some(_) => return Err(PreciseError::Parse("multiple decimal points".into())),
@@ -139,7 +139,7 @@ impl Precise {
         let mut coeff: i128 = trimmed
             .parse()
             .map_err(|_| PreciseError::Overflow)?;
-        // نم منفیِ بزرگ → ضریب نمی‌شود؛ اعشار بزرگ‌تر از ۳۷ → fail-closed
+        // large negative exponent → no coefficient; decimals above 37 → fail-closed
         if decimals > 37 {
             return Err(PreciseError::Overflow);
         }
@@ -162,7 +162,7 @@ impl Precise {
         Ok(out)
     }
 
-    /// نرمال‌سازی کانونیک — حذف صفرهای انتهایی و صفرِ علامت‌دار.
+    /// Canonical normalization — strip trailing zeros and the signed zero.
     pub fn reduce(&mut self) {
         while self.decimals > 0 && self.coeff != 0 && self.coeff % 10 == 0 {
             self.coeff /= 10;
@@ -173,35 +173,35 @@ impl Precise {
         }
     }
 
-    /// نسخهٔ کانونیکِ کاهش‌یافته — خود شیء تغییر نمی‌کند.
+    /// The reduced canonical copy — the object itself is not mutated.
     #[must_use]
     pub fn reduced(mut self) -> Self {
         self.reduce();
         self
     }
 
-    /// آیا صفر است؟ — همیشه روی فرم کانونیک درست است.
+    /// Is it zero? — always correct on the canonical form.
     #[must_use]
     pub const fn is_zero(&self) -> bool {
         self.coeff == 0
     }
 
-    /// قدرمطلق.
+    /// Absolute value.
     #[must_use]
     pub fn abs(&self) -> Self {
         Self { coeff: self.coeff.abs(), decimals: self.decimals }
     }
 
-    /// نقض علامت.
+    /// Sign violation.
     #[must_use]
     pub const fn neg(&self) -> Self {
         Self { coeff: -self.coeff, decimals: self.decimals }
     }
 
-    /// هم‌مقیاس‌سازی دو عدد به بیشینهٔ اعشار مشترک.
+    /// Rescales two numbers to a shared maximum decimal count.
     ///
     /// # Errors
-    /// [`PreciseError::Overflow`] اگر اختلافِ اعشار از جدولِ توان بیرون بزند.
+    /// [`PreciseError::Overflow`] if the decimal-count difference falls outside the power table.
     pub fn align(&self, other: &Self) -> PreciseResult<(i128, i128, i32)> {
         let d = self.decimals.max(other.decimals);
         let a = self.scale_to(d)?;
@@ -209,7 +209,7 @@ impl Precise {
         Ok((a, b, d))
     }
 
-    /// ضریب در مقیاسِ `target` اعشار.
+    /// Coefficient scaled to the `target` decimal count.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -220,8 +220,8 @@ impl Precise {
             self.coeff.checked_mul(p).ok_or(PreciseError::Overflow)
         } else {
             let p = pow10_checked(-diff)?;
-            // مقسوم‌علیه دقیق — فرم کانونیک تضمین نمی‌کند بخش‌پذیر باشد؛
-            // برای هم‌مقیاس‌سازیِ درست، باقی‌مانده باید صفر باشد.
+            // exact divisor — the canonical form does not guarantee divisibility;
+            // for correct rescaling, the remainder must be zero.
             if self.coeff % p != 0 {
                 return Err(PreciseError::Overflow);
             }
@@ -229,7 +229,7 @@ impl Precise {
         }
     }
 
-    /// جمعِ دقیق.
+    /// Exact addition.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -240,7 +240,7 @@ impl Precise {
         Ok(out)
     }
 
-    /// تفاضلِ دقیق (`self − other`).
+    /// Exact subtraction (`self − other`).
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -248,7 +248,7 @@ impl Precise {
         self.add(&other.neg())
     }
 
-    /// ضربِ دقیق — اعشارها جمع می‌شوند، ضرایب ضرب.
+    /// Exact multiplication — decimals add, coefficients multiply.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -263,11 +263,11 @@ impl Precise {
         Ok(out)
     }
 
-    /// تقسیمِ دقیق با دقتِ `precision` اعشار (پیش‌فرض ۱۸) و گردکردنِ
-    /// نیم-دور-از-صفر — صددرصد صحیح، بدون شناور.
+    /// Exact division at `precision` decimals (default 18) with
+    /// half-away-from-zero rounding — 100% correct, no floats.
     ///
     /// # Errors
-    /// [`PreciseError::Parse`] روی تقسیم بر صفر؛ [`PreciseError::Overflow`].
+    /// [`PreciseError::Parse`] on division by zero; [`PreciseError::Overflow`].
     pub fn div(&self, other: &Self, precision: i32) -> PreciseResult<Self> {
         if other.coeff == 0 {
             return Err(PreciseError::Parse("division by zero".into()));
@@ -297,7 +297,7 @@ impl Precise {
         };
         let mut q = i128::try_from(num / den).map_err(|_| PreciseError::Overflow)?;
         let rem = num % den;
-        // نیم-دور-از-صفر: 2·rem ≥ den ⟺ rem ≥ den − rem (بدونِ سرریز)
+        // half-away-from-zero: 2·rem ≥ den ⟺ rem ≥ den − rem (overflow-free)
         if rem >= den.saturating_sub(rem) {
             q += 1;
         }
@@ -306,26 +306,26 @@ impl Precise {
         Ok(out)
     }
 
-    /// باقیماندهٔ دهدهی — معناشناسیِ `%` جاوااسکریپت (علامتِ dividend).
+    /// Decimal remainder — JavaScript `%` semantics (the dividend's sign).
     ///
     /// # Errors
-    /// [`PreciseError::Parse`] روی تقسیم بر صفر؛ [`PreciseError::Overflow`].
+    /// [`PreciseError::Parse`] on division by zero; [`PreciseError::Overflow`].
     pub fn mod_op(&self, other: &Self) -> PreciseResult<Self> {
         if other.coeff == 0 {
             return Err(PreciseError::Parse("modulo by zero".into()));
         }
         let (a, b, d) = self.align(other)?;
-        let q = a / b; // rust: truncate toward zero — همان JS %
+        let q = a / b; // rust: truncate toward zero — same as JS %
         let rem = a - q * b;
         let mut out = Self { coeff: rem, decimals: d };
         out.reduce();
         Ok(out)
     }
 
-    /// مقایسهٔ ترتیبیِ دقیق.
+    /// Exact ordering comparison.
     ///
     /// # Errors
-    /// [`PreciseError::Overflow`] روی اختلافِ مقیاسِ بیرون جدول.
+    /// [`PreciseError::Overflow`] for a scale difference outside the table.
     pub fn cmp_precise(&self, other: &Self) -> PreciseResult<std::cmp::Ordering> {
         let (a, b, _) = self.align(other)?;
         Ok(a.cmp(&b))
@@ -363,7 +363,7 @@ impl Precise {
         Ok(self.cmp_precise(other)? != std::cmp::Ordering::Greater)
     }
 
-    /// برابریِ مقداری (نه شیئی) — `0.10 == 0.1`.
+    /// Value equality (not identity) — `0.10 == 0.1`.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -371,7 +371,7 @@ impl Precise {
         Ok(self.cmp_precise(other)? == std::cmp::Ordering::Equal)
     }
 
-    /// کمینهٔ دقیق.
+    /// Exact minimum.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -383,7 +383,7 @@ impl Precise {
         }
     }
 
-    /// بیشینهٔ دقیق.
+    /// Exact maximum.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -395,7 +395,7 @@ impl Precise {
         }
     }
 
-    /// گردکردن/برش به `d` اعشار — هستهٔ مشترکِ `decimal_to_precision`.
+    /// Rounds/truncates to `d` decimals — the shared `decimal_to_precision` core.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -408,7 +408,7 @@ impl Precise {
             let scale = pow10_checked(i32::try_from(drop_digits).map_err(|_| PreciseError::Overflow)?)?;
             let quotient = self.coeff / scale;
             match mode {
-                // نیم-دور-از-صفر: |rem| ≥ scale − |rem| (بدونِ سرریز — |rem| < scale)
+                // half-away-from-zero: |rem| ≥ scale − |rem| (overflow-free — |rem| < scale)
                 RoundingMode::Round => {
                     let remainder = (self.coeff - quotient * scale).abs();
                     if remainder >= scale.saturating_sub(remainder) {
@@ -425,7 +425,7 @@ impl Precise {
         Ok(out)
     }
 
-    /// تعداد رقم‌های اعشاریِ قدرمطلقِ ضریب.
+    /// Decimal digit count of the coefficient's absolute value.
     #[must_use]
     fn digit_count(&self) -> u32 {
         if self.coeff == 0 {
@@ -441,7 +441,7 @@ impl Precise {
         }
     }
 
-    /// نمای معناییِ برای `PadWithZero` — دقیقاً `d` اعشار.
+    /// Semantic view for `PadWithZero` — exactly `d` decimals.
     ///
     /// # Errors
     /// [`PreciseError::Overflow`].
@@ -457,7 +457,7 @@ impl Precise {
 }
 
 impl fmt::Display for Precise {
-    /// نمایش کانونیک — بدون ریزشِ شناور؛ `decimals ≤ 0` صفرهایِ انتهایِ صحیح می‌آورد.
+    /// Canonical display — no float drift; `decimals ≤ 0` yields trailing integer zeros.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.coeff == 0 {
             if self.decimals > 0 {
@@ -500,40 +500,40 @@ impl std::str::FromStr for Precise {
 
 // ── decimal_to_precision ────────────────────────────────────────────────────
 
-/// شمارشِ دقت — سه حالتِ `number.ts:7–243`.
+/// Precision parsing — the three `number.ts:7–243` cases.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CountingMode {
-    /// تعداد رقم‌های اعشار (می‌تواند منفی باشد — گردکردنِ ده‌گان).
+    /// Decimal digit count (may be negative — decade rounding).
     DecimalPlaces,
-    /// تعداد رقم‌های معنادار (`≥ 1`).
+    /// Significant digit count (`≥ 1`).
     SignificantDigits,
-    /// تیکِ قیمت — `precision` یعنی تعداد اعشارِ تیکِ واحد `10^−p`.
-    /// برای تیکِ دلخواهِ رشته‌ای [`to_precision_tick_size`] را ببینید.
+    /// Price tick — `precision` means the decimal count of the unit tick `10^−p`.
+    /// For an arbitrary string tick see [`to_precision_tick_size`].
     TickSize,
 }
 
-/// گردکردن یا برش — دو حالتِ مرجع.
+/// Round or truncate — the two upstream modes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RoundingMode {
-    /// گردکردنِ نیم-دور-از-صفر (`ROUND`).
+    /// Half-away-from-zero rounding (`ROUND`).
     Round,
-    /// برش به سمت صفر (`TRUNCATE`).
+    /// Truncation toward zero (`TRUNCATE`).
     Truncate,
 }
 
-/// پدینگِ خروجی رشته.
+/// String output padding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PaddingMode {
-    /// بدون پدینگ — فرم کاهش‌یافتهٔ کانونیک.
+    /// No padding — the reduced canonical form.
     NoPadding,
-    /// پدینگ با صفر تا دقتِ خواسته‌شده.
+    /// Zero-padding to the requested precision.
     PadWithZero,
 }
 
-/// پورت `decimalToPrecision` — صددرصد دهدهیِ دقیق.
+/// Port of `decimalToPrecision` — 100% exact decimal.
 ///
 /// # Errors
-/// [`PreciseError::Parse`] روی ورودی نامعتبر / حالتِ بی‌معنا؛
+/// [`PreciseError::Parse`] on invalid input / a meaningless mode;
 /// [`PreciseError::Overflow`].
 pub fn decimal_to_precision(
     x: &str,
@@ -552,20 +552,20 @@ pub fn decimal_to_precision(
             if v.is_zero() {
                 return Ok("0".to_owned());
             }
-            // نمِ رقمرَد اول: e = (رقم‌ها − 1) − اعشار
+            // first-digit exponent: e = (digits − 1) − decimals
             let e = i64::from(v.digit_count() - 1) - i64::from(v.decimals);
             let d = i64::from(precision - 1) - e;
             let d = i32::try_from(d).map_err(|_| PreciseError::Overflow)?;
             v.rounded_at(d, rounding)?
         }
         CountingMode::TickSize => {
-            // تیکِ واحدِ 10^−p — مسیرِ صددرصدِ Precise (درمانِ #1)؛
-            // تیکِ رشته‌ایِ دلخواه → [`to_precision_tick_size`].
+            // the 10^−p unit tick — the 100% Precise path (fix #1);
+            // an arbitrary string tick → [`to_precision_tick_size`].
             let ap = precision.unsigned_abs();
             if ap > 37 {
                 return Err(PreciseError::Overflow);
             }
-            let idx = ap as usize; // widening — بی‌زیان
+            let idx = ap as usize; // widening — lossless
             let tick = if precision >= 0 {
                 Precise { coeff: 1, decimals: precision }
             } else {
@@ -595,13 +595,13 @@ pub fn decimal_to_precision(
     }
 }
 
-/// گردکردن به مضربِ تیک با تقسیم/باقیماندهٔ صددرصدِ صحیح — درمانِ قضاییِ #1.
+/// Rounds to a tick multiple with 100% integer division/remainder — forensic fix #1.
 ///
-/// `q = val / tick`؛ در `Round`: `2·|rem| ≥ |tick| → q += sign(rem)`؛
-/// نتیجه = `q_rounded × tick`. هیچ `f64 %`ی در مسیر نیست.
+/// `q = val / tick`; in `Round`: `2·|rem| ≥ |tick| → q += sign(rem)`;
+/// result = `q_rounded × tick`. No `f64 %` anywhere in the path.
 ///
 /// # Errors
-/// [`PreciseError::Parse`] روی تیکِ صفر/منفی یا ورودیِ نامعتبر؛
+/// [`PreciseError::Parse`] on a zero/negative tick or invalid input;
 /// [`PreciseError::Overflow`].
 pub fn to_precision_tick_size(
     x: &str,
@@ -616,16 +616,16 @@ pub fn to_precision_tick_size(
     Ok(tick_round(&v, &t, rounding)?.to_string())
 }
 
-/// هستهٔ تیکِ مشترک — ورودی‌های تجزیه‌شده.
+/// The shared tick core — parsed inputs.
 ///
 /// # Errors
 /// [`PreciseError::Overflow`].
 fn tick_round(val: &Precise, tick: &Precise, rounding: RoundingMode) -> PreciseResult<Precise> {
     let (va, vb, _) = val.align(tick)?;
-    let quot = va / vb; // برش به سمت صفر روی ضریبِ هم‌مقیاس
+    let quot = va / vb; // truncate toward zero on the co-scaled coefficient
     let rem = va - quot * vb;
     let quot = match rounding {
-        // نیم-دور-از-صفر: |rem| ≥ |vb| − |rem| (|rem| < |vb| — بدونِ سرریز)
+        // half-away-from-zero: |rem| ≥ |vb| − |rem| (|rem| < |vb| — overflow-free)
         RoundingMode::Round => {
             let ra = rem.abs();
             let ba = vb.abs();
@@ -643,21 +643,21 @@ fn tick_round(val: &Precise, tick: &Precise, rounding: RoundingMode) -> PreciseR
     Ok(out)
 }
 
-/// ردیفِ شاهدِ خودآزمونِ تیک — برای `GET /quant/venues`.
+/// The tick self-test witness row — for `GET /quant/venues`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TickSelftestRow {
-    /// ورودی خام.
+    /// Raw input.
     pub input: &'static str,
-    /// تیک خام.
+    /// Raw tick.
     pub tick: &'static str,
-    /// خروجی کانونیک.
+    /// Canonical output.
     pub output: String,
 }
 
-/// خودآزمونِ قطعیِ تیک — نشانِ «صفر ریزشِ شناور» روی سیم.
+/// The deterministic tick self-test — the 'zero float drift' marker on the wire.
 ///
 /// # Errors
-/// رخ نمی‌دهد — ورودی‌های ثابتِ داخل crate.
+/// Never happens — constant in-crate inputs.
 #[must_use]
 pub fn precise_tick_selftest_rows() -> Vec<TickSelftestRow> {
     let case = |input: &'static str, tick: &'static str| -> TickSelftestRow {
@@ -674,10 +674,10 @@ pub fn precise_tick_selftest_rows() -> Vec<TickSelftestRow> {
     ]
 }
 
-/// وضعیتِ نگهبانِ گپِ ترتیب — نشانِ سیمیِ درمانِ #2.
+/// The sequence-gap guard state — the on-wire marker of fix #2.
 ///
 /// # Errors
-/// رخ نمی‌دهد — پروبِ ثابت.
+/// Never happens — a static probe.
 #[must_use]
 pub fn orderbook_gap_guard_probe() -> [&'static str; 3] {
     let mut book = OrderBook::new(64);
@@ -698,42 +698,42 @@ fn label_of(outcome: &OrderBookSyncOutcome) -> &'static str {
 
 // ── Throttler ───────────────────────────────────────────────────────────────
 
-/// سیاستِ محدودساز — دو الگوریتمِ `throttle.ts:9–197`.
+/// Limiter policy — the two `throttle.ts:9–197` algorithms.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LimiterPolicy {
-    /// سطلِ سوراخ — `refill_rate_per_ms` مداوم، ظرفیت `capacity`.
+    /// Leaky bucket — a continuous `refill_rate_per_ms`, `capacity` limit.
     LeakyBucket,
-    /// پنجرهٔ لغزانِ وزن‌دار — سقفِ وزن در بازهٔ زمانی.
+    /// Weighted sliding window — a weight cap per time window.
     RollingWindow,
 }
 
-/// محدودسازِ نرخِ دوگانهٔ سیسی‌اکس‌تا — هر دو الگوریتم در یک ساختار.
+/// The ccxt dual rate limiter — both algorithms in one structure.
 #[derive(Debug, Clone)]
 pub struct CcxtThrottler {
-    /// سیاستِ فعال.
+    /// Active policy.
     pub policy: LimiterPolicy,
-    /// نرخِ پرشدن (توکن/میلی‌ثانیه) — فقط `LeakyBucket`.
+    /// Refill rate (tokens/ms) — `LeakyBucket` only.
     pub refill_rate_per_ms: f64,
-    /// ظرفیت سطل — فقط `LeakyBucket`.
+    /// Bucket capacity — `LeakyBucket` only.
     pub capacity: f64,
-    /// توکن‌هایِ در دسترسِ فعلی.
+    /// Currently available tokens.
     pub current_tokens: f64,
-    /// هزینهٔ پیش‌فرضِ هر درخواست.
+    /// Default cost per request.
     pub default_cost: f64,
-    /// مُهرِ آخرین پرشدن.
+    /// Last-refill timestamp.
     last_refill_ms: u64,
-    /// پنجرهٔ زمانی (`ms`) — فقط `RollingWindow`.
+    /// Time window (`ms`) — `RollingWindow` only.
     pub window_size_ms: u64,
-    /// سقفِ وزنِ پنجره — فقط `RollingWindow`.
+    /// Window weight cap — `RollingWindow` only.
     pub max_window_weight: i64,
-    /// صفِ (`timestamp_ms`, `cost`) پنجره — بدونِ `shift` آرایه، `pop_front` $O(1)$.
+    /// The window's (`timestamp_ms`, `cost`) queue — no array `shift`, `pop_front` $O(1)$.
     entries: VecDeque<(u64, i64)>,
-    /// Σ وزنِ درون پنجره.
+    /// Σ weight inside the window.
     window_total: i64,
 }
 
 impl CcxtThrottler {
-    /// سطلِ سوراخ — مثلاً `capacity=10, rate=0.2/ms, default_cost=1`.
+    /// Leaky bucket — e.g. `capacity=10, rate=0.2/ms, default_cost=1`.
     #[must_use]
     pub fn new_leaky_bucket(capacity: f64, refill_rate_per_ms: f64, default_cost: f64) -> Self {
         Self {
@@ -750,7 +750,7 @@ impl CcxtThrottler {
         }
     }
 
-    /// پنجرهٔ لغزانِ وزن‌دار — مثلاً `window=60_000ms, max=1200`.
+    /// Weighted sliding window — e.g. `window=60_000ms, max=1200`.
     #[must_use]
     pub fn new_rolling_window(window_size_ms: u64, max_window_weight: i64) -> Self {
         Self {
@@ -767,8 +767,8 @@ impl CcxtThrottler {
         }
     }
 
-    /// تأخیرِ لازم پیش از درخواستِ `cost` در `now_ms` — و رزروِ آن.
-    /// خروجی `0` یعنی بلافاصله مجاز.
+    /// The delay required before a `cost` request at `now_ms` — and reserves it.
+    /// An output of `0` means immediately allowed.
     #[must_use]
     #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn wait_ms(&mut self, now_ms: u64, cost: f64) -> u64 {
@@ -786,8 +786,8 @@ impl CcxtThrottler {
                     f64::INFINITY
                 };
                 if !wait.is_finite() {
-                    // بدونِ نرخِ پرشدن، هیچ تأخیرِ متناهی‌ای جواب نیست —
-                    // صادقانه `u64::MAX`؛ متدِ بعدی همان مسیر را می‌بندد.
+                    // without a refill rate, no finite delay is an answer —
+                    // honestly `u64::MAX`; the next method closes that path.
                     return u64::MAX;
                 }
                 let wait = wait as u64;
@@ -827,13 +827,13 @@ impl CcxtThrottler {
         }
     }
 
-    /// تعدادِ ردیف‌هایِ زندهٔ پنجره — تست/تلمتری.
+    /// Live window row count — tests/telemetry.
     #[must_use]
     pub fn rolling_entries(&self) -> usize {
         self.entries.len()
     }
 
-    /// Σ وزنِ درون پنجره — تست/تلمتری.
+    /// Σ weight inside the window — tests/telemetry.
     #[must_use]
     pub const fn rolling_total(&self) -> i64 {
         self.window_total
@@ -842,35 +842,35 @@ impl CcxtThrottler {
 
 // ── OrderBook ───────────────────────────────────────────────────────────────
 
-/// سمتِ کتاب — بالاترین bid در اندیسِ 0 / پایین‌ترین ask در اندیسِ 0.
+/// Book side — the highest bid at index 0 / the lowest ask at index 0.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SideKind {
-    /// خریداران — مرتبِ نزولیِ قیمت.
+    /// Buyers — price-sorted descending.
     Bids,
-    /// فروشندگان — مرتبِ صعودیِ قیمت.
+    /// Sellers — price-sorted ascending.
     Asks,
 }
 
-/// یک سمتِ کتابِ L2 — لِیول‌های مرتب با جست‌وجوی دودویی (`bisect_left`).
+/// One L2 book side — sorted levels with binary search (`bisect_left`).
 #[derive(Debug, Clone)]
 pub struct OrderBookSide {
-    /// سمت.
+    /// Side.
     pub kind: SideKind,
-    /// لِیول‌های (`price_micros`, `size_micros`) مرتبِ «بهترین‌اول».
+    /// Sorted 'best-first' (`price_micros`, `size_micros`) levels.
     levels: Vec<(i64, i64)>,
-    /// سقفِ عمق اختیاری — بعد از درج برش می‌خورد.
+    /// Optional depth cap — trimmed after insertion.
     pub depth_cap: Option<usize>,
 }
 
 impl OrderBookSide {
-    /// سمتِ تازه — `depth_cap` اختیاری.
+    /// A fresh side — optional `depth_cap`.
     #[must_use]
     pub fn new(kind: SideKind, depth_cap: Option<usize>) -> Self {
         Self { kind, levels: Vec::new(), depth_cap }
     }
 
-    /// اندیسِ درج/یافتن — معادلِ `bisect_left` با کلیدِ علامت‌دار:
-    /// bids با `−price` (بالاترین bid → اندیس 0)، asks با `+price`.
+    /// Insert/find index — equivalent to `bisect_left` with a signed key:
+    /// bids with `−price` (highest bid → index 0), asks with `+price`.
     #[must_use]
     fn bisect(&self, price: i64) -> usize {
         match self.kind {
@@ -879,8 +879,8 @@ impl OrderBookSide {
         }
     }
 
-    /// ذخیرهٔ لِیول — `size == 0` یعنی حذف؛ هم‌قیمت یعنی بازنویسیِ $O(1)$؛
-    /// در غیر این‌صورت درج در اندیسِ دودویی + اجرای سقفِ عمق.
+    /// Stores a level — `size == 0` means removal; same price means an $O(1)$ overwrite;
+    /// otherwise binary-index insertion + depth-cap enforcement.
     pub fn store(&mut self, price_micros: i64, size_micros: i64) {
         let idx = self.bisect(price_micros);
         let exists = self.levels.get(idx).is_some_and(|&(p, _)| p == price_micros);
@@ -902,32 +902,32 @@ impl OrderBookSide {
         }
     }
 
-    /// بهترین لِیول — سرِ صف.
+    /// The best level — head of the queue.
     #[must_use]
     pub fn best_level(&self) -> Option<(i64, i64)> {
         self.levels.first().copied()
     }
 
-    /// n لِیولِ برتر.
+    /// The top n levels.
     #[must_use]
     pub fn top_n(&self, n: usize) -> &[(i64, i64)] {
         let end = n.min(self.levels.len());
         &self.levels[..end]
     }
 
-    /// تعدادِ لِیول‌های زنده.
+    /// Live level count.
     #[must_use]
     pub fn len(&self) -> usize {
         self.levels.len()
     }
 
-    /// خالی بودن سمت.
+    /// Whether the side is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.levels.is_empty()
     }
 
-    /// اسپرد بر پایهٔ bps — میانِ `(ask − bid) / mid × 10⁴`.
+    /// Spread in bps — `(ask − bid) / mid × 10⁴`.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn spread_bps(&self, asks: &OrderBookSide) -> Option<f64> {
@@ -943,7 +943,7 @@ impl OrderBookSide {
         Some((ask as f64 - bid as f64) / mid * 10_000.0)
     }
 
-    /// قیمتِ میانی در مقیاس میکرو — گردِ پایینِ `(bid+ask)/2`.
+    /// Mid price in micro scale — floor of `(bid+ask)/2`.
     #[must_use]
     pub fn mid_price_micros(&self, asks: &OrderBookSide) -> Option<i64> {
         let (bid, _) = self.best_level()?;
@@ -954,8 +954,8 @@ impl OrderBookSide {
         Some(bid.midpoint(ask))
     }
 
-    /// `VWAP` برای مصرفِ `target_notional_micros` — پیمودنِ بهترین‌ها تا
-    /// پر شدنِ ناتینال؛ ناکافی بودنِ عمق → `None`.
+    /// `VWAP` for consuming `target_notional_micros` — walks the best levels until
+    /// the notional fills; insufficient depth → `None`.
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn vwap_for_notional(&self, target_notional_micros: i64) -> Option<f64> {
@@ -976,38 +976,38 @@ impl OrderBookSide {
     }
 }
 
-/// حاصلِ اعمالِ دلتا — درمانِ قضاییِ #2 (`OrderBook.ts:96–136`).
+/// The delta-application outcome — forensic fix #2 (`OrderBook.ts:96–136`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OrderBookSyncOutcome {
-    /// دلتا کهنه بود (`nonce ≤ current`) — نادیده گرفته شد.
+    /// The delta was stale (`nonce ≤ current`) — ignored.
     IgnoredStale,
-    /// گپِ ترتیب — لِیول‌ها دست‌نخورده؛ resync فوریِ REST snapshot لازم.
+    /// Sequence gap — levels untouched; an immediate REST snapshot resync is required.
     SequenceGapDetected {
-        /// nonce مورد انتظار (`current + 1`).
+        /// The expected nonce (`current + 1`).
         expected: u64,
-        /// nonce دریافتی.
+        /// The received nonce.
         received: u64,
     },
-    /// دلتا اعمال شد و nonce تازه شد.
+    /// The delta was applied and the nonce went fresh.
     Applied {
-        /// nonce تازهٔ کتاب.
+        /// The book's new nonce.
         nonce: u64,
     },
 }
 
-/// کتابِ سفارشِ L2 — دو سمتِ مرتب + نگهبانِ ترتیبِ nonce.
+/// The L2 order book — two sorted sides + a nonce order guard.
 #[derive(Debug, Clone)]
 pub struct OrderBook {
-    /// nonce فعلی — ۰ یعنی هنوز اسنپ‌شات نگرفته.
+    /// The current nonce — 0 means no snapshot yet.
     pub nonce: u64,
-    /// سمتِ خرید.
+    /// The buy side.
     pub bids: OrderBookSide,
-    /// سمتِ فروش.
+    /// The sell side.
     pub asks: OrderBookSide,
 }
 
 impl OrderBook {
-    /// کتابِ تازه با سقفِ عمقِ یکسان برای دو سمت.
+    /// A fresh book with one depth cap for both sides.
     #[must_use]
     pub fn new(depth_cap: usize) -> Self {
         Self {
@@ -1017,9 +1017,9 @@ impl OrderBook {
         }
     }
 
-    /// اعمالِ دلتا با نگهبانِ کاملِ ترتیب:
-    /// کهنه → `IgnoredStale`؛ گپ → `SequenceGapDetected` بدونِ جهش؛
-    /// پیوسته → اعمال + `Applied`.
+    /// Applies a delta with the full order guard:
+    /// stale → `IgnoredStale`; gap → `SequenceGapDetected` without a jump;
+    /// contiguous → applied + `Applied`.
     pub fn apply_delta(
         &mut self,
         incoming_nonce: u64,
@@ -1045,7 +1045,7 @@ impl OrderBook {
         OrderBookSyncOutcome::Applied { nonce: incoming_nonce }
     }
 
-    /// بازنشانی با اسنپ‌شات REST — پس از `SequenceGapDetected`.
+    /// Resets from a REST snapshot — after `SequenceGapDetected`.
     pub fn reset(&mut self, snapshot_nonce: u64, bids: &[(i64, i64)], asks: &[(i64, i64)]) {
         self.bids = OrderBookSide::new(SideKind::Bids, self.bids.depth_cap);
         self.asks = OrderBookSide::new(SideKind::Asks, self.asks.depth_cap);
@@ -1061,16 +1061,16 @@ impl OrderBook {
 
 // ── SafeExtractor ───────────────────────────────────────────────────────────
 
-/// استخراجِ دفاعیِ فیلدها از `serde_json::Value` — پورتِ `safeString`/…
-/// (`type.ts:17–186`): هیچ پنیک، هیچ حسرت — همه `Option`.
+/// Defensive field extraction from `serde_json::Value` — a port of `safeString`/…
+/// (`type.ts:17–186`): no panics, no regrets — all `Option`.
 pub trait SafeExtractor {
-    /// اولین کلیدِ قابل‌یافتن به‌صورت رشته (عدد → نمایش کانونیک).
+    /// The first findable key as a string (numbers → canonical display).
     fn safe_string(&self, keys: &[&str]) -> Option<String>;
-    /// اولین کلید به‌صورت [`Precise`] — قیمت/مبلغِ بدونِ ریزش.
+    /// The first key as a [`Precise`] — drift-free price/amount.
     fn safe_precise(&self, keys: &[&str]) -> Option<Precise>;
-    /// اولین کلید به‌صورت `i64` (رشتهٔ رقم‌دار هم می‌خواند).
+    /// The first key as an `i64` (also reads digit strings).
     fn safe_i64(&self, keys: &[&str]) -> Option<i64>;
-    /// اولین کلید به‌صورت بولی (`true`/`"true"`/…).
+    /// The first key as a boolean (`true`/`"true"`/…).
     fn safe_bool(&self, keys: &[&str]) -> Option<bool>;
 }
 
@@ -1112,7 +1112,7 @@ impl SafeExtractor for serde_json::Value {
     }
 }
 
-/// پیمودنِ مسیرِ کلیدها در اشیای تو در تو.
+/// Walks a key path through nested objects.
 fn walk<'a>(v: &'a serde_json::Value, keys: &[&str]) -> Option<&'a serde_json::Value> {
     let mut cur = v;
     for k in keys {
@@ -1121,8 +1121,8 @@ fn walk<'a>(v: &'a serde_json::Value, keys: &[&str]) -> Option<&'a serde_json::V
     Some(cur)
 }
 
-/// صفر-سنجیِ رشتهٔ عددی — `""`/`"0"`/`"0.0"`/`"-0"` → `None`.
-/// قراردادِ `omit_zero` مرجع: عرضهٔ صفر یعنی «فیلد غایب».
+/// Numeric-string zero check — `""`/`"0"`/`"0.0"`/`"-0"` → `None`.
+/// The upstream `omit_zero` contract: a zero supply means 'field absent'.
 #[must_use]
 pub fn omit_zero(s: &str) -> Option<&str> {
     match s.trim() {
@@ -1133,68 +1133,68 @@ pub fn omit_zero(s: &str) -> Option<&str> {
 
 // ── Error taxonomy ──────────────────────────────────────────────────────────
 
-/// واریانت‌هایِ شبکه‌ایِ قابلِ تلاشِ دوباره (`errors.ts:3–252`).
+/// Retryable network variants (`errors.ts:3–252`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum NetworkErrorKind {
-    /// سقفِ نرخ — backoff بلند.
+    /// Rate cap — long backoff.
     #[error("RateLimitExceeded")]
     RateLimitExceeded,
-    /// سپرِ `DDoS` صرافی.
+    /// The exchange's `DDoS` shield.
     #[error("DDoSProtection")]
     DdosProtection,
-    /// پایانِ زمانِ درخواست.
+    /// Request timeout.
     #[error("RequestTimeout")]
     RequestTimeout,
-    /// صرافی در دسترس نیست.
+    /// The exchange is unreachable.
     #[error("ExchangeNotAvailable")]
     ExchangeNotAvailable,
-    /// nonce تکراری/کهنه (اختیارِ زمان‌محور).
+    /// Duplicate/stale nonce (time-skew option).
     #[error("InvalidNonce")]
     InvalidNonce,
 }
 
-/// واریانت‌هایِ صرافی‌ایِ غیرقابلِ تلاشِ دوباره.
+/// Non-retryable exchange variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum ExchangeErrorKind {
-    /// احراز ناموفق.
+    /// Authentication failed.
     #[error("AuthenticationError")]
     AuthenticationError,
-    /// موجودی ناکافی.
+    /// Insufficient balance.
     #[error("InsufficientFunds")]
     InsufficientFunds,
-    /// سفارشِ نامعتبر.
+    /// Invalid order.
     #[error("InvalidOrder")]
     InvalidOrder,
-    /// سفارش یافت نشد.
+    /// Order not found.
     #[error("OrderNotFound")]
     OrderNotFound,
-    /// نمادِ ناشناخته.
+    /// Unknown symbol.
     #[error("BadSymbol")]
     BadSymbol,
-    /// حالتِ حاشیه از قبل ست شده.
+    /// Margin mode already set.
     #[error("MarginModeAlreadySet")]
     MarginModeAlreadySet,
 }
 
-/// رده‌بندیِ خطای سیسی‌اکس‌تا — قابلِ تلاشِ دوباره در برابرِ قطعی.
+/// ccxt error classification — retryable vs final.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum CcxtErrorKind {
-    /// خطای شبکه — retry/backoff.
+    /// Network error — retry/backoff.
     #[error("NetworkError: {0}")]
     NetworkError(#[from] NetworkErrorKind),
-    /// خطای صرافی — retry بی‌معنا.
+    /// Exchange error — retry is meaningless.
     #[error("ExchangeError: {0}")]
     ExchangeError(#[from] ExchangeErrorKind),
 }
 
 impl CcxtErrorKind {
-    /// آیا تلاشِ دوباره معنا دارد؟ — فقط `NetworkError`.
+    /// Is retrying meaningful? — only `NetworkError`.
     #[must_use]
     pub const fn is_retryable(&self) -> bool {
         matches!(self, Self::NetworkError(_))
     }
 
-    /// backoff نماییِ پیشنهادی (ms) — پایهٔ هر واریانت، سقفِ ۶۰ ثانیه.
+    /// Suggested exponential backoff (ms) — a base per variant, capped at 60 seconds.
     #[must_use]
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn recommended_backoff_ms(&self, attempt: u32) -> u64 {
@@ -1214,46 +1214,46 @@ impl CcxtErrorKind {
 
 // ── Keyless market matrix ───────────────────────────────────────────────────
 
-/// یک نقطهٔ پایانیِ عمودی — مسیر/متد/وزنِ واقعی.
+/// One vertical endpoint — real path/method/weight.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MarketEndpoint {
-    /// هدفِ کاربردی (`ticker24h`, `depth`, …).
+    /// Functional target (`ticker24h`, `depth`, …).
     pub purpose: &'static str,
-    /// متدِ HTTP.
+    /// HTTP method.
     pub method: &'static str,
-    /// مسیر یا بدنهٔ نمونه (`POST` های Hyperliquid مسیرِ واحد با بدنه).
+    /// Path or sample body (Hyperliquid `POST`s use one path with a body).
     pub path: &'static str,
-    /// وزنِ نرخ‌سنجیِ اعلامیِ صرافی (۰ = اعلام‌نشده).
+    /// The exchange's declared rate-limit weight (0 = undeclared).
     pub weight: u32,
 }
 
-/// مکانِ عمودیِ صفر-کلید — فقط دادهٔ عمومی، صفر KYC، صفر API key.
+/// A zero-key vertical venue — public data only, zero KYC, zero API key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeylessMarketVenue {
-    /// شناسهٔ پایدار (`binance-spot`, …).
+    /// Stable ID (`binance-spot`, …).
     pub id: &'static str,
-    /// نام نمایشی.
+    /// Display name.
     pub display_name: &'static str,
-    /// گونهٔ مکان (`cex-spot`, `cex-linear-perp`, `dex-perp`, `dex-amm`).
+    /// Venue kind (`cex-spot`, `cex-linear-perp`, `dex-perp`, `dex-amm`).
     pub venue_kind: &'static str,
-    /// پایهٔ URL.
+    /// URL base.
     pub base_url: &'static str,
-    /// احرازِ لازم — همیشه `"none"`.
+    /// Auth required — always `"none"`.
     pub auth: &'static str,
-    /// نقاطِ پایانی.
+    /// Endpoints.
     pub endpoints: Vec<MarketEndpoint>,
-    /// یادداشتِ کوتاه.
+    /// Short note.
     pub note: &'static str,
 }
 
-/// تعدادِ مکان‌هایِ ماتریس — گیتِ آزمونِ سیم.
+/// Matrix venue count — the wire test gate.
 pub const KEYLESS_VENUE_COUNT: usize = 8;
 
-/// ماتریسِ کاملِ بازارِ عمومیِ بی‌کلید — ۸ مکانِ تأییدشدهٔ Arena.
+/// The full keyless public-market matrix — 8 Arena-verified venues.
 ///
-/// همهٔ مسیرها واقعی و در دسترسِ عموم؛ Hyperliquid با وزن‌هایِ اعلامیِ
-/// `info` (2/2/4) و Base با زنجیرهٔ 8453 — هیچ کلیدی در هیچ مسیری.
-#[allow(clippy::too_many_lines)] // کاتالوگِ داده‌ایِ ۸ مکان — طولش ماهیتِ داده است
+/// All paths are real and publicly accessible; Hyperliquid with the declared `info`
+/// weights (2/2/4) and Base on chain 8453 — no key anywhere.
+#[allow(clippy::too_many_lines)] // the 8-venue data catalog — its length is the data's nature
 #[must_use]
 pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
     vec![
@@ -1263,7 +1263,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-spot",
             base_url: "https://api.binance.com",
             auth: "none",
-            note: "اسپات کلاسیک — عمیق‌ترین نقدشوندگیِ جهانی",
+            note: "\u{627}\u{633}\u{67e}\u{627}\u{62a} \u{6a9}\u{644}\u{627}\u{633}\u{6cc}\u{6a9} — \u{639}\u{645}\u{6cc}\u{642}‌\u{62a}\u{631}\u{6cc}\u{646} \u{646}\u{642}\u{62f}\u{634}\u{648}\u{646}\u{62f}\u{6af}\u{6cc}\u{650} \u{62c}\u{647}\u{627}\u{646}\u{6cc}",
             endpoints: vec![
                 MarketEndpoint { purpose: "ticker24h", method: "GET", path: "/api/v3/ticker/24hr", weight: 0 },
                 MarketEndpoint { purpose: "depth", method: "GET", path: "/api/v3/depth", weight: 0 },
@@ -1276,7 +1276,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-linear-perp",
             base_url: "https://fapi.binance.com",
             auth: "none",
-            note: "آینده‌های خطیِ USDT-M — funding/OI عمومی",
+            note: "\u{622}\u{6cc}\u{646}\u{62f}\u{647}‌\u{647}\u{627}\u{6cc} \u{62e}\u{637}\u{6cc}\u{650} USDT-M — funding/OI \u{639}\u{645}\u{648}\u{645}\u{6cc}",
             endpoints: vec![
                 MarketEndpoint { purpose: "premiumIndex", method: "GET", path: "/fapi/v1/premiumIndex", weight: 0 },
                 MarketEndpoint { purpose: "fundingRate", method: "GET", path: "/fapi/v1/fundingRate", weight: 0 },
@@ -1289,7 +1289,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-linear-perp",
             base_url: "https://api.bybit.com",
             auth: "none",
-            note: "v5 عمومی — تیکر/کتاب/کندل/تاریخچهٔ funding",
+            note: "v5 \u{639}\u{645}\u{648}\u{645}\u{6cc} — \u{62a}\u{6cc}\u{6a9}\u{631}/\u{6a9}\u{62a}\u{627}\u{628}/\u{6a9}\u{646}\u{62f}\u{644}/\u{62a}\u{627}\u{631}\u{6cc}\u{62e}\u{686}\u{647}\u{654} funding",
             endpoints: vec![
                 MarketEndpoint { purpose: "tickers", method: "GET", path: "/v5/market/tickers", weight: 0 },
                 MarketEndpoint { purpose: "orderbook", method: "GET", path: "/v5/market/orderbook", weight: 0 },
@@ -1303,7 +1303,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-linear-perp",
             base_url: "https://www.okx.com",
             auth: "none",
-            note: "v5 عمومی — تیکر/کتاب/کندل/funding",
+            note: "v5 \u{639}\u{645}\u{648}\u{645}\u{6cc} — \u{62a}\u{6cc}\u{6a9}\u{631}/\u{6a9}\u{62a}\u{627}\u{628}/\u{6a9}\u{646}\u{62f}\u{644}/funding",
             endpoints: vec![
                 MarketEndpoint { purpose: "tickers", method: "GET", path: "/api/v5/market/tickers", weight: 0 },
                 MarketEndpoint { purpose: "books", method: "GET", path: "/api/v5/market/books", weight: 0 },
@@ -1317,7 +1317,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-spot",
             base_url: "https://api.kraken.com",
             auth: "none",
-            note: "REST عمومیِ کلاسیک — Ticker/Depth/OHLC",
+            note: "REST \u{639}\u{645}\u{648}\u{645}\u{6cc}\u{650} \u{6a9}\u{644}\u{627}\u{633}\u{6cc}\u{6a9} — Ticker/Depth/OHLC",
             endpoints: vec![
                 MarketEndpoint { purpose: "ticker", method: "GET", path: "/0/public/Ticker", weight: 0 },
                 MarketEndpoint { purpose: "depth", method: "GET", path: "/0/public/Depth", weight: 0 },
@@ -1330,7 +1330,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "cex-spot",
             base_url: "https://api.exchange.coinbase.com",
             auth: "none",
-            note: "پارامترِ {id} در مسیر — نمادِ محصول",
+            note: "\u{67e}\u{627}\u{631}\u{627}\u{645}\u{62a}\u{631}\u{650} {id} \u{62f}\u{631} \u{645}\u{633}\u{6cc}\u{631} — \u{646}\u{645}\u{627}\u{62f}\u{650} \u{645}\u{62d}\u{635}\u{648}\u{644}",
             endpoints: vec![
                 MarketEndpoint { purpose: "ticker", method: "GET", path: "/products/{id}/ticker", weight: 0 },
                 MarketEndpoint { purpose: "book-l2", method: "GET", path: "/products/{id}/book?level=2", weight: 0 },
@@ -1343,7 +1343,7 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "dex-perp",
             base_url: "https://api.hyperliquid.xyz",
             auth: "none",
-            note: "POST /info با بدنهٔ تایپ‌دار — وزن‌هایِ اعلامیِ 2/2/4",
+            note: "POST /info \u{628}\u{627} \u{628}\u{62f}\u{646}\u{647}\u{654} \u{62a}\u{627}\u{6cc}\u{67e}‌\u{62f}\u{627}\u{631} — \u{648}\u{632}\u{646}‌\u{647}\u{627}\u{6cc}\u{650} \u{627}\u{639}\u{644}\u{627}\u{645}\u{6cc}\u{650} 2/2/4",
             endpoints: vec![
                 MarketEndpoint { purpose: "allMids", method: "POST", path: "/info {\"type\":\"allMids\"}", weight: 2 },
                 MarketEndpoint { purpose: "l2Book", method: "POST", path: "/info {\"type\":\"l2Book\",\"coin\":…}", weight: 2 },
@@ -1357,16 +1357,16 @@ pub fn keyless_public_market_matrix() -> Vec<KeylessMarketVenue> {
             venue_kind: "dex-amm",
             base_url: "https://mainnet.base.org",
             auth: "none",
-            note: "Ethereum Base — Chain ID 8453 — RPC کلید-کمتر + کوتیشنِ استخر",
+            note: "Ethereum Base — Chain ID 8453 — RPC \u{6a9}\u{644}\u{6cc}\u{62f}-\u{6a9}\u{645}\u{62a}\u{631} + \u{6a9}\u{648}\u{62a}\u{6cc}\u{634}\u{646}\u{650} \u{627}\u{633}\u{62a}\u{62e}\u{631}",
             endpoints: vec![
                 MarketEndpoint { purpose: "rpc-chainid", method: "POST", path: "/ (eth_chainId → 0x2105 = 8453)", weight: 0 },
-                MarketEndpoint { purpose: "pool-quote", method: "POST", path: "/ (eth_call روی قراردادِ استخرِ V2/V3)", weight: 0 },
+                MarketEndpoint { purpose: "pool-quote", method: "POST", path: "/ (eth_call \u{631}\u{648}\u{6cc} \u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f}\u{650} \u{627}\u{633}\u{62a}\u{62e}\u{631}\u{650} V2/V3)", weight: 0 },
             ],
         },
     ]
 }
 
-/// امضای کورِ سیسی‌اکس‌تا — گیتِ آزمونِ سیم.
+/// The ccxt core signature — the wire test gate.
 pub const CCXT_CORE_SIGNATURE: &str = "ccxt-core-rs-v1";
 
 // ── tests ───────────────────────────────────────────────────────────────────
@@ -1403,18 +1403,18 @@ mod tests {
         assert!(Precise::parse("abc").is_err());
         assert!(Precise::parse("").is_err());
         assert!(Precise::parse("1e").is_err());
-        assert!(Precise::parse("1e-40").is_err(), "اعشارِ > ۳۷ fail-closed");
+        assert!(Precise::parse("1e-40").is_err(), "\u{627}\u{639}\u{634}\u{627}\u{631}\u{650} > \u{6f3}\u{6f7} fail-closed");
     }
 
     #[test]
     fn precise_ops_are_float_free_exact() {
-        // کلاسیکِ IEEE-754: 0.1 + 0.2 = 0.30000000000000004 — اینجا 0.3
+        // IEEE-754 classic: 0.1 + 0.2 = 0.30000000000000004 — here 0.3
         assert_eq!(p("0.1").add(&p("0.2")).unwrap().to_string(), "0.3");
         assert_eq!(p("0.3").sub(&p("0.1")).unwrap().to_string(), "0.2");
         assert_eq!(p("0.000001").mul(&p("1000")).unwrap().to_string(), "0.001");
         assert_eq!(p("-42.5").abs().to_string(), "42.5");
         assert_eq!(p("7").neg().to_string(), "-7");
-        // تقسیم با دقتِ ۱۸ + گردِ نیم-دور-از-صفر
+        // division at 18-digit precision + half-away-from-zero rounding
         assert_eq!(p("1").div(&p("3"), 18).unwrap().to_string(), "0.333333333333333333");
         assert_eq!(p("2").div(&p("3"), 6).unwrap().to_string(), "0.666667");
         assert_eq!(p("-2").div(&p("3"), 6).unwrap().to_string(), "-0.666667");
@@ -1422,7 +1422,7 @@ mod tests {
         assert!(p("1").div(&p("0"), 18).is_err());
         assert_eq!(p("7.5").mod_op(&p("2")).unwrap().to_string(), "1.5");
         assert_eq!(p("-7.5").mod_op(&p("2")).unwrap().to_string(), "-1.5");
-        // مقایسه‌ها
+        // comparisons
         assert!(p("0.10").eq_val(&p("0.1")).unwrap());
         assert!(p("1.00001").gt(&p("1")).unwrap());
         assert!(p("1").le(&p("1.0")).unwrap());
@@ -1443,7 +1443,7 @@ mod tests {
         assert_eq!(dtp("12.5465", Truncate, 2, DP, NP).unwrap(), "12.54");
         assert_eq!(dtp("12.5465", Round, 0, DP, NP).unwrap(), "13");
         assert_eq!(dtp("-12.5465", Round, 2, DP, NP).unwrap(), "-12.55");
-        // دقتِ منفی — ده‌گان
+        // negative precision — decades
         assert_eq!(dtp("1234.567", Round, -2, DP, NP).unwrap(), "1200");
         assert_eq!(dtp("1234.567", Round, -2, DP, PZ).unwrap(), "1200");
         // SignificantDigits
@@ -1454,10 +1454,10 @@ mod tests {
         assert_eq!(dtp("123.456", Truncate, 3, SD, PZ).unwrap(), "123");
         assert_eq!(dtp("0.000123456", Truncate, 3, SD, PZ).unwrap(), "0.000123");
         assert_eq!(dtp("0", Round, 5, SD, NP).unwrap(), "0");
-        // TickSize واحدِ 10^−p
+        // the 10^−p TickSize
         assert_eq!(dtp("1.23456", Round, 4, TS, NP).unwrap(), "1.2346");
         assert_eq!(dtp("1.23456", Truncate, 4, TS, NP).unwrap(), "1.2345");
-        // پدینگ
+        // padding
         assert_eq!(dtp("12.5", Round, 4, DP, PZ).unwrap(), "12.5000");
         assert_eq!(dtp("12.5", Round, 4, DP, NP).unwrap(), "12.5");
     }
@@ -1465,15 +1465,15 @@ mod tests {
     #[test]
     fn forensic_fix_1_tick_size_round_is_pure_precise_no_float_drift() {
         use RoundingMode::{Round, Truncate};
-        // فال‌بکِ f64 % مرجع روی 0.0001 ریزش می‌دهد؛ اینجا نتایجِ دقیقِ
-        // محاسبه‌شدهٔ صحیح اند:
+        // the upstream `f64 %` fallback drifts on 0.0001; here the exactly-computed correct
+        // results are:
         assert_eq!(to_precision_tick_size("0.2857", "0.0001", Round).unwrap(), "0.2857");
         assert_eq!(to_precision_tick_size("123.456", "0.0001", Round).unwrap(), "123.456");
-        // نیم‌گردها
+        // half-roundings
         assert_eq!(to_precision_tick_size("0.125", "0.05", Round).unwrap(), "0.15");
         assert_eq!(to_precision_tick_size("0.125", "0.05", Truncate).unwrap(), "0.1");
         assert_eq!(to_precision_tick_size("1.0049", "0.05", Round).unwrap(), "1");
-        // تیکِ منفی/صفر ممنوع
+        // negative/zero tick forbidden
         assert!(to_precision_tick_size("1", "0", Round).is_err());
         assert!(to_precision_tick_size("1", "-0.01", Round).is_err());
     }
@@ -1488,29 +1488,29 @@ mod tests {
         assert_eq!(rows[3].output, "1");
         assert_eq!(rows[4].output, "123.456");
         let again = precise_tick_selftest_rows();
-        assert_eq!(rows, again, "خودآزمون باید دترمینیستیک باشد");
+        assert_eq!(rows, again, "\u{62e}\u{648}\u{62f}\u{622}\u{632}\u{645}\u{648}\u{646} \u{628}\u{627}\u{6cc}\u{62f} \u{62f}\u{62a}\u{631}\u{645}\u{6cc}\u{646}\u{6cc}\u{633}\u{62a}\u{6cc}\u{6a9} \u{628}\u{627}\u{634}\u{62f}");
     }
 
     #[test]
     fn leaky_bucket_delays_are_exact() {
         let mut t = CcxtThrottler::new_leaky_bucket(10.0, 1.0, 6.0);
-        assert_eq!(t.wait_ms(0, 6.0), 0, "ظرفیتِ کامل — بلافاصله");
-        assert_eq!(t.wait_ms(0, 6.0), 2, "۴ توکن مانده → ceil(2/1)=۲ms");
-        assert_eq!(t.wait_ms(1_000, 1.0), 0, "۱ ثانیه بعد — پر شده");
+        assert_eq!(t.wait_ms(0, 6.0), 0, "\u{638}\u{631}\u{641}\u{6cc}\u{62a}\u{650} \u{6a9}\u{627}\u{645}\u{644} — \u{628}\u{644}\u{627}\u{641}\u{627}\u{635}\u{644}\u{647}");
+        assert_eq!(t.wait_ms(0, 6.0), 2, "\u{6f4} \u{62a}\u{648}\u{6a9}\u{646} \u{645}\u{627}\u{646}\u{62f}\u{647} → ceil(2/1)=\u{6f2}ms");
+        assert_eq!(t.wait_ms(1_000, 1.0), 0, "\u{6f1} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{628}\u{639}\u{62f} — \u{67e}\u{631} \u{634}\u{62f}\u{647}");
     }
 
     #[test]
     fn rolling_window_is_o1_weighted() {
         let mut t = CcxtThrottler::new_rolling_window(60_000, 100);
         assert_eq!(t.wait_ms(0, 60.0), 0);
-        assert_eq!(t.wait_ms(1, 60.0), 59_999, "تا خروجِ اولی از پنجره صبر می‌کند");
-        // درخواستِ دوم در لحظهٔ انقضایِ اولی زمان‌بندی شد — یعنی اولی بیرون
-        // است و فقط تازه‌مانده: entries=1، وزن=۶۰ (نه ۱۲۰).
+        assert_eq!(t.wait_ms(1, 60.0), 59_999, "\u{62a}\u{627} \u{62e}\u{631}\u{648}\u{62c}\u{650} \u{627}\u{648}\u{644}\u{6cc} \u{627}\u{632} \u{67e}\u{646}\u{62c}\u{631}\u{647} \u{635}\u{628}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}");
+        // the second request is scheduled at the first's exact expiry — i.e. the first has slid out
+        // and only the fresh one remains: entries=1, weight=60 (not 120).
         assert_eq!(t.rolling_entries(), 1);
         assert_eq!(t.rolling_total(), 60);
-        // پاک‌سازیِ کاملِ پنجره در زمانِ آینده
+        // full window purge at a future time
         assert_eq!(t.wait_ms(70_000, 1.0), 0);
-        assert_eq!(t.rolling_entries(), 2, "قدیمی هنوز تا ۱۲۰٬۰۰۰ زنده است + تازه");
+        assert_eq!(t.rolling_entries(), 2, "\u{642}\u{62f}\u{6cc}\u{645}\u{6cc} \u{647}\u{646}\u{648}\u{632} \u{62a}\u{627} \u{6f1}\u{6f2}\u{6f0}\u{66c}\u{6f0}\u{6f0}\u{6f0} \u{632}\u{646}\u{62f}\u{647} \u{627}\u{633}\u{62a} + \u{62a}\u{627}\u{632}\u{647}");
     }
 
     #[test]
@@ -1519,19 +1519,19 @@ mod tests {
         bids.store(100_000, 5);
         bids.store(101_000, 7);
         bids.store(99_000, 2);
-        assert_eq!(bids.best_level(), Some((101_000, 7)), "بالاترین bid سرِ صف");
+        assert_eq!(bids.best_level(), Some((101_000, 7)), "\u{628}\u{627}\u{644}\u{627}\u{62a}\u{631}\u{6cc}\u{646} bid \u{633}\u{631}\u{650} \u{635}\u{641}");
         assert_eq!(bids.top_n(2).len(), 2);
         bids.store(101_000, 0);
-        assert_eq!(bids.best_level(), Some((100_000, 5)), "size=0 حذف می‌کند");
-        // بازنویسیِ $O(1)$ همان قیمت
+        assert_eq!(bids.best_level(), Some((100_000, 5)), "size=0 \u{62d}\u{630}\u{641} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}");
+        // an $O(1)$ overwrite at the same price
         bids.store(100_000, 9);
         assert_eq!(bids.best_level(), Some((100_000, 9)));
 
         let mut asks = OrderBookSide::new(SideKind::Asks, None);
         asks.store(103_000, 4);
         asks.store(102_000, 3);
-        assert_eq!(asks.best_level(), Some((102_000, 3)), "پایین‌ترین ask سرِ صف");
-        assert!(bids.spread_bps(&asks).unwrap() > 0.0, "اسپردِ مثبت");
+        assert_eq!(asks.best_level(), Some((102_000, 3)), "\u{67e}\u{627}\u{6cc}\u{6cc}\u{646}‌\u{62a}\u{631}\u{6cc}\u{646} ask \u{633}\u{631}\u{650} \u{635}\u{641}");
+        assert!(bids.spread_bps(&asks).unwrap() > 0.0, "\u{627}\u{633}\u{67e}\u{631}\u{62f}\u{650} \u{645}\u{62b}\u{628}\u{62a}");
         assert_eq!(bids.mid_price_micros(&asks), Some(101_000));
     }
 
@@ -1541,44 +1541,44 @@ mod tests {
         asks.store(100, 1);
         asks.store(101, 1);
         asks.store(102, 1);
-        assert_eq!(asks.len(), 2, "سقفِ عمقِ ۲");
+        assert_eq!(asks.len(), 2, "\u{633}\u{642}\u{641}\u{650} \u{639}\u{645}\u{642}\u{650} \u{6f2}");
         assert_eq!(asks.best_level(), Some((100, 1)));
         assert_eq!(asks.top_n(5).len(), 2);
 
         let mut bids = OrderBookSide::new(SideKind::Bids, None);
         bids.store(99, 100);
         bids.store(98, 300);
-        // ناتینالِ ۲۰٬۰۰۰: 99×100=9900 → 98×300=29400 → cumulative 39300 ≥ 20000
+        // notional 20,000: 99×100=9900 → 98×300=29400 → cumulative 39300 ≥ 20000
         // vwap = 39300/400 = 98.25
         let vwap = bids.vwap_for_notional(20_000).unwrap();
         assert!((vwap - 98.25).abs() < 1e-9);
-        assert!(bids.vwap_for_notional(10_000_000).is_none(), "عمق ناکافی");
+        assert!(bids.vwap_for_notional(10_000_000).is_none(), "\u{639}\u{645}\u{642} \u{646}\u{627}\u{6a9}\u{627}\u{641}\u{6cc}");
         assert!(bids.vwap_for_notional(0).is_none());
     }
 
     #[test]
     fn forensic_fix_2_sequence_gap_is_detected_not_applied() {
         let mut book = OrderBook::new(64);
-        // اولین اسنپ‌شاتِ پیوسته
+        // the first contiguous snapshot
         let out = book.apply_delta(7, &[(100_000, 5_000)], &[(101_000, 4_000)]);
         assert_eq!(out, OrderBookSyncOutcome::Applied { nonce: 7 });
-        // کهنه — نادیده
+        // stale — ignored
         assert_eq!(book.apply_delta(5, &[], &[]), OrderBookSyncOutcome::IgnoredStale);
         assert_eq!(book.nonce, 7);
-        // گپ — بدونِ جهشِ لِیول‌ها
+        // gap — no level jump
         let gap = book.apply_delta(9, &[(102_000, 9_999)], &[]);
         assert_eq!(
             gap,
             OrderBookSyncOutcome::SequenceGapDetected { expected: 8, received: 9 }
         );
-        assert_eq!(book.nonce, 7, "nonce ثابت ماند");
-        assert!(book.asks.top_n(9).iter().all(|&(p, _)| p != 102_000), "لِیولِ گپ‌دار هرگز وارد نشد");
-        // پیوستهٔ بعد از گپ — همچنان رد می‌شود تا resync
+        assert_eq!(book.nonce, 7, "nonce \u{62b}\u{627}\u{628}\u{62a} \u{645}\u{627}\u{646}\u{62f}");
+        assert!(book.asks.top_n(9).iter().all(|&(p, _)| p != 102_000), "\u{644}\u{650}\u{6cc}\u{648}\u{644}\u{650} \u{6af}\u{67e}‌\u{62f}\u{627}\u{631} \u{647}\u{631}\u{6af}\u{632} \u{648}\u{627}\u{631}\u{62f} \u{646}\u{634}\u{62f}");
+        // contiguous after the gap — still rejected until resync
         assert_eq!(
             book.apply_delta(8, &[], &[]),
             OrderBookSyncOutcome::Applied { nonce: 8 }
         );
-        // resync با اسنپ‌شات
+        // resync with snapshot
         book.reset(20, &[(100_000, 1)], &[(101_000, 1)]);
         assert_eq!(book.nonce, 20);
         assert_eq!(book.apply_delta(23, &[], &[]).clone(),
@@ -1611,7 +1611,7 @@ mod tests {
         assert_eq!(omit_zero("0"), None);
         assert_eq!(omit_zero("0.0"), None);
         assert_eq!(omit_zero("-0"), None);
-        assert_eq!(omit_zero(" 0 "), None, "حاشیهٔ سفید هم صفر است");
+        assert_eq!(omit_zero(" 0 "), None, "\u{62d}\u{627}\u{634}\u{6cc}\u{647}\u{654} \u{633}\u{641}\u{6cc}\u{62f} \u{647}\u{645} \u{635}\u{641}\u{631} \u{627}\u{633}\u{62a}");
         assert_eq!(omit_zero("0.0001"), Some("0.0001"));
         assert_eq!(omit_zero("12.5"), Some("12.5"));
     }
@@ -1643,7 +1643,7 @@ mod tests {
             assert!(!e.is_retryable());
             assert_eq!(e.recommended_backoff_ms(0), 0);
         }
-        // نمایی با سقفِ ۶۰ ثانیه
+        // exponential with a 60-second cap
         assert_eq!(CcxtErrorKind::NetworkError(N::RequestTimeout).recommended_backoff_ms(0), 500);
         assert_eq!(CcxtErrorKind::NetworkError(N::RequestTimeout).recommended_backoff_ms(1), 1_000);
         assert_eq!(CcxtErrorKind::NetworkError(N::RateLimitExceeded).recommended_backoff_ms(10), 60_000);
@@ -1665,8 +1665,8 @@ mod tests {
             "base-mainnet-dex",
         ]);
         for v in &m {
-            assert_eq!(v.auth, "none", "همهٔ مکان‌ها بی‌کلید");
-            assert!(!v.endpoints.is_empty(), "هر مکان باید نقطهٔ پایانی داشته باشد");
+            assert_eq!(v.auth, "none", "\u{647}\u{645}\u{647}\u{654} \u{645}\u{6a9}\u{627}\u{646}‌\u{647}\u{627} \u{628}\u{6cc}‌\u{6a9}\u{644}\u{6cc}\u{62f}");
+            assert!(!v.endpoints.is_empty(), "\u{647}\u{631} \u{645}\u{6a9}\u{627}\u{646} \u{628}\u{627}\u{6cc}\u{62f} \u{646}\u{642}\u{637}\u{647}\u{654} \u{67e}\u{627}\u{6cc}\u{627}\u{646}\u{6cc} \u{62f}\u{627}\u{634}\u{62a}\u{647} \u{628}\u{627}\u{634}\u{62f}");
         }
         let hl = m.iter().find(|v| v.id == "hyperliquid-dex").unwrap();
         assert_eq!(hl.endpoints[0].weight, 2);

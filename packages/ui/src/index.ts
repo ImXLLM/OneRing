@@ -1,7 +1,7 @@
 // KIAN Design System — @kian/ui
-// Tailwind 4 (CSS-first @theme) + shadcn الگو + motion 14 — RTL-first، پالت سلطنتی
+// Tailwind 4 (CSS-first @theme) + shadcn pattern + motion 14 — RTL-first, royal palette
 //
-// کامپوننت‌ها:
+// Components:
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export {
   Card,
@@ -22,7 +22,7 @@ export { Alert, AlertTitle, AlertDescription, alertVariants, type AlertProps } f
 export { Toaster } from "./components/toaster";
 export { Slot } from "./components/slot";
 
-// هوک‌ها و ابزارها:
+// Hooks and utilities:
 export { toast, dismiss, useToast, type ToastItem, type ToastVariant } from "./hooks/use-toast";
 export { cn } from "./lib/utils";
 

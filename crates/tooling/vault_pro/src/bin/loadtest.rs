@@ -1,11 +1,11 @@
-//! `loadtest` — لودتست کوتاه فاز ۸ (ADR-009 §۷ فاز ۸): «p95 زیر TS baseline
-//! در همان سخت‌افزار + حافظهٔ مقصد ثبت‌شده».
+//! `loadtest` — short phase 8 load test (ADR-009 §7 phase 8): «p95 below the TS baseline
+//! on the same hardware + the recorded destination memory».
 //!
-//! مولد بار tokio — معادل سبک `oha`: N کارگر هم‌زمان، M ثانیه، شمارش تأخیرها
-//! و محاسبهٔ p50/p95/p99 و RPS و توزیع وضعیت. خروجی JSON با `--json` برای
-//! ثبت در سند مقایسه (LOADTEST.md).
+//! tokio load generator — a lightweight `oha` equivalent: N concurrent workers, M seconds, latency counts
+//! plus p50/p95/p99, RPS and status distribution. JSON output with `--json` for
+//! recording in the comparison document (LOADTEST.md).
 //!
-//! استفاده:
+//! Usage:
 //! ```text
 //! loadtest --url http://127.0.0.1:3000/api/v1/health \
 //!          [--duration 10] [--concurrency 8] [--header "x-kia-key: ..."] \
@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-/// خواندن مقدار `--flag` از آرگومان‌ها.
+/// Reads the `--flag` value from the arguments.
 fn arg_of(args: &[String], flag: &str) -> Option<String> {
     args.iter().position(|a| a == flag).and_then(|i| args.get(i + 1)).cloned()
 }

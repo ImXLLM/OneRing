@@ -1,23 +1,23 @@
-//! kian-bot — آداپتور تلگرام M6 — orchestrator خالص آفلاین‌تست‌پذیر.
+//! kian-bot — the M6 Telegram adapter — a pure, offline-testable orchestrator.
 //!
-//! معماری (همان الگوی سراسر مخزن — دامنه خالص + شِل نازک):
+//! Architecture (the same repo-wide pattern — pure domain + thin shell):
 //!
-//! * [`orchestrator`] — هستهٔ **صددرصد خالص**: تجزیهٔ فرمان، سقف نرخ با ساعت
-//!   تزریقی، برش پیام، ساخت [`BotAction`]. هیچ I/O — همهٔ مسیرها با
-//!   `FakePort` آفلاین تست می‌شوند.
-//! * [`update`] — تجزیهٔ آپدیت تلگرام از `serde_json::Value` خالص؛ **هر دو
-//!   شِل** (طول‌کشی teloxide و وبهوک کرنل) از همین یک مسیر تجزیه می‌روند.
-//! * [`backlog`] — تخلیهٔ عقب‌ماندگی در بوت (پورت `drain_backlog` بات هرمس؛
-//!   `offset = -1, timeout = 0`) — ضد پاسخ دوباره پس از ری‌استارت.
-//! * [`port`] — پورت [`KernelPort`] (async-trait): اقتصاد ملی + نشست شهروند.
-//! * [`kernel_http`] — پیاده‌سازی واقعی پورت روی HTTP کرنل.
-//! * [`shell`] — طول‌کشی teloxide 0.17 (rustls؛ هرگز openssl-system).
+//! * [`orchestrator`] — a **100% pure** core: command parsing, rate cap with an injected
+//!   clock, message splitting, [`BotAction`] construction. No I/O — every path is
+//!   tested offline with `FakePort`.
+//! * [`update`] — parsing a Telegram update from a plain `serde_json::Value`; **both
+//!   shells** (the teloxide polling loop and the kernel webhook) parse through this single path.
+//! * [`backlog`] — backlog drain at boot (port of the Hermes bot `drain_backlog`;
+//!   `offset = -1, timeout = 0`) — anti double-reply after restart.
+//! * [`port`] — the [`KernelPort`] port (async-trait): national economy + citizen session.
+//! * [`kernel_http`] — the real port implementation over kernel HTTP.
+//! * [`shell`] — the teloxide 0.17 polling loop (rustls; never openssl-system).
 //!
-//! اصل هویت (مادهٔ ۱ — fail-closed): بات دارندهٔ `KIAN_BOT_TOKEN` است و
-//! آپدیت‌ها از کانال معتمد تلگرام می‌آیند. برای دادهٔ شهروند، بات initData را
-//! با [`kian_contracts::build_bot_init_data`] ضرب می‌کند و `POST /auth/telegram`
-//! را همان مسیر رسمی مینی‌اپ طی می‌کند — **هیچ مسیر جانبی برای هویت و پول
-//! وجود ندارد**. توکن بات هرگز در لاگ/پاسخ نمی‌آید (تست‌شده).
+//! Identity principle (article 1 — fail-closed): the bot holds `KIAN_BOT_TOKEN` and
+//! updates come from Telegram's trusted channel. For citizen data, the bot signs initData
+//! with [`kian_contracts::build_bot_init_data`] and `POST /auth/telegram`
+//! follows the same official mini-app path — **there is no side path for identity or money
+//! anywhere**. The bot token never appears in logs/responses (tested).
 
 pub mod backlog;
 pub mod kernel_http;

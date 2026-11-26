@@ -11,7 +11,7 @@ pragma solidity ^0.8.24;
 ///   * Base native USDC  0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 (6 dec)
 ///   * $0xKIA            ZeroXKiaToken      (18 dec)
 ///
-/// The four Day-1 sovereign revenue streams ("جنگ اول به از صلح آخر"):
+/// The four Day-1 sovereign revenue streams ("The first war is better than the last peace"):
 ///   * Stream 1 — 10% (1000 bps) mandatory platform charter tax on every
 ///     marketplace sale, routed to `kiaTreasury`.
 ///   * Stream 2 — 10%–50% (1000..=5000 bps) programmable affiliate split.

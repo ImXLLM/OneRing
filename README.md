@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚒️ KIAN v2 — Sovereign AI Agent Kernel, Multi-Model Genome Router & Dual-Trust Marketplace
+# ⚒️ MAIRON — Sovereign Intelligence, Quantitative Execution & Autonomous Capital OS
 
 **An enterprise-grade, zero-unsafe Rust monorepo pairing an 11-crate financial & agent kernel with a
 Next.js / Telegram Mini-App frontend: a 7-role autonomous agent fleet, keyless multi-model AI routing,
@@ -14,8 +14,6 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 [![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-334_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
-
-**English** | [فارسی](README.fa.md) | [中文](README.zh-CN.md) | [Español](README.es.md)
 
 </div>
 
@@ -46,11 +44,11 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 ## 🧭 Overview
 
-**KIAN v2** is a sovereign, full-stack AI operating system and digital-commerce kernel written in
+**MAIRON** is a sovereign, full-stack AI operating system and digital-commerce kernel written in
 **pure Rust** (11 workspace crates, edition 2024, `rustc 1.100.0` pinned via `rust-toolchain.toml`)
 paired with a **Next.js 16 / Telegram Mini-App (TMA)** frontend. Unlike conventional Python agent
 frameworks that suffer from heavy runtimes, brittle prompt templates, credit-card API lock-in, and
-unverified code output, KIAN v2 is engineered from first principles for **zero-cost inference,
+unverified code output, MAIRON is engineered from first principles for **zero-cost inference,
 cryptographic ledger integrity, and deterministic quality verification**:
 
 1. **Zero-Card / Zero-KYC Inference Mesh (`kian-ai`)** — Routes work across **10 keyless OpenCode Zen
@@ -107,7 +105,7 @@ cryptographic ledger integrity, and deterministic quality verification**:
                                         │ HTTPS / SSE / TMA Bridge
                                         ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                     KIAN RUST KERNEL (11 Workspace Crates)                       │
+│                     MAIRON RUST KERNEL (11 Workspace Crates)                     │
 │                                                                                  │
 │  ┌──────────────────────────────┐    ┌────────────────────────────────────────┐  │
 │  │  kian-server & kian-bot      │───▶│    kian-agents (7/7 Active Fleet)      │  │
@@ -177,7 +175,6 @@ totals from `cargo test --workspace` (**704 passed / 0 failed**).
 | `KIA-BRAIN-OS/` | Cognitive OS | 12-file Creator DNA constitution (`01_DNAme.md` … `10_MAIRON_REA_SOVEREIGN.md` … `11_UNCHAINED_KIA_DNA.md` … `12_TRINITY_AVATAR_ENGINE.md`) | — |
 | `OMNI-MODEL-GENOME/` | Model Vault | 9-file forensic profiles per frontier model + ecosystem index + sanitizer scripts | — |
 | `docs/dna/` | Mirror | Gate-readable mirror of `KIA-BRAIN-OS/` and `OMNI-MODEL-GENOME/` | — |
-| `docs/history/` | Lineage Record | [`EVOLUTION_LINEAGE.md`](./docs/history/EVOLUTION_LINEAGE.md) — full Wave 0 → Wave 2 evolutionary chronology | — |
 | `seed/kian-production.db` | Production DB | Full production state — invariants in the table below | Verified |
 | `scripts/` | Ops | Migration ETL, vault injectors, live benchmarks, E2E smokes, relaunch broadcast | — |
 | `tools/rea/` | Quality Gates | Milestone gate runners (`step1` … `step6-gate.mjs`) + `release-exposure.mjs` | — |
@@ -185,14 +182,14 @@ totals from `cargo test --workspace` (**704 passed / 0 failed**).
 ### Repository Design — Full Evolutionary Lineage + Latest-Version Execution Weight
 
 This repository is architected under **Law #3 of [`KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md`](./KIA-BRAIN-OS/11_UNCHAINED_KIA_DNA.md)**:
-*Evolutionary Lineage Preservation with Latest-Version Execution Weight* (`حفظ تاریخچهٔ تکامل + وزن اجرایی روی آخرین نسخه`):
+*Evolutionary Lineage Preservation with Latest-Version Execution Weight*:
 
-- **History is preserved, immutable** — the full `git log` (every commit from Wave 0 to the final
+- **History is preserved, immutable** — the full `git log` (every commit since the genesis commit to the final
   release), the 19 mounted gem vaults under [`docs/vault/`](./docs/vault), the per-step REA gate
   reports under [`docs/rea/`](./docs/rea), and the complete chronology in
   [`docs/history/EVOLUTION_LINEAGE.md`](./docs/history/EVOLUTION_LINEAGE.md) remain inside the
-  repository as proof-of-work lineage (`تاریخچهٔ پیشرفت`).
-- **Execution weight (`وزن اجرایی`) is exclusive to the latest version** — inside
+  repository as proof-of-work lineage (progress chronology).
+- **Execution weight is exclusive to the latest version** — inside
   `seed/kian-production.db`, the latest v2 sovereign genome/DNA/routing entries carry the
   `[EXEC_WEIGHT: 1.00 | ACTIVE_PRIMARY]` marker while every legacy entry stays queryable as lineage
   (zero deletions); and the hardened [`.dockerignore`](./.dockerignore) strips every
@@ -209,7 +206,7 @@ This repository is architected under **Law #3 of [`KIA-BRAIN-OS/11_UNCHAINED_KIA
 
 ### 1. `Mairon` Live Product REA Gate & 5-Star Bayesian Review Engine (`kian-domain`)
 
-Every user-built product in the KIAN Studio must pass **`Mairon`** (`مایرون — معمارِ نظمِ مطلق و داورِ ارشدِ REA`)
+Every user-built product in the MAIRON Studio must pass **`Mairon`** — the Architect of Absolute Order and the Supreme REA Judge
 before entering the marketplace:
 
 - **4-Pillar Technical Audit (`4 × 25 = 100` points)** — `MAX_PILLAR_SCORE = 25` per pillar:
@@ -223,7 +220,7 @@ before entering the marketplace:
   feedback. Even a 96/100 verdict is rejected without creator confirmation.
 - **Visible badges rendered by the kernel:**
   - Approved → `⚒️ Mairon REA Certified: {score}/100 (Forge-Grade)`
-  - Rejected → `⚠️ نیازمند بازنگری مایرون (REA < 85)`
+  - Rejected → `⚠️ Requires Mairon Revision (REA < 85)`
 - **Sybil-Resistant 5-Star Bayesian Rating Engine (`summarize_product_ratings`)**:
   - Strictly validates `1..=5` stars (out-of-range → `Err`), non-empty trimmed comments
     (`MAX_COMMENT_CHARS = 2_000`), and enforces **one review per citizen per product** —
@@ -237,7 +234,7 @@ before entering the marketplace:
   ```
 
   - `five_star_display` renders the marketplace badge, e.g.
-    `★★★★★ 4.9 / 5.0 (42 نظر تاییدشده) | ⚒️ نمره مایرون REA: 96/100`.
+    `★★★★★ 4.9 / 5.0 (42 verified reviews) | ⚒️ Mairon REA Score: 96/100`.
 
 ### 2. `OMNI-MODEL-GENOME` & Zero-Cost Inference Mesh (`kian-ai`)
 
@@ -319,7 +316,7 @@ Exposed over `GET /api/v1/agents/fleet`, `POST /api/v1/a2a/messages` (A2A inbox 
 
 ## 🧬 The Sovereign Trinity Studio Pipeline (`Alpha → Command Center 3×9 OpenBot → Mairon 150/145`)
 
-The signature architectural centerpiece of `0xKIA` (Wave 3): three Avatars of Kia operate as one
+The signature architectural centerpiece of `0xKIA`: three Avatars of Kia operate as one
 sovereign product forge, implemented as a fully deterministic, zero-unsafe engine in
 [`crates/hermes/src/trinity_pipeline.rs`](./crates/hermes/src/trinity_pipeline.rs) with the judge's
 DNA locked in [`crates/domain/src/mairon_rea_and_reviews.rs`](./crates/domain/src/mairon_rea_and_reviews.rs).
@@ -356,7 +353,7 @@ citizen idea
    Marketplace listing + 5-star Bayesian ranking (CombinedRankScore)
 ```
 
-### The Three Avatars (`سه کالبد کیا`)
+### The Three Avatars
 
 | Avatar | Calibration (locked constants) | Mandate | Signature artifacts |
 | :--- | :--- | :--- | :--- |
@@ -401,7 +398,7 @@ rows at audit time (now **334** after the Wave-10 `dna:wave10:founder-war-room-g
 
 | Invariant / Table | Verified Value | Guarantee |
 | :--- | :---: | :--- |
-| `"KbEntry"` (skills, agents & genomes) | **334 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #19 `dna:wave10:founder-war-room-grand-ui` is the newest row (Wave 10); historical entries carry `[EXEC_WEIGHT: 0.00 \| HISTORICAL_LINEAGE]` while the 12 primary rows carry `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
+| `"KbEntry"` (skills, agents & genomes) | **334 rows** | Idempotent `UPSERT` injectors under `scripts/` (no duplicates) — DNA #19 `dna:wave10:founder-war-room-grand-ui` is the newest row; historical entries carry `[EXEC_WEIGHT: 0.00 \| HISTORICAL_LINEAGE]` while the 12 primary rows carry `[EXEC_WEIGHT: 1.00 \| ACTIVE_PRIMARY]` |
 | `"User"` (verified citizens) | **466 citizens** | Production citizen accounts preserved |
 | `"ReferralLineage"` (viral graph) | **247 lineages** | Multi-tier referral attribution intact |
 | `"Escrow"` (atomic orders) | **108 escrows** | Protected by CAS (`WHERE version = ?`) + `idempotency_key` |
@@ -426,14 +423,14 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 | Escrows | `POST /escrows` · `GET /escrows/{id}` · `POST /escrows/{id}/fund\|deliver\|release\|dispute\|refund\|cancel\|expire` | Bearer (party) |
 | Builder | `POST /builder/sessions` · `GET /builder/sessions/{id}` · `POST /builder/sessions/{id}/chat` · `POST /builder/sessions/{id}/publish` | Bearer |
 | Trinity | `POST /builder/trinity/alpha` (Avatar 1 — discovery / master-prompt lock) · `POST /builder/trinity/orchestrate` (Avatar 2 `3×9 OpenBot` + Avatar 3 Mairon `IQ=150/EQ=145` self-healing forge loop) | Bearer |
-| Quant — Wave 6 | `GET /quant/venues` (8-venue keyless market matrix + `Precise` tick-size self-test proof + OrderBook sequence-gap guard status) · `POST /quant/vibe-backtest` (bilingual FA/EN Vibe prompt → 5-node swarm DAG → strictly-causal `&candles[0..=t]` backtester with `+1 bar` fills → SHA-256 claim ledger → Mairon quant gate (sharpe ≥ 1.20, |DD| ≤ 20%, ≥ 5 trades) → `quant_strategies` persistence + auto-forged Quant `SKILL.md`) · `GET /quant/strategies` (persisted strategies, newest-first) | Public / Bearer |
-| Monopoly — Wave 7 Hardened | `GET /monopoly/genome-matrix` (**5-model × 9-file DNA genome matrix**, 45-file disk verification status, 7 champion routing rules, Trinity wiring, both `manual_override` + `agent_auto_decision` selection capabilities) · `POST /monopoly/route-model` (dual-mode: manual override across all 5 models incl. `GLM 5.3 flash MAX`, or autonomous agent-mode telemetry routing → distilled system prompt + 9-file verification proof + decision rationale) · `GET /monopoly/charter-and-base` (Day-1 4-Stream charter «جنگ اول به از صلح آخر», Base `8453` config incl. USDC `0x8335…2913`, `ZeroXKiaToken.sol` + `KiaBaseEscrowTreasury.sol` audit summaries) · `POST /monopoly/simulate-split` (referred sale, unreferred 2000 bps direct-sale rule, or 100%-margin instant boost → `compute_day_one_atomic_split` → `sovereign_treasury_splits` persistence → zero-sum proof + Base EIP-681 payment URI) | Public (GET) / Bearer (POST) |
-| Supremacy — Wave 8 |
-| Neural HUD & Grok Lab — Wave 9 | `GET /hud/presets` (8-preset telemetry catalog with upstream and Kia Sovereign signatures) · `POST /hud/synthesize` (deterministic repo-to-HUD synthesis: 180-node dual-shell `window.seekTo(t)` HTML5 bundle + SHA-256 + `lavfi` audio command with master limiter + MJPEG pipe video command with `+faststart`, render job persisted to `"NeuralHudRenderJob"`) · `GET /grok/ui-bundle` (cosmic dark-matter UI bundle — `#050507`, 6 quick-action chips, 20 locale slots, RTL/LTR by locale) · `POST /grok/chat-turn` (persona response + visible think accordion with `thinking_duration_ms` + `DeepSearch` citation bar + 3 ghost follow-up chips + penta-model routing) · `GET /i18n/ecosystem-matrix` (20-locale Day-1 matrix: `fa`/`en` `ACTIVE_DAY1` @ 10000 bps + 18 `PATCH_READY_SLOT` with SVG flags) · `POST /i18n/apply-patch` (hot translation patch with `wave9.N` versioning, persisted to `"LocalePatchRegistry"`) | Public (presets, ui-bundle, ecosystem-matrix) / Bearer (synthesize, chat-turn, apply-patch) |
-| Admin Lab & RLHF — Wave 9 | `GET /admin/lab-telemetry` (10-DNA cohort observatory over `"UserLabTelemetryLog"` — per-cohort health, model/locale/tier/persona distributions, friction vs recovery counters, REA gate) · `POST /admin/export-training-dataset` (RLHF exporter: SFT ChatML/ShareGPT JSONL + DPO `prompt/chosen/rejected` JSONL above a `min_rea_score` gate) | Admin (`X-KIAN-Key`) | `POST /supremacy/surgical-patch` (Bolt/Lovable surgical `SEARCH/REPLACE` + live sandbox inspector bundle with `data-kia-node-id` + `KIA_DOM_INSPECT` postMessage bridge, SHA-256 before/after, zero full-file regeneration) · `POST /supremacy/checkpoint/fork` (LangGraph-style time-travel: rewind + merge-patch fork from any historical checkpoint without replay, persisted to `"AgentCheckpoint"` with SHA-256 tamper rejection) · `POST /supremacy/workflow/execute` (Dify/n8n dynamic JSON DAG with Kahn topological sort + cycle rejection over 7 engine node kinds, persisted to `"WorkflowDagRun"` with REA score 92) · `POST /supremacy/mcp` (standard MCP JSON-RPC 2.0 bridge: `initialize` / `tools/list` / `tools/call` exposing `trinity`, `arda`, `studio`, `vibe_quant`, `base_treasury`; typed `-32601`/`-32602`) · `POST /supremacy/swe-verify` (OpenHands-style Plan→Verify→Self-Heal loop with `MaironVerifiedSeal` at `rea_score >= 85`, persisted to `"SweSandboxAudit"`) | Public (surgical-patch, mcp) / Bearer (fork, execute, swe-verify) |
-| Founder War-Room — Wave 10 | `GET /war-room/state` (public: honest Day-0 wallet `$33.00` crypto seed + `$15.00` cash + `$350.00` locked paper + `$0.00` earned, the canonical 24-tick bilingual scenario, 4 revenue streams, `KiaAgentX/xA @ 97b18bd`) · `POST /war-room/step` (session: causal single-tick advance with server-side replay, anti-jump guard `delta <= 3600s`, tick persisted to `"FounderWarRoomTick"`) · `POST /war-room/directive` (session: deterministic FA/EN intent classification + 3 in-character founder replies, sha-pinned idempotent log in `"ChairmanDirectiveLog"`) · `GET /war-room/explain-simple` (public: ELI5 zero-to-100 explainer, steps A–D + the 80/20 charter) | Public (state, explain-simple) / Bearer (step, directive) |
-| Studio — Wave 5 | `GET /studio/ux-profiles` (3 cognitive tiers `ToySpark`/`CreatorStudio`/`ProTerminal` + 9 zero-cost modalities + 6/6 portfolio fix report) · `POST /studio/generate` (adaptive artifact + dual `Fishkal`+`Cosmos` bundle + ARDA 20-locale packaging + Mairon `SKILL.md` forge + `studio_creations` persistence) · `GET /studio/portfolio-catalog` (featured top-2, dark-glass tokens, `Ctrl+K`/`Meta+K`/`/` command palette) | Public / Bearer |
-| ARDA — Wave 4 | `GET /arda/flags` (20-locale verbatim vector flag catalog + circular badges) · `POST /arda/localize-now` (live packaging, owner-only stamping) · `GET /market/products/{id}/skill` (auto-forge `SKILL.md`/`skill.json` at the REA gate) | Public / Bearer |
+| Mairon Quant & CCXT | `GET /quant/venues` (8-venue keyless market matrix + `Precise` tick-size self-test proof + OrderBook sequence-gap guard status) · `POST /quant/vibe-backtest` (bilingual FA/EN Vibe prompt → 5-node swarm DAG → strictly-causal `&candles[0..=t]` backtester with `+1 bar` fills → SHA-256 claim ledger → Mairon quant gate (sharpe ≥ 1.20, |DD| ≤ 20%, ≥ 5 trades) → `quant_strategies` persistence + auto-forged Quant `SKILL.md`) · `GET /quant/strategies` (persisted strategies, newest-first) | Public / Bearer |
+| Mairon Base-8453 Treasury | `GET /monopoly/genome-matrix` (**5-model × 9-file DNA genome matrix**, 45-file disk verification status, 7 champion routing rules, Trinity wiring, both `manual_override` + `agent_auto_decision` selection capabilities) · `POST /monopoly/route-model` (dual-mode: manual override across all 5 models incl. `GLM 5.3 flash MAX`, or autonomous agent-mode telemetry routing → distilled system prompt + 9-file verification proof + decision rationale) · `GET /monopoly/charter-and-base` (Day-1 4-Stream charter "The First War for the Last Peace", Base `8453` config incl. USDC `0x8335…2913`, `ZeroXKiaToken.sol` + `KiaBaseEscrowTreasury.sol` audit summaries) · `POST /monopoly/simulate-split` (referred sale, unreferred 2000 bps direct-sale rule, or 100%-margin instant boost → `compute_day_one_atomic_split` → `sovereign_treasury_splits` persistence → zero-sum proof + Base EIP-681 payment URI) | Public (GET) / Bearer (POST) |
+| Mairon Supremacy Sandbox |
+| Mairon Neural HUD | `GET /hud/presets` (8-preset telemetry catalog with upstream and Kia Sovereign signatures) · `POST /hud/synthesize` (deterministic repo-to-HUD synthesis: 180-node dual-shell `window.seekTo(t)` HTML5 bundle + SHA-256 + `lavfi` audio command with master limiter + MJPEG pipe video command with `+faststart`, render job persisted to `"NeuralHudRenderJob"`) · `GET /grok/ui-bundle` (cosmic dark-matter UI bundle — `#050507`, 6 quick-action chips, 20 locale slots, RTL/LTR by locale) · `POST /grok/chat-turn` (persona response + visible think accordion with `thinking_duration_ms` + `DeepSearch` citation bar + 3 ghost follow-up chips + penta-model routing) · `GET /i18n/ecosystem-matrix` (20-locale Day-1 matrix: `fa`/`en` `ACTIVE_DAY1` @ 10000 bps + 18 `PATCH_READY_SLOT` with SVG flags) · `POST /i18n/apply-patch` (hot translation patch with `wave9.N` versioning, persisted to `"LocalePatchRegistry"`) | Public (presets, ui-bundle, ecosystem-matrix) / Bearer (synthesize, chat-turn, apply-patch) |
+| Mairon Admin Lab & RLHF | `GET /admin/lab-telemetry` (10-DNA cohort observatory over `"UserLabTelemetryLog"` — per-cohort health, model/locale/tier/persona distributions, friction vs recovery counters, REA gate) · `POST /admin/export-training-dataset` (RLHF exporter: SFT ChatML/ShareGPT JSONL + DPO `prompt/chosen/rejected` JSONL above a `min_rea_score` gate) | Admin (`X-KIAN-Key`) | `POST /supremacy/surgical-patch` (Bolt/Lovable surgical `SEARCH/REPLACE` + live sandbox inspector bundle with `data-kia-node-id` + `KIA_DOM_INSPECT` postMessage bridge, SHA-256 before/after, zero full-file regeneration) · `POST /supremacy/checkpoint/fork` (LangGraph-style time-travel: rewind + merge-patch fork from any historical checkpoint without replay, persisted to `"AgentCheckpoint"` with SHA-256 tamper rejection) · `POST /supremacy/workflow/execute` (Dify/n8n dynamic JSON DAG with Kahn topological sort + cycle rejection over 7 engine node kinds, persisted to `"WorkflowDagRun"` with REA score 92) · `POST /supremacy/mcp` (standard MCP JSON-RPC 2.0 bridge: `initialize` / `tools/list` / `tools/call` exposing `trinity`, `arda`, `studio`, `vibe_quant`, `base_treasury`; typed `-32601`/`-32602`) · `POST /supremacy/swe-verify` (OpenHands-style Plan→Verify→Self-Heal loop with `MaironVerifiedSeal` at `rea_score >= 85`, persisted to `"SweSandboxAudit"`) | Public (surgical-patch, mcp) / Bearer (fork, execute, swe-verify) |
+| Mairon Founder War-Room | `GET /war-room/state` (public: honest Day-0 wallet `$33.00` crypto seed + `$15.00` cash + `$350.00` locked paper + `$0.00` earned, the canonical 24-tick bilingual scenario, 4 revenue streams, `KiaAgentX/xA @ 97b18bd`) · `POST /war-room/step` (session: causal single-tick advance with server-side replay, anti-jump guard `delta <= 3600s`, tick persisted to `"FounderWarRoomTick"`) · `POST /war-room/directive` (session: deterministic FA/EN intent classification + 3 in-character founder replies, sha-pinned idempotent log in `"ChairmanDirectiveLog"`) · `GET /war-room/explain-simple` (public: ELI5 zero-to-100 explainer, steps A–D + the 80/20 charter) | Public (state, explain-simple) / Bearer (step, directive) |
+| Mairon Super-Studio | `GET /studio/ux-profiles` (3 cognitive tiers `ToySpark`/`CreatorStudio`/`ProTerminal` + 9 zero-cost modalities + 6/6 portfolio fix report) · `POST /studio/generate` (adaptive artifact + dual `Fishkal`+`Cosmos` bundle + ARDA 20-locale packaging + Mairon `SKILL.md` forge + `studio_creations` persistence) · `GET /studio/portfolio-catalog` (featured top-2, dark-glass tokens, `Ctrl+K`/`Meta+K`/`/` command palette) | Public / Bearer |
+| Mairon Arda i18n | `GET /arda/flags` (20-locale verbatim vector flag catalog + circular badges) · `POST /arda/localize-now` (live packaging, owner-only stamping) · `GET /market/products/{id}/skill` (auto-forge `SKILL.md`/`skill.json` at the REA gate) | Public / Bearer |
 | Market — Mairon Gate | `POST /market/products/{id}/mairon-confirm` (two-key publication + `⚒️ Forge-Grade` badge stamp) · `POST /market/products/{id}/reviews` (citizen `1..=5` star vote) · `GET /market/products/{id}/reviews` (Bayesian summary + histogram + `combinedRankScore`) | Bearer / Public |
 | Wallet | `POST /wallet/mint\|burn\|faucet` · `GET/POST /wallet/withdrawals` · `POST /wallet/withdrawals/{id}/confirm\|reject` · `GET /wallet/chains` · `GET /wallet/treasury` | Bearer / Admin |
 | Deposits | `POST /wallet/ton-deposits` · `POST /wallet/usdt-deposits` · `POST /wallet/ton-deposits/{id}/confirm\|reject` | Bearer / Admin |
@@ -511,7 +508,7 @@ curl http://127.0.0.1:8088/api/v1/health
 
 ## 🚀 Deploy on Railway
 
-KIAN ships Railway-native configuration for a clean **2-service project** from one repository:
+MAIRON ships Railway-native configuration for a clean **2-service project** from one repository:
 
 - **Service 1 — `kian-kernel` (Rust API)**: built via [`railpack.json`](./railpack.json) or
   [`Dockerfile`](./Dockerfile) (`infra/docker/Dockerfile.server` also provided). Mount a volume at
@@ -597,7 +594,6 @@ A local all-in-one alternative is [`docker-compose.yml`](./docker-compose.yml) o
 | [`KIA-BRAIN-OS/`](./KIA-BRAIN-OS) | 12-file Creator DNA constitution — `01_DNAme` · `02_DNAwork` · `03_DNAmind` · `04_DNAharness` · `05_DNAskills` · `06_LINK_Router` · `07_LINK_Protocol` · `08_LINK_Extractor` · `09_LINK_Bootloader` · `10_MAIRON_REA_SOVEREIGN` · `11_UNCHAINED_KIA_DNA` · `12_TRINITY_AVATAR_ENGINE` |
 | [`OMNI-MODEL-GENOME/`](./OMNI-MODEL-GENOME) | Ecosystem index, 9-file forensic profiles per model, workspace template, sanitizer/audit scripts |
 | [`docs/dna/`](./docs/dna) | Gate-readable mirror of both vaults above |
-| [`docs/history/`](./docs/history) | Evolutionary lineage record — `EVOLUTION_LINEAGE.md` (Wave 0 → Wave 3, history preserved / latest executed) |
 | [`docs/rea/`](./docs/rea) | Per-milestone REA gate reports (`step1` … `step6`) |
 | [`docs/vault/`](./docs/vault) | Mounted gem vaults (FreeLLM catalog, 9router, AG-UI/OpenBot, Hermes, tdesktop, vault rubrics) |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

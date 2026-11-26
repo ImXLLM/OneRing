@@ -1,23 +1,23 @@
-//! `kian-wallet` — کیف پول USDT چهارزنجیره — TRX/SOL/TON/BSC + خزانه و حضانت کلید.
+//! `kian-wallet` — four-chain USDT wallet — TRX/SOL/TON/BSC + treasury and key custody.
 //!
-//! طراحی حضانت (custody) برای M5 — همه‌چیز آفلاین و قطعی:
-//!  * هیچ کلید خصوصی‌ای در این کرت زندگی نمی‌کند — اعتبارسنجی آدرس فقط با
-//!    چک‌سام‌های رسمی زنجیره انجام می‌شود (`Base58Check` ترون، `EIP-55` با
-//!    keccak-256، CRC16-XMODEM تون) — یعنی «آدرس اشتباه هرگز ثبت نمی‌شود» و
-//!    پول هرگز به آدرس خراب نمی‌رود.
-//!  * خزانه‌ها فقط از env می‌آیند (لایهٔ server) — هیچ آدرس خزانه‌ای در کد.
-//!  * قانون حراست: هر جابه‌جایی خزانه باید به لایحهٔ پارلمان اشاره کند
-//!    (`bill:…`) — مبالغ بالای آستانه هم رأی انسانی می‌خواهند (گره با M5
-//!    nation و مادهٔ ۷ منشور).
-//!  * مبالغ USDT روی سیم رشتهٔ دهدهی با ≤۶ رقم اعشارند؛ ذخیره در مقیاس
-//!    `micro-USDT` (۱۰⁻⁶) — بدون float روی پول. واحد on-chain بایننس‌چین ۱۸
-//!    اعشار است؛ لایهٔ وایر ما اعلام کاربر را ≤۶ رقم نرمال می‌کند.
+//! Custody design for M5 — everything offline and deterministic:
+//!  * No private key lives in this crate — address validation relies only on
+//!    the chains' official checksums (Tron `Base58Check`, `EIP-55` with
+//!    keccak-256, TON CRC16-XMODEM) — meaning "a wrong address is never recorded" and
+//!    funds never go to a broken address.
+//!  * Treasuries come only from env (server layer) — no treasury address in code.
+//!  * Custody rule: every treasury movement must reference a parliament bill
+//!    (`bill:…`) — amounts above the threshold also require a human vote (coupling with M5
+//!    nation and Article 7 of the charter).
+//!  * USDT amounts on the wire are decimal strings with ≤6 decimal places; storage is scaled
+//!    in `micro-USDT` (10⁻⁶) — no floats on money. BNB Chain's on-chain unit has 18
+//!    decimals; our wire layer normalizes user-declared amounts to ≤6 digits.
 //!
-//! قراردادهای کانونیک USDT (راستی‌آزمایی‌شده در گام ۵):
+//! Canonical USDT contracts (verified at step 5):
 //!  * TRC20  — `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t` (tron.network)
 //!  * SPL    — `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB` (Solscan)
 //!  * TON    — `EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs` (Tonscan Jetton Master)
-//!  * BEP20  — `0x55d398326f99059fF775485246999027B3197955` (EIP-55 کانونیک؛ `PancakeSwap`)
+//!  * BEP20  — `0x55d398326f99059fF775485246999027B3197955` (canonical EIP-55; `PancakeSwap`)
 #![forbid(unsafe_code)]
 
 pub mod base_treasury;
@@ -25,71 +25,71 @@ pub mod ccxt_core;
 
 use sha2::{Digest, Sha256};
 
-/// شناسه کرِیت — برای smoke test و لاگ‌ها.
+/// Crate id — for smoke tests and logs.
 pub const NAME: &str = "kian-wallet";
 
-/// نسخه کرِیت — از `Cargo.toml` خوانده می‌شود.
+/// Crate version — read from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// سلام‌سنج — نشانه زنده‌بودن سیم‌کشی.
+/// Health probe — wiring liveness indicator.
 #[must_use]
 pub fn hello() -> &'static str {
     "kian_wallet · KIAN is alive"
 }
 
-// ── خطا ─────────────────────────────────────────────────────────────────────
+// ── errors ─────────────────────────────────────────────────────────────────────
 
-/// خطای کیف پول — نگاشت HTTP در لایهٔ server.
+/// Wallet error — HTTP mapping lives in the server layer.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum WalletError {
-    /// آدرس با قواعد زنجیره نمی‌خواند (چک‌سام/طول/الphabet).
+    /// Address does not parse under the chain rules (checksum/length/alphabet).
     #[error("invalid {chain} address: {detail}")]
     InvalidAddress {
-        /// زنجیرهٔ خطا
+        /// Error chain.
         chain: &'static str,
-        /// توضیح صادقانهٔ مشکل
+        /// Honest description of the problem.
         detail: String,
     },
-    /// مبلغ USDT نامعتبر (صفر/منفی/بیش از ۶ اعشار/خارج از محدوده).
+    /// Invalid USDT amount (zero/negative/more than 6 decimals/out of range).
     #[error("invalid USDT amount: {0}")]
     InvalidAmount(String),
-    /// نقض قانون حراست خزانه — جابه‌جایی بدون لایحهٔ پارلمان.
+    /// Treasury custody rule violation — movement without a parliament bill.
     #[error("custody violation: {0}")]
     CustodyViolation(String),
 }
 
-/// نتیجهٔ استاندارد کیف پول.
+/// Standard wallet result.
 pub type WalletResult<T> = Result<T, WalletError>;
 
-// ── زنجیره‌ها ───────────────────────────────────────────────────────────────
+// ── chains ───────────────────────────────────────────────────────────────
 
-/// چهار زنجیرهٔ پشتیبانی‌شده — همه USDT؛ واحد وایر یکسان micro-USDT.
+/// Four supported chains — all USDT; the wire unit is uniformly micro-USDT.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Chain {
-    /// ترون — TRC20
+    /// Tron — TRC20
     Trx,
-    /// سولانا — SPL
+    /// Solana — SPL
     Sol,
-    /// تون — Jetton
+    /// TON — Jetton
     Ton,
-    /// بایننس اسمارت چین — BEP20
+    /// BNB Smart Chain — BEP20
     Bsc,
 }
 
-/// قرارداد کانونیک USDT روی ترون (TRC20).
+/// Canonical USDT contract on Tron (TRC20).
 pub const USDT_TRC20: &str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-/// قرارداد کانونیک USDT روی سولانا (SPL mint).
+/// Canonical USDT contract on Solana (SPL mint).
 pub const USDT_SPL: &str = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
-/// قرارداد کانونیک USDT روی تون (Jetton Master).
+/// Canonical USDT contract on TON (Jetton Master).
 pub const USDT_TON: &str = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs";
-/// قرارداد کانونیک USDT روی بایننس‌چین (BEP20، فرم EIP-55 کانونیک).
+/// Canonical USDT contract on BNB Chain (BEP20, canonical EIP-55 form).
 pub const USDT_BEP20: &str = "0x55d398326f99059fF775485246999027B3197955";
 
 impl Chain {
-    /// هر چهار زنجیره به ترتیب ثابت — برای metadata endpoint.
+    /// All four chains in a fixed order — for the metadata endpoint.
     pub const ALL: [Chain; 4] = [Chain::Trx, Chain::Sol, Chain::Ton, Chain::Bsc];
 
-    /// برچسب سیمی/دیتابیسی.
+    /// Wire/database label.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
@@ -100,7 +100,7 @@ impl Chain {
         }
     }
 
-    /// شناسه از برچسب سیمی — حساس به بزرگی حروف نیست.
+    /// Id parsed from the wire label — case-insensitive.
     #[must_use]
     pub fn from_str_raw(raw: &str) -> Option<Self> {
         match raw.trim().to_ascii_uppercase().as_str() {
@@ -112,18 +112,18 @@ impl Chain {
         }
     }
 
-    /// نام فارسی — UI مینی‌اپ/پنل.
+    /// Persian name — mini-app/panel UI.
     #[must_use]
     pub const fn fa_name(&self) -> &'static str {
         match self {
-            Self::Trx => "ترون",
-            Self::Sol => "سولانا",
-            Self::Ton => "تون",
-            Self::Bsc => "بایننس اسمارت چین",
+            Self::Trx => "\u{62a}\u{631}\u{648}\u{646}",
+            Self::Sol => "\u{633}\u{648}\u{644}\u{627}\u{646}\u{627}",
+            Self::Ton => "\u{62a}\u{648}\u{646}",
+            Self::Bsc => "\u{628}\u{627}\u{6cc}\u{646}\u{646}\u{633} \u{627}\u{633}\u{645}\u{627}\u{631}\u{62a} \u{686}\u{6cc}\u{646}",
         }
     }
 
-    /// قرارداد کانونیک USDT این زنجیره.
+    /// This chain's canonical USDT contract.
     #[must_use]
     pub const fn usdt_contract(&self) -> &'static str {
         match self {
@@ -134,8 +134,8 @@ impl Chain {
         }
     }
 
-    /// واحد on-chain USDT — ۶ روی TRX/SOL/TON و ۱۸ روی BSC.
-    /// سیم KIAN مستقل از این، مقیاس micro-USDT (۱۰⁻⁶) دارد.
+    /// On-chain USDT unit — 6 on TRX/SOL/TON and 18 on BSC.
+    /// The KIAN wire is independent of this, scaled in micro-USDT (10⁻⁶).
     #[must_use]
     pub const fn usdt_onchain_decimals(&self) -> u32 {
         match self {
@@ -151,7 +151,7 @@ impl std::fmt::Display for Chain {
     }
 }
 
-// ── keccak-256 (برای EIP-55) — پیاده‌سازی خالص، بدون وابستگی خارجی ──────────
+// ── keccak-256 (for EIP-55) — pure implementation, no external dependency ──────────
 
 const KECCAK_RC: [u64; 24] = [
     0x0000_0000_0000_0001,
@@ -188,7 +188,7 @@ const KECCAK_PI: [usize; 24] = [
     10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1,
 ];
 
-/// یک دور کامل keccak-f[1600].
+/// One full keccak-f[1600] round.
 fn keccak_f(a: &mut [u64; 25]) {
     for &rc in &KECCAK_RC {
         // theta
@@ -202,7 +202,7 @@ fn keccak_f(a: &mut [u64; 25]) {
                 a[x + 5 * y] ^= d;
             }
         }
-        // rho + pi (چرخش/جابه‌جایی باگ‌رفتهٔ مرجع)
+        // rho + pi (rotation/offset with the reference implementation's bug fixed)
         let mut last = a[1];
         for i in 0..24 {
             let j = KECCAK_PI[i];
@@ -228,9 +228,9 @@ fn keccak_f(a: &mut [u64; 25]) {
     }
 }
 
-/// keccak-256 اصلی اتریوم (پدینگ 0x01 — نه SHA3-256 با 0x06).
+/// Ethereum's original keccak-256 (0x01 padding — not SHA3-256 with 0x06).
 #[must_use]
-#[allow(clippy::cast_possible_truncation)] // بایت کم‌ارزش عمدی لِین — با mask 0xff
+#[allow(clippy::cast_possible_truncation)] // Deliberately taking the lane's low byte — with mask 0xff
 pub fn keccak256(input: &[u8]) -> [u8; 32] {
     const RATE: usize = 136;
     let mut st = [0u64; 25];
@@ -239,25 +239,25 @@ pub fn keccak256(input: &[u8]) -> [u8; 32] {
         absorb(&mut st, block);
         keccak_f(&mut st);
     }
-    // بلوک نهایی با پدینگ keccak: 0x01 … 0x80
+    // Final block with keccak padding: 0x01 … 0x80
     let mut last = [0u8; RATE];
     last[..remainder.len()].copy_from_slice(remainder);
     last[remainder.len()] ^= 0x01;
     last[RATE - 1] ^= 0x80;
     absorb(&mut st, &last);
     keccak_f(&mut st);
-    // خروجی ۳۲ بایت — فقط بایتِ کم‌ارزش هر لِین (mask 0xFF)؛
-    // زیر ۸ بیت هرگز نقض truncation نیست.
+    // 32-byte output — only the low byte of each lane (mask 0xFF);
+    // Below 8 bits, truncation is never violated.
     let mut out = [0u8; 32];
     for (i, b) in out.iter_mut().enumerate() {
-        // بایت کم‌ارزش عمدی لِین — زیر ۸ بیت هرگز truncation نیست
+        // Deliberate low byte of the lane — below 8 bits, truncation is never violated
         let lane_byte = ((st[i / 8] >> (8 * (i % 8))) & 0xff) as u8;
         *b = lane_byte;
     }
     out
 }
 
-/// XOR یک بلوک ۱۳۶بایتی در لِین‌های وضعیت (little-endian).
+/// XOR a 136-byte block into the state lanes (little-endian).
 fn absorb(st: &mut [u64; 25], block: &[u8]) {
     for (i, lane) in block.as_chunks::<8>().0.iter().enumerate() {
         let mut v = 0u64;
@@ -268,12 +268,12 @@ fn absorb(st: &mut [u64; 25], block: &[u8]) {
     }
 }
 
-// ── Base58 (ترون/سولانا) ────────────────────────────────────────────────────
+// ── Base58 (Tron/Solana) ────────────────────────────────────────────────────
 
-/// الفبای Base58 بیت‌کوین (بدون 0/O/I/l) — ترون و سولانا همان را دارند.
+/// Bitcoin's Base58 alphabet (no 0/O/I/l) — Tron and Solana use the same.
 const B58_ALPHABET: &[u8] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-/// رمزگشایی Base58 به بایت — `None` روی کاراکتر بیرون الفبا.
+/// Base58 decode to bytes — `None` on a character outside the alphabet.
 #[must_use]
 pub fn b58_decode(s: &str) -> Option<Vec<u8>> {
     if s.is_empty() {
@@ -282,7 +282,7 @@ pub fn b58_decode(s: &str) -> Option<Vec<u8>> {
     let mut bytes: Vec<u8> = Vec::new();
     for c in s.bytes() {
         let val = u32::try_from(B58_ALPHABET.iter().position(|&a| a == c)?).ok()?;
-        // bytes = bytes × 58 + val (عدد بزرگ روی آرایهٔ بایت big-endian)
+        // bytes = bytes × 58 + val (bignum over a big-endian byte array)
         let mut carry = val;
         for b in bytes.iter_mut().rev() {
             let x = u32::from(*b) * 58 + carry;
@@ -294,7 +294,7 @@ pub fn b58_decode(s: &str) -> Option<Vec<u8>> {
             carry >>= 8;
         }
     }
-    // هر '1' پیش‌رو = یک بایت صفر
+    // Each leading '1' = one zero byte
     let pad = s.len() - s.trim_start_matches('1').len();
     let first_non_zero = bytes.iter().position(|&b| b != 0).unwrap_or(bytes.len());
     let mut out = vec![0u8; pad];
@@ -302,7 +302,7 @@ pub fn b58_decode(s: &str) -> Option<Vec<u8>> {
     Some(out)
 }
 
-/// CRC16-XMODEM (پلی 0x1021، مقدار آغاز صفر) — چک‌سام آدرس دوستانهٔ تون.
+/// CRC16-XMODEM (poly 0x1021, zero init) — TON user-friendly address checksum.
 #[must_use]
 pub fn crc16_xmodem(data: &[u8]) -> u16 {
     let mut crc: u16 = 0;
@@ -319,9 +319,9 @@ pub fn crc16_xmodem(data: &[u8]) -> u16 {
     crc
 }
 
-// ── اعتبارسنجی آدرس هر زنجیره ───────────────────────────────────────────────
+// ── Per-chain address validation ───────────────────────────────────────────────
 
-/// ترون: `Base58Check` — ۲۵ بایت = `0x41` + ۲۰ بایت + sha256d[:4].
+/// Tron: `Base58Check` — 25 bytes = `0x41` + 20 bytes + sha256d[:4].
 fn validate_trx(addr: &str) -> WalletResult<()> {
     let fail = |d: &str| WalletError::InvalidAddress {
         chain: "TRX",
@@ -342,7 +342,7 @@ fn validate_trx(addr: &str) -> WalletResult<()> {
     Ok(())
 }
 
-/// سولانا: Base58 خالص — دقیقاً ۳۲ بایت (کلید عمومی ed25519)، بدون چک‌سام.
+/// Solana: plain Base58 — exactly 32 bytes (ed25519 public key), no checksum.
 fn validate_sol(addr: &str) -> WalletResult<()> {
     let fail = |d: &str| WalletError::InvalidAddress {
         chain: "SOL",
@@ -358,9 +358,9 @@ fn validate_sol(addr: &str) -> WalletResult<()> {
     Ok(())
 }
 
-/// تون: base64url دوستانه — ۳۶ بایت = tag + workchain + ۳۲ بایت + CRC16-XMODEM
-/// (big-endian؛ راستی‌آزمایی‌شده روی jUSDT master). tag: 0x11 bounceable /
-/// 0x51 non-bounceable؛ workchain: 0 یا -1.
+/// TON: user-friendly base64url — 36 bytes = tag + workchain + 32 bytes + CRC16-XMODEM
+/// (big-endian; verified against the jUSDT master). tag: 0x11 bounceable /
+/// 0x51 non-bounceable; workchain: 0 or -1.
 fn validate_ton(addr: &str) -> WalletResult<()> {
     use base64::Engine as _;
     let fail = |d: &str| WalletError::InvalidAddress {
@@ -394,7 +394,7 @@ fn validate_ton(addr: &str) -> WalletResult<()> {
     Ok(())
 }
 
-/// چک‌سام EIP-55 روی شکل hex — ورودی ۴۰ کاراکتر بدون 0x، همه حروف کوچک.
+/// EIP-55 checksum over the hex form — input is 40 characters without 0x, all lowercase.
 fn eip55_checksum(lower_hex: &[u8]) -> String {
     let hash = keccak256(lower_hex);
     let mut out = String::with_capacity(40);
@@ -418,8 +418,8 @@ fn eip55_checksum(lower_hex: &[u8]) -> String {
     out
 }
 
-/// بایننس‌چین: `0x` + ۴۰ hex؛ همه‌کوچک/همه‌بزرگ بدون چک‌سام قبول، مختلط فقط
-/// اگر با EIP-55 بخواند (keccak-256 خالص بالا).
+/// BNB Chain: `0x` + 40 hex; all-lowercase/all-uppercase accepted without checksum, mixed only
+/// if it reads as valid EIP-55 (the pure keccak-256 above).
 fn validate_bsc(addr: &str) -> WalletResult<()> {
     let fail = |d: &str| WalletError::InvalidAddress {
         chain: "BSC",
@@ -441,10 +441,10 @@ fn validate_bsc(addr: &str) -> WalletResult<()> {
     Ok(())
 }
 
-/// اعتبارسنجی آدرس ولت برای یک زنجیره — دروازهٔ ثبت آدرس کاربر.
+/// Wallet address validation for one chain — the gateway for registering a user's address.
 ///
 /// # Errors
-/// [`WalletError::InvalidAddress`] با دلیل صادقانه.
+/// [`WalletError::InvalidAddress`] with an honest reason.
 pub fn validate_address(chain: Chain, addr: &str) -> WalletResult<()> {
     let addr = addr.trim();
     if addr.is_empty() || addr.len() > 96 {
@@ -461,10 +461,10 @@ pub fn validate_address(chain: Chain, addr: &str) -> WalletResult<()> {
     }
 }
 
-// ── مبلغ USDT ───────────────────────────────────────────────────────────────
+// ── USDT amount ───────────────────────────────────────────────────────────────
 
-/// تجزیهٔ رشتهٔ مبلغ USDT — دهدهی با ≤۶ رقم اعشار و > ۰؛ خروجی micro-USDT.
-/// همان قرارداد سخت‌گیرانهٔ microTON (M3): بدون float، بدون منفی، بدون صفر.
+/// Parse a USDT amount string — decimal with ≤6 decimal places and > 0; output in micro-USDT.
+/// The same strict microTON contract (M3): no floats, no negatives, no zero.
 ///
 /// # Errors
 /// [`WalletError::InvalidAmount`].
@@ -496,24 +496,24 @@ pub fn parse_usdt(amount: &str) -> WalletResult<i64> {
     if micro > i64::MAX as u128 {
         return Err(fail("out of range"));
     }
-    #[allow(clippy::cast_possible_truncation)] // بالای i64 چک شد
+    #[allow(clippy::cast_possible_truncation)] // Checked against i64 overflow
     Ok(micro as i64)
 }
 
-// ── حراست خزانه ─────────────────────────────────────────────────────────────
+// ── Treasury custody ─────────────────────────────────────────────────────────────
 
-/// سیاست حراست خزانه — قانون قراردادی M5:
-/// هر جابه‌جایی خزانه باید لایحهٔ پارلمان داشته باشد؛ مبالغ ≥ آستانه رأی
-/// انسانی می‌خواهند (همان گیت مادهٔ ۷، این‌بار در مقیاس micro-USDT).
+/// Treasury custody policy — the M5 contractual rule:
+/// every treasury movement must carry a parliament bill; amounts ≥ the threshold require
+/// a human vote (the same Article 7 gate, this time in micro-USDT scale).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CustodyPolicy {
-    /// آستانهٔ رأی انسانی در micro-USDT — ۰ یعنی هیچ مبلغی رأی انسانی نمی‌خواهد.
+    /// Human-vote threshold in micro-USDT — 0 means no amount ever requires a human vote.
     pub human_threshold_micro: i64,
 }
 
 impl Default for CustodyPolicy {
-    /// پیش‌فرض: هر مبلغ ≥ ۵۰ USDT معادل آستانهٔ انسانی (نرخ سیم: ۱۰۰۰ Đ/USDT
-    /// ⇔ آستانهٔ منشور ۵۰,۰۰۰ Đ) — نرخ واقعی در لایهٔ server از env می‌آید.
+    /// Default: every amount ≥ 50 USDT equals the human threshold (wire rate: 1000 Đ/USDT
+    /// ⇔ charter threshold 50,000 Đ) — the real rate comes from env in the server layer.
     fn default() -> Self {
         Self {
             human_threshold_micro: 50 * 1_000_000,
@@ -522,10 +522,10 @@ impl Default for CustodyPolicy {
 }
 
 impl CustodyPolicy {
-    /// بررسی طرح جابه‌جایی خزانه — خروجی: آیا رأی انسانی لازم است؟
+    /// Review a treasury movement plan — output: does it require a human vote?
     ///
     /// # Errors
-    /// [`WalletError::CustodyViolation`] بدون ارجاع لایحهٔ معتبر (`bill:…`).
+    /// [`WalletError::CustodyViolation`] when there is no valid bill reference (`bill:…`).
     pub fn check_movement(&self, amount_micro: i64, bill_id: Option<&str>) -> WalletResult<bool> {
         if amount_micro <= 0 {
             return Err(WalletError::CustodyViolation(
@@ -562,7 +562,7 @@ mod tests {
 
     #[test]
     fn keccak_matches_reference_vectors() {
-        // وکتورهای مرجع (pycryptodome keccak-256 — گام ۵ سندباکس)
+        // Reference vectors (pycryptodome keccak-256 — step 5 sandbox)
         let h = |b: &[u8]| hex::encode(keccak256(b));
         assert_eq!(
             h(b""),
@@ -572,7 +572,7 @@ mod tests {
             h(b"abc"),
             "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45"
         );
-        // چندبلوکی — ۲۰۰ بایت > نرخ ۱۳۶ (پوشش مسیر chunks_exact)
+        // Multi-block — 200 bytes > the 136 rate (covers the chunks_exact path)
         assert_eq!(
             h(&[b'a'; 200]),
             "96ea54061def936c4be90b518992fdc6f12f535068a256229aca54267b4d084d"
@@ -581,7 +581,7 @@ mod tests {
 
     #[test]
     fn eip55_checksum_matches_spec_vectors() {
-        // چهار وکتور رسمی EIP-55
+        // The four official EIP-55 vectors
         for v in [
             "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
             "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
@@ -590,13 +590,13 @@ mod tests {
         ] {
             assert!(validate_bsc(v).is_ok(), "{v} must pass");
         }
-        // خراب‌کردن یک حرف چک‌سام — باید رد شود
+        // Corrupt one checksum letter — must be rejected
         assert!(validate_bsc("0x5AAEB6053F3E94C9b9A09f33669435E7Ef1BeAed").is_err());
     }
 
     #[test]
     fn canonical_usdt_contracts_validate_on_their_own_chain() {
-        // شواهد واقعی: قرارداد کانونیک هر زنجیره باید با قواعد همان زنجیره بخواند
+        // Real evidence: each chain's canonical contract must parse under that chain's rules
         assert!(validate_address(Chain::Trx, USDT_TRC20).is_ok());
         assert!(validate_address(Chain::Sol, USDT_SPL).is_ok());
         assert!(validate_address(Chain::Ton, USDT_TON).is_ok());
@@ -605,11 +605,11 @@ mod tests {
 
     #[test]
     fn trx_rejects_tampered_checksum() {
-        // همان آدرس با یک کاراکتر جابه‌جا — چک‌سام می‌سوزد
+        // The same address with one character swapped — the checksum breaks
         assert!(validate_trx("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6u").is_err());
         assert!(
             validate_trx("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6").is_err(),
-            "طول ۳۳"
+            "\u{637}\u{648}\u{644} \u{6f3}\u{6f3}"
         );
         assert!(validate_trx("1111111111111111111111111111111111").is_err());
     }
@@ -618,44 +618,44 @@ mod tests {
     fn ton_rejects_tampered_crc_and_bad_tag() {
         let good = USDT_TON;
         assert!(validate_ton(good).is_ok());
-        // CRC خراب: آخرین کاراکتر عوض می‌شود (اصلی با 's' تمام می‌شود)
+        // Corrupt CRC: the last character is changed (the original ends with 's')
         let bad = format!("{}t", &good[..47]);
         assert!(validate_ton(&bad).is_err());
-        // طول بد
+        // Bad length
         assert!(validate_ton(&good[..47]).is_err());
-        // base64 استاندارد با +/ — کاراکتر بیرون الفبای url-safe
+        // Standard base64 with +/ — a character outside the url-safe alphabet
         assert!(validate_ton("EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id+sDs").is_err());
     }
 
     #[test]
     fn sol_rejects_wrong_length_and_junk() {
         assert!(validate_sol(USDT_SPL).is_ok());
-        // کاراکتر بیرون الفبا (حتی با طول درست)
+        // Character outside the alphabet (even with the right length)
         assert!(
             validate_sol("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8Benw0YB").is_err(),
-            "کاراکتر '0' بیرون الفبا"
+            "\u{6a9}\u{627}\u{631}\u{627}\u{6a9}\u{62a}\u{631} '0' \u{628}\u{6cc}\u{631}\u{648}\u{646} \u{627}\u{644}\u{641}\u{628}\u{627}"
         );
-        assert!(validate_sol("0OIl").is_err(), "کاراکتر بیرون الفبا");
-        // ۴۵ کاراکتر → ۳۳ بایت — نه ۳۲ (پیشوند '1' یک بایت صفر می‌آورد)
+        assert!(validate_sol("0OIl").is_err(), "\u{6a9}\u{627}\u{631}\u{627}\u{6a9}\u{62a}\u{631} \u{628}\u{6cc}\u{631}\u{648}\u{646} \u{627}\u{644}\u{641}\u{628}\u{627}");
+        // 45 characters → 33 bytes — not 32 (a leading '1' prefix brings a zero byte)
         let too_long = format!("1{USDT_SPL}");
         assert!(validate_sol(&too_long).is_err());
-        // ۳۵ کاراکتر → یک بایت — نه ۳۲
+        // 35 characters → one byte — not 32
         let too_short = "1111111111111111111111111111111112";
         assert!(validate_sol(too_short).is_err());
     }
 
     #[test]
     fn bsc_rejects_bad_case_and_junk() {
-        assert!(validate_bsc(USDT_BEP20).is_ok(), "فرم کانونیک باید بخواند");
+        assert!(validate_bsc(USDT_BEP20).is_ok(), "\u{641}\u{631}\u{645} \u{6a9}\u{627}\u{646}\u{648}\u{646}\u{6cc}\u{6a9} \u{628}\u{627}\u{6cc}\u{62f} \u{628}\u{62e}\u{648}\u{627}\u{646}\u{62f}");
         assert!(
             validate_bsc("55d398326f99059ff775485246999027b3197955").is_ok(),
-            "همه‌کوچک بدون 0x"
+            "\u{647}\u{645}\u{647}‌\u{6a9}\u{648}\u{686}\u{6a9} \u{628}\u{62f}\u{648}\u{646} 0x"
         );
         assert!(
             validate_bsc("0x55D398326F99059FF775485246999027B3197955").is_ok(),
-            "همه‌بزرگ مجاز"
+            "\u{647}\u{645}\u{647}‌\u{628}\u{632}\u{631}\u{6af} \u{645}\u{62c}\u{627}\u{632}"
         );
-        // یک حرف با فرم کانونیک فرق کند — چک‌سام می‌سوزد
+        // One letter differs from the canonical form — the checksum breaks
         assert!(validate_bsc("0x55D398326f99059fF775485246999027B3197955").is_err());
         assert!(validate_bsc("0x123").is_err());
         assert!(validate_bsc("0xzzd398326f99059ff775485246999027b3197955").is_err());
@@ -669,7 +669,7 @@ mod tests {
         assert_eq!(
             Chain::Bsc.usdt_onchain_decimals(),
             18,
-            "BSC روی زنجیره ۱۸ اعشار دارد"
+            "BSC \u{631}\u{648}\u{6cc} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647} \u{6f1}\u{6f8} \u{627}\u{639}\u{634}\u{627}\u{631} \u{62f}\u{627}\u{631}\u{62f}"
         );
         for c in Chain::ALL {
             assert_ne!(c.usdt_contract(), "", "contract must be present");
@@ -682,7 +682,7 @@ mod tests {
         assert_eq!(parse_usdt("1").unwrap(), 1_000_000);
         assert_eq!(parse_usdt("0.5").unwrap(), 500_000);
         assert_eq!(parse_usdt("1.234567").unwrap(), 1_234_567);
-        assert!(parse_usdt("0.1234567").is_err(), "بیش از ۶ رقم اعشار");
+        assert!(parse_usdt("0.1234567").is_err(), "\u{628}\u{6cc}\u{634} \u{627}\u{632} \u{6f6} \u{631}\u{642}\u{645} \u{627}\u{639}\u{634}\u{627}\u{631}");
         assert!(parse_usdt("0").is_err());
         assert!(parse_usdt("-1").is_err());
         assert!(parse_usdt("").is_err());
@@ -693,29 +693,29 @@ mod tests {
     #[test]
     fn custody_requires_bill_reference_always() {
         let policy = CustodyPolicy::default();
-        // بدون لایحه — ممنوع مطلق
+        // No bill — absolutely forbidden
         assert!(policy.check_movement(5_000_000, None).is_err());
-        // لایحهٔ بدشکل
+        // Malformed bill
         assert!(policy.check_movement(5_000_000, Some("esc:9")).is_err());
         assert!(policy.check_movement(5_000_000, Some("bill:")).is_err());
-        // لایحهٔ معتبر — زیر آستانه: رأی انسانی نمی‌خواهد
+        // Valid bill — below the threshold: no human vote required
         assert!(
             !policy.check_movement(5_000_000, Some("bill:x1")).unwrap(),
-            "زیر آستانه — بدون رأی انسانی"
+            "\u{632}\u{6cc}\u{631} \u{622}\u{633}\u{62a}\u{627}\u{646}\u{647} — \u{628}\u{62f}\u{648}\u{646} \u{631}\u{623}\u{6cc} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc}"
         );
-        // بالای آستانه (۵۰ USDT): رأی انسانی می‌خواهد
+        // Above the threshold (50 USDT): a human vote is required
         assert!(
             policy.check_movement(60_000_000, Some("bill:x1")).unwrap(),
-            "بالای آستانه — رأی انسانی لازم است"
+            "\u{628}\u{627}\u{644}\u{627}\u{6cc} \u{622}\u{633}\u{62a}\u{627}\u{646}\u{647} — \u{631}\u{623}\u{6cc} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc} \u{644}\u{627}\u{632}\u{645} \u{627}\u{633}\u{62a}"
         );
-        // مبلغ صفر/منفی
+        // Zero/negative amount
         assert!(policy.check_movement(0, Some("bill:x1")).is_err());
         assert!(policy.check_movement(-1, Some("bill:x1")).is_err());
     }
 
     #[test]
     fn b58_decode_handles_leading_zeros() {
-        // '11' → دو بایت صفر
+        // '11' → two zero bytes
         assert_eq!(b58_decode("11").unwrap(), vec![0u8, 0]);
         assert_eq!(b58_decode("2").unwrap(), vec![1]);
         assert!(b58_decode("").is_none(), "empty string is not base58");
@@ -724,7 +724,7 @@ mod tests {
 
     #[test]
     fn crc16_xmodem_matches_reference() {
-        // وکتور مرجع: CRC16-XMODEM("123456789") = 0x31C3
+        // Reference vector: CRC16-XMODEM("123456789") = 0x31C3
         assert_eq!(crc16_xmodem(b"123456789"), 0x31C3);
     }
 }

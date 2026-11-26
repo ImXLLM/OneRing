@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// KIAN miniapp — همان دروازه‌های REA وب: بدون سورس‌مپ مرورگر + هدرهای سخت‌گیرانه
+// KIAN miniapp — same REA gates as the web app: no browser source maps + strict headers
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -13,7 +13,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // پکیج‌های workspace با سورس TS خام — باید ترنسپایل شوند
+  // Workspace packages with raw TS sources — they must be transpiled
   transpilePackages: ["@kian/ui", "@kian/sdk", "@kian/contracts"],
   productionBrowserSourceMaps: false,
   poweredByHeader: false,

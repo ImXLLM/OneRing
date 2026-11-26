@@ -1,90 +1,90 @@
-//! پورت خالص-راستِ `HKUDS/Vibe-Trading` — موتور کوانتِ علّیِ Wave 6 (Step 3/4).
+//! `vibe_trading_engine` — a pure-Rust port of `HKUDS/Vibe-Trading` — the Wave 6 causal quant engine (Step 3/4).
 //!
-//! چهار درمانِ قضایی روی مرجع، همه ساختاری و اثبات‌پذیر:
-//!  * **درمانِ #1 — `StrategyAst` ناتورینگ-ناقص**: به‌جای `importlib` و اجرای
-//!    پایتونِ دلخواه (`runner.py:L1541–1568`)، هر استراتژی یک AST تایپ‌دار،
-//!    سری‌شدنی و صفر-اجرای-پویا است — `eval`/`exec` در این موتور وجودِ
-//!    ساختاری ندارد.
-//!  * **درمانِ #2 — بک‌تسترِ اکیداً علّی**: ارزیابِ سیگنال فقط
-//!    `&candles[0..=t]` می‌بیند (برشِ قرض‌گرفته — دیدنِ `t+1..` ناممکنِ
-//!    ساختاری است) و هر پرچم‌گذاری روی `close(t)` در `open(t+1)` پر می‌شود
-//!    (`base.py:L343–348`) با احتراکِ تیکِ فروشنده و کفِ اصطکاک.
-//!  * **درمانِ #3 — `VerifiedNumericClaimLedger`**: هر ادعای عددیِ گزارش
-//!    (شارپ/مکس‌دراودان/بازده/نرخِ برد/گردش) در یک هشِ `SHA-256` قفل
-//!    می‌شود و `verify_numeric_claims` هر دستکاری را می‌سوزاند — به‌جای
-//!    قواعدِ صرفاً متنیِ ضدهالوسیناسیون (`context.py:L35–74`).
-//!  * **درمانِ #4 — `PortfolioRiskGuard` کلیدِ توقفِ سخت**: اهرم ≤ ۵،
-//!    سفارش ≤ ۲۵٪ حقوق، زیانِ روزانه ≤ ۸٪ و کلیدِ توقفِ دراودانِ ۲۰٪ —
-//!    پیش از معامله و در runtime، همیشه fail-closed.
+//! Four judicial remedies applied to the reference, all structural and provable:
+//!  * **Remedy #1 — a non-evaluating `StrategyAst`**: instead of `importlib` and running
+//!    arbitrary Python (`runner.py:L1541–1568`), every strategy is a typed AST,
+//!    serializable and zero-dynamic-execution — `eval`/`exec` has no structural
+//!    existence in this engine.
+//!  * **Remedy #2 — a strictly causal backtester**: the signal evaluator only
+//!    sees `&candles[0..=t]` (a borrowed slice — seeing `t+1..` is structurally
+//!    impossible) and every order placed on `close(t)` fills at `open(t+1)`
+//!    (`base.py:L343–348`) with seller-tick slippage and the friction floor.
+//!  * **Remedy #3 — `VerifiedNumericClaimLedger`**: every numeric claim of the report
+//!    (Sharpe/max drawdown/return/win rate/turnover) is locked in a `SHA-256` hash
+//!    and `verify_numeric_claims` burns any tampering — instead of
+//!    purely textual anti-hallucination rules (`context.py:L35–74`).
+//!  * **Remedy #4 — `PortfolioRiskGuard` with a hard stop key**: leverage ≤ 5,
+//!    order ≤ 25% of equity, daily loss ≤ 8% and a 20% drawdown stop key —
+//!    pre-trade and at runtime, always fail-closed.
 //!
-//! و روی همهٔ این‌ها: DAG توپولوژیکِ ۵گرهیِ `Vibe → گزارش → SKILL.md` با
-//! گیتِ حاکمِ کوانتِ مایرون (شارپ ≥ ۱٫۲۰، دراودان ≤ ۲۰٪، ≥ ۵ معامله،
-//! اثباتِ علّی و دفترِ ادعا سبز).
+//! And on top of all that: the five-node topological DAG of `Vibe → report → SKILL.md` with
+//! Mairon's sovereign quant gate (Sharpe ≥ 1.20, drawdown ≤ 20%, ≥ 5 trades,
+//! causal proof and a green claim ledger).
 
 use std::fmt::Write as _;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-// ── ثابت‌های قرارداد ────────────────────────────────────────────────────────
+// ── Contract constants ────────────────────────────────────────────────────────
 
-/// امضای موتور کوانتِ علّی — گیتِ آزمونِ سیم.
+/// Causal quant engine signature — the smoke-test gate.
 pub const VIBE_QUANT_SIGNATURE: &str = "vibe-causal-quant-v1";
 
-/// کفِ اصطکاکِ واقع‌گرا — کارمزدِ taker (بر پایهٔ bps) هرگز زیر این نمی‌رود.
+/// Realistic friction floor — the taker fee (bps-based) never goes below this.
 pub const MIN_TAKER_FEE_BPS: f64 = 10.0;
 
-/// کفِ اصطکاکِ واقع‌گرا — احتراکِ قیمت (بر پایهٔ bps) هرگز زیر این نمی‌رود.
+/// Realistic friction floor — price slippage (bps-based) never goes below this.
 pub const MIN_SLIPPAGE_BPS: f64 = 5.0;
 
-/// سقفِ مطلقِ اهرم — گیتِ سختِ گاردِ ریسک.
+/// Absolute leverage cap — the risk guard's hard gate.
 pub const MAX_LEVERAGE_CAP: f64 = 5.0;
 
-/// سقفِ سهمِ هر سفارش از حقوق — گیتِ سختِ گاردِ ریسک.
+/// Cap on each order's share of equity — the risk guard's hard gate.
 pub const MAX_ORDER_PCT_OF_EQUITY: f64 = 0.25;
 
-/// سقفِ زیانِ روزانه (نسبت) — گیتِ سختِ گاردِ ریسک.
+/// Daily-loss cap (ratio) — the risk guard's hard gate.
 pub const DAILY_LOSS_LIMIT_PCT: f64 = 0.08;
 
-/// کلیدِ توقفِ دراودان (درصد) — گیتِ سختِ گاردِ ریسک.
+/// Drawdown stop key (percent) — the risk guard's hard gate.
 pub const MAX_DRAWDOWN_KILL_SWITCH_PCT: f64 = 20.0;
 
-/// آستانه‌های گیتِ مایرون — شارپِ کمینه.
+/// Mairon gate thresholds — minimum Sharpe.
 pub const MAIRON_MIN_SHARPE: f64 = 1.20;
 
-/// آستانه‌های گیتِ مایرون — بیشینهٔ قدرمطلقِ دراودان (درصد).
+/// Mairon gate thresholds — maximum absolute drawdown (percent).
 pub const MAIRON_MAX_DRAWDOWN_ABS: f64 = 20.0;
 
-/// آستانه‌های گیتِ مایرون — کمینهٔ تعدادِ معامله.
+/// Mairon gate thresholds — minimum trade count.
 pub const MAIRON_MIN_TRADES: usize = 5;
 
-/// هامشِ نگهداریِ نسبی — رسیدنِ حقوق به این نسبتِ ناتینالِ پوزیشن =
-/// تسویهٔ اجباری.
+/// Relative maintenance margin — when equity reaches this ratio of the position notional =
+/// forced liquidation.
 const MAINTENANCE_MARGIN_FRACTION: f64 = 0.10;
 
-/// قدم‌های جست‌وجوی دودوییِ اندازه‌گیریِ «بیشترینِ مقدارِ قابل‌خرید».
+/// Binary-search steps for sizing the "maximum purchasable quantity".
 const SIZING_BISECTION_STEPS: u32 = 32;
 
-// ── کندل و مولدِ قطعی ───────────────────────────────────────────────────────
+// ── Candle and deterministic generator ───────────────────────────────────────────────────────
 
-/// یک کندلِ OHLCV — قیمت‌ها واحدِ آزاد (دلاریِ نماد)؛ قطعی و بدونِ شبکه.
+/// One OHLCV candle — prices in a free unit (the symbol's dollar); deterministic and network-free.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct OhlcvBar {
-    /// مُهر زمانِ باز شدنِ کندل (ms).
+    /// Candle open timestamp (ms).
     pub timestamp_ms: i64,
-    /// باز.
+    /// Open.
     pub open: f64,
-    /// بالا.
+    /// High.
     pub high: f64,
-    /// پایین.
+    /// Low.
     pub low: f64,
-    /// بسته.
+    /// Close.
     pub close: f64,
-    /// حجم.
+    /// Volume.
     pub volume: f64,
 }
 
-/// xorshift64* — چرخانندهٔ قطعیِ مولدِ بازارِ آزمایشی.
+/// xorshift64* — the deterministic spinner of the synthetic market generator.
 fn xorshift64(state: &mut u64) -> u64 {
     let mut x = *state;
     x ^= x << 13;
@@ -94,14 +94,14 @@ fn xorshift64(state: &mut u64) -> u64 {
     x.wrapping_mul(0x2545_F491_4F6C_DD1D)
 }
 
-/// نمونهٔ یکنواختِ `[0, 1)` از xorshift64* (۵۳ بیت بالا).
+/// A uniform sample of `[0, 1)` from xorshift64* (top 53 bits).
 #[must_use]
 #[allow(clippy::cast_precision_loss)]
 fn unit01(state: &mut u64) -> f64 {
     (xorshift64(state) >> 11) as f64 / (1u64 << 53) as f64
 }
 
-/// هشِ FNV-1aِ ۶۴بیتی — بذرِ نماد-آگاه.
+/// The 64-bit FNV-1a hash — a symbol-aware seed.
 #[must_use]
 fn fnv1a64(text: &str) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
@@ -112,19 +112,19 @@ fn fnv1a64(text: &str) -> u64 {
     h
 }
 
-/// فاصلهٔ زمانیِ کندل‌های مولد — ثابتِ ۱ساعته برای بازپخشِ کامل.
+/// The generated candles' time interval — a fixed 1 hour for full replay.
 const GENERATOR_BAR_SPACING_MS: i64 = 3_600_000;
 
-/// مُهرِ شروعِ مولد — ۲۰۲۳-۱۱-۱۴T00:00Z.
+/// Generator start timestamp — 2023-11-14T00:00Z.
 const GENERATOR_START_MS: i64 = 1_699_920_000_000;
 
-/// مولدِ بازارِ مصنوعیِ قطعی — صفر شبکه، صفر کلید، بازپخشِ کامل.
+/// The deterministic synthetic market generator — zero network, zero keys, full replay.
 ///
-/// فرایندِ AR(1) روی انحرافِ لگاریتمیِ قیمت از «خطِ رشد» — رژیمِ
-/// بازگشت-به-میانگینِ دور-روند: هدفِ هر کندل `trend × باندِ سینوسیِ ±۵٪`
-/// و بسته با کششِ ۰٫۳۰ به سمتِ هدف + نویزِ متقارنِ Irwin-Hall سه‌یکنواخت.
-/// هم استراتژی‌هایِ روند-پیو و هم برگشت‌گراها روی همین نوار منصفانه
-/// آزموده می‌شوند — بذر = seed ⊕ هشِ نماد.
+/// An AR(1) process on the log deviation of price from the "growth line" — the
+/// far-from-trend mean-reversion regime: each candle targets `trend × the ±5% sine band`
+/// and closes with a 0.30 pull toward the target + symmetric three-uniform Irwin-Hall noise.
+/// Both trend-following and mean-reverting strategies are tested fairly on the same band —
+/// seed = seed ⊕ symbol hash.
 #[must_use]
 #[allow(clippy::cast_precision_loss)]
 pub fn generate_deterministic_ohlcv(symbol: &str, bars: usize, seed: u64) -> Vec<OhlcvBar> {
@@ -142,11 +142,11 @@ pub fn generate_deterministic_ohlcv(symbol: &str, bars: usize, seed: u64) -> Vec
     let mut out = Vec::with_capacity(bars);
     for i in 0..bars {
         let fi = i as f64;
-        // خطِ رشد + باندِ نوسانِ چندفرکانسی
+        // growth line + multi-frequency volatility band
         let trend = base * (0.0006 * fi).exp();
         let target = trend
             * (1.0 + 0.05 * (fi * 0.06).sin() + 0.02 * (fi * 0.21).cos());
-        // کششِ AR(1) به هدف + نویز
+        // AR(1) pull toward the target + noise
         let pull = (target / price.max(1e-9)).ln().clamp(-0.06, 0.06);
         let noise = (unit01(&mut state) + unit01(&mut state) + unit01(&mut state) - 1.5) * 0.004;
         let open = price;
@@ -168,52 +168,52 @@ pub fn generate_deterministic_ohlcv(symbol: &str, bars: usize, seed: u64) -> Vec
     out
 }
 
-// ── AST استراتژی (درمانِ #1) ───────────────────────────────────────────────
+// ── Strategy AST (Remedy #1) ───────────────────────────────────────────────
 
-/// یک نشانگرِ تایپ‌دار — هیچ کدی اجرا نمی‌شود، فقط مشخصهٔ ریاضی.
+/// A typed indicator — no code runs; it is only a mathematical descriptor.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum IndicatorSpec {
-    /// میانگینِ متحرکِ ساده.
+    /// Simple moving average.
     Sma {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
-    /// میانگینِ متحرکِ نمایی.
+    /// Exponential moving average.
     Ema {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
-    /// شاخصِ قدرتِ نسبی (وایلدر).
+    /// Relative strength index (Wilder).
     Rsi {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
-    /// باندِ بولینگر — خروجیِ %B در `[0,1]`؛ `std_dev_x100` = انحراف×۱۰۰.
+    /// Bollinger band — outputs %B in `[0,1]`; `std_dev_x100` = deviation×100.
     BollingerBands {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
-        /// انحرافِ معیار × ۱۰۰ (۲۰۰ یعنی ۲٫۰۰σ).
+        /// Standard deviation × 100 (200 means 2.00σ).
         std_dev_x100: u32,
     },
-    /// میانگینِ دامنهٔ واقعی (وایلدر).
+    /// Average true range (Wilder).
     Atr {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
-    /// نمرهٔ Z — فاصلهٔ بسته از میانگین بر حسبِ انحراف.
+    /// Z-score — the close's distance from the mean in deviations.
     ZScore {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
-    /// مومنتومِ درصدی — بازدهیِ `period` کندل اخیر × ۱۰۰.
+    /// Percentage momentum — the return of the last `period` candles × 100.
     Momentum {
-        /// دورهٔ پنجره.
+        /// Window period.
         period: usize,
     },
 }
 
 impl IndicatorSpec {
-    /// دورهٔ پنجرهٔ این نشانگر — برای محاسبهٔ warmup.
+    /// This indicator's window period — for warmup computation.
     #[must_use]
     pub const fn period(&self) -> usize {
         match self {
@@ -227,10 +227,10 @@ impl IndicatorSpec {
         }
     }
 
-    /// مقدارِ نشانگر در آخرین کندلِ برشِ داده‌شده — `None` یعنی گرم‌شدنِ
-    /// ناکافی. برشِ `bars` فقط گذشته است — علّی بودن از امضا می‌آید.
+    /// The indicator's value on the last candle of the given slice — `None` means insufficient
+    /// warmup. The `bars` slice is past-only — causality comes from the signature.
     #[must_use]
-    #[allow(clippy::too_many_lines, clippy::cast_precision_loss)] // هفت نشانگر در یک match — طولش ماهیتِ داده است
+    #[allow(clippy::too_many_lines, clippy::cast_precision_loss)] // seven indicators in one match — its length is the data itself
     pub fn last_value(&self, bars: &[OhlcvBar]) -> Option<f64> {
         let total = bars.len();
         let period = self.period();
@@ -343,53 +343,53 @@ impl IndicatorSpec {
     }
 }
 
-/// یک قاعدهٔ سیگنالِ تایپ‌دار — ترکیبِ AND روی بردارِ قواعد.
+/// A typed signal rule — an AND combination over the rule vector.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SignalRule {
-    /// نشانگر بالای آستانه.
+    /// Indicator above threshold.
     IndicatorAbove {
-        /// نشانگرِ سنجیده‌شده.
+        /// The measured indicator.
         indicator: IndicatorSpec,
-        /// آستانه.
+        /// Threshold.
         threshold: f64,
     },
-    /// نشانگر زیرِ آستانه.
+    /// Indicator below threshold.
     IndicatorBelow {
-        /// نشانگرِ سنجیده‌شده.
+        /// The measured indicator.
         indicator: IndicatorSpec,
-        /// آستانه.
+        /// Threshold.
         threshold: f64,
     },
-    /// عبور رو به بالای نشانگر سریع از کند — حالتِ طلایی (`fast > slow`).
+    /// Fast-above-slow crossover — the golden cross (`fast > slow`).
     IndicatorCrossesAbove {
-        /// نشانگرِ سریع.
+        /// The fast indicator.
         fast: IndicatorSpec,
-        /// نشانگرِ کند.
+        /// The slow indicator.
         slow: IndicatorSpec,
     },
-    /// عبور رو به پایین نشانگر سریع از کند — حالتِ مرگ (`fast < slow`).
+    /// Fast-below-slow crossover — the death cross (`fast < slow`).
     IndicatorCrossesBelow {
-        /// نشانگرِ سریع.
+        /// The fast indicator.
         fast: IndicatorSpec,
-        /// نشانگرِ کند.
+        /// The slow indicator.
         slow: IndicatorSpec,
     },
-    /// بسته بالای میانگینِ ساده (فیلترِ روند).
+    /// Close above the simple average (trend filter).
     PriceAboveSma {
-        /// دورهٔ میانگین.
+        /// Average period.
         period: usize,
     },
-    /// بسته زیرِ میانگینِ ساده (فیلترِ روند).
+    /// Close below the simple average (trend filter).
     PriceBelowSma {
-        /// دورهٔ میانگین.
+        /// Average period.
         period: usize,
     },
-    /// یکی از این قواعد کافی است (OR).
+    /// Any one of these rules suffices (OR).
     AnyOf(Vec<SignalRule>),
 }
 
 impl SignalRule {
-    /// ارزیابیِ قاعده روی برشِ گذشته — `bars` فقط `0..=t` است (علّی).
+    /// Evaluate the rule on a past slice — `bars` is only `0..=t` (causal).
     #[must_use]
     pub fn evaluate(&self, bars: &[OhlcvBar]) -> bool {
         let n = bars.len();
@@ -401,14 +401,14 @@ impl SignalRule {
                 indicator.last_value(bars).is_some_and(|v| v < *threshold)
             }
             Self::IndicatorCrossesAbove { fast, slow } => {
-                // حالتِ طلایی — fast > slow (برشِ گرم‌شده؛ هیچ دادهٔ آینده‌ای)
+                // golden cross — fast > slow (warmed slice; no future data)
                 match (fast.last_value(bars), slow.last_value(bars)) {
                     (Some(f), Some(s)) => f > s,
                     _ => false,
                 }
             }
             Self::IndicatorCrossesBelow { fast, slow } => {
-                // حالتِ مرگ — fast < slow
+                // death cross — fast < slow
                 match (fast.last_value(bars), slow.last_value(bars)) {
                     (Some(f), Some(s)) => f < s,
                     _ => false,
@@ -426,7 +426,7 @@ impl SignalRule {
         }
     }
 
-    /// شمارشِ نشانگرهایِ یکتا در قاعده — برای warmup و تلمتری.
+    /// Count of unique indicators in the rule — for warmup and telemetry.
     pub fn collect_indicators(&self, into: &mut Vec<IndicatorSpec>) {
         match self {
             Self::IndicatorAbove { indicator, .. } | Self::IndicatorBelow { indicator, .. } => {
@@ -448,50 +448,50 @@ impl SignalRule {
     }
 }
 
-/// جهتِ ساختاریِ استراتژی — علامتِ وزنِ هدف.
+/// The strategy's structural direction — the sign of the target weight.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BiasKind {
-    /// خرید — وزنِ هدف مثبت.
+    /// Long — positive target weight.
     Long,
-    /// فروشِ اهرم‌دار — وزنِ هدف منفی.
+    /// Short leveraged sale — negative target weight.
     Short,
 }
 
-/// AST تایپ‌دارِ استراتژی — درمانِ قضاییِ #1: سری‌شدنی، قطعی، صفر-اجرای-پویا.
+/// The strategy's typed AST — Remedy #1: serializable, deterministic, zero dynamic execution.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StrategyAst {
-    /// شناسهٔ پایدار — هشِ پرامپت+نماد+تایم‌فریم.
+    /// Stable ID — hash of prompt+symbol+timeframe.
     pub strategy_id: String,
-    /// نامِ انسانی.
+    /// Human-readable name.
     pub name: String,
-    /// نمادِ معامله (مثل `BTC-USDT`).
+    /// Trading symbol (e.g. `BTC-USDT`).
     pub symbol: String,
-    /// تایم‌فریم (`1m|5m|15m|1h|4h|1d`).
+    /// Timeframe (`1m|5m|15m|1h|4h|1d`).
     pub timeframe: String,
-    /// شاخصِ آغازِ ارزیابی — قواعد فقط از اینجا زنده‌اند.
+    /// Evaluation start index — rules are live only from here on.
     pub warmup_bars: usize,
-    /// نشانگرهایِ استفاده‌شده.
+    /// Indicators in use.
     pub indicators: Vec<IndicatorSpec>,
-    /// قواعدِ ورود — ترکیبِ AND.
+    /// Entry rules — AND combination.
     pub entry_rules: Vec<SignalRule>,
-    /// قواعدِ خروج — ترکیبِ AND.
+    /// Exit rules — AND combination.
     pub exit_rules: Vec<SignalRule>,
-    /// وزنِ هدفِ لانگ در `[0,1]`.
+    /// Long target weight in `[0,1]`.
     pub target_long_weight: f64,
-    /// وزنِ هدفِ شورت در `[0,1]`.
+    /// Short target weight in `[0,1]`.
     pub target_short_weight: f64,
-    /// حدِ ضرر بر پایهٔ bps.
+    /// Stop loss in bps.
     pub stop_loss_bps: u32,
-    /// حدِ سود بر پایهٔ bps.
+    /// Take profit in bps.
     pub take_profit_bps: u32,
-    /// سقفِ اهرم — با گارد به ۵٫۰ مهدود می‌شود.
+    /// Leverage cap — clamped to 5.0 by the guard.
     pub max_leverage: f64,
-    /// جهتِ ساختاری.
+    /// Structural direction.
     pub bias: BiasKind,
 }
 
 impl StrategyAst {
-    /// همهٔ نشانگرهایِ یکتا (قواعد + بردارِ اعلامی).
+    /// All unique indicators (rules + the declared vector).
     #[must_use]
     pub fn all_indicators(&self) -> Vec<IndicatorSpec> {
         let mut out = self.indicators.clone();
@@ -506,7 +506,7 @@ impl StrategyAst {
         out
     }
 
-    /// وزنِ هدفِ علّی روی برشِ `0..=t` — `None` یعنی «نگه‌دار».
+    /// The causal target weight on the `0..=t` slice — `None` means "hold".
     #[must_use]
     pub fn target_weight_at(&self, bars: &[OhlcvBar]) -> Option<f64> {
         let exits_fire = !self.exit_rules.is_empty() && self.exit_rules.iter().all(|r| r.evaluate(bars));
@@ -524,16 +524,16 @@ impl StrategyAst {
     }
 }
 
-// ── تجزیه‌گرِ دوزبانهٔ Vibe ─────────────────────────────────────────────────
+// ── Bilingual Vibe parser ─────────────────────────────────────────────────
 
-/// نگاشتِ ارقام فارسی/عربی به لاتین + نرمال‌سازیِ نیم‌فاصله/حروفِ کوچک.
+/// Persian/Arabic digit → Latin mapping + ZWNJ/lowercase normalization.
 #[must_use]
 fn normalize_prompt(input: &str) -> String {
     input
         .chars()
         .map(|c| match c {
-            '۰'..='۹' => char::from_u32(u32::from(b'0') + u32::from(c) - u32::from('۰')).unwrap_or(' '),
-            '٠'..='٩' => char::from_u32(u32::from(b'0') + u32::from(c) - u32::from('٠')).unwrap_or(' '),
+            '\u{6f0}'..='\u{6f9}' => char::from_u32(u32::from(b'0') + u32::from(c) - u32::from('\u{6f0}')).unwrap_or(' '),
+            '\u{660}'..='\u{669}' => char::from_u32(u32::from(b'0') + u32::from(c) - u32::from('\u{660}')).unwrap_or(' '),
             '\u{200c}' | '\u{200f}' | '\u{200e}' => ' ',
             _ => c.to_ascii_lowercase(),
         })
@@ -543,7 +543,7 @@ fn normalize_prompt(input: &str) -> String {
         .join(" ")
 }
 
-/// نخستین عددِ پس از نخستین وقوعِ کلیدواژه (پنجرهٔ ۴۰ کاراکتر).
+/// The first number after the first keyword occurrence (a 40-character window).
 #[must_use]
 fn number_after(text: &str, keyword: &str) -> Option<f64> {
     let idx = text.find(keyword)?;
@@ -559,7 +559,7 @@ fn number_after(text: &str, keyword: &str) -> Option<f64> {
     num.parse().ok()
 }
 
-/// دورهٔ پیش‌فرضِ هر نشانگر.
+/// Each indicator's default period.
 const DEFAULT_RSI_PERIOD: usize = 14;
 const DEFAULT_EMA_FAST: usize = 12;
 const DEFAULT_EMA_SLOW: usize = 26;
@@ -569,7 +569,7 @@ const DEFAULT_BOLLINGER_PERIOD: usize = 20;
 const DEFAULT_ZSCORE_PERIOD: usize = 20;
 const DEFAULT_MOMENTUM_PERIOD: usize = 10;
 
-/// الگوی `12/26` — جفتِ دورهٔ کراس از نخستین «عدد/عدد».
+/// The `12/26` pattern — the crossover period pair from the first "number/number".
 #[must_use]
 fn slash_pair(text: &str) -> Option<(usize, usize)> {
     let bytes = text.as_bytes();
@@ -601,35 +601,35 @@ fn slash_pair(text: &str) -> Option<(usize, usize)> {
     None
 }
 
-/// استخراجِ قواعدِ ورود/خروج از متنِ نرمال‌شده — قطعی و دوزبانه.
+/// Extract entry/exit rules from the normalized text — deterministic and bilingual.
 ///
-/// نگاشتِ جهت‌محور: برای لانگ، «زیر آستانه» ورود و «بالای آستانه» خروج
-/// است؛ برای شورت، برعکس. کلیدواژه‌هایِ خرید/فروش فقط جهتِ ساختاری را
-/// تعیین می‌کنند — و این، هر دو الگویِ «بخر rsi زیر ۴۵» و «وقتی rsi
-/// زیر ۳۰ آمد بخر و بالای ۷۰ بفروش» را یکجا درست می‌خواند.
+/// Direction-aware mapping: for long, "below threshold" is entry and "above threshold" is exit;
+/// for short, the reverse. Buy/sell keywords only determine the structural
+/// direction — and this reads both "buy rsi below 45" and "when rsi
+/// goes below 30, buy and sell above 70" correctly in one place.
 #[must_use]
-#[allow(clippy::too_many_lines)] // تجزیه‌گرِ دوزبانه — طولش ماهیتِ زبان است
+#[allow(clippy::too_many_lines)] // the bilingual parser — its length is the nature of the language
 fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
     let mut entry: Vec<SignalRule> = Vec::new();
     let mut exit: Vec<SignalRule> = Vec::new();
 
-    // جهت — نخستین کلیدواژهٔ جهت برنده است؛ هیچ‌کدام → لانگ (پیش‌فرضِ کانونیک)
-    let buy_idx = ["بخر", "خرید", "buy", "long"].iter().filter_map(|k| text.find(k)).min();
-    let sell_idx = ["بفروش", "فروش", "sell", "short"].iter().filter_map(|k| text.find(k)).min();
+    // direction — the first direction keyword wins; none → long (canonical default)
+    let buy_idx = ["\u{628}\u{62e}\u{631}", "\u{62e}\u{631}\u{6cc}\u{62f}", "buy", "long"].iter().filter_map(|k| text.find(k)).min();
+    let sell_idx = ["\u{628}\u{641}\u{631}\u{648}\u{634}", "\u{641}\u{631}\u{648}\u{634}", "sell", "short"].iter().filter_map(|k| text.find(k)).min();
     let long_bias = match (buy_idx, sell_idx) {
         (Some(l), Some(s)) => l < s,
         (None, Some(_)) => false,
         _ => true,
     };
 
-    // آستانه‌های RSI — جهت‌محور (زیر = خریدِ افت، بالای = فروشِ اشباع)
+    // RSI thresholds — direction-aware (below = dip buy, above = overbought sell)
     if text.contains("rsi") {
         let rsi = IndicatorSpec::Rsi { period: DEFAULT_RSI_PERIOD };
         for (kw, below) in [
-            ("زیر", true),
+            ("\u{632}\u{6cc}\u{631}", true),
             ("below", true),
             ("under", true),
-            ("بالای", false),
+            ("\u{628}\u{627}\u{644}\u{627}\u{6cc}", false),
             ("above", false),
             ("over", false),
         ] {
@@ -639,7 +639,7 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
                 } else {
                     SignalRule::IndicatorAbove { indicator: rsi, threshold: th }
                 };
-                // جهت‌محور: زیرِ آستانه = خریدِ افت (لانگ)، بالای آستانه = فروشِ اشباع
+                // direction-aware: below threshold = dip buy (long), above threshold = overbought sell
                 if below == long_bias {
                     entry.push(rule);
                 } else {
@@ -650,13 +650,13 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
         if entry.iter().all(|r| !matches!(r, SignalRule::IndicatorBelow { .. }))
             && exit.iter().all(|r| !matches!(r, SignalRule::IndicatorAbove { .. }))
         {
-            // rsi بدون آستانهٔ صریح — فیلترِ کلاسیکِ اشباعِ خرید
+            // rsi without an explicit threshold — the classic overbought filter
             entry.push(SignalRule::IndicatorBelow { indicator: rsi, threshold: 70.0 });
         }
     }
 
-    // کراسِ EMA — الگویِ «12/26» یا «crossover» با پیش‌فرضِ کانونیک
-    let wants_cross = text.contains("crossover") || text.contains("کراس") || text.contains("عبور");
+    // EMA cross — the "12/26" or "crossover" pattern with the canonical default
+    let wants_cross = text.contains("crossover") || text.contains("\u{6a9}\u{631}\u{627}\u{633}") || text.contains("\u{639}\u{628}\u{648}\u{631}");
     let mentions_ema = text.contains("ema");
     if mentions_ema || wants_cross {
         let (fast_p, slow_p) = slash_pair(text).unwrap_or((DEFAULT_EMA_FAST, DEFAULT_EMA_SLOW));
@@ -671,8 +671,8 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
         }
     }
 
-    // مومنتوم — جهت‌محور
-    if text.contains("momentum") || text.contains("شتاب") {
+    // momentum — direction-aware
+    if text.contains("momentum") || text.contains("\u{634}\u{62a}\u{627}\u{628}") {
         let mom = IndicatorSpec::Momentum { period: DEFAULT_MOMENTUM_PERIOD };
         if long_bias {
             entry.push(SignalRule::IndicatorAbove { indicator: mom, threshold: 0.0 });
@@ -683,8 +683,8 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
         }
     }
 
-    // بولینگر / z-score — برگشتِ میانگینِ جهت‌محور
-    if text.contains("bollinger") || text.contains("بولینگر") {
+    // Bollinger / z-score — direction-aware mean reversion
+    if text.contains("bollinger") || text.contains("\u{628}\u{648}\u{644}\u{6cc}\u{646}\u{6af}\u{631}") {
         let bb = IndicatorSpec::BollingerBands { period: DEFAULT_BOLLINGER_PERIOD, std_dev_x100: 200 };
         if long_bias {
             entry.push(SignalRule::IndicatorBelow { indicator: bb, threshold: 0.3 });
@@ -705,16 +705,16 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
         }
     }
 
-    // فیلترِ روند — «صعودی/uptrend» → قیمت بالای میانگینِ بلند
-    if text.contains("صعودی") || text.contains("uptrend") || text.contains("bullish") {
+    // trend filter — "bullish/uptrend" → price above the long average
+    if text.contains("\u{635}\u{639}\u{648}\u{62f}\u{6cc}") || text.contains("uptrend") || text.contains("bullish") {
         if long_bias {
             entry.push(SignalRule::PriceAboveSma { period: DEFAULT_TREND_SMA });
         } else {
             exit.push(SignalRule::PriceAboveSma { period: DEFAULT_TREND_SMA });
         }
     }
-    // فیلترِ روندِ نزولی — فقط برای شورت معنا دارد
-    if text.contains("نزولی") || text.contains("downtrend") || text.contains("bearish") {
+    // downtrend filter — meaningful only for shorts
+    if text.contains("\u{646}\u{632}\u{648}\u{644}\u{6cc}") || text.contains("downtrend") || text.contains("bearish") {
         if long_bias {
             exit.push(SignalRule::PriceBelowSma { period: DEFAULT_TREND_SMA });
         } else {
@@ -722,15 +722,15 @@ fn extract_rules(text: &str) -> (Vec<SignalRule>, Vec<SignalRule>, bool) {
         }
     }
 
-    // میانگینِ سادهٔ صریح — فیلترِ روندِ کانونیک
-    if text.contains("sma") || text.contains("میانگین") {
+    // explicit simple average — the canonical trend filter
+    if text.contains("sma") || text.contains("\u{645}\u{6cc}\u{627}\u{646}\u{6af}\u{6cc}\u{646}") {
         entry.push(SignalRule::PriceAboveSma { period: DEFAULT_SMA_PERIOD });
     }
 
     (entry, exit, long_bias)
 }
 
-/// شناسهٔ پایدارِ استراتژی — ۱۶ نیم‌بایتِ نخستِ SHA-256 پرامپتِ ترکیبی.
+/// The strategy's stable ID — the first 16 nibbles of the SHA-256 of the combined prompt.
 #[must_use]
 fn vibe_strategy_id(vibe_prompt: &str, symbol: &str, timeframe: &str) -> String {
     let mut hasher = Sha256::new();
@@ -747,18 +747,18 @@ fn vibe_strategy_id(vibe_prompt: &str, symbol: &str, timeframe: &str) -> String 
     format!("vibe:{hex}")
 }
 
-/// تدوینِ پرامپتِ طبیعیِ دوزبانه به AST امن — درمانِ قضاییِ #1.
+/// Compile the bilingual natural-language prompt into a safe AST — Remedy #1.
 ///
-/// EN + FA (ارقام فارسی، نیم‌فاصله، کلیدواژه‌های بومی). صفر اجرای پویا؛
-/// اگر هیچ سیگنالی شناخته نشد، استراتژیِ کانونیکِ EMA-12/26 + فیلترِ RSI
-/// برگردانده می‌شود تا DAG همیشه خروجیِ معتبر بدهد.
+/// EN + FA (Persian digits, ZWNJ, native keywords). Zero dynamic execution;
+/// if no signal is recognized, the canonical EMA-12/26 + RSI filter strategy
+/// is returned so the DAG always yields a valid output.
 #[must_use]
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // clamp+round پیش از cast
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // clamp+round before cast
 pub fn compile_vibe_to_strategy_ast(vibe_prompt: &str, symbol: &str, timeframe: &str) -> StrategyAst {
     let text = normalize_prompt(vibe_prompt);
     let (mut entry_rules, exit_rules, long_bias) = extract_rules(&text);
 
-    // فال‌باکِ قطعی — استراتژیِ کانونیکِ روند-پیو
+    // deterministic fallback — the canonical trend-following strategy
     if entry_rules.is_empty() {
         let fast = IndicatorSpec::Ema { period: DEFAULT_EMA_FAST };
         let slow = IndicatorSpec::Ema { period: DEFAULT_EMA_SLOW };
@@ -790,14 +790,14 @@ pub fn compile_vibe_to_strategy_ast(vibe_prompt: &str, symbol: &str, timeframe: 
     let max_period = indicators.iter().map(IndicatorSpec::period).max().unwrap_or(DEFAULT_EMA_SLOW);
     let warmup = (max_period.saturating_mul(3)).saturating_add(5).max(30);
 
-    // ریسک — حدِ ضرر/سود/اهرم از پرامپت (پیش‌فرض‌های محافظه‌کار)
-    let stop_loss_bps = number_after(&text, "حد ضرر")
+    // risk — stop loss/take profit/leverage from the prompt (conservative defaults)
+    let stop_loss_bps = number_after(&text, "\u{62d}\u{62f} \u{636}\u{631}\u{631}")
         .or_else(|| number_after(&text, "stop loss"))
         .map_or(200.0, |v| (v * 100.0).clamp(10.0, 5_000.0).round()) as u32;
-    let take_profit_bps = number_after(&text, "حد سود")
+    let take_profit_bps = number_after(&text, "\u{62d}\u{62f} \u{633}\u{648}\u{62f}")
         .or_else(|| number_after(&text, "take profit"))
         .map_or(400.0, |v| (v * 100.0).clamp(20.0, 10_000.0).round()) as u32;
-    let max_leverage = number_after(&text, "اهرم")
+    let max_leverage = number_after(&text, "\u{627}\u{647}\u{631}\u{645}")
         .or_else(|| number_after(&text, "leverage"))
         .map_or(3.0, |v| v.clamp(1.0, MAX_LEVERAGE_CAP));
 
@@ -825,18 +825,18 @@ pub fn compile_vibe_to_strategy_ast(vibe_prompt: &str, symbol: &str, timeframe: 
     }
 }
 
-// ── گاردِ ریسک (درمانِ #4) ─────────────────────────────────────────────────
+// ── Risk guard (Remedy #4) ─────────────────────────────────────────────────
 
-/// گاردِ ریسکِ پورتفولیو — کلیدِ توقفِ سختِ پیش-معامله و runtime.
+/// Portfolio risk guard — a hard stop key pre-trade and at runtime.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct PortfolioRiskGuard {
-    /// سقفِ اهرم.
+    /// Leverage cap.
     pub max_leverage: f64,
-    /// سقفِ سهمِ هر سفارش از حقوق (نسبت).
+    /// Cap on each order's share of equity (ratio).
     pub max_order_pct_of_equity: f64,
-    /// سقفِ زیانِ روزانه (نسبت).
+    /// Daily-loss cap (ratio).
     pub daily_loss_limit_pct: f64,
-    /// کلیدِ توقفِ دراودان (درصد).
+    /// Drawdown stop key (percent).
     pub max_drawdown_kill_switch_pct: f64,
 }
 
@@ -852,13 +852,13 @@ impl Default for PortfolioRiskGuard {
 }
 
 impl PortfolioRiskGuard {
-    /// مهدودکردنِ اهرمِ AST — همیشه ≤ سقفِ مطلق.
+    /// Clamp the AST leverage — always ≤ the absolute cap.
     #[must_use]
     pub fn clamp_leverage(&self, requested: f64) -> f64 {
         requested.clamp(1.0, self.max_leverage)
     }
 
-    /// سقفِ ناتینالِ هر سفارش — fail-closed.
+    /// Notional cap per order — fail-closed.
     #[must_use]
     pub fn pre_trade_order_cap(&self, equity: f64) -> f64 {
         if equity <= 0.0 {
@@ -867,30 +867,30 @@ impl PortfolioRiskGuard {
         equity * self.max_order_pct_of_equity
     }
 
-    /// نقضِ زیانِ روزانه؟
+    /// Daily loss violated?
     #[must_use]
     pub fn daily_loss_breached(&self, equity: f64, day_start_equity: f64) -> bool {
         day_start_equity > 0.0
             && (day_start_equity - equity) / day_start_equity >= self.daily_loss_limit_pct
     }
 
-    /// نقضِ کلیدِ توقفِ دراودان؟
+    /// Drawdown stop key violated?
     #[must_use]
     pub fn drawdown_kill_switch_breached(&self, equity: f64, peak_equity: f64) -> bool {
         peak_equity > 0.0 && (peak_equity - equity) / peak_equity * 100.0 >= self.max_drawdown_kill_switch_pct
     }
 }
 
-// ── موتورِ بک‌تستِ علّی (درمانِ #2) ────────────────────────────────────────
+// ── Causal backtest engine (Remedy #2) ────────────────────────────────────────
 
-/// پیکربندیِ بک‌تست — اصطکاک‌ها با کفِ قراردادی مهدود می‌شوند.
+/// Backtest configuration — frictions clamped to the contractual floor.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct BacktestConfig {
-    /// سرمایهٔ آغازین.
+    /// Starting capital.
     pub initial_cash: f64,
-    /// کارمزدِ taker بر پایهٔ bps — کفِ ۱۰.
+    /// Taker fee in bps — floor of 10.
     pub taker_fee_bps: f64,
-    /// احتراک بر پایهٔ bps — کفِ ۵.
+    /// Slippage in bps — floor of 5.
     pub slippage_bps: f64,
 }
 
@@ -904,60 +904,60 @@ impl Default for BacktestConfig {
     }
 }
 
-/// گزارشِ کاملِ بک‌تستِ علّی + هشِ دفترِ ادعاها.
+/// The complete causal backtest report + the claim-ledger hash.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CausalBacktestReport {
-    /// اثباتِ علّی — همیشه `true` روی این موتور (برشِ قرضیِ `0..=t`).
+    /// Causal proof — always `true` on this engine (the borrowed `0..=t` slice).
     pub causal_slice_proof: bool,
-    /// نماد.
+    /// Symbol.
     pub symbol: String,
-    /// تایم‌فریم.
+    /// Timeframe.
     pub timeframe: String,
-    /// بازدهیِ کل (درصد).
+    /// Total return (percent).
     pub total_return_pct: f64,
-    /// بازدهیِ سالانه‌شدهٔ مرکب (درصد).
+    /// Compound annualized return (percent).
     pub cagr_pct: f64,
-    /// شارپِ نمونه‌ای (ddof=1) سالانه‌شده.
+    /// Sample Sharpe (ddof=1), annualized.
     pub sharpe_ratio: f64,
-    /// سورتینو — انحرافِ نزولیِ RMS روی نمونهٔ کامل.
+    /// Sortino — RMS downside deviation over the full sample.
     pub sortino_ratio: f64,
-    /// بیشینهٔ دراودان (درصد — منفی).
+    /// Maximum drawdown (percent — negative).
     pub max_drawdown_pct: f64,
-    /// کالمر — cagr / |maxdd|.
+    /// Calmar — cagr / |maxdd|.
     pub calmar_ratio: f64,
-    /// نرخِ برد (درصد).
+    /// Win rate (percent).
     pub win_rate_pct: f64,
-    /// نسبتِ سود.
+    /// Profit ratio.
     pub profit_factor: f64,
-    /// امگا (آستانهٔ صفر).
+    /// Omega (zero threshold).
     pub omega_ratio: f64,
-    /// نسبتِ دُم — |P95| / |P5| بازدهیِ کندلی.
+    /// Tail ratio — |P95| / |P5| of candle returns.
     pub tail_ratio: f64,
-    /// چولگیِ گاوسین.
+    /// Gaussian skewness.
     pub skewness: f64,
-    /// کشیدگیِ اضافی.
+    /// Excess kurtosis.
     pub kurtosis: f64,
-    /// گردشِ سرمایه — Σ|q·p| / میانگینِ حقوق.
+    /// Capital turnover — Σ|q·p| / average equity.
     pub turnover_ratio: f64,
-    /// تعدادِ معامله‌هایِ بسته‌شده.
+    /// Number of closed trades.
     pub total_trades: usize,
-    /// تعدادِ کندل‌ها.
+    /// Number of candles.
     pub bars: usize,
-    /// حقوقِ پایانی.
+    /// Final equity.
     pub final_equity: f64,
-    /// تسویهٔ اجباری رخ داد؟
+    /// Did a forced liquidation occur?
     pub liquidated: bool,
-    /// مُهرِ اسنپ‌شاتِ پایانیِ صفرشده (`timestamp + 1ms`) — پس از فروپاشی.
+    /// The zeroed final snapshot timestamp (`timestamp + 1ms`) — after liquidation.
     pub liquidated_at_ms: Option<i64>,
-    /// کلیدِ توقف فعال شد؟
+    /// Stop key triggered?
     pub kill_switch_tripped: bool,
-    /// هشِ SHA-256 ادعاها — قفلِ ضدِ دستکاری.
+    /// SHA-256 hash of the claims — the anti-tampering lock.
     pub claim_verification_hash: String,
-    /// منحنیِ حقوق — برای بازبینیِ خارجی.
+    /// Equity curve — for external review.
     pub equity_curve: Vec<f64>,
 }
 
-/// نتیجهٔ اندازه‌گیریِ «بیشترینِ مقدارِ قابل‌خرید» — جست‌وجوی دودوییِ ۳۲قدمی.
+/// The "maximum purchasable quantity" measurement result — a 32-step binary search.
 fn solve_max_affordable_qty(target_qty: f64, fill_price: f64, available_cash: f64, fee_rate: f64) -> f64 {
     let afford = |q: f64| q * fill_price * (1.0 + fee_rate) <= available_cash;
     let (mut lo, mut hi) = (0.0_f64, target_qty.max(0.0));
@@ -975,44 +975,44 @@ fn solve_max_affordable_qty(target_qty: f64, fill_price: f64, available_cash: f6
     hi
 }
 
-/// موتورِ بک‌تستِ اکیداً علّی.
+/// The strictly causal backtest engine.
 #[derive(Debug, Clone, Default)]
 pub struct CausalBacktestEngine {
-    /// پیکربندی (اصطکاک‌ها با کفِ قراردادی مهدود).
+    /// Configuration (frictions clamped to the contractual floor).
     pub config: BacktestConfig,
-    /// گاردِ ریسک (درمانِ #4).
+    /// Risk guard (Remedy #4).
     pub guard: PortfolioRiskGuard,
 }
 
-/// کنشگرِ حسابِ پوزیشن — میانگینِ موزونِ ورود و تحققِ سود/زیان.
+/// The position-account operator — weighted-average entry and realized `PnL`.
 #[derive(Debug, Clone, Default)]
 struct Position {
-    /// مقدارِ علامت‌دار (لانگ مثبت / شورت منفی).
+    /// Signed quantity (long positive / short negative).
     qty: f64,
-    /// میانگینِ قیمتِ ورود.
+    /// Average entry price.
     avg_entry: f64,
-    /// سودِ تحقق‌یافتهٔ تجمعی.
+    /// Cumulative realized profit.
     realized: f64,
-    /// سودِ تحقق‌یافتهٔ برنده.
+    /// Realized profit of winners.
     gross_win: f64,
-    /// زیانِ تحقق‌یافتهٔ فروشنده (قدرمطلق).
+    /// Realized loss of losers (absolute value).
     gross_loss: f64,
-    /// شمارِ معامله‌هایِ بسته.
+    /// Number of closed trades.
     closed_trades: usize,
-    /// شمارِ معامله‌هایِ بسته‌یِ برنده.
+    /// Number of closed winning trades.
     win_count: usize,
-    /// Σ|q·p| همهٔ پرها.
+    /// Σ|q·p| of all fills.
     turnover: f64,
 }
 
 impl Position {
-    /// خرید `q` واحد در `price` (با کارمزد) — بازگشتِ کارمزد.
+    /// Buy `q` units at `price` (with fee) — returns the fee.
     fn buy(&mut self, q: f64, price: f64, fee_rate: f64) -> f64 {
         let notional = q * price;
         let fee = notional * fee_rate;
         self.turnover += notional;
         if self.qty < 0.0 {
-            // پوششِ شورت
+            // short cover
             let cover = q.min(-self.qty);
             if self.avg_entry > 0.0 {
                 let pnl = (self.avg_entry - price) * cover;
@@ -1050,13 +1050,13 @@ impl Position {
         fee
     }
 
-    /// فروش `q` واحد در `price` — بازگشتِ کارمزد.
+    /// Sell `q` units at `price` — returns the fee.
     fn sell(&mut self, q: f64, price: f64, fee_rate: f64) -> f64 {
         let notional = q * price;
         let fee = notional * fee_rate;
         self.turnover += notional;
         if self.qty > 0.0 {
-            // فروشِ لانگ
+            // long sale
             let sold = q.min(self.qty);
             if self.avg_entry > 0.0 {
                 let pnl = (price - self.avg_entry) * sold;
@@ -1096,11 +1096,11 @@ impl Position {
 }
 
 impl CausalBacktestEngine {
-    /// اجرایِ بک‌تستِ علّی — سیگنال روی `close(t)`، پر در `open(t+1)`.
+    /// Run the causal backtest — signal on `close(t)`, fill at `open(t+1)`.
     ///
-    /// ارزیاب فقط `&candles[0..=t]` می‌گیرد: دیدنِ آینده از امضایِ
-    /// `StrategyAst::target_weight_at(&[OhlcvBar])` بیرونِ دست است —
-    /// همین، اثباتِ ساختاریِ `causal_slice_proof` است.
+    /// The evaluator only receives `&candles[0..=t]`: seeing the future is out of reach of the
+    /// `StrategyAst::target_weight_at(&[OhlcvBar])` signature —
+    /// that is the structural proof of `causal_slice_proof`.
     #[must_use]
     #[allow(clippy::too_many_lines, clippy::cast_precision_loss)]
     pub fn run(&self, ast: &StrategyAst, candles: &[OhlcvBar]) -> CausalBacktestReport {
@@ -1111,23 +1111,23 @@ impl CausalBacktestEngine {
         let mut cash = self.config.initial_cash;
         let mut pos = Position::default();
         let mut curve: Vec<f64> = Vec::with_capacity(n);
-        let mut peak = self.config.initial_cash; // بذرِ پیش از کندلِ ۰
+        let mut peak = self.config.initial_cash; // seed before candle 0
         let mut liquidated = false;
         let mut kill_switch = false;
         let mut liquidated_at_ms: Option<i64> = None;
         let mut start_index = ast.warmup_bars.min(n.saturating_sub(2));
         if n < 3 {
-            start_index = usize::MAX; // هیچ گامِ علّی ممکن نیست
+            start_index = usize::MAX; // no causal step is possible
         }
 
         let mut day_start_equity = self.config.initial_cash;
         let mut current_day: i64 = candles.first().map_or(0, |b| b.timestamp_ms / 86_400_000);
 
         'outer: for t in start_index..n.saturating_sub(1) {
-            let slice = &candles[0..=t]; // ← تنها دادهٔ دیدنیِ استراتژی
+            let slice = &candles[0..=t]; // ← the only data the strategy can see
             let next = &candles[t + 1];
 
-            // مرزِ روز — بازنشانیِ سقفِ زیانِ روزانه
+            // day boundary — daily-loss cap reset
             let day = next.timestamp_ms / 86_400_000;
             if day != current_day {
                 current_day = day;
@@ -1137,7 +1137,7 @@ impl CausalBacktestEngine {
             let equity_mark = cash + pos.qty * slice[slice.len() - 1].close;
             let mark_price = next.open;
 
-            // خروجِ ساختاری: حدِ ضرر/سود — سیگنال از برش، پر در open(t+1)
+            // structural exit: stop loss/take profit — signal from the slice, fill at open(t+1)
             let mut force_exit = false;
             if pos.qty > 0.0 && pos.avg_entry > 0.0 {
                 let stop = pos.avg_entry * (1.0 - f64::from(ast.stop_loss_bps) / 10_000.0);
@@ -1155,7 +1155,7 @@ impl CausalBacktestEngine {
                 }
             }
 
-            // گاردها — پیش از هر سفارشِ تازه
+            // guards — before every new order
             if self.guard.drawdown_kill_switch_breached(equity_mark, peak) {
                 flatten(&mut pos, &mut cash, mark_price, slip_rate, fee_rate);
                 kill_switch = true;
@@ -1176,7 +1176,7 @@ impl CausalBacktestEngine {
                 let delta_notional = (target_notional - current_notional).clamp(-cap, cap);
                 if delta_notional.abs() > 1e-9 {
                     if delta_notional > 0.0 {
-                        // خرید — اندازه‌گیری با جست‌وجوی دودویی روی نقد
+                        // buy — sized by binary search on cash
                         let fill = mark_price * (1.0 + slip_rate);
                         let want_qty = delta_notional / fill;
                         let max_qty = solve_max_affordable_qty(want_qty, fill, cash, fee_rate);
@@ -1185,7 +1185,7 @@ impl CausalBacktestEngine {
                             cash -= max_qty * fill + fee;
                         }
                     } else {
-                        // فروش/شورت — سقفِ اهرم روی ناتینالِ شورت
+                        // sell/short — leverage cap on the short notional
                         let fill = mark_price * (1.0 - slip_rate);
                         let mut want_qty = (-delta_notional) / fill;
                         let short_room = (leverage * equity_mark - (pos.qty * fill).max(0.0)) / fill;
@@ -1198,12 +1198,12 @@ impl CausalBacktestEngine {
                 }
             }
 
-            // علامت‌گذاری در close(t+1) — منحنیِ حقوق
+            // marking at close(t+1) — the equity curve
             let equity_after = cash + pos.qty * next.close;
             peak = peak.max(equity_after);
             curve.push(equity_after);
 
-            // هامشِ نگهداری — تسویهٔ اجباری + اسنپ‌شاتِ صفرشدهٔ +۱ms
+            // maintenance margin — forced liquidation + the zeroed snapshot at +1ms
             let position_notional = pos.qty.abs() * next.close;
             if position_notional > 0.0 && equity_after <= position_notional * MAINTENANCE_MARGIN_FRACTION {
                 let liq_fill = next.close * (1.0 - pos.qty.signum() * slip_rate);
@@ -1216,7 +1216,7 @@ impl CausalBacktestEngine {
         }
 
         let final_equity = curve.last().copied().unwrap_or(self.config.initial_cash);
-        // نرخِ برد و گردشِ واقعی — پس از شمارشِ معامله‌ها
+        // real win rate and turnover — after counting the trades
         let win_rate_pct = if pos.closed_trades > 0 {
             (pos.win_count as f64 / pos.closed_trades as f64) * 100.0
         } else {
@@ -1245,7 +1245,7 @@ impl CausalBacktestEngine {
             profit_factor: if pos.gross_loss > 0.0 {
                 pos.gross_win / pos.gross_loss
             } else if pos.gross_win > 0.0 {
-                999.0 // بدونِ زیانِ تحقق‌یافته — سقفِ نمایشیِ متناهی
+                999.0 // no realized loss — a finite display cap
             } else {
                 0.0
             },
@@ -1273,7 +1273,7 @@ impl CausalBacktestEngine {
     }
 }
 
-/// بستنِ کاملِ پوزیشن در `price` — بدونِ احتراکِ اضافه (احتراک در fill).
+/// Close the position fully at `price` — no extra slippage (slippage is in the fill).
 fn flatten(pos: &mut Position, cash: &mut f64, price: f64, slip_rate: f64, fee_rate: f64) {
     if pos.qty.abs() < f64::EPSILON {
         return;
@@ -1292,9 +1292,9 @@ fn flatten(pos: &mut Position, cash: &mut f64, price: f64, slip_rate: f64, fee_r
     }
 }
 
-// ── سنجه‌های نهادی ──────────────────────────────────────────────────────────
+// ── Institutional metrics ──────────────────────────────────────────────────────────
 
-/// کندل در سال برای هر تایم‌فریم — سالانه‌سازیِ سنجه‌ها.
+/// Candles per year per timeframe — metric annualization.
 #[must_use]
 pub fn bars_per_year(timeframe: &str) -> f64 {
     match timeframe {
@@ -1303,11 +1303,11 @@ pub fn bars_per_year(timeframe: &str) -> f64 {
         "15m" => 35_040.0,
         "1h" => 8_760.0,
         "4h" => 2_190.0,
-        _ => 365.0, // «1d» و هر تایم‌فریمِ ناشناخته
+        _ => 365.0, // "1d" and any unknown timeframe
     }
 }
 
-/// بازدهی‌هایِ کندلی از منحنیِ حقوق — با بذرِ سرمایهٔ آغازین.
+/// Candle returns from the equity curve — seeded with the starting capital.
 #[must_use]
 fn bar_returns(curve: &[f64], initial: f64) -> Vec<f64> {
     let mut out = Vec::with_capacity(curve.len());
@@ -1357,7 +1357,7 @@ fn compute_sortino(curve: &[f64], initial: f64, timeframe: &str) -> f64 {
 #[must_use]
 #[allow(clippy::cast_precision_loss)]
 fn compute_max_drawdown(curve: &[f64], initial: f64) -> f64 {
-    let mut peak = initial; // بذر پیش از کندلِ ۰ — همان metrics.py
+    let mut peak = initial; // seed before candle 0 — same as metrics.py
     let mut worst: f64 = 0.0;
     for &e in curve {
         peak = peak.max(e);
@@ -1401,7 +1401,7 @@ fn compute_tail_ratio(curve: &[f64], initial: f64) -> f64 {
     }
     r.sort_by(f64::total_cmp);
     let m = r.len();
-    // صدک‌ها با حسابِ صحیح — بدونِ هیچ cast شناور
+    // percentiles computed correctly — without any float casts
     let p95_idx = (((m - 1) * 95 + 50) / 100).min(m - 1);
     let p05_idx = (((m - 1) * 5 + 50) / 100).min(m - 1);
     let p95 = r[p95_idx];
@@ -1446,9 +1446,9 @@ fn compute_kurtosis(curve: &[f64], initial: f64) -> f64 {
     m4 / (m2 * m2) - 3.0
 }
 
-// ── دفترِ ادعای عددی (درمانِ #3) ───────────────────────────────────────────
+// ── Numeric claim ledger (Remedy #3) ───────────────────────────────────────────
 
-/// پنج ادعای عددیِ قفل‌شونده — نمایشِ کانونیکِ `%.6e`-مانندِ قطعی.
+/// The five lockable numeric claims — a canonical `%.6e`-like deterministic representation.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct NumericClaims {
     sharpe_ratio: f64,
@@ -1458,7 +1458,7 @@ struct NumericClaims {
     turnover_ratio: f64,
 }
 
-/// رشتهٔ کانونیکِ ادعاها — همان قالب برای ساخت و راستی‌آزمایی.
+/// The claims' canonical string — the same format for construction and verification.
 #[must_use]
 fn claims_canonical(c: &NumericClaims) -> String {
     format!(
@@ -1467,7 +1467,7 @@ fn claims_canonical(c: &NumericClaims) -> String {
     )
 }
 
-/// هشِ SHA-256 ادعاها از گزارشِ زنده.
+/// SHA-256 hash of the claims from the live report.
 #[must_use]
 pub fn claim_hash(report: &CausalBacktestReport) -> String {
     let c = NumericClaims {
@@ -1489,33 +1489,33 @@ pub fn claim_hash(report: &CausalBacktestReport) -> String {
     hex
 }
 
-/// راستی‌آزماییِ دفترِ ادعاها — هر دستکاریِ عددی را می‌سوزاند.
+/// Verify the claim ledger — burns any numeric tampering.
 #[must_use]
 pub fn verify_numeric_claims(report: &CausalBacktestReport) -> bool {
     claim_hash(report) == report.claim_verification_hash && !report.claim_verification_hash.is_empty()
 }
 
-// ── گیتِ حاکمِ کوانتِ مایرون ───────────────────────────────────────────────
+// ── Mairon quant sovereign gate ───────────────────────────────────────────────
 
-/// واپسِ گیتِ مایرون روی یک استراتژیِ کوانت.
+/// Mairon's gate verdict on a quant strategy.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MaironQuantGateVerdict {
-    /// تأییدِ فروش در مارکت‌پلیس + فورجِ خودکارِ SKILL.md.
+    /// Marketplace listing approval + automatic SKILL.md forge.
     pub approved: bool,
-    /// دلیلِ صادقانه — فهرستِ نقض‌ها یا «همه‌چیز سبز».
+    /// An honest reason — the list of violations or "all green".
     pub reason: String,
-    /// آیا گذرِ تنظیمِ قطعیِ رژیم به کار رفت؟
+    /// Was the deterministic regime-tuning pass applied?
     pub regime_boost_applied: bool,
-    /// شارپِ گزارش‌شده در لحظهٔ داوری.
+    /// Sharpe reported at adjudication time.
     pub judged_sharpe: f64,
-    /// دراودانِ گزارش‌شده در لحظهٔ داوری.
+    /// Drawdown reported at adjudication time.
     pub judged_max_drawdown_pct: f64,
-    /// معامله‌هایِ گزارش‌شده در لحظهٔ داوری.
+    /// Trades reported at adjudication time.
     pub judged_total_trades: usize,
 }
 
 impl MaironQuantGateVerdict {
-    /// داوریِ خالص روی یک گزارشِ راستی‌آزمایی‌شده.
+    /// Pure adjudication on a verified report.
     #[must_use]
     pub fn judge(report: &CausalBacktestReport, ledger_ok: bool) -> Self {
         let mut failures: Vec<String> = Vec::new();
@@ -1560,13 +1560,13 @@ impl MaironQuantGateVerdict {
     }
 }
 
-/// واریانت‌هایِ قطعیِ گذرِ تنظیمِ رژیم — آستانه‌ها را به‌صورتِ محافظه‌کارانه
-/// باز می‌کنند تا استراتژیِ واقعاً معتبر روی رژیمِ سخت‌تر هم سبز شود.
-/// هیچ عددی از هوا نمی‌آید — همهٔ سه واریانت تبدیلِ قطعیِ همان AST اند.
+/// Deterministic regime-tuning pass variants — conservatively
+/// reopen the thresholds so a genuinely valid strategy goes green on the stricter regime too.
+/// No number comes out of thin air — all three variants are deterministic transformations of the same AST.
 #[must_use]
 fn regime_boost_variants(ast: &StrategyAst) -> Vec<StrategyAst> {
     let mut out = Vec::new();
-    // واریانتِ ۱ — سخت‌گیرترکردنِ ورود (RSI بالاتر می‌خرد، فیلترِ روندِ بلندتر)
+    // variant 1 — tighten entry (buys at higher RSI, longer trend filter)
     let mut v1 = ast.clone();
     v1.entry_rules = ast
         .entry_rules
@@ -1591,18 +1591,18 @@ fn regime_boost_variants(ast: &StrategyAst) -> Vec<StrategyAst> {
         })
         .collect();
     out.push(v1);
-    // واریانتِ ۲ — حذفِ آخرین قاعدهٔ Conjunctive ورود (اگر بیش از یکی)
+    // variant 2 — drop the last conjunctive entry rule (if more than one)
     if ast.entry_rules.len() > 1 {
         let mut v2 = ast.clone();
         v2.entry_rules.pop();
         out.push(v2);
     }
-    // واریانتِ ۳ — توقفِ دیرتر و سودِ دورتر (اجازهٔ نفس کشیدن به رژیم)
+    // variant 3 — stop later and take profit farther (let the regime breathe)
     let mut v3 = ast.clone();
     v3.stop_loss_bps = ast.stop_loss_bps.saturating_mul(2).min(2_000);
     v3.take_profit_bps = ast.take_profit_bps.saturating_mul(2).min(8_000);
     out.push(v3);
-    // واریانتِ ۴ — تأییدِ روند بر ورودِ برگشت‌گرا (dip-buy فقط در روندِ صعودی)
+    // variant 4 — trend confirmation over mean-reverting entry (dip-buy only in an uptrend)
     let mut v4 = ast.clone();
     let trend_rule = if ast.bias == BiasKind::Long {
         SignalRule::PriceAboveSma { period: DEFAULT_TREND_SMA }
@@ -1614,9 +1614,9 @@ fn regime_boost_variants(ast: &StrategyAst) -> Vec<StrategyAst> {
     out
 }
 
-// ── فورجِ SKILL.md کوانت ───────────────────────────────────────────────────
+// ── Quant SKILL.md forge ───────────────────────────────────────────────────
 
-/// فورجِ قطعیِ `SKILL.md` کوانت از AST + گزارش + واپسِ گیت.
+/// Deterministic forge of the quant `SKILL.md` from the AST + report + gate verdict.
 #[must_use]
 pub fn forge_quant_skill_md(
     ast: &StrategyAst,
@@ -1663,41 +1663,41 @@ pub fn forge_quant_skill_md(
     )
 }
 
-// ── DAG توپولوژیکِ ۵گرهی ───────────────────────────────────────────────────
+// ── Five-node topological DAG ───────────────────────────────────────────────────
 
-/// تلمتریِ یک گرهٔ DAG — قطعی و خوانا.
+/// One DAG node's telemetry — deterministic and readable.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SwarmNodeTelemetry {
-    /// اندیسِ ۱-پایه در توالیِ اجرا.
+    /// 1-based index in the execution sequence.
     pub index: usize,
-    /// نامِ کانونیکِ گره.
+    /// The node's canonical name.
     pub name: String,
-    /// وضعیت — `ok` | `skipped`.
+    /// Status — `ok` | `skipped`.
     pub status: String,
-    /// خلاصهٔ قطعیِ کاریِ گره.
+    /// The node's deterministic work summary.
     pub summary: String,
-    /// تیکِ قطعیِ شبیه‌سازی‌شدهٔ اجرا (برای ترتیبِ خوانا در لاگ‌ها).
+    /// The run's deterministic simulated tick (for a readable order in logs).
     pub deterministic_ticks: u64,
 }
 
-/// گزارشِ کاملِ DAG — AST، بک‌تست، گیت، SKILL و تلمتریِ ۵ گره.
+/// The complete DAG report — the AST, backtest, gate, SKILL and the telemetry of 5 nodes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SwarmDagReport {
-    /// گره‌های اجرا‌شده به ترتیبِ توپولوژیک.
+    /// Executed nodes in topological order.
     pub nodes: Vec<SwarmNodeTelemetry>,
-    /// AST نهایی (شاید واریانتِ پس از گذرِ رژیم).
+    /// The final AST (possibly a post-regime-pass variant).
     pub ast: StrategyAst,
-    /// گزارشِ بک‌تستِ علّیِ نهایی.
+    /// The final causal backtest report.
     pub backtest: CausalBacktestReport,
-    /// واپسِ گیتِ مایرون.
+    /// Mairon's gate verdict.
     pub gate: MaironQuantGateVerdict,
-    /// `SKILL.md` فورج‌شده.
+    /// The forged `SKILL.md`.
     pub skill_md: String,
-    /// امضای موتور.
+    /// Engine signature.
     pub signature: String,
 }
 
-/// پنج گرهٔ DAG — نام‌هایِ کانونیک به همان ترتیبِ قرارداد.
+/// The five DAG nodes — canonical names in the same contractual order.
 pub const SWARM_DAG_NODES: [&str; 5] = [
     "MarketDataScout",
     "FactorFeatureMiner",
@@ -1706,14 +1706,14 @@ pub const SWARM_DAG_NODES: [&str; 5] = [
     "MaironQuantRiskJudge",
 ];
 
-/// تعدادِ کندل‌هایِ پیش‌فرضِ DAG — پوششِ کاملِ چرخه‌هایِ رژیم.
+/// The DAG's default candle count — full coverage of regime cycles.
 pub const SWARM_DAG_DEFAULT_BARS: usize = 720;
 
-/// اجرایِ کاملِ DAG توپولوژیکِ ۵گرهی روی یک پرامپتِ طبیعیِ دوزبانه.
+/// Run the complete five-node topological DAG on a bilingual natural-language prompt.
 ///
 /// `1. MarketDataScout → 2. FactorFeatureMiner → 3. StrategyAstSynthesizer
-/// → 4. CausalBacktestVerifier → 5. MaironQuantRiskJudge` — با گذرِ قطعیِ
-/// تنظیمِ رژیم روی گرهٔ ۵ تا استراتژیِ واقعاً معتبر سبز شود.
+/// → 4. CausalBacktestVerifier → 5. MaironQuantRiskJudge` — with the deterministic
+/// regime-tuning pass on node 5 so a genuinely valid strategy goes green.
 #[must_use]
 #[allow(clippy::too_many_lines)]
 pub fn run_vibe_quant_swarm_dag(
@@ -1727,7 +1727,7 @@ pub fn run_vibe_quant_swarm_dag(
     let mut telemetry: Vec<SwarmNodeTelemetry> = Vec::with_capacity(5);
     let tick = |i: usize| u64::try_from(bar_count).unwrap_or(1) * u64::try_from(i + 1).unwrap_or(1);
 
-    // ۱ — کاوشگرِ دادهٔ بازار: مولدِ قطعیِ صفر-شبکه
+    // 1 — Market data scout: a deterministic zero-network generator
     let candles = generate_deterministic_ohlcv(symbol, bar_count, seed);
     let first = candles.first().map_or(0.0, |b| b.close);
     let last = candles.last().map_or(0.0, |b| b.close);
@@ -1743,7 +1743,7 @@ pub fn run_vibe_quant_swarm_dag(
         deterministic_ticks: tick(0),
     });
 
-    // ۲ — استخراج‌گرِ فاکتور: مقادیرِ پایانیِ نشانگرها روی گذشته
+    // 2 — Factor feature miner: the indicators' final values over the past
     let base_ast = compile_vibe_to_strategy_ast(vibe_prompt, symbol, timeframe);
     let indicators = base_ast.all_indicators();
     let factor_parts: Vec<String> = indicators
@@ -1765,7 +1765,7 @@ pub fn run_vibe_quant_swarm_dag(
         deterministic_ticks: tick(1),
     });
 
-    // ۳ — هم‌نگارِ AST: صفر اجرای پویا
+    // 3 — Strategy AST synthesizer: zero dynamic execution
     telemetry.push(SwarmNodeTelemetry {
         index: 3,
         name: SWARM_DAG_NODES[2].into(),
@@ -1781,7 +1781,7 @@ pub fn run_vibe_quant_swarm_dag(
         deterministic_ticks: tick(2),
     });
 
-    // ۴ — راستی‌آزمایِ بک‌تستِ علّی + دفترِ ادعاها
+    // 4 — Causal backtest verifier + claim ledger
     let engine = CausalBacktestEngine::default();
     let mut final_ast = base_ast.clone();
     let mut report = engine.run(&final_ast, &candles);
@@ -1800,7 +1800,7 @@ pub fn run_vibe_quant_swarm_dag(
         deterministic_ticks: tick(3),
     });
 
-    // ۵ — داورِ کوانتِ مایرون + گذرِ قطعیِ تنظیمِ رژیم
+    // 5 — Mairon quant judge + the deterministic regime-tuning pass
     let mut verdict = MaironQuantGateVerdict::judge(&report, ledger_ok);
     if !verdict.approved {
         for variant in regime_boost_variants(&base_ast) {
@@ -1855,7 +1855,7 @@ mod tests {
         let a = generate_deterministic_ohlcv("BTC-USDT", 300, 42);
         let b = generate_deterministic_ohlcv("BTC-USDT", 300, 42);
         assert_eq!(a.len(), 300);
-        assert_eq!(a, b, "بازپخشِ کامل — صفر شبکه");
+        assert_eq!(a, b, "\u{628}\u{627}\u{632}\u{67e}\u{62e}\u{634}\u{650} \u{6a9}\u{627}\u{645}\u{644} — \u{635}\u{641}\u{631} \u{634}\u{628}\u{6a9}\u{647}");
         for bar in &a {
             assert!(bar.high >= bar.low);
             assert!(bar.high >= bar.open && bar.high >= bar.close);
@@ -1864,36 +1864,36 @@ mod tests {
             assert!(bar.timestamp_ms > 0);
         }
         let other = generate_deterministic_ohlcv("ETH-USDT", 300, 42);
-        assert_ne!(a[10], other[10], "بذرِ نماد-آگاه");
+        assert_ne!(a[10], other[10], "\u{628}\u{630}\u{631}\u{650} \u{646}\u{645}\u{627}\u{62f}-\u{622}\u{6af}\u{627}\u{647}");
         let base = generate_deterministic_ohlcv("BTC-USDT", 1, 0)[0].open;
-        assert!(feq(base, 65_000.0), "قیمتِ پایهٔ BTC");
+        assert!(feq(base, 65_000.0), "\u{642}\u{6cc}\u{645}\u{62a}\u{650} \u{67e}\u{627}\u{6cc}\u{647}\u{654} BTC");
     }
 
     #[test]
     fn parser_handles_the_fa_reference_prompt() {
         let ast = compile_vibe_to_strategy_ast(
-            "وقتی RSI زیر ۳۰ آمد و روند صعودی بود بخر و بالای ۷۰ بفروش",
+            "\u{648}\u{642}\u{62a}\u{6cc} RSI \u{632}\u{6cc}\u{631} \u{6f3}\u{6f0} \u{622}\u{645}\u{62f} \u{648} \u{631}\u{648}\u{646}\u{62f} \u{635}\u{639}\u{648}\u{62f}\u{6cc} \u{628}\u{648}\u{62f} \u{628}\u{62e}\u{631} \u{648} \u{628}\u{627}\u{644}\u{627}\u{6cc} \u{6f7}\u{6f0} \u{628}\u{641}\u{631}\u{648}\u{634}",
             "BTC-USDT",
             "1h",
         );
         assert_eq!(ast.bias, BiasKind::Long);
-        // ورود: RSI زیر ۳۰ + فیلترِ روندِ صعودی
+        // entry: RSI below 30 + uptrend filter
         assert!(
             ast.entry_rules.iter().any(|r| matches!(
                 r,
                 SignalRule::IndicatorBelow { threshold, .. } if feq(*threshold, 30.0)
             )),
-            "ورودِ RSI<30: {:?}",
+            "\u{648}\u{631}\u{648}\u{62f}\u{650} RSI<30: {:?}",
             ast.entry_rules
         );
         assert!(ast.entry_rules.iter().any(|r| matches!(r, SignalRule::PriceAboveSma { .. })));
-        // خروج: RSI بالای ۷۰
+        // exit: RSI above 70
         assert!(
             ast.exit_rules.iter().any(|r| matches!(
                 r,
                 SignalRule::IndicatorAbove { threshold, .. } if feq(*threshold, 70.0)
             )),
-            "خروجِ RSI>70: {:?}",
+            "\u{62e}\u{631}\u{648}\u{62c}\u{650} RSI>70: {:?}",
             ast.exit_rules
         );
         assert!(ast.indicators.iter().any(|i| matches!(i, IndicatorSpec::Rsi { period: 14 })));
@@ -1910,7 +1910,7 @@ mod tests {
             SignalRule::IndicatorCrossesAbove {
                 fast: IndicatorSpec::Ema { period: 12 },
                 slow: IndicatorSpec::Ema { period: 26 }
-            })), "کراسِ 12/26: {:?}", ast.entry_rules);
+            })), "\u{6a9}\u{631}\u{627}\u{633}\u{650} 12/26: {:?}", ast.entry_rules);
         assert!(ast.entry_rules.iter().any(|r| matches!(
             r,
             SignalRule::IndicatorAbove { indicator: IndicatorSpec::Momentum { .. }, threshold } if feq(*threshold, 0.0)
@@ -1922,14 +1922,14 @@ mod tests {
 
     #[test]
     fn parser_falls_back_to_canonical_strategy_on_noise() {
-        let ast = compile_vibe_to_strategy_ast("هیچ سیگنال شناخته‌شده‌ای نیست", "SOL-USDT", "1d");
-        assert!(!ast.entry_rules.is_empty(), "فال‌باکِ کانونیک");
+        let ast = compile_vibe_to_strategy_ast("\u{647}\u{6cc}\u{686} \u{633}\u{6cc}\u{6af}\u{646}\u{627}\u{644} \u{634}\u{646}\u{627}\u{62e}\u{62a}\u{647}‌\u{634}\u{62f}\u{647}‌\u{627}\u{6cc} \u{646}\u{6cc}\u{633}\u{62a}", "SOL-USDT", "1d");
+        assert!(!ast.entry_rules.is_empty(), "\u{641}\u{627}\u{644}‌\u{628}\u{627}\u{6a9}\u{650} \u{6a9}\u{627}\u{646}\u{648}\u{646}\u{6cc}\u{6a9}");
         assert!(ast.entry_rules.iter().any(|r| matches!(r, SignalRule::IndicatorCrossesAbove { .. })));
-        // اهرم/توقف/سودِ پیش‌فرض
+        // default leverage/stop/take-profit
         assert!(feq(ast.max_leverage, 3.0));
         assert_eq!(ast.stop_loss_bps, 200);
         assert_eq!(ast.take_profit_bps, 400);
-        // پرامپتِ ریسکِ صریح
+        // explicit risk prompt
         let risky = compile_vibe_to_strategy_ast(
             "buy rsi below 40 with stop loss 1.5% take profit 3% leverage 4x",
             "BTC-USDT",
@@ -1943,13 +1943,13 @@ mod tests {
     #[test]
     fn risk_guard_caps_are_hard() {
         let g = PortfolioRiskGuard::default();
-        assert!(feq(g.clamp_leverage(50.0), 5.0), "اهرمِ ۵۰× هرگز");
+        assert!(feq(g.clamp_leverage(50.0), 5.0), "\u{627}\u{647}\u{631}\u{645}\u{650} \u{6f5}\u{6f0}× \u{647}\u{631}\u{6af}\u{632}");
         assert!(feq(g.clamp_leverage(3.0), 3.0));
         assert!(feq(g.pre_trade_order_cap(10_000.0), 2_500.0));
-        assert!(g.daily_loss_breached(9_100.0, 10_000.0), "۹٪ زیانِ روزانه");
-        assert!(!g.daily_loss_breached(9_500.0, 10_000.0), "۵٪ مجاز");
-        assert!(g.drawdown_kill_switch_breached(7_500.0, 10_000.0), "۲۵٪ دراودان");
-        assert!(!g.drawdown_kill_switch_breached(9_000.0, 10_000.0), "۱۰٪ مجاز");
+        assert!(g.daily_loss_breached(9_100.0, 10_000.0), "\u{6f9}\u{66a} \u{632}\u{6cc}\u{627}\u{646}\u{650} \u{631}\u{648}\u{632}\u{627}\u{646}\u{647}");
+        assert!(!g.daily_loss_breached(9_500.0, 10_000.0), "\u{6f5}\u{66a} \u{645}\u{62c}\u{627}\u{632}");
+        assert!(g.drawdown_kill_switch_breached(7_500.0, 10_000.0), "\u{6f2}\u{6f5}\u{66a} \u{62f}\u{631}\u{627}\u{648}\u{62f}\u{627}\u{646}");
+        assert!(!g.drawdown_kill_switch_breached(9_000.0, 10_000.0), "\u{6f1}\u{6f0}\u{66a} \u{645}\u{62c}\u{627}\u{632}");
     }
 
     #[test]
@@ -1960,10 +1960,10 @@ mod tests {
         let report = engine.run(&ast, &candles);
         assert!(report.causal_slice_proof);
         assert!(verify_numeric_claims(&report));
-        // سیگنالِ ۱روزی: هندسهٔ +۱ کندل — پرها همیشه بینِ بازِ کندلِ بعد
-        // احتراک می‌خورند، نه بستهٔ کندلِ سیگنال.
-        // (اثبات از امضا: target_weight_at فقط &[OhlcvBar] برشی می‌گیرد.)
-        let _ = &mut candles; // صرفاً اثباتِ دست‌پذیریِ داده
+        // The 1-day signal: the +1 candle geometry — fills always take slippage at the next candle's
+        // open, never at the signal candle's close.
+        // (proof from the signature: target_weight_at takes only a &[OhlcvBar] slice.)
+        let _ = &mut candles; // merely a proof of data accessibility
         assert_eq!(report.bars, 400);
         assert!(report.final_equity > 0.0);
     }
@@ -1975,12 +1975,12 @@ mod tests {
         let mut report = CausalBacktestEngine::default().run(&ast, &candles);
         assert!(verify_numeric_claims(&report));
         let honest_hash = report.claim_verification_hash.clone();
-        // دستکاریِ شارپ — دفتر باید بسوزد
+        // Sharpe tampering — the ledger must burn
         let tampered = report.sharpe_ratio + 0.001;
         report.sharpe_ratio = tampered;
-        assert!(!verify_numeric_claims(&report), "ادعای دستکاری‌شده نمی‌گذرد");
+        assert!(!verify_numeric_claims(&report), "\u{627}\u{62f}\u{639}\u{627}\u{6cc} \u{62f}\u{633}\u{62a}\u{6a9}\u{627}\u{631}\u{6cc}‌\u{634}\u{62f}\u{647} \u{646}\u{645}\u{6cc}‌\u{6af}\u{630}\u{631}\u{62f}");
         report.sharpe_ratio = tampered - 0.001;
-        assert!(verify_numeric_claims(&report), "بازگشت به عددِ صادق");
+        assert!(verify_numeric_claims(&report), "\u{628}\u{627}\u{632}\u{6af}\u{634}\u{62a} \u{628}\u{647} \u{639}\u{62f}\u{62f}\u{650} \u{635}\u{627}\u{62f}\u{642}");
         assert_eq!(report.claim_verification_hash, honest_hash);
     }
 
@@ -2001,10 +2001,10 @@ mod tests {
             ("omega", report.omega_ratio),
             ("tail", report.tail_ratio),
         ] {
-            assert!(v.is_finite(), "{name} باید متناهی باشد");
+            assert!(v.is_finite(), "{name} \u{628}\u{627}\u{6cc}\u{62f} \u{645}\u{62a}\u{646}\u{627}\u{647}\u{6cc} \u{628}\u{627}\u{634}\u{62f}");
         }
-        assert!(report.max_drawdown_pct <= 0.0, "دراودان همیشه ≤ ۰");
-        assert!(report.total_trades >= 1, "روی ۷۲۰ کندلِ رژیمی معامله باید باشد");
+        assert!(report.max_drawdown_pct <= 0.0, "\u{62f}\u{631}\u{627}\u{648}\u{62f}\u{627}\u{646} \u{647}\u{645}\u{6cc}\u{634}\u{647} ≤ \u{6f0}");
+        assert!(report.total_trades >= 1, "\u{631}\u{648}\u{6cc} \u{6f7}\u{6f2}\u{6f0} \u{6a9}\u{646}\u{62f}\u{644}\u{650} \u{631}\u{698}\u{6cc}\u{645}\u{6cc} \u{645}\u{639}\u{627}\u{645}\u{644}\u{647} \u{628}\u{627}\u{6cc}\u{62f} \u{628}\u{627}\u{634}\u{62f}");
         assert!(feq(
             report.calmar_ratio,
             report.cagr_pct / report.max_drawdown_pct.abs().max(f64::EPSILON)
@@ -2035,7 +2035,7 @@ mod tests {
 
     #[test]
     fn dag_produces_gate_green_strategies_with_boost() {
-        // سه پرامپتِ متفاوت — همه باید یا مستقیم یا با گذرِ رژیم سبز شوند
+        // three different prompts — all must go green either directly or via the regime pass
         for (prompt, symbol, tf, seed) in [
             ("Momentum breakout with EMA 12/26 crossover and RSI filter", "BTC-USDT", "1h", 2026u64),
             ("buy rsi below 45 sell above 75", "BTC-USDT", "1h", 77u64),
@@ -2044,14 +2044,14 @@ mod tests {
             let dag = run_vibe_quant_swarm_dag(prompt, symbol, tf, SWARM_DAG_DEFAULT_BARS, seed);
             assert!(
                 dag.gate.approved,
-                "{prompt} باید سبز شود — {}",
+                "{prompt} \u{628}\u{627}\u{6cc}\u{62f} \u{633}\u{628}\u{632} \u{634}\u{648}\u{62f} — {}",
                 dag.gate.reason
             );
             assert!(dag.backtest.sharpe_ratio >= MAIRON_MIN_SHARPE);
             assert!(dag.backtest.max_drawdown_pct.abs() <= MAIRON_MAX_DRAWDOWN_ABS);
             assert!(dag.backtest.total_trades >= MAIRON_MIN_TRADES);
             assert!(verify_numeric_claims(&dag.backtest));
-            assert!(!dag.skill_md.is_empty(), "SKILL.md فورج شده باشد");
+            assert!(!dag.skill_md.is_empty(), "SKILL.md \u{641}\u{648}\u{631}\u{62c} \u{634}\u{62f}\u{647} \u{628}\u{627}\u{634}\u{62f}");
             assert!(dag.skill_md.contains("causal_slice_proof=true"));
         }
     }
@@ -2072,7 +2072,7 @@ mod tests {
             SWARM_DAG_DEFAULT_BARS,
             13,
         );
-        assert_eq!(dag.skill_md, again.skill_md, "فورجِ قطعی");
+        assert_eq!(dag.skill_md, again.skill_md, "\u{641}\u{648}\u{631}\u{62c}\u{650} \u{642}\u{637}\u{639}\u{6cc}");
         assert!(dag.skill_md.starts_with("---\n"));
         assert!(dag.skill_md.contains("## Verified metrics"));
         assert!(dag.skill_md.contains("## Mairon verdict"));
@@ -2084,7 +2084,7 @@ mod tests {
         let ast = compile_vibe_to_strategy_ast("buy rsi below 40", "BTC-USDT", "1h");
         let json = serde_json::to_string(&ast).unwrap();
         let back: StrategyAst = serde_json::from_str(&json).unwrap();
-        assert_eq!(back, ast, "AST تایپ‌دار — گردشِ کاملِ JSON");
+        assert_eq!(back, ast, "AST \u{62a}\u{627}\u{6cc}\u{67e}‌\u{62f}\u{627}\u{631} — \u{6af}\u{631}\u{62f}\u{634}\u{650} \u{6a9}\u{627}\u{645}\u{644}\u{650} JSON");
     }
 
     #[test]
@@ -2097,7 +2097,7 @@ mod tests {
         assert_eq!(ast.bias, BiasKind::Short);
         let candles = generate_deterministic_ohlcv("BTC-USDT", 200, 5);
         if let Some(w) = ast.target_weight_at(&candles) {
-            assert!(w <= 0.0, "وزنِ شورت هرگز مثبت نیست");
+            assert!(w <= 0.0, "\u{648}\u{632}\u{646}\u{650} \u{634}\u{648}\u{631}\u{62a} \u{647}\u{631}\u{6af}\u{632} \u{645}\u{62b}\u{628}\u{62a} \u{646}\u{6cc}\u{633}\u{62a}");
         }
     }
 }

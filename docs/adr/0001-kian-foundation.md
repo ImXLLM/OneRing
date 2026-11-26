@@ -1,18 +1,21 @@
-# ADR-0001 — بنیان KIAN
+# ADR-0001 — The KIAN Foundation
 
-**وضعیت:** پذیرفته‌شده — 2026-11-20
+**Status:** Accepted — 2026-11-20
 
-## زمینه
-۵ خط محصول legacy (Python نسل۱، TS نسل۲ و ۳، Rust نسل۴، پرچم‌دار 10x) با قطعات تکراری.
-هدف: یک اکوسیستم واحد، امن و قابل توسعه با فرانتاند اولویت اول.
+## Context
 
-## تصمیم
-1. **نام:** KIAN (کیان) — «اصل، سرچشمه، پادشاهی»؛ پیوستگی برند با KiaAgentX؛ هم‌خوان با استعارهٔ nation/parliament.
-2. **معماری:** مونوریپو — کرنل Rust (۱۳ کرت) + فرانتاند TypeScript (Next.js 16.4 / React 19.3 / Tailwind 4.3).
-3. **قرارداد اول:** DTOها در Rust منبع حقیقت‌اند؛ OpenAPI 3.1 → SDK خودکار → Zod mirror.
-4. **دروازه REA 10/10:** هیچ آرتیفکتی افشا نمی‌کند (سورس‌مپ، کریدنشال، debug companion، متادیتای Rust) — docs/rea-gates.md.
-5. **زبان‌ها:** Rust + TypeScript + SQL + Shell. Python legacy بیرون از مونوریپو می‌ماند تا parity کامل شود.
+Five legacy product lines (Python gen-1, TS gen-2 and gen-3, Rust gen-4, and the 10x flagship) with duplicated components.
+Goal: a single, secure, extensible ecosystem with a frontend-first priority.
 
-## پیامدها
-- حذف سه‌گانه‌سازی Python/TS/Rust در بلندمدت؛ dual-run در `crates/observe` مهاجرت امن را تضمین می‌کند.
-- فرانتاند اول: M1 = apps/web + packages/ui.
+## Decision
+
+1. **Name:** KIAN — "origin, source, kingdom"; brand continuity with KiaAgentX; aligned with the nation/parliament metaphor.
+2. **Architecture:** monorepo — Rust kernel (13 crates) + TypeScript frontend (Next.js 16.4 / React 19.3 / Tailwind 4.3).
+3. **First contract:** DTOs in Rust are the source of truth; OpenAPI 3.1 → automated SDK → Zod mirror.
+4. **REA gate 10/10:** no artifact is exposed (source maps, credentials, debug companions, Rust metadata) — docs/rea-gates.md.
+5. **Languages:** Rust + TypeScript + SQL + Shell. Legacy Python stays outside the monorepo until full parity is reached.
+
+## Consequences
+
+- Long-term elimination of the Python/TS/Rust triplication; the dual-run heritage in `crates/observe` guarantees a safe migration.
+- Frontend first: M1 = apps/web + packages/ui.

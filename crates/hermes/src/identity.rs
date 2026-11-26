@@ -1,36 +1,36 @@
-//! طبقه‌بند قطعی هویت کاربر — پورت `10x/engine/identity_rl.py` (پوشهٔ ۰۲ گنجینه).
+//! Deterministic user-identity classifier — port of `10x/engine/identity_rl.py` (vault folder 02).
 //!
-//! نسخهٔ پایتون Q-Learning با اکتشاف تصادفی بود؛ پورت کیان «قطعی» است —
-//! همان فضای برچسب‌ها (۷ معمارهٔ کاربر)، همان سبدسازی ویژگی‌ها، همان
-//! جوایز رویدادمحور، اما با:
-//! * طبقه‌بند [`classify`] — برندهٔ بیشینه روی امتیازهای انباشته (بدون RNG)؛
-//! * هش وضعیت [`hash_state`] — FNV-1a ۳۲بیتیِ همیشه‌پایدار (جایگزین
-//!   `blake2b % 100000` پایتون که وابسته به کتابخانهٔ خارجی بود).
+//! The Python version was Q-Learning with stochastic exploration; the Kian port is "deterministic" —
+//! the same label space (7 user archetypes), the same feature bucketing, the same
+//! event-driven rewards, but with:
+//! * the [`classify`] classifier — the argmax winner over accumulated scores (no RNG);
+//! * the [`hash_state`] state hash — an always-stable 32-bit FNV-1a (replacing
+//!   the Python `blake2b % 100000` that depended on an external library).
 #![forbid(unsafe_code)]
 
 use std::fmt;
 
-/// برچسب‌های هویتی — همان `ACTIONS` پایتون، به‌صورت enum بسته.
+/// Identity labels — the Python `ACTIONS`, as a closed enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UserArchetype {
-    /// تازه‌وارد — سیگنال‌های کم
+    /// Newcomer — few signals
     NewUser,
-    /// تماشاگر — می‌چرخد، قصد خرید کم
+    /// Spectator — browses, little purchase intent
     Browser,
-    /// کارکنِ مأموریت — اعتبار را با تسک جمع می‌کند
+    /// Mission worker — earns credits through tasks
     TaskEarner,
-    /// خریدار بازگشتی
+    /// Repeat buyer
     ReturningBuyer,
-    /// پرارزش — برداشت/خرید بزرگ
+    /// High-value — large withdrawals/purchases
     HighValue,
-    /// همراه — تعامل عمیق با دستیار و محصولات
+    /// Companion — deep engagement with the assistant and products
     Supporter,
-    /// در آستانهٔ ریزش — بازگشت خرج یا اعتراض
+    /// Churn risk — refunds or complaints
     ChurnRisk,
 }
 
 impl UserArchetype {
-    /// برچسب متنی — همان رشته‌های `ACTIONS` پایتون (سازگاری سیم).
+    /// Text label — the Python `ACTIONS` strings (wire compatibility).
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -44,7 +44,7 @@ impl UserArchetype {
         }
     }
 
-    /// همهٔ برچسب‌ها به ترتیب پایدار — همان ترتیب `ACTIONS` پایتون.
+    /// All labels in stable order — the Python `ACTIONS` order.
     #[must_use]
     pub const fn all() -> [Self; 7] {
         [
@@ -65,26 +65,26 @@ impl fmt::Display for UserArchetype {
     }
 }
 
-/// بردار ویژگی‌های گسسته‌شدهٔ رفتار کاربر — همان ستون‌های `_BUCKETS` پایتون.
+/// Discretized user-behavior feature vector — the Python `_BUCKETS` columns.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct UserFeatures {
-    /// بازدید (چت + خرید — نمای بازگشت)
+    /// Visits (chat + purchase — returning view)
     pub visits: u32,
-    /// تعداد خرید
+    /// Purchase count
     pub purchases: u32,
-    /// تسک‌های انجام‌شده
+    /// Completed tasks
     pub tasks: u32,
-    /// برداشت‌های موفق
+    /// Successful withdrawals
     pub withdraws: u32,
-    /// سطح چت
+    /// Chat level
     pub chat_level: u32,
-    /// سبد زمانی (ساعت / ۶)
+    /// Time bucket (hour / 6)
     pub session_bucket: u32,
-    /// تازگی — ۱ اگر سن حساب < ۲ روز
+    /// Freshness — 1 if the account age < 2 days
     pub freshness: u32,
 }
 
-/// مرزهای سبد — عیناً `_BUCKETS` پایتون.
+/// Bucket edges — exactly the Python `_BUCKETS`.
 type FeatureExtractor = fn(&UserFeatures) -> u32;
 
 const BUCKETS: [(&str, u32, FeatureExtractor); 7] = [
@@ -98,7 +98,7 @@ const BUCKETS: [(&str, u32, FeatureExtractor); 7] = [
 ];
 
 impl UserFeatures {
-    /// رشتهٔ وضعیت گسسته — عیناً همان قالب `_state` پایتون:
+    /// Discrete state string — exactly the Python `_state` format:
     /// `visits:0|purchases:0|tasks:0|withdraws:0|chat_level:0|session_bucket:0|freshness:0`
     #[must_use]
     pub fn state_string(&self) -> String {
@@ -113,8 +113,8 @@ impl UserFeatures {
     }
 }
 
-/// هش وضعیت قطعی — FNV-1a ۳۲بیتی (پایدار در همهٔ نسخه‌ها و سکوها؛ جایگزین
-/// `hashlib.blake2b % 100000` پایتون). برای شمول در جدول Q مقیاس‌پذیر.
+/// Deterministic state hash — 32-bit FNV-1a (stable across versions and platforms; replaces
+/// the Python `hashlib.blake2b % 100000`). Suitable for inclusion in a scalable Q table.
 #[must_use]
 pub fn hash_state(state: &str) -> u32 {
     let mut h: u32 = 0x811C_9DC5;
@@ -125,9 +125,9 @@ pub fn hash_state(state: &str) -> u32 {
     h
 }
 
-/// جایز رویدادها — عیناً `_EVENT_REWARD` پایتون؛ غایب یعنی صفر.
+/// Event rewards — exactly the Python `_EVENT_REWARD`; absent means zero.
 ///
-/// خروجی: `(برچسب، امتیاز)` جفت‌های رویداد.
+/// Output: `(label, score)` event pairs.
 #[must_use]
 pub fn event_rewards(event: &str) -> &'static [(UserArchetype, f64)] {
     match event {
@@ -166,8 +166,8 @@ pub fn event_rewards(event: &str) -> &'static [(UserArchetype, f64)] {
     }
 }
 
-/// امتیاز برچسب‌ها را از دنبالهٔ رویدادها می‌سازد (بدون نرخ یادگیری — جمعِ ساده
-/// جوایز؛ نتایج با Q-Learning هم‌راستاست چون بیشینهٔ همان جوایز را برمی‌گزیند).
+/// Builds label scores from the event sequence (no learning rate — a plain sum of
+/// rewards; results align with Q-Learning since the argmax of the same rewards is chosen).
 fn score(events: &[&str]) -> Vec<(UserArchetype, f64)> {
     let mut totals: Vec<(UserArchetype, f64)> =
         UserArchetype::all().iter().map(|&a| (a, 0.0)).collect();
@@ -181,11 +181,11 @@ fn score(events: &[&str]) -> Vec<(UserArchetype, f64)> {
     totals
 }
 
-/// طبقه‌بند قطعی — برندهٔ بیشینهٔ امتیازها با اولویت ترتیب پایدار.
+/// Deterministic classifier — the argmax winner over scores with stable-order priority.
 ///
-/// بدون هیچ رویداد (پروندهٔ نو) → [`UserArchetype::NewUser`] (همان
-/// `profile_label` پایتون). تسک‌محور بودن بر خرید بازگشتی، در حالت تساوی
-/// با ترتیب رویدادها حل می‌شود — ورودی دنباله همیشه قطعی است.
+/// No events at all (a fresh profile) → [`UserArchetype::NewUser`] (the Python
+/// `profile_label`). Mission-worker vs repeat-buyer ties are resolved
+/// by event order — the sequence input is always deterministic.
 #[must_use]
 pub fn classify(events: &[&str]) -> UserArchetype {
     if events.is_empty() {
@@ -196,15 +196,15 @@ pub fn classify(events: &[&str]) -> UserArchetype {
         .iter()
         .map(|(_, v)| *v)
         .fold(f64::NEG_INFINITY, f64::max);
-    // اولین برچسب در ترتیب پایدار که به بیشینه رسیده — قطعی و تکرارپذیر
+    // The first label in stable order to reach the max — deterministic and reproducible
     totals
         .iter()
         .find(|(_, v)| (*v - best).abs() < f64::EPSILON)
         .map_or(UserArchetype::NewUser, |(a, _)| *a)
 }
 
-/// اطمینان برنده — نسبت امتیاز برنده به مجموع قدر مطلق‌ها (۰..=۱؛ عینِ حس
-/// `confidence` پایتون اما قطعی و بدون softmax سرریزپذیر).
+/// Winner confidence — the winner score over the sum of absolute values (0..=1; the spirit of
+/// the Python `confidence` but deterministic and without an overflow-prone softmax).
 #[must_use]
 pub fn confidence(events: &[&str]) -> f64 {
     let totals = score(events);
@@ -220,7 +220,7 @@ pub fn confidence(events: &[&str]) -> f64 {
 mod tests {
     use super::*;
 
-    /// رشتهٔ وضعیت — قالب عین پایتون و سبدسازی سقف‌دار.
+    /// State string — a Python-identical format with clamped bucketing.
     #[test]
     fn state_string_matches_python_format() {
         let f = UserFeatures::default();
@@ -243,7 +243,7 @@ mod tests {
         );
     }
 
-    /// هش وضعیت — پایدار، دترمینیستیتیک، بدون برخورد در فضای تست.
+    /// State hash — stable, deterministic, collision-free over the test space.
     #[test]
     fn hash_state_is_stable_and_collides_rarely() {
         let s = "visits:0|purchases:0|tasks:0|withdraws:0|chat_level:0|session_bucket:0|freshness:0";
@@ -251,7 +251,7 @@ mod tests {
         let empty = hash_state("");
         let base = hash_state(s);
         assert_ne!(empty, base);
-        // چندصد وضعیت متمایز → برخورد کمتر از ۲٪ (فضای ۲^۳۲)
+        // Several hundred distinct states → under 2% collisions (a 2^32 space)
         let mut seen = std::collections::HashSet::new();
         let mut collisions = 0;
         for i in 0..200u32 {
@@ -263,7 +263,7 @@ mod tests {
         assert!(collisions <= 4, "collisions: {collisions}");
     }
 
-    /// طبقه‌بند — پرچم‌های رفتاری متمایز به برچسب درست می‌رسند.
+    /// Classifier — distinct behavioral flags land on the right label.
     #[test]
     fn classify_matches_expected_archetypes() {
         assert_eq!(classify(&[]), UserArchetype::NewUser);
@@ -275,27 +275,27 @@ mod tests {
         assert_eq!(classify(&["chargeback"]), UserArchetype::ChurnRisk);
         assert_eq!(classify(&["visit"]), UserArchetype::ReturningBuyer);
         assert_eq!(classify(&["mystery_box"]), UserArchetype::TaskEarner);
-        // خریدار بازگشتی: چند خرید + ویزیت — بر خریدار بازگشتی می‌چربد
+        // Repeat buyer: several purchases + visits — weighted toward a returning buyer
         assert_eq!(
             classify(&["purchase", "visit", "purchase"]),
             UserArchetype::ReturningBuyer
         );
-        // رویداد ناشناخته → هیچ امتیازی → NewUser
+        // Unknown event → no score → NewUser
         assert_eq!(classify(&["nope"]), UserArchetype::NewUser);
     }
 
-    /// قطعیت — همان دنباله، همان برچسب و همان اطمینان.
+    /// Determinism — the same sequence, the same label, the same confidence.
     #[test]
     fn classification_is_deterministic() {
         let events = vec!["purchase", "withdraw", "chat_message"];
         assert_eq!(classify(&events), classify(&events));
         assert!((confidence(&events) - confidence(&events)).abs() < f64::EPSILON);
         assert!(confidence(&["purchase"]) > confidence(&[]));
-        // ترکیب خرید + برداشت → HighValue (برندهٔ بیشینه)
+        // A purchase + withdrawal combination → HighValue (the argmax winner)
         assert_eq!(classify(&["purchase", "withdraw"]), UserArchetype::HighValue);
     }
 
-    /// برچسب‌ها و رشته‌ها — سازگاری سیم با پایتون.
+    /// Labels and strings — wire compatibility with Python.
     #[test]
     fn archetypes_serialize_to_python_labels() {
         let labels: Vec<&str> = UserArchetype::all().iter().map(|a| a.as_str()).collect();

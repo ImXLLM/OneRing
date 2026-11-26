@@ -1,8 +1,8 @@
-//! قراردادهای بازار M3 — محصول‌ها، خرید با اسکرو ۸ حالته و سفارش‌های من.
+//! M3 market contracts — products, purchase via the 8-state escrow, and my orders.
 //!
-//! خرید = ساخت امانت + تأمین آن در «یک» فرمان اتمی: Din خریدار قفل می‌شود و
-//! فروشنده تحویل می‌دهد؛ مادهٔ ۸ منشور خودش مالیات ۱۰٪ را در `release` اعمال می‌کند.
-//! محتوای تحویل (`deliveryPayload`) هرگز روی وایر عمومی نمی‌آید.
+//! Purchase = escrow creation + funding in «one» atomic command: the buyer's Din is locked and
+//! the seller delivers; Article 8 of the charter applies the 10% tax itself in `release`.
+//! The delivery payload (`deliveryPayload`) never travels on the public wire.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -10,209 +10,209 @@ use utoipa::ToSchema;
 use crate::common::{Din, EscrowStatus, Id, IdempotencyKey};
 use crate::escrows::EscrowView;
 
-/// سقف حجم محتوای تحویل محصول (۱۵۰ کیلوبایت برای آرتیفکت HTML تک‌صفحه‌ای تعاملی).
+/// Product delivery payload size cap (150 kilobytes for an interactive single-page HTML artifact).
 pub const MAX_DELIVERY_PAYLOAD_BYTES: usize = 150_000;
 
-/// سقف حجم پیش‌نمایش عمومی HTML پیش از خرید (۵۰ کیلوبایت).
+/// Public HTML preview size cap before purchase (50 kilobytes).
 pub const MAX_PREVIEW_HTML_BYTES: usize = 50_000;
 
-/// درخواست ثبت محصول در بازار.
+/// Product listing request for the market.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateProductRequest {
-    /// عنوان (۱..=۱۲۰ کاراکتر)
+    /// Title (1..=120 characters)
     pub title: String,
-    /// توضیح (۱..=۲۰۰۰ کاراکتر)
+    /// Description (1..=2000 characters)
     pub description: String,
-    /// قیمت به دیین — حداقل ۱
+    /// Price in Din — minimum 1
     pub price_din: Din,
-    /// دسته اختیاری
+    /// Optional category
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
-    /// پیش‌نمایش امن HTML برای صفحهٔ محصول پیش از خرید (حداکثر ۵۰ KB)
+    /// Safe HTML preview for the product page before purchase (max 50 KB)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub preview_html: Option<String>,
-    /// درصد پورسانت معرف بر حسب نقاط پایه (پیش‌فرض ۱۰۰۰ = ۱۰٪، سقف ۵۰۰۰ = ۵۰٪)
+    /// Referrer commission rate in basis points (default 1000 = 10%, cap 5000 = 50%)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub affiliate_bps: Option<u16>,
-    /// نوع آرتیفکت تک‌صفحه‌ای (پیش‌فرض `"html"`)
+    /// Single-page artifact kind (default `"html"`)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub artifact_kind: Option<String>,
-    /// محتوای تحویل کامل (حداکثر ۱۵۰ KB) — فقط به خریدار همان سفارش داده می‌شود
+    /// Full delivery payload (max 150 KB) — served only to the buyer of that very order
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delivery_payload: Option<String>,
 }
 
-/// نمای عمومی محصول — بدون محتوای تحویل (`deliveryPayload`) و بدون نیاز به نشست.
+/// Public product view — no delivery payload (`deliveryPayload`) and no session required.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductView {
-    /// شناسه (`prod:{uuid}`)
+    /// Id (`prod:{uuid}`)
     pub id: String,
-    /// حساب فروشنده (`citizen:{tg_id}`)
+    /// Seller account (`citizen:{tg_id}`)
     pub seller_id: String,
-    /// عنوان
+    /// Title
     pub title: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// قیمت به دیین
+    /// Price in Din
     pub price_din: Din,
-    /// دسته — `null` صریح اگر ثبت نشده
+    /// Category — explicit `null` if unset
     pub category: Option<String>,
-    /// پیش‌نمایش عمومی HTML
+    /// Public HTML preview
     pub preview_html: String,
-    /// نرخ پورسانت معرف بر حسب نقاط پایه (`0..=5000`)
+    /// Referrer commission rate in basis points (`0..=5000`)
     pub affiliate_bps: u16,
-    /// نوع آرتیفکت (`html` و…)
+    /// Artifact kind (`html` and more)
     pub artifact_kind: String,
-    /// فعال بودن برای خرید
+    /// Whether it is purchasable
     pub active: bool,
-    /// زمان ایجاد ISO
+    /// ISO creation time
     pub created_at: String,
-    /// نمرهٔ REA مایرون مُهر‌شده روی لیستینگ (`0..=100`؛ `0` = هنوز مُهر نشده)
+    /// Mairon REA score sealed on the listing (`0..=100`; `0` = not yet sealed)
     pub mairon_score: u8,
-    /// نشان مرئی مایرون (خالی = مُهر نشده)
+    /// Visible Mairon badge (empty = not sealed)
     pub mairon_badge: String,
 }
 
-/// فهرست محصولات فعال بازار.
+/// List of the market's active products.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductListResponse {
-    /// محصولات — جدیدترین اول
+    /// Products — newest first
     pub items: Vec<ProductView>,
 }
 
-/// درخواست خرید — ساخت امانت + قفل Din خریدار در یک فرمان اتمی.
+/// Purchase request — escrow creation + buyer Din lock in one atomic command.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PurchaseRequest {
-    /// محصول هدف
+    /// Target product
     pub product_id: Id,
-    /// معرف اختیاری (`tg_id` عددی مثل `"12345"` یا `"citizen:12345"`)
+    /// Optional referrer (numeric `tg_id` like `"12345"` or `"citizen:12345"`)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub referrer: Option<String>,
-    /// کلید یکسان‌سازی اختیاری — retry دوبار پول نمی‌گیرد
+    /// Optional idempotency key — a retry never charges twice
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// پاسخ تحویل محتوای کامل محصول — فقط برای خریدار یا فروشندهٔ اسکرو پرداخت‌شده.
+/// Full product content delivery response — only for the buyer or the seller of a paid escrow.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EscrowDeliveryView {
-    /// شناسه اسکرو
+    /// Escrow id
     pub escrow_id: String,
-    /// شناسه محصول مرتبط
+    /// Related product id
     pub product_id: String,
-    /// عنوان محصول
+    /// Product title
     pub title: String,
-    /// نوع آرتیفکت (`html` و…)
+    /// Artifact kind (`html` and more)
     pub artifact_kind: String,
-    /// وضعیت فعلی اسکرو (`FUNDED` / `DELIVERED` / `RELEASED`)
+    /// Current escrow status (`FUNDED` / `DELIVERED` / `RELEASED`)
     pub state: EscrowStatus,
-    /// محتوای کامل محصول پولی
+    /// Full paid product content
     pub delivery_payload: String,
 }
 
-/// پاسخ خرید — امانت CREATED→FUNDED در همان لحظه.
+/// Purchase response — the escrow goes CREATED→FUNDED in the same instant.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PurchaseResponse {
-    /// امانت تأمین‌شده (FUNDED)
+    /// Funded escrow (FUNDED)
     pub escrow: EscrowView,
-    /// تراکنش قفل Din — `null` صریح در replay بدون tx
+    /// Din lock transaction — explicit `null` on a tx-less replay
     pub tx_id: Option<String>,
-    /// آیا این پخش مجدد بود؟ (پول دوباره قفل نشد)
+    /// Was this a replay? (no money was re-locked)
     pub replayed: bool,
 }
 
-/// سفارش‌های من + محصولات من — یک نگاه به کل حضور در بازار.
+/// My orders + my products — one view of the whole market presence.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MyMarketResponse {
-    /// محصول‌هایی که فروخته‌ام
+    /// Products I have sold
     pub products: Vec<ProductView>,
-    /// اسکروهایی که خریدار یا فروشندهٔ آن‌ها هستم
+    /// Escrows where I am the buyer or the seller
     pub orders: Vec<EscrowView>,
 }
 
-// ── مُهر مایرون و رأی ۵-ستارهٔ شهروندان (Wave 3 — Trinity marketplace gate) ──
+// ── Mairon seal and citizens' 5-star votes (Wave 3 — Trinity marketplace gate) ──
 
-/// پاسخ تأیید و انتشار دو-کلیدی (`POST /market/products/{id}/mairon-confirm`).
+/// Two-key confirm-and-publish response (`POST /market/products/{id}/mairon-confirm`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MaironConfirmResponse {
-    /// شناسهٔ محصول
+    /// Product id
     pub product_id: String,
-    /// نمرهٔ REA مایرون (`0..=100`)
+    /// Mairon REA score (`0..=100`)
     pub mairon_rea_score: u8,
-    /// نشان مرئی مُهرشده روی لیستینگ
+    /// Visible badge sealed on the listing
     pub mairon_visible_badge: String,
-    /// تأیید صریح سازنده — کلید دوم دروازهٔ دو-کلیدی
+    /// Explicit builder confirmation — the second key of the two-key gate
     pub creator_confirmed: bool,
-    /// آیا لیستینگ با مُهر منتشر شد؟
+    /// Was the listing published with the seal?
     pub published: bool,
 }
 
-/// درخواست ثبت رأی شهروند روی محصول (`POST /market/products/{id}/reviews`).
+/// Citizen vote submission for a product (`POST /market/products/{id}/reviews`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductReviewSubmitRequest {
-    /// ستاره — فقط `1..=5`
+    /// Stars — `1..=5` only
     pub stars: u8,
-    /// نظر صحیح‌سنجی‌شده (`1..=2000` کاراکتر پس از trim)
+    /// Validated comment (`1..=2000` characters after trim)
     pub comment: String,
 }
 
-/// نمای یک رأی روی وایر.
+/// One vote as seen on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductReviewView {
-    /// شناسهٔ یکتای رأی (`rev:{uuid}`)
+    /// Unique vote id (`rev:{uuid}`)
     pub review_id: String,
-    /// شناسهٔ محصول
+    /// Product id
     pub product_id: String,
-    /// حساب شهروند رأی‌دهنده (`citizen:{tg_id}`)
+    /// Voter citizen account (`citizen:{tg_id}`)
     pub reviewer_id: String,
-    /// ستاره (`1..=5`)
+    /// Stars (`1..=5`)
     pub stars: u8,
-    /// نظر
+    /// Comment
     pub comment: String,
-    /// خرید تاییدشده (اتصال به امانت تسویه‌شده؛ ضد-سوریل)
+    /// Verified purchase (linked to a settled escrow; anti-Sybil)
     pub verified_purchase: bool,
-    /// عکس فوری نمرهٔ REA مایرون هنگام رأی
+    /// Snapshot of the Mairon REA score at vote time
     pub mairon_score_at_review: u8,
-    /// زمان ثبت ISO
+    /// ISO submission time
     pub created_at: String,
 }
 
-/// خلاصهٔ رتبهٔ ۵-ستارهٔ بیزی + هیستوگرام + نمرهٔ رتبهٔ ترکیبی
-/// (`GET /market/products/{id}/reviews`) — دو لایهٔ فنی و اجتماعی کنار هم.
+/// Bayesian 5-star rating summary + histogram + combined rating score
+/// (`GET /market/products/{id}/reviews`) — the technical and social layers side by side.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductRatingSummaryResponse {
-    /// شناسهٔ محصول
+    /// Product id
     pub product_id: String,
-    /// نمرهٔ فنی مایرون (`0..=100`)
+    /// Mairon technical score (`0..=100`)
     pub mairon_rea_score: u8,
-    /// نشان مرئی مایرون
+    /// Visible Mairon badge
     pub mairon_visible_badge: String,
-    /// شمار همهٔ رأی‌ها
+    /// Total vote count
     pub total_reviews: u32,
-    /// شمار رأی‌های خرید تاییدشده
+    /// Verified-purchase vote count
     pub verified_reviews: u32,
-    /// میانگین حسابی ستاره‌ها (`0.0..=5.0`)
+    /// Arithmetic mean of stars (`0.0..=5.0`)
     pub average_stars: f64,
-    /// میانگین بیزی (پیشین `C = 5.0` و `m = 4.20`)
+    /// Bayesian mean (prior `C = 5.0` and `m = 4.20`)
     pub bayesian_stars: f64,
-    /// هیستوگرام دقیق `[1★..5★]`
+    /// Exact histogram `[1★..5★]`
     pub star_histogram: Vec<u32>,
-    /// نمایش پنج‌ستارهٔ دوزبانه
+    /// Bilingual five-star display
     pub five_star_display: String,
-    /// نمرهٔ رتبهٔ ترکیبی: `0.60 * (bayesian_stars * 20) + 0.40 * mairon_score`
+    /// Combined rating score: `0.60 * (bayesian_stars * 20) + 0.40 * mairon_score`
     pub combined_rank_score: f64,
-    /// همهٔ رأی‌های محصول — جدیدترین اول
+    /// All product votes — newest first
     pub reviews: Vec<ProductReviewView>,
 }
 
@@ -226,11 +226,11 @@ mod tests {
         let p = ProductView {
             id: "prod:1".into(),
             seller_id: "citizen:1".into(),
-            title: "دستور پخت".into(),
-            description: "راجع به چیزی".into(),
+            title: "\u{62f}\u{633}\u{62a}\u{648}\u{631} \u{67e}\u{62e}\u{62a}".into(),
+            description: "\u{631}\u{627}\u{62c}\u{639} \u{628}\u{647} \u{686}\u{6cc}\u{632}\u{6cc}".into(),
             price_din: Din::new(500).unwrap(),
             category: None,
-            preview_html: "<h1>دمو</h1>".into(),
+            preview_html: "<h1>\u{62f}\u{645}\u{648}</h1>".into(),
             affiliate_bps: 1_000,
             artifact_kind: "html".into(),
             active: true,
@@ -242,7 +242,7 @@ mod tests {
         assert!(json.contains("\"category\":null"), "explicit null — {json}");
         assert!(json.contains("\"affiliateBps\":1000"), "affiliateBps — {json}");
         assert!(json.contains("\"artifactKind\":\"html\""), "artifactKind — {json}");
-        assert!(json.contains("\"previewHtml\":\"<h1>دمو</h1>\""), "previewHtml — {json}");
+        assert!(json.contains("\"previewHtml\":\"<h1>\u{62f}\u{645}\u{648}</h1>\""), "previewHtml — {json}");
     }
 
     #[test]

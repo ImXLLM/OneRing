@@ -1,68 +1,68 @@
-//! قراردادهای امانت — ستون فقرات مارکت‌پلیس (ADR-004، مادهٔ ۸ منشور) — پورت `escrows.ts`.
+//! Escrow contracts — the marketplace backbone (ADR-004, Charter Article 8) — port of `escrows.ts`.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::common::{Din, EscrowStatus, Id, IdempotencyKey};
 
-/// `createEscrowRequestSchema` — id غایب را سرور می‌سازد؛ تکراری رد می‌شود.
+/// `createEscrowRequestSchema` — the server generates a missing id; duplicates are rejected.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateEscrowRequest {
-    /// شناسهٔ اختیاری (سرور می‌سازد؛ تکراری → خطا)
+    /// optional id (server-generated; duplicate → error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<Id>,
-    /// خریدار
+    /// buyer
     pub buyer_id: Id,
-    /// فروشنده
+    /// seller
     pub seller_id: Id,
-    /// مبلغ دیین
+    /// amount in Din
     pub amount: Din,
-    /// ارجاع محصول اختیاری (≤۱۲۸)
+    /// optional product reference (≤128)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(max_length = 128)]
     pub product_ref: Option<String>,
-    /// TTL ساعت (۱ تا ۷۲۰)
+    /// TTL in hours (1 to 720)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(minimum = 1_i64, maximum = 720_i64)]
     pub ttl_hours: Option<i64>,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// نمای امانت — `escrowViewSchema` (همهٔ فیلدهای nullable صریح روی سیم).
+/// Escrow view — `escrowViewSchema` (all nullable fields explicit on the wire).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EscrowView {
-    /// شناسه
+    /// id
     pub id: String,
-    /// خریدار
+    /// buyer
     pub buyer_id: String,
-    /// فروشنده
+    /// seller
     pub seller_id: String,
-    /// مبلغ
+    /// amount
     pub amount: Din,
-    /// ارجاع محصول (nullable — صریح روی سیم)
+    /// product reference (nullable — explicit on the wire)
     #[schema(required = true)]
     pub product_ref: Option<String>,
-    /// وضعیت
+    /// status
     pub status: EscrowStatus,
-    /// زمان ایجاد
+    /// creation time
     pub created_at: String,
-    /// تراکنش تأمین (nullable)
+    /// fund transaction (nullable)
     #[schema(required = true)]
     pub funded_tx_id: Option<String>,
-    /// تراکنش تسویه (nullable)
+    /// settle transaction (nullable)
     #[schema(required = true)]
     pub settle_tx_id: Option<String>,
-    /// دلیل اختلاف (nullable)
+    /// dispute reason (nullable)
     #[schema(required = true)]
     pub dispute_reason: Option<String>,
-    /// ارجاع تحویل (nullable)
+    /// delivery reference (nullable)
     #[schema(required = true)]
     pub delivery_ref: Option<String>,
-    /// زمان انقضا (nullable)
+    /// expiry time (nullable)
     #[schema(required = true)]
     pub expires_at: Option<String>,
 }
@@ -71,7 +71,7 @@ pub struct EscrowView {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EscrowListResponse {
-    /// ردیف‌ها
+    /// rows
     pub items: Vec<EscrowView>,
 }
 
@@ -79,7 +79,7 @@ pub struct EscrowListResponse {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FundEscrowRequest {
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
@@ -88,24 +88,24 @@ pub struct FundEscrowRequest {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DeliverEscrowRequest {
-    /// ارجاع تحویل اختیاری (≤۲۵۶)
+    /// optional delivery reference (≤256)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schema(max_length = 256)]
     pub delivery_ref: Option<String>,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// `releaseEscrowRequestSchema` — مادهٔ ۷: برای مبالغ ≥ ۵۰٬۰۰۰ Đ باید
-/// `approvedByAdmin: true` **صریح** باشد؛ هرگز ضمنی.
+/// `releaseEscrowRequestSchema` — Article 7: for amounts ≥ 50,000 Đ,
+/// `approvedByAdmin: true` must be **explicit**; never implied.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ReleaseEscrowRequest {
-    /// تأیید صریح ادمین (مادهٔ ۷)
+    /// explicit admin approval (Article 7)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub approved_by_admin: Option<bool>,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
@@ -114,10 +114,10 @@ pub struct ReleaseEscrowRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DisputeEscrowRequest {
-    /// دلیل (۱ تا ۵۰۰ کاراکتر)
+    /// reason (1 to 500 characters)
     #[schema(min_length = 1, max_length = 500)]
     pub reason: String,
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
@@ -126,7 +126,7 @@ pub struct DisputeEscrowRequest {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RefundEscrowRequest {
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
@@ -135,7 +135,7 @@ pub struct RefundEscrowRequest {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CancelEscrowRequest {
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
@@ -144,21 +144,21 @@ pub struct CancelEscrowRequest {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExpireEscrowRequest {
-    /// کلید یکسان‌سازی اختیاری
+    /// optional idempotency key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<IdempotencyKey>,
 }
 
-/// `escrowActionResponseSchema` — پاسخ همهٔ اقدامات امانت.
+/// `escrowActionResponseSchema` — the response of every escrow action.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EscrowActionResponse {
-    /// نمای امانت پس از عملیات
+    /// escrow view after the operation
     pub escrow: EscrowView,
-    /// شناسهٔ تراکنش (nullable — لغو/ساخت پول جابه‌جا نمی‌کند)
+    /// The transaction id (nullable — cancel/forge never moves money)
     #[schema(required = true)]
     pub tx_id: Option<String>,
-    /// آیا replay بود؟
+    /// was this a replay?
     pub replayed: bool,
 }
 

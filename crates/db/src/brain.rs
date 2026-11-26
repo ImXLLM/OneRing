@@ -1,133 +1,133 @@
-//! کوئری‌های مغز M4 — مهارت‌های هرمس، ران‌ها، حافظهٔ ۷لایه، ناوگان ایجنت‌ها،
-//! صندوق A2A و خوانش‌های ادمین.
+//! M4 brain queries — Hermes skills, runs, the 7-layer memory, the agent fleet,
+//! the A2A inbox, and the admin reads.
 //!
-//! قواعد ثابت سر جایش است: هیچ پولی اینجا جابه‌جا نمی‌شود (مغز فقط می‌خواند
-//! و شاهد می‌نویسد)؛ راز هرگز در ستونی ذخیره نمی‌شود — ورودی رانِ REDACTED
-//! فقط متن پاک‌شده را نگه می‌دارد.
+//! The standing rules hold: no money moves here (the brain only reads and
+//! writes witnesses); a secret is never stored in any column — the REDACTED run's
+//! input keeps only the redacted text.
 
 use crate::error::DbResult;
 use crate::store::{now_iso, V3Store};
 use sqlx::Row;
 
-/// بذر مهارت — دادهٔ خالص از `crates/hermes`؛ صدا زدن سرور هنگام بوت.
+/// Skill seed — pure data from `crates/hermes`; the server invokes it at boot.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SkillSeed {
-    /// شناسهٔ مهارت (`wallet.balance`)
+    /// Skill ID (`wallet.balance`)
     pub id: String,
-    /// عنوان فارسی
+    /// Persian title
     pub title: String,
-    /// دسته
+    /// Category
     pub category: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// `kernel` یا `llm`
+    /// `kernel` or `llm`
     pub kind: String,
-    /// برآورد توکن
+    /// Token estimate
     pub estimate_tokens: i64,
 }
 
-/// ردیف مهارت پس از seed.
+/// The skill row after seeding.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SkillRow {
-    /// شناسه
+    /// ID
     pub id: String,
-    /// عنوان
+    /// Title
     pub title: String,
-    /// دسته
+    /// Category
     pub category: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// نوع
+    /// Kind
     pub kind: String,
-    /// برآورد توکن
+    /// Token estimate
     pub estimate_tokens: i64,
-    /// فعال؟
+    /// Active?
     pub active: bool,
 }
 
-/// شاهد یک اجرای مهارت — ورودی/خروجی پس از سپر؛ راز هرگز.
+/// Witness of one skill run — input/output after the shield; never a secret.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HermesRunRow {
-    /// شناسه (`hrun:{uuid}`)
+    /// ID (`hrun:{uuid}`)
     pub id: String,
-    /// کاربر
+    /// User
     pub user_id: String,
-    /// مهارت
+    /// Skill
     pub skill_id: String,
-    /// ورودی (پس از redaction اگر redact شد)
+    /// Input (post-redaction if redacted)
     pub input: String,
-    /// خروجی — ران مسدودشده رشتهٔ خالی
+    /// Output — a blocked run stores the empty string
     pub output: String,
     /// `ALLOW`/`REDACTED`/`BLOCKED`
     pub shield: String,
     /// `hermes.ok`/`hermes.blocked`/`hermes.failed`
     pub outcome: String,
-    /// ارائه‌دهنده — مهارت kernel `None`
+    /// Provider — `None` for kernel skills
     pub provider: Option<String>,
-    /// مدل — مهارت kernel `None`
+    /// Model — `None` for kernel skills
     pub model: Option<String>,
-    /// توکن ورودی
+    /// Input tokens
     pub prompt_tokens: i64,
-    /// توکن خروجی
+    /// Output tokens
     pub completion_tokens: i64,
-    /// مجموع
+    /// Total
     pub total_tokens: i64,
-    /// زمان ISO — خوانشی؛ درج خودکار با `now_iso()` انجام می‌شود و مقدار این
-    /// فیلد در مسیر درج نادیده گرفته می‌شود.
+    /// ISO time — display; insertion is automatic via `now_iso()` and this field's
+    /// value is ignored on the insert path.
     pub created_at: String,
 }
 
-/// یک یادداشت حافظهٔ ۷لایه.
+/// One 7-layer memory note.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MemoryNoteRow {
-    /// شناسه (`mem:{uuid}`)
+    /// ID (`mem:{uuid}`)
     pub id: String,
-    /// کاربر
+    /// User
     pub user_id: String,
-    /// لایه — یکی از ۷ لایهٔ ثابت
+    /// Layer — one of the 7 fixed layers
     pub layer: String,
-    /// محتوا
+    /// Content
     pub content: String,
 }
 
-/// ردیف ایجنت ناوگان.
+/// A fleet agent row.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentRow {
-    /// شناسه (`agent:{role}`)
+    /// ID (`agent:{role}`)
     pub id: String,
-    /// نام
+    /// Name
     pub name: String,
-    /// نقش
+    /// Role
     pub role: String,
-    /// وضعیت صادقانه (`active`/`registered`/`disabled`)
+    /// Honest status (`active`/`registered`/`disabled`)
     pub status: String,
-    /// توضیح
+    /// Description
     pub description: String,
 }
 
-/// پیام A2A.
+/// An A2A message.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct A2aRow {
-    /// شناسه (`a2a:{uuid}`)
+    /// ID (`a2a:{uuid}`)
     pub id: String,
-    /// فرستنده
+    /// Sender
     pub from_agent: String,
-    /// گیرنده
+    /// Receiver
     pub to_agent: String,
-    /// نوع (`handoff`/`query`/`result`)
+    /// Kind (`handoff`/`query`/`result`)
     pub kind: String,
-    /// بدنه
+    /// Body
     pub body: String,
-    /// زمان ISO — غایب یعنی «همین حالا»
+    /// ISO time — absent means "right now"
     pub created_at: Option<String>,
 }
 
 impl V3Store {
-    /// بذر مهارت‌ها — upsert متادیتا، پرچم `active` را دست نمی‌زند
-    /// (اگر ادمین مهارتی را خاموش کرده باشد بوت دوباره روشنش نمی‌کند).
+    /// Seed skills — upsert the metadata; does not touch the `active` flag
+    /// (if an admin disabled a skill, the boot does not re-enable it).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn seed_skills(&self, skills: &[SkillSeed]) -> DbResult<()> {
         for s in skills {
             sqlx::query(
@@ -150,10 +150,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرست مهارت‌ها — `active_only` برای سیم عمومی، `false` برای ادمین.
+    /// List skills — `active_only` for the public wire, `false` for admin.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_skills(&self, active_only: bool) -> DbResult<Vec<SkillRow>> {
         let sql = if active_only {
             r#"SELECT "id","title","category","description","kind","estimateTokens","active"
@@ -177,10 +177,10 @@ impl V3Store {
             .collect())
     }
 
-    /// درج شاهد اجرا — پس از هر ران (پایهٔ امتیاز هویتی و دنبالهٔ ادمین).
+    /// Insert a run witness — after every run (the identity-score base and the admin trail).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_hermes_run(&self, r: &HermesRunRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "HermesRun"
@@ -205,10 +205,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// ران‌های یک کاربر — جدیدترین اول.
+    /// A user's runs — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_hermes_runs(&self, user_id: &str, limit: i64) -> DbResult<Vec<HermesRunRow>> {
         let rows = sqlx::query(
             r#"SELECT "id","userId","skillId","input","output","shield","outcome","provider","model","promptTokens","completionTokens","totalTokens","createdAt"
@@ -239,10 +239,10 @@ impl V3Store {
             .collect())
     }
 
-    /// شمارش ران‌های سالم/مسدودشدهٔ کاربر — پایهٔ امتیاز هویتی صادقانه.
+    /// Count a user's healthy/blocked runs — the honest identity-score base.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn hermes_run_counts(&self, user_id: &str) -> DbResult<(i64, i64)> {
         let row = sqlx::query(
             r#"SELECT
@@ -256,10 +256,10 @@ impl V3Store {
         Ok((row.get("ok"), row.get("blocked")))
     }
 
-    /// نوشتن یادداشت حافظه — لایه از enum هرمس می‌آید و اینجا فقط رشته است.
+    /// Write a memory note — the layer comes from the Hermes enum and is just a string here.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_memory_note(&self, r: &MemoryNoteRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "MemoryNote" ("id","userId","layer","content","createdAt")
@@ -275,17 +275,17 @@ impl V3Store {
         Ok(())
     }
 
-    /// خواندن حافظه — همهٔ لایه‌ها یا یک لایه؛ جدیدترین اول.
+    /// Read memory — all layers or one layer; newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_memory_notes(
         &self,
         user_id: &str,
         layer: Option<&str>,
         limit: i64,
     ) -> DbResult<Vec<(String, String, String)>> {
-        // خروجی: (id, layer, content)
+        // output: (id, layer, content)
         let rows = if let Some(layer) = layer {
             sqlx::query(
                 r#"SELECT "id","layer","content" FROM "MemoryNote"
@@ -309,10 +309,10 @@ impl V3Store {
         Ok(rows.into_iter().map(|r| (r.get("id"), r.get("layer"), r.get("content"))).collect())
     }
 
-    /// ثبت ایجنت ناوگان — فقط بار اول؛ وضعیت ادمین هرگز از بوت بازنویسی نمی‌شود.
+    /// Register a fleet agent — first time only; the boot never overwrites the admin status.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn seed_agent(&self, r: &AgentRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "Agent" ("id","name","role","status","description")
@@ -329,10 +329,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// فهرست ناوگان — ثابت به ترتیب نقش.
+    /// List the fleet — stable, ordered by role.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_agents(&self) -> DbResult<Vec<AgentRow>> {
         let rows = sqlx::query(
             r#"SELECT "id","name","role","status","description" FROM "Agent" ORDER BY "role""#,
@@ -351,10 +351,10 @@ impl V3Store {
             .collect())
     }
 
-    /// ایجنت با نقش — برای گارد فرستنده/گیرندهٔ A2A.
+    /// Agent by role — for the A2A sender/receiver guard.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_agent(&self, agent_id: &str) -> DbResult<Option<AgentRow>> {
         let row = sqlx::query(
             r#"SELECT "id","name","role","status","description" FROM "Agent" WHERE "id" = ?"#,
@@ -371,10 +371,10 @@ impl V3Store {
         }))
     }
 
-    /// ارسال پیام A2A — گیت‌وی ادمین.
+    /// Send an A2A message — the admin gateway.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn insert_a2a_message(&self, r: &A2aRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "A2aMessage" ("id","fromAgent","toAgent","kind","body","createdAt")
@@ -391,10 +391,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// صندوق ورودی ایجنت — جدیدترین اول.
+    /// An agent's inbox — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_a2a_inbox(&self, agent_id: &str, limit: i64) -> DbResult<Vec<A2aRow>> {
         let rows = sqlx::query(
             r#"SELECT "id","fromAgent","toAgent","kind","body","createdAt"
@@ -418,10 +418,10 @@ impl V3Store {
             .collect())
     }
 
-    /// همهٔ واریزهای TON (همهٔ کاربران) — نمای ادمین؛ فیلتر وضعیت اختیاری.
+    /// All TON deposits (all users) — the admin view; optional status filter.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_ton_deposits_all(
         &self,
         status: Option<&str>,
@@ -463,70 +463,70 @@ impl V3Store {
     }
 }
 
-/// ردیف جلسهٔ سازندهٔ محصول HTML با AI — نگاشت ۱به‌۱ به جدول `"BuilderSession"` (مهاجرت `0005`).
+/// AI HTML product-builder session row — a 1:1 mapping to the `"BuilderSession"` table (migration `0005`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BuilderSessionRow {
-    /// شناسهٔ یکتا (`bldr:{uuid}`)
+    /// Unique id (`bldr:{uuid}`)
     pub id: String,
-    /// مالک جلسه (`citizen:{tg_id}`)
+    /// Session owner (`citizen:{tg_id}`)
     pub account_id: String,
-    /// مرحله (`discovery` / `ready` / `published`)
+    /// Stage (`discovery` / `ready` / `published`)
     pub stage: String,
-    /// عنوان پیشنهادی محصول
+    /// Proposed product title
     pub title: String,
-    /// توضیح فروش (فرمول CAST)
+    /// Sale description (CAST formula)
     pub description: String,
-    /// قیمت پیشنهادی به دیین
+    /// Suggested price in Din
     pub suggested_price: i64,
-    /// درصد پورسانت معرف پیشنهادی (`0..=5000`)
+    /// Suggested referrer commission rate (`0..=5000`)
     pub affiliate_bps: u16,
-    /// کد کامل HTML تک‌صفحه‌ای تولیدشده
+    /// The generated full single-page HTML code
     pub generated_html: String,
-    /// شناسهٔ محصول منتشرشده در بازار (در صورت انتشار)
+    /// Marketplace id of the published product (when published)
     pub published_product_id: Option<String>,
-    /// زمان ایجاد (Unix epoch ثانیه)
+    /// Creation time (Unix epoch seconds)
     pub created_at: i64,
-    /// زمان آخرین تغییر (Unix epoch ثانیه)
+    /// Last-modified time (Unix epoch seconds)
     pub updated_at: i64,
 }
 
-/// بستهٔ به‌روزرسانی خروجی و وضعیت جلسهٔ سازندهٔ محصول.
+/// Update bundle for a product-builder session's output and status.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BuilderSessionPatch {
-    /// مرحلهٔ جدید
+    /// New stage
     pub stage: String,
-    /// عنوان پیشنهادی
+    /// Proposed title
     pub title: String,
-    /// توضیح فروش
+    /// Sale description
     pub description: String,
-    /// قیمت پیشنهادی به دیین
+    /// Suggested price in Din
     pub suggested_price: i64,
-    /// نرخ پورسانت معرف
+    /// Referrer commission rate
     pub affiliate_bps: u16,
-    /// کد HTML تولیدشده
+    /// Generated HTML code
     pub generated_html: String,
-    /// شناسهٔ محصول منتشرشده (در صورت انتشار)
+    /// Published product id (when published)
     pub published_product_id: Option<String>,
-    /// زمان به‌روزرسانی (Unix epoch ثانیه)
+    /// Update time (Unix epoch seconds)
     pub updated_at: i64,
 }
 
-/// یک پیام تاریخچهٔ گفتگوی سازندهٔ محصول — جدول `"BuilderMessage"`.
+/// One product-builder conversation message — the `"BuilderMessage"` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BuilderMessageRow {
-    /// شناسهٔ افزایشی پیام
+    /// Incremental message id
     pub id: i64,
-    /// شناسهٔ جلسهٔ مرتبط
+    /// Related session id
     pub session_id: String,
-    /// نقش (`user` / `assistant` / `system`)
+    /// Role (`user` / `assistant` / `system`)
     pub role: String,
-    /// متن پیام
+    /// Message text
     pub content: String,
-    /// زمان ثبت (Unix epoch ثانیه)
+    /// Record time (Unix epoch seconds)
     pub created_at: i64,
 }
 
-#[allow(clippy::needless_pass_by_value)] // الگوی sqlx: Row از fetch مصرف می‌شود
+#[allow(clippy::needless_pass_by_value)] // sqlx pattern: the Row is consumed from fetch
 fn builder_session_from(r: sqlx::sqlite::SqliteRow) -> BuilderSessionRow {
     let bps_raw: i64 = r.get("affiliateBps");
     BuilderSessionRow {
@@ -556,10 +556,10 @@ fn builder_message_from(r: sqlx::sqlite::SqliteRow) -> BuilderMessageRow {
 }
 
 impl V3Store {
-    /// ساخت جلسهٔ جدید سازندهٔ محصول.
+    /// Create a new product-builder session.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn create_builder_session(&self, row: &BuilderSessionRow) -> DbResult<()> {
         sqlx::query(
             r#"INSERT INTO "BuilderSession"
@@ -583,10 +583,10 @@ impl V3Store {
         Ok(())
     }
 
-    /// خواندن جلسهٔ سازنده فقط اگر متعلق به `account_id` باشد (ایزوله‌سازی مالکیت).
+    /// Read the builder session only if it belongs to `account_id` (ownership isolation).
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn get_builder_session(
         &self,
         id: &str,
@@ -605,10 +605,10 @@ impl V3Store {
         Ok(row.map(builder_session_from))
     }
 
-    /// فهرست جلسات سازندهٔ یک شهروند — جدیدترین اول.
+    /// List a citizen's builder sessions — newest first.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_builder_sessions_for_account(
         &self,
         account_id: &str,
@@ -630,12 +630,12 @@ impl V3Store {
         Ok(rows.into_iter().map(builder_session_from).collect())
     }
 
-    /// به‌روزرسانی آرتیفکت، متادیتا و مرحلهٔ جلسهٔ سازنده (با بررسی مالکیت).
+    /// Update a builder session's artifact, metadata, and stage (with an ownership check).
     ///
-    /// خروجی `true` یعنی ردیف متعلق به کاربر پیدا و به‌روز شد.
+    /// A `true` output means an owned row was found and updated.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn update_builder_session_artifact(
         &self,
         id: &str,
@@ -664,10 +664,10 @@ impl V3Store {
         Ok(res.rows_affected() > 0)
     }
 
-    /// افزودن یک پیام جدید به گفتگوی جلسه و برگرداندن شناسهٔ پیام درج‌شده.
+    /// Append a new message to the session conversation and return the inserted message ID.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn append_builder_message(
         &self,
         session_id: &str,
@@ -688,10 +688,10 @@ impl V3Store {
         Ok(res.last_insert_rowid())
     }
 
-    /// برگرداندن آخرین `limit` پیام یک جلسه به ترتیب صعودی (`id ASC`) برای جلوگیری از انفجار توکن.
+    /// Return a session's latest `limit` messages in ascending order (`id ASC`) to prevent a token explosion.
     ///
     /// # Errors
-    /// خطای SQL.
+    /// SQL error.
     pub async fn list_builder_messages(
         &self,
         session_id: &str,
@@ -727,29 +727,29 @@ mod tests {
         s
     }
 
-    /// چرخهٔ کامل مغز روی دیتابیس واقعی: بذر مهارت idempotent، شاهد ران،
-    /// حافظه، ایجنت، پیام A2A و فهرست ادمین واریزها.
+    /// The full brain cycle on a real database: idempotent skill seed, run witness,
+    /// memory, agent, A2A message, and the admin deposit listing.
     #[tokio::test]
-    #[allow(clippy::too_many_lines)] // پوشش جدول‌های مغز — خوانایی تست مهم‌تر است
+    #[allow(clippy::too_many_lines)] // brain table coverage — test readability matters more
     async fn brain_tables_round_trip() {
         let store = store().await;
 
-        // مهارت‌ها — بذر دوباره متادیتا را به‌روز می‌کند ولی شمارش ثابت است
+        // Skills — reseeding refreshes metadata but keeps the count stable
         store
             .seed_skills(&[
                 SkillSeed {
                     id: "wallet.balance".into(),
-                    title: "تراز من".into(),
+                    title: "\u{62a}\u{631}\u{627}\u{632} \u{645}\u{646}".into(),
                     category: "wallet".into(),
-                    description: "خوانش قطعی دفتر".into(),
+                    description: "\u{62e}\u{648}\u{627}\u{646}\u{634} \u{642}\u{637}\u{639}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}".into(),
                     kind: "kernel".into(),
                     estimate_tokens: 0,
                 },
                 SkillSeed {
                     id: "ai.chat".into(),
-                    title: "گفت‌وگو".into(),
+                    title: "\u{6af}\u{641}\u{62a}‌\u{648}\u{6af}\u{648}".into(),
                     category: "brain".into(),
-                    description: "گفت‌وگوی آزاد".into(),
+                    description: "\u{6af}\u{641}\u{62a}‌\u{648}\u{6af}\u{648}\u{6cc} \u{622}\u{632}\u{627}\u{62f}".into(),
                     kind: "llm".into(),
                     estimate_tokens: 900,
                 },
@@ -759,9 +759,9 @@ mod tests {
         store
             .seed_skills(&[SkillSeed {
                 id: "wallet.balance".into(),
-                title: "تراز من".into(),
+                title: "\u{62a}\u{631}\u{627}\u{632} \u{645}\u{646}".into(),
                 category: "wallet".into(),
-                description: "خوانش قطعی دفتر (v2)".into(),
+                description: "\u{62e}\u{648}\u{627}\u{646}\u{634} \u{642}\u{637}\u{639}\u{6cc} \u{62f}\u{641}\u{62a}\u{631} (v2)".into(),
                 kind: "kernel".into(),
                 estimate_tokens: 0,
             }])
@@ -771,14 +771,14 @@ mod tests {
         assert_eq!(skills.len(), 2, "seed is idempotent");
         assert!(skills.iter().any(|s| s.id == "wallet.balance" && s.description.contains("v2")));
 
-        // شاهد ران + شمارش
+        // run witness + count
         store
             .insert_hermes_run(&HermesRunRow {
                 id: "hrun:1".into(),
                 user_id: "user:tg:111".into(),
                 skill_id: "wallet.balance".into(),
-                input: "ترازم را بگو".into(),
-                output: "۵۰۰ Đ".into(),
+                input: "\u{62a}\u{631}\u{627}\u{632}\u{645} \u{631}\u{627} \u{628}\u{6af}\u{648}".into(),
+                output: "\u{6f5}\u{6f0}\u{6f0} Đ".into(),
                 shield: "ALLOW".into(),
                 outcome: "hermes.ok".into(),
                 provider: None,
@@ -814,38 +814,38 @@ mod tests {
         assert_eq!(runs.len(), 2);
         assert_eq!(runs[0].id, "hrun:2", "newest first");
 
-        // حافظهٔ ۷لایه
+        // the 7-layer memory
         store
             .insert_memory_note(&MemoryNoteRow {
                 id: "mem:1".into(),
                 user_id: "user:tg:111".into(),
                 layer: "episodic".into(),
-                content: "پرسید ترازش را".into(),
+                content: "\u{67e}\u{631}\u{633}\u{6cc}\u{62f} \u{62a}\u{631}\u{627}\u{632}\u{634} \u{631}\u{627}".into(),
             })
             .await
             .expect("memory write");
         let notes = store.list_memory_notes("user:tg:111", Some("episodic"), 5).await.expect("memory read");
         assert_eq!(notes.len(), 1);
-        assert_eq!(notes[0].2, "پرسید ترازش را");
+        assert_eq!(notes[0].2, "\u{67e}\u{631}\u{633}\u{6cc}\u{62f} \u{62a}\u{631}\u{627}\u{632}\u{634} \u{631}\u{627}");
 
-        // ناوگان — seed دوباره وضعیت ادمین را بازنویسی نمی‌کند
+        // fleet — re-seeding does not overwrite the admin status
         store
             .seed_agent(&AgentRow {
                 id: "agent:orchestrator".into(),
-                name: "هرمس".into(),
+                name: "\u{647}\u{631}\u{645}\u{633}".into(),
                 role: "orchestrator".into(),
                 status: "active".into(),
-                description: "قلب ناوگان".into(),
+                description: "\u{642}\u{644}\u{628} \u{646}\u{627}\u{648}\u{6af}\u{627}\u{646}".into(),
             })
             .await
             .expect("agent seed");
         store
             .seed_agent(&AgentRow {
                 id: "agent:orchestrator".into(),
-                name: "هرمس".into(),
+                name: "\u{647}\u{631}\u{645}\u{633}".into(),
                 role: "orchestrator".into(),
                 status: "disabled".into(),
-                description: "قلب ناوگان".into(),
+                description: "\u{642}\u{644}\u{628} \u{646}\u{627}\u{648}\u{6af}\u{627}\u{646}".into(),
             })
             .await
             .expect("agent reseed is no-op");
@@ -859,7 +859,7 @@ mod tests {
                 from_agent: "agent:orchestrator".into(),
                 to_agent: "agent:support".into(),
                 kind: "handoff".into(),
-                body: "پاسخ به شهروند ۱۱۱".into(),
+                body: "\u{67e}\u{627}\u{633}\u{62e} \u{628}\u{647} \u{634}\u{647}\u{631}\u{648}\u{646}\u{62f} \u{6f1}\u{6f1}\u{6f1}".into(),
                 created_at: None,
             })
             .await
@@ -868,7 +868,7 @@ mod tests {
         assert_eq!(inbox.len(), 1);
         assert_eq!(inbox[0].from_agent, "agent:orchestrator");
 
-        // واریزهای ادمین — خالی هم پاسخ سالم است
+        // admin deposits — an empty result is a healthy response too
         let deps = store.list_ton_deposits_all(Some("PENDING"), 50).await.expect("deposits");
         assert!(deps.is_empty(), "no pending deposits at the start");
     }
@@ -891,7 +891,7 @@ mod tests {
         };
         store.create_builder_session(&session).await.expect("create");
 
-        // مالکیت: کاربر دیگر نمی‌تواند جلسه را بخواند یا تغییر دهد
+        // ownership: another user can neither read nor modify the session
         assert!(store.get_builder_session("bldr:1", "citizen:999").await.unwrap().is_none());
         let owned = store
             .get_builder_session("bldr:1", "citizen:100")
@@ -900,15 +900,15 @@ mod tests {
             .expect("owner sees session");
         assert_eq!(owned.stage, "discovery");
 
-        // به‌روزرسانی آرتیفکت
+        // artifact update
         let updated = store
             .update_builder_session_artifact(
                 "bldr:1",
                 "citizen:100",
                 &BuilderSessionPatch {
                     stage: "ready".into(),
-                    title: "محاسبه‌گر هوشمند".into(),
-                    description: "ابزار تعاملی".into(),
+                    title: "\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{647}\u{648}\u{634}\u{645}\u{646}\u{62f}".into(),
+                    description: "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}".into(),
                     suggested_price: 250,
                     affiliate_bps: 1_500,
                     generated_html: "<!DOCTYPE html><html><body>ok</body></html>".into(),
@@ -924,7 +924,7 @@ mod tests {
         assert_eq!(reloaded.suggested_price, 250);
         assert_eq!(reloaded.affiliate_bps, 1_500);
 
-        // ۱۵ پیام درج می‌کنیم و پنجرهٔ ۱۲تایی می‌خوانیم → باید پیام‌های ۴ تا ۱۵ به ترتیب صعودی برگردند
+        // we insert 15 messages and read the 12-message window → messages 4 through 15 must return in ascending order
         for i in 1..=15 {
             store
                 .append_builder_message("bldr:1", "user", &format!("msg-{i}"), 1_700_000_000 + i)

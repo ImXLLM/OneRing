@@ -1,10 +1,10 @@
-# کانفیگ clippy — همان قرارداد legacy با msrv فعلی
+# clippy config — same legacy convention, current msrv
 msrv = "1.100.0"
-# unwrap/expect فقط داخل تست‌ها مجاز است
+# unwrap/expect allowed only inside tests
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 
-# تبدیل‌های عمدی i64→u32 در مهاجرت زمان/فرکانس اسکرو (escrow.rs TTL sweep) —
-# مقادیر همیشه توسط دامنه اعتبارسنجی شده‌اند؛ نشت علامت/برش هدف‌گذاری‌شده است.
-# (همان تصمیم legacy در DropAgentX-pro با سطح pedantic یکسان)
+# Deliberate i64→u32 casts in the escrow time/frequency migration (escrow.rs TTL sweep) —
+# values are always validated by the domain; the sign/truncation leak is deliberate.
+# (the same legacy decision in DropAgentX-pro, same pedantic level)
 allow-dbg-in-tests = true

@@ -1,36 +1,36 @@
-//! رتبه‌سنج وایرال بازار کیان — پورت دقیق `xai-org/x-algorithm` (commit 269340c).
+//! The Kian market viral ranker — an exact port of `xai-org/x-algorithm` (commit 269340c).
 //!
-//! منابع پورت:
-//! - `home-mixer/params/param.rs` — وزن‌های دقیق سیگنال تعامل (کل فایل، ۲۰۲۶)
-//! - `home-mixer/scorers/author_cold_start.rs` — بوت‌استرپ سازندگان تازه‌کار
-//! - `xai-value-model/scoring.rs` — فرمول `fuse_heads` (جمع وزن × احتمال)
+//! Port sources:
+//! - `home-mixer/params/param.rs` — exact engagement-signal weights (whole file, 2026)
+//! - `home-mixer/scorers/author_cold_start.rs` — bootstrap for novice creators
+//! - `xai-value-model/scoring.rs` — the `fuse_heads` formula (sum of weight × probability)
 //!
-//! قانون طلایی الگوریتم X: وزن‌ها روی **احتمال پیش‌بینی‌شدهٔ** هر تعامل ضرب
-//! می‌شوند، نه روی شمارش خام. `ShareViaCopyLink = +20.0` قوی‌ترین سیگنال
-//! مثبت است (حدود ۲۸ برابر favorite=0.708) و `Report = -234.0` قوی‌ترین
-//! سیگنال منفی — یک گزارش، ۳۰ لایک مثبت را باطل می‌کند.
+//! The X-algorithm golden rule: weights multiply each interaction's **predicted probability**,
+//! not raw counts. `ShareViaCopyLink = +20.0` is the strongest positive signal
+//! (about 28x favorite=0.708) and `Report = -234.0` is the strongest
+//! negative signal — one report cancels 30 positive likes.
 //!
-//! بوت‌استرپ سرد (`ColdStartPolicy`): محصول با سن ≤ ۷۲۰۰ ثانیه (۲ ساعت)،
-//! سازنده با < ۵۰٬۰۰۰ فالوور و < ۲۰۰ ایمپرشن، واجد تزریق به اسلات‌های
-//! کشف ۱۵..=۱۶ می‌شود — نمونه‌گیری Thompson روی `Beta(0.75, 49.25)`
-//! (میانگین ۰٫۰۱۵) + پاداش اکتشافی قطعی (`SplitMix64` روی شناسهٔ محصول)،
-//! بدون هیچ RNG غیرقطعی.
+//! Cold start (`ColdStartPolicy`): a product aged <= 7200 seconds (2 hours),
+//! a creator with < 50,000 followers and < 200 impressions qualifies for injection into
+//! discovery slots 15..=16 — Thompson sampling over `Beta(0.75, 49.25)`
+//! (mean 0.015) + a deterministic exploration bonus (`SplitMix64` over the product id),
+//! with no non-deterministic RNG.
 #![forbid(unsafe_code)]
 
-/// وزن‌های دقیق تعامل — پورت خط‌به‌خط `home-mixer/params/param.rs`.
+/// Exact engagement weights — a line-by-line port of `home-mixer/params/param.rs`.
 ///
-/// مقادیر منفی جریمه‌اند و هرگز به‌صورت پاداش درخشش نمی‌گیرند؛ یک سیگنال
-/// منفی بزرگ (گزارش/مسدودسازی) رتبهٔ محصول را زیر صفر می‌برد.
+/// Negative values are penalties and never sparkle as rewards; one large negative
+/// signal (report/mute) pushes the product's rank below zero.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ViralEngagementWeights {
-    /// `share_via_copy_link = 20.0` — قوی‌ترین سیگنال مثبت (کپی لینک محصول).
+    /// `share_via_copy_link = 20.0` — the strongest positive signal (copying the product link).
     pub share_via_copy_link: f64,
     /// `reply = 5.0`.
     pub reply: f64,
-    /// `bidirectional_reply_boost = 15.0` — اگر طرفین به هم پاسخ داده باشند
-    /// (مجموع پاسخ دوسویه = ۲۰٫۰، هم‌تراز کپی‌لینک).
+    /// `bidirectional_reply_boost = 15.0` — when both parties have replied to each other
+    /// (total bidirectional reply = 20.0, on par with copy-link).
     pub bidirectional_reply_boost: f64,
-    /// `quote = 5.0` — ریمیکس/کوت محصول.
+    /// `quote = 5.0` — a product remix/quote.
     pub quote: f64,
     /// `share_via_dm = 5.0`.
     pub share_via_dm: f64,
@@ -42,15 +42,15 @@ pub struct ViralEngagementWeights {
     pub repost: f64,
     /// `favorite = 0.708`.
     pub favorite: f64,
-    /// `cont_click_dwell_per_sec = 0.385` — ثانیه‌های توقف پس از کلیک.
+    /// `cont_click_dwell_per_sec = 0.385` — dwell seconds after a click.
     pub cont_click_dwell_per_sec: f64,
     /// `click = 0.274`.
     pub click: f64,
     /// `open_link = 0.2`.
     pub open_link: f64,
-    /// `dwell = 0.05` — توقف سادهٔ اسکرول.
+    /// `dwell = 0.05` — a plain scroll dwell.
     pub dwell: f64,
-    /// `not_dwelled = -0.02` — دید ولی نخواند.
+    /// `not_dwelled = -0.02` — seen but not read.
     pub not_dwelled: f64,
     /// `block_creator = -31.2`.
     pub block_creator: f64,
@@ -58,7 +58,7 @@ pub struct ViralEngagementWeights {
     pub not_interested: f64,
     /// `mute_creator = -58.8`.
     pub mute_creator: f64,
-    /// `report = -234.0` — قوی‌ترین سیگنال منفی.
+    /// `report = -234.0` — the strongest negative signal.
     pub report: f64,
 }
 
@@ -87,16 +87,16 @@ impl Default for ViralEngagementWeights {
     }
 }
 
-/// احتمال‌های پیش‌بینی‌شدهٔ تعامل برای یک محصول بازار (`CandidateSignals`).
+/// Predicted engagement probabilities for a market product (`CandidateSignals`).
 ///
-/// هر فیلد ∈ [0, 1] است جز `cont_click_dwell_secs` و `dwell_secs` که
-/// «ثانیهٔ مورد انتظار»اند (میانگین احتمال × ثانیه).
+/// Every field is in [0, 1] except `cont_click_dwell_secs` and `dwell_secs`, which
+/// are «expected seconds» (mean probability × seconds).
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct ProductSignals {
     pub share_via_copy_link: f64,
-    /// پاسخ ساده؛ `bidirectional_reply` آن را با پاداش ۱۵ جمع می‌کند.
+    /// A plain reply; `bidirectional_reply` sums it with the +15 boost.
     pub reply: f64,
-    /// پاسخ دوسویه (خریدار و سازنده به هم جواب داده‌اند)؟
+    /// Bidirectional reply (buyer and builder answered each other)?
     pub bidirectional_reply: bool,
     pub quote: f64,
     pub share_via_dm: f64,
@@ -115,11 +115,11 @@ pub struct ProductSignals {
     pub report: f64,
 }
 
-/// فرمول فیوژن `xai-value-model/scoring.rs::fuse_heads` — جمع وزن × سیگنال.
+/// The `xai-value-model/scoring.rs::fuse_heads` fusion formula — sum of weight × signal.
 ///
-/// پاسخ دوسویه هم‌ارز `reply + bidirectional_reply_boost = 20.0` حساب
-/// می‌شود؛ منفی‌ها همیشه کسر می‌شوند. خروجی می‌تواند منفی باشد — محصول
-/// گزارش‌شده عملاً از کشف حذف می‌شود.
+/// A bidirectional reply counts as `reply + bidirectional_reply_boost = 20.0`;
+/// negatives are always subtracted. The output can go negative — a reported product
+/// is effectively gone from discovery.
 #[must_use]
 pub fn fuse_score(w: &ViralEngagementWeights, s: &ProductSignals) -> f64 {
     let reply_w = if s.bidirectional_reply {
@@ -146,37 +146,37 @@ pub fn fuse_score(w: &ViralEngagementWeights, s: &ProductSignals) -> f64 {
         + s.report * w.report
 }
 
-/// امتیاز فیوژن با وزن‌های پیش‌فرض الگوریتم X ۲۰۲۶.
+/// Fusion score with the 2026 X-algorithm default weights.
 #[must_use]
 pub fn score_with_defaults(s: &ProductSignals) -> f64 {
     fuse_score(&ViralEngagementWeights::default(), s)
 }
 
-// ── Cold-Start (پورت `author_cold_start.rs`) ────────────────────────────────
+// ── Cold-Start (port of `author_cold_start.rs`) ────────────────────────────────
 
-/// سیاست بوت‌استرپ سرد سازنده — دقیقاً مطابق پارامترهای تست upstream:
-/// `max_post_age=7200`، `beta_alpha0=0.75`، `beta_beta0=49.25`.
+/// Creator cold-start policy — exactly the upstream test parameters:
+/// `max_post_age=7200`, `beta_alpha0=0.75`, `beta_beta0=49.25`.
 ///
-/// محصولِ واجدِ شرایط به اسلات‌های کشف `slot_min..=slot_max` (پیش‌فرض
-/// ۱۵..=۱۶) تزریق می‌شود؛ آیتم‌های جابه‌جاشده **حذف نمی‌شوند**، فقط یک
-/// پله پایین می‌روند (صداقت رتبه‌بندی).
+/// A qualifying product is injected into discovery slots `slot_min..=slot_max` (default
+/// 15..=16); displaced items are **not removed**, they only shift down one
+/// step (ranking fairness).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColdStartPolicy {
-    /// سازنده با ≥ این فالوور، دیگر تازه‌کار نیست.
+    /// A creator with >= this many followers is no longer a novice.
     pub max_creator_followers: u64,
-    /// سن محصول ≤ این مقدار (۷۲۰۰ ثانیه = ۲ ساعت).
+    /// Product age <= this value (7200 seconds = 2 hours).
     pub max_product_age_secs: i64,
-    /// ایمپرشن ≥ این مقدار، دیگر سرد نیست.
+    /// Impressions >= this value, no longer cold.
     pub max_impressions: u64,
-    /// نخستین اسلات کشف (۰-مبنا) — ۱۵.
+    /// First discovery slot (zero-based) — 15.
     pub slot_min: usize,
-    /// آخرین اسلات کشف (۰-مبنا) — ۱۶.
+    /// Last discovery slot (zero-based) — 16.
     pub slot_max: usize,
     /// `ColdStartBetaAlpha0 = 0.75`.
     pub beta_alpha0: f64,
     /// `ColdStartBetaBeta0 = 49.25`.
     pub beta_beta0: f64,
-    /// دامنهٔ پاداش اکتشافی قطعی ∈ [0, این مقدار).
+    /// Deterministic exploration bonus range in [0, this value).
     pub exploration_bonus: f64,
 }
 
@@ -195,7 +195,7 @@ impl Default for ColdStartPolicy {
     }
 }
 
-/// محصول تازه‌کار نامزد اسلات کشف.
+/// A novice product, candidate for a discovery slot.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColdStartCandidate {
     pub product_id: u64,
@@ -205,7 +205,7 @@ pub struct ColdStartCandidate {
 }
 
 impl ColdStartPolicy {
-    /// واجد شرایط بوت‌استرپ سرد؟ (هیچ‌کدام از سه شرط را نباید از دست بدهد)
+    /// Cold-start eligible? (none of the three conditions may fail)
     #[must_use]
     pub fn is_eligible(&self, c: &ColdStartCandidate) -> bool {
         c.creator_followers < self.max_creator_followers
@@ -213,30 +213,30 @@ impl ColdStartPolicy {
             && c.impressions < self.max_impressions
     }
 
-    /// میانگین توزیع پیشین `Beta(alpha0, beta0)` — مقدار قطعی ۰٫۰۱۵.
+    /// Mean of the `Beta(alpha0, beta0)` prior — the deterministic 0.015.
     #[must_use]
     pub fn beta_prior_mean(&self) -> f64 {
         self.beta_alpha0 / (self.beta_alpha0 + self.beta_beta0)
     }
 
-    /// امتیاز اولویت قطعی: میانگین `Beta` + پاداش اکتشافی `SplitMix64`.
+    /// Deterministic priority score: `Beta` mean + `SplitMix64` exploration bonus.
     ///
-    /// Upstream از نمونه‌گیری Thompson (`Beta.sample(rng)`) استفاده می‌کند؛
-    /// نسخهٔ کیان **قطعی** است تا رتبه‌بندی بازتولیدپذیر بماند — همان
-    /// میانگین `0.015` به‌عنوان پایه و یک لرزش اکتشافی ∈ [0, 0.01) مشتق
-    /// از شناسهٔ محصول، طوری که کاندیداهای هم‌ارز مساوی نمانند.
+    /// Upstream uses Thompson sampling (`Beta.sample(rng)`);
+    /// the Kian version is **deterministic** to keep ranking reproducible — the same
+    /// `0.015` mean as the base plus an exploration jitter in [0, 0.01) derived
+    /// from the product id so that equivalent candidates do not remain tied.
     #[must_use]
     pub fn priority_score(&self, c: &ColdStartCandidate) -> f64 {
         self.beta_prior_mean() + self.exploration_bonus * splitmix64_unit(c.product_id)
     }
 }
 
-/// `SplitMix64` — مولد شبه‌تصادفی قطعی و بدونوابسته (پاداش اکتشافی).
-// خروجی >> 11 دقیقاً ۵۳ بیت معنادار دارد؛ تبدیل به f64 بدون خطاست اما
-// clippy نمی‌تواند این را اثبات کند — اجازهٔ هدفمند طبق قرارداد ledger.rs.
+/// `SplitMix64` — a deterministic, stateless pseudo-random generator (exploration bonus).
+// the >> 11 output has exactly 53 significant bits; converting to f64 is lossless but
+// clippy cannot prove it — a targeted allow per the ledger.rs contract.
 #[allow(clippy::cast_precision_loss)]
 fn splitmix64_unit(seed: u64) -> f64 {
-    // >> 11 → عدد صحیح ۵۳ بیتی؛ تقسیم بر 2^53 → ∈ [0, 1)
+    // >> 11 → a 53-bit integer; divided by 2^53 → in [0, 1)
     ((splitmix64(seed) >> 11) as f64) / ((1u64 << 53) as f64)
 }
 
@@ -247,20 +247,20 @@ fn splitmix64(seed: u64) -> u64 {
     z ^ (z >> 31)
 }
 
-/// یک ردیف رتبه‌بندی‌شدهٔ بازار — ورودی/خروجی تزریق سرد.
+/// One ranked market row — input/output of the cold injection.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RankedProduct {
     pub product_id: u64,
-    /// امتیاز فیوژن نهایی (`fuse_score`).
+    /// The final fusion score (`fuse_score`).
     pub score: f64,
 }
 
-/// تزریق قطعی کاندیداهای سرد به اسلات‌های کشف `slot_min..=slot_max`.
+/// Deterministic injection of cold candidates into discovery slots `slot_min..=slot_max`.
 ///
-/// * فقط کاندیداهای واجد شرایط، مرتبِ نزولیِ `priority_score`، در نظر
-///   گرفته می‌شوند (تا `slot_max - slot_min + 1` مورد).
-/// * لیست ورودی باید نزولیِ امتیاز باشد (قرارداد caller پس از مرتب‌سازی).
-/// * طول خروجی = ورودی + تعداد تزریق‌ها — هیچ محصولی حذف نمی‌شود.
+/// * Only eligible candidates, sorted by descending `priority_score`, are
+///   considered (up to `slot_max - slot_min + 1` items).
+/// * The input list must be score-descending (the caller's contract after sorting).
+/// * Output length = input + number of injections — no product is ever dropped.
 #[must_use]
 pub fn inject_cold_start(
     policy: &ColdStartPolicy,
@@ -272,7 +272,7 @@ pub fn inject_cold_start(
         .filter(|c| policy.is_eligible(c))
         .map(|c| (*c, policy.priority_score(c)))
         .collect();
-    // نزولی اولویت؛ گرهٔ تساوی با شناسهٔ کوچک‌تر قطعی می‌شود تا مرتب‌سازی بازتولیدپذیر بماند.
+    // priority-descending; ties resolve deterministically to the smaller id so sorting stays reproducible.
     eligible.sort_by(|a, b| {
         b.1.total_cmp(&a.1).then_with(|| a.0.product_id.cmp(&b.0.product_id))
     });
@@ -290,7 +290,7 @@ pub fn inject_cold_start(
         if idx <= out.len() {
             out.insert(idx, injected);
         } else {
-            // لیست کوتاه‌تر از اسلات کشف است — در انتها می‌آید، نه حذف.
+            // the list is shorter than the discovery slots — injections go at the end, nothing dropped.
             out.push(injected);
         }
     }
@@ -305,7 +305,7 @@ mod tests {
         ViralEngagementWeights::default()
     }
 
-    /// وزن‌های پورت‌شده دقیقاً با `param.rs` برابرند.
+    /// The ported weights equal `param.rs` exactly.
     #[test]
     fn weights_match_upstream_param_rs() {
         let w = weights();
@@ -329,7 +329,7 @@ mod tests {
         assert_eq!(w.report, -234.0);
     }
 
-    /// غلبهٔ کپی‌لینک: +20.0 و حدود ۲۸ برابرِ favorite=0.708.
+    /// Copy-link dominance: +20.0, about 28x favorite=0.708.
     #[test]
     fn copy_link_dominance_is_28x_over_favorite() {
         let copy_sig = ProductSignals { share_via_copy_link: 1.0, ..ProductSignals::default() };
@@ -344,13 +344,13 @@ mod tests {
             (27.0..29.0).contains(&ratio),
             "copy-link must be ~28x favorite, got {ratio}"
         );
-        // پاسخ دوسویه (۲۰٫۰) هم‌تراز کپی‌لینک و بالاتر از هر سیگنال تکی دیگر.
+        // bidirectional reply (20.0) matches copy-link and beats every other single signal.
         let mutual = ProductSignals { reply: 1.0, bidirectional_reply: true, ..ProductSignals::default() };
         assert_eq!(score_with_defaults(&mutual), 20.0);
     }
 
-    /// سرکوب جریمهٔ منفی: یک گزارش، محصول را زیر صفر می‌برد و پایین‌تر از
-    /// محصولِ بی‌سیگنالِ تمیز می‌نشاند — حتی اگر لایک و کپی‌لینک هم داشته باشد.
+    /// Negative-penalty suppression: one report pushes the product below zero, seating it under
+    /// the clean signal-free product — even if it also has likes and copy-links.
     #[test]
     fn negative_penalty_suppresses_reported_product() {
         let reported = ProductSignals {
@@ -370,7 +370,7 @@ mod tests {
             "clean product must outrank reported one: {s_clean} vs {s_reported}"
         );
 
-        // ترتیب قاطعیت جریمه‌ها: report(-234) > mute(-58.8) > not_interested(-53.07)
+        // penalty severity order: report(-234) > mute(-58.8) > not_interested(-53.07)
         // > block(-31.2) > not_dwelled(-0.02)
         let r = score_with_defaults(&ProductSignals { report: 1.0, ..ProductSignals::default() });
         let m = score_with_defaults(&ProductSignals { mute_creator: 1.0, ..ProductSignals::default() });
@@ -380,7 +380,7 @@ mod tests {
         assert!(r < m && m < ni && ni < b && b < nd);
     }
 
-    /// واجد شرایط بودن سرد: مرزهای دقیق <50k فالوور، ≤7200s، <200 ایمپرشن.
+    /// Cold eligibility: exact thresholds <50k followers, <=7200s, <200 impressions.
     #[test]
     fn cold_start_eligibility_boundaries() {
         let policy = ColdStartPolicy::default();
@@ -400,7 +400,7 @@ mod tests {
         assert!(!policy.is_eligible(&too_seen));
     }
 
-    /// میانگین پیشین Beta(0.75, 49.25) دقیقاً ۰٫۰۱۵ و امتیاز اولویت قطعی.
+    /// The Beta(0.75, 49.25) prior mean is exactly 0.015 and the priority score is deterministic.
     #[test]
     fn cold_start_priority_is_deterministic_and_bounded() {
         let policy = ColdStartPolicy::default();
@@ -421,7 +421,7 @@ mod tests {
             "score < mean + exploration bonus ceiling"
         );
 
-        // دو محصول متفاوت — لرزش اکتشافی آن‌ها را جدا می‌کند (تقریباً همیشه).
+        // two distinct products — the exploration jitter separates them (almost always).
         let mut distinct = 0;
         for id in 1..64u64 {
             let other = ColdStartCandidate { product_id: id, ..c };
@@ -432,10 +432,10 @@ mod tests {
         assert!(distinct > 32, "exploration bonus must spread scores");
     }
 
-    /// تزریق سرد: دو برندهٔ برتر (بالاترین اولویت قطعی) دقیقاً در اسلات‌های
-    /// ۱۵ و ۱۶ می‌نشینند و هیچ آیتم رتبه‌بندی‌شده‌ای حذف نمی‌شود.
+    /// Cold injection: the two top winners (highest deterministic priority) land exactly in slots
+    /// 15 and 16 and no ranked item is dropped.
     #[test]
-    #[allow(clippy::cast_precision_loss)] // فهرست ۳۰تایی نزولی امتیاز — دقت دوگانهٔ کافی
+    #[allow(clippy::cast_precision_loss)] // a 30-item score-descending list — f64 precision suffices
     fn cold_start_slot_injection_15_and_16() {
         let policy = ColdStartPolicy::default();
         let ranked: Vec<RankedProduct> = (0u64..30)
@@ -454,12 +454,12 @@ mod tests {
         let candidates = [
             ColdStartCandidate { product_id: 500, ..base },
             ColdStartCandidate { product_id: 700, ..base },
-            ColdStartCandidate { product_id: 900, ..base }, // فقط ۲ اسلات هست
-            ColdStartCandidate { product_id: 999, creator_followers: 500_000, ..base }, // معروف
+            ColdStartCandidate { product_id: 900, ..base }, // only 2 slots exist
+            ColdStartCandidate { product_id: 999, creator_followers: 500_000, ..base }, // famous
         ];
 
-        // انتظار = دو کاندیدای واجدِ شرایط با بالاترین اولویت قطعی
-        // (همان گره‌گشاییِ تزریق: نزولی امتیاز، سپس نزولی‌نبودن بر شناسهٔ کوچک‌تر).
+        // expectation = the two eligible candidates with the highest deterministic priority
+        // (the same tie-breaking as the injection: score-descending, then smaller id).
         let mut priorities: Vec<(f64, u64)> = [500u64, 700, 900]
             .map(|id| {
                 (
@@ -481,7 +481,7 @@ mod tests {
             out.iter().all(|p| p.product_id != 999),
             "famous creator must never be injected"
         );
-        // ترتیب نسبی آیتم‌های اصلی حفظ شده — فقط یک پله جابه‌جایی.
+        // the original items' relative order is preserved — only a one-step shift.
         let originals: Vec<u64> = out
             .iter()
             .filter(|p| p.product_id >= 1_000)
@@ -491,7 +491,7 @@ mod tests {
         assert_eq!(originals, expected);
     }
 
-    /// لیست کوتاه‌تر از اسلات کشف — تزریق در انتها، بدون هراس.
+    /// list shorter than the discovery slots — injections at the end, nothing at risk.
     #[test]
     fn injection_handles_short_lists() {
         let policy = ColdStartPolicy::default();
@@ -507,8 +507,8 @@ mod tests {
         assert_eq!(out[1].product_id, 2, "falls to the end when list < slot");
     }
 
-    /// لرزش اکتشافی باید صفر نباشد و در بازهٔ مجاز بماند — اگر `SplitMix64`
-    /// خراب شود، همهٔ کاندیدها مساوی می‌شوند و اکتشاف می‌میرد.
+    /// The exploration jitter must be non-zero and stay within range — if `SplitMix64`
+    /// broke, all candidates would tie and exploration would die.
     #[test]
     fn exploration_bonus_is_real_and_bounded() {
         let policy = ColdStartPolicy::default();

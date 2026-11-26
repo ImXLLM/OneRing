@@ -1,10 +1,10 @@
-//! پیاده‌سازی HTTP واقعی [`KernelPort`] — کلاینت کرنل برای شِل طول‌کشی.
+//! The real HTTP implementation of [`KernelPort`] — the kernel client for the polling shell.
 //!
-//! * `POST /api/v1/auth/telegram` با initData ضرب‌شده — **همان مسیر رسمی
-//!   هویت مینی‌اپ**؛ هیچ مسیر جانبی وجود ندارد.
-//! * `GET /api/v1/me` با Bearer — تراز/قفل.
-//! * `GET /api/v1/economy` — عمومی (مادهٔ ۶).
-//! * توکن بات فقط برای ضرب initData استفاده می‌شود؛ هرگز در لاگ/URL نمی‌آید.
+//! * `POST /api/v1/auth/telegram` with signed initData — **the same official
+//!   mini-app identity path**; no side path exists.
+//! * `GET /api/v1/me` with Bearer — balance/locks.
+//! * `GET /api/v1/economy` — public (article 6).
+//! * The bot token is used only to sign initData; it never appears in logs/URLs.
 
 use std::time::Duration;
 
@@ -15,12 +15,12 @@ use serde_json::json;
 
 use crate::port::{BotEconomy, BotError, BotMe, KernelPort};
 
-/// کلاینت کرنل — نگه‌دارندهٔ توکن برای ضرب initData.
+/// Kernel client — holds the token for signing initData.
 pub struct KernelHttpClient {
     http: reqwest::Client,
-    /// پایهٔ کرنل — مثل `http://127.0.0.1:8088`.
+    /// Kernel base — e.g. `http://127.0.0.1:8088`.
     base_url: String,
-    /// توکن بات — فقط ضرب initData؛ هرگز لاگ نمی‌شود.
+    /// Bot token — signs initData only; never logged.
     bot_token: String,
 }
 
@@ -65,10 +65,10 @@ struct EconomyWire {
 }
 
 impl KernelHttpClient {
-    /// ساخت — timeout ۱۵ ثانیه؛ rustls (webpki-roots).
+    /// Build — 15-second timeout; rustls (webpki-roots).
     ///
     /// # Errors
-    /// ساخت کلاینت TLS ممکن است شکست بخورد.
+    /// TLS client construction can fail.
     pub fn new(base_url: &str, bot_token: &str) -> reqwest::Result<Self> {
         let http = reqwest::Client::builder()
             .timeout(Duration::from_secs(15))
@@ -77,14 +77,14 @@ impl KernelHttpClient {
         Ok(Self { http, base_url: base_url.trim_end_matches('/').to_owned(), bot_token: bot_token.to_owned() })
     }
 
-    /// نگاشت پاسخ کرنل به [`BotError`] — پیام خام کرنل صادقانه می‌آید ولی
-    /// توکن/کلید هرگز در آن نیست (قرارداد پاکت خطای M2).
+    /// Map a kernel response to [`BotError`] — the raw kernel message comes through honestly but
+    /// never contains a token/key (the M2 error envelope contract).
     async fn map_err(res: reqwest::Response) -> BotError {
         let body: serde_json::Value = res.json().await.unwrap_or(serde_json::json!({}));
         let err = &body["error"];
         BotError::Kernel {
             code: err["code"].as_str().unwrap_or("HTTP_ERROR").to_owned(),
-            message: err["message"].as_str().unwrap_or("کرنل پاسخ نامعتبر داد").to_owned(),
+            message: err["message"].as_str().unwrap_or("\u{6a9}\u{631}\u{646}\u{644} \u{67e}\u{627}\u{633}\u{62e} \u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631} \u{62f}\u{627}\u{62f}").to_owned(),
         }
     }
 }
@@ -121,10 +121,10 @@ impl KernelPort for KernelHttpClient {
         username: Option<&str>,
         now_secs: i64,
     ) -> Result<BotMe, BotError> {
-        // ۱) ضرب initData از کانال معتمد (بات دارندهٔ توکن است)
+        // 1) Sign initData from the trusted channel (the bot holds the token)
         let init_data =
             build_bot_init_data(&self.bot_token, telegram_id, username, now_secs);
-        // ۲) نشست از همان مسیر رسمی مینی‌اپ
+        // 2) Session via the same official mini-app path
         let auth_url = format!("{}/api/v1/auth/telegram", self.base_url);
         let res = self
             .http
@@ -137,7 +137,7 @@ impl KernelPort for KernelHttpClient {
             return Err(Self::map_err(res).await);
         }
         let auth: AuthWire = res.json().await.map_err(|e| BotError::Transport(e.to_string()))?;
-        // ۳) نمای من با Bearer
+        // 3) The me view with Bearer
         let me_url = format!("{}/api/v1/me", self.base_url);
         let res = self
             .http
@@ -164,8 +164,8 @@ impl KernelPort for KernelHttpClient {
 mod tests {
     use super::*;
 
-    /// initData ضرب‌شده توسط کلاینت، طبق الگوریتم رسمی تأیید می‌شود —
-    /// هویت یک مسیر دارد، نه دو.
+    /// The client-signed initData is verified per the official algorithm —
+    /// identity has one path, not two.
     #[test]
     fn minted_init_data_is_official_scheme() {
         let client = KernelHttpClient::new("http://127.0.0.1:8088/", "7000000000:TEST").expect("client");
@@ -175,19 +175,19 @@ mod tests {
                 .expect("verifies");
         assert_eq!(identity.user_id, "4242");
         assert_eq!(identity.username.as_deref(), Some("kia"));
-        // base_url نرمال شده — بدون اسلش انتهایی
+        // normalized base_url — no trailing slash
         assert_eq!(client.base_url, "http://127.0.0.1:8088");
     }
 
-    /// نگاشت خطا — کد کرنل می‌آید؛ متن کاربر فنی نیست و رازی ندارد.
+    /// Error mapping — the kernel code comes through; the user text is non-technical and secret-free.
     #[test]
     fn bot_error_user_text_is_persian_and_secret_free() {
         let e = BotError::Kernel { code: "IDENTITY_DISABLED".to_owned(), message: "x".to_owned() };
-        assert!(e.user_text().contains("غیرفعال"));
+        assert!(e.user_text().contains("\u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644}"));
         let t = BotError::Transport("boom".to_owned());
-        assert!(t.user_text().contains("کرنل در دسترس نیست"));
+        assert!(t.user_text().contains("\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a}"));
         assert!(!t.user_text().contains("boom"));
         let s = BotError::Kernel { code: "SESSION_EXPIRED".to_owned(), message: "y".to_owned() };
-        assert!(s.user_text().contains("منقضی"));
+        assert!(s.user_text().contains("\u{645}\u{646}\u{642}\u{636}\u{6cc}"));
     }
 }

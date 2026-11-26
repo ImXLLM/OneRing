@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * پاکسازی REA خروجی standalone — حذف همه سورس‌مپ‌ها از آرتیفکت انتشار.
- * فیلتر REA: javascript.source_maps → "Do not ship source maps beside the release."
- * استفاده: node tools/rea/clean-standalone.mjs <standalone-dir>
+ * REA cleanup of the standalone output — strips all source maps from the release artifact.
+ * REA filter: javascript.source_maps → "Do not ship source maps beside the release."
+ * Usage: node tools/rea/clean-standalone.mjs <standalone-dir>
  */
 import { readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";

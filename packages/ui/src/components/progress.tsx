@@ -2,13 +2,13 @@ import { type HTMLAttributes } from "react";
 import { cn } from "../lib/utils";
 
 interface ProgressProps extends HTMLAttributes<HTMLDivElement> {
-  /** مقدار بین ۰ تا ۱۰۰ */
+  /** Value between 0 and 100 */
   value?: number;
-  /** رنگ پرکننده: royal (پیش‌فرض) یا gold (Din) */
+  /** Fill color: royal (default) or gold (Din) */
   tone?: "royal" | "gold";
 }
 
-/** نوار پیشرفت RTL-آگاه — از سمت راست پر می‌شود */
+/** RTL-aware progress bar — fills from the right */
 export function Progress({ className, value = 0, tone = "royal", ...props }: ProgressProps) {
   const clamped = Math.min(100, Math.max(0, value));
   return (

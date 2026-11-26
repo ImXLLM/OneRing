@@ -1,55 +1,55 @@
-//! هستهٔ خالص orchestrator — فرمان‌ها، سقف نرخ با ساعت تزریقی، برش پیام.
+//! The pure orchestrator kernel — commands, rate limiting with an injected clock, message truncation.
 //!
-//! قواعد:
-//! * **صفر I/O** — داده فقط از [`KernelPort`] می‌آید؛ خروجی فقط [`BotAction`].
-//! * سقف نرخ per-chat با ساعت تزریقی (`now_ms`) — آفلاین‌تست‌پذیر؛ هشدار یک‌بار
-//!   در هر پنجره (پاسخ به اسپم، خودش اسپم نمی‌سازد).
-//! * برش پیام روی مرز کاراکتر — سقف سخت تلگرام ۴۰۹۶.
-//! * توکن بات هرگز وارد متن‌ها نمی‌شود (تست صریح؛ توکن اساساً اینجا نیست).
-//! * فرمان‌های شهروند (`/balance`، `/me`) هویت را از کانال معتمد می‌گیرند —
-//!   initData ضرب می‌شود و مسیر رسمی `POST /auth/telegram` طی می‌شود؛ از
-//!   بدنهٔ کاربر هرگز.
+//! Rules:
+//! * **Zero I/O** — data comes only from [`KernelPort`]; output is only [`BotAction`].
+//! * Per-chat rate limit with an injected clock (`now_ms`) — offline-testable; one warning
+//!   per window (it replies to spam without producing spam itself).
+//! * Message truncation on a character boundary — the Telegram hard cap is 4096.
+//! * The bot token never enters any text (explicit test; the token is not here at all).
+//! * Citizen commands (`/balance`, `/me`) take identity from the trusted channel —
+//!   initData is HMAC-verified and the official `POST /auth/telegram` path is taken; never
+//!   from the user body.
 
 use std::collections::{HashMap, VecDeque};
 
 use crate::port::KernelPort;
 use crate::update::BotUpdate;
 
-/// سقف سخت طول پیام تلگرام.
+/// The Telegram message-length hard cap.
 pub const TELEGRAM_MAX_CHARS: usize = 4096;
 
-/// یک پیام با دکمه‌های لینک اختیاری — تنها کنشی که بات می‌کند.
+/// A message with optional link buttons — the only action the bot takes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BotAction {
-    /// چت مقصد.
+    /// Destination chat.
     pub chat_id: i64,
-    /// متن (RTL فارسی، بدون راز).
+    /// Text (Persian RTL, no secrets).
     pub text: String,
-    /// دکمه‌های inline لینک (یک ردیف شیشه‌ای — ورود به مینی‌اپ و بازار).
+    /// Inline link buttons (one glass row — mini-app and market entry).
     pub links: Vec<LinkButton>,
 }
 
-/// دکمهٔ لینک inline.
+/// One inline link button.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LinkButton {
-    /// برچسب دکمه.
+    /// Button label.
     pub label: String,
-    /// URL (https یا t.me).
+    /// URL (https or t.me).
     pub url: String,
 }
 
-/// سیاست بات — از env شِل می‌آید؛ هیچ رازی در متن‌ها نیست.
+/// Bot policy — comes from the shell env; no secrets in any text.
 #[derive(Debug, Clone)]
 pub struct BotPolicy {
-    /// نام کاربری بات (بدون `@`) — برای نرمال‌سازی `/cmd@Bot`.
+    /// Bot username (without `@`) — for `/cmd@Bot` normalization.
     pub bot_username: Option<String>,
-    /// URL مینی‌اپ — دکمهٔ ورود.
+    /// Mini-app URL — the entry button.
     pub miniapp_url: String,
-    /// پنجرهٔ سقف نرخ به میلی‌ثانیه.
+    /// Rate-limit window in milliseconds.
     pub rate_window_ms: u64,
-    /// بیشینهٔ پیام در هر پنجره per-chat.
+    /// Max messages per window, per chat.
     pub rate_max_per_window: u32,
-    /// سقف طول پاسخ (≤ ۴۰۹۶).
+    /// Reply length cap (<= 4096).
     pub reply_max_chars: usize,
 }
 
@@ -65,51 +65,51 @@ impl Default for BotPolicy {
     }
 }
 
-/// هستهٔ خالص بات — بدون I/O، بدون راز در خروجی.
+/// The pure bot kernel — no I/O, no secrets in output.
 pub struct BotCore {
     policy: BotPolicy,
-    /// زمان‌های ارسال اخیر per-chat.
+    /// Recent send times per chat.
     stamps: HashMap<i64, VecDeque<u64>>,
-    /// آخرین هشدار نرخ per-chat — یک هشدار در هر پنجره.
+    /// Last rate warning per chat — one warning per window.
     last_warn: HashMap<i64, u64>,
 }
 
 impl BotCore {
-    /// ساخت با سیاست.
+    /// Build with a policy.
     #[must_use]
     pub fn new(policy: BotPolicy) -> Self {
         Self { policy, stamps: HashMap::new(), last_warn: HashMap::new() }
     }
 
-    /// سیاست (نمایشی).
+    /// The policy (for display).
     #[must_use]
     pub fn policy(&self) -> &BotPolicy {
         &self.policy
     }
 
-    /// پردازش یک آپدیت — قلب بات. خالص: هر اثر جانبی فقط `BotAction`.
+    /// Process one update — the heart of the bot. Pure: every side effect is a `BotAction` only.
     ///
-    /// `now_ms` از ساعت تزریقی شِل می‌آید (آفلاین‌تست‌پذیر).
+    /// `now_ms` comes from the injected shell clock (offline-testable).
     pub async fn handle(
         &mut self,
         update: &BotUpdate,
         now_ms: u64,
         port: &dyn KernelPort,
     ) -> Vec<BotAction> {
-        // ۱) سقف نرخ per-chat — هشدار یک‌بار در پنجره
+        // 1) per-chat rate limit — one warning per window
         match self.rate_verdict(update.chat_id, now_ms) {
             RateVerdict::Reject { warn: Some((chat, retry_ms)) } => {
                 let secs = (retry_ms / 1000).max(1);
                 return vec![Action::text(
                     chat,
-                    format!("کمی آرام‌تر — پس از {secs} ثانیه دوباره بپرسید. /help"),
+                    format!("\u{6a9}\u{645}\u{6cc} \u{622}\u{631}\u{627}\u{645}‌\u{62a}\u{631} — \u{67e}\u{633} \u{627}\u{632} {secs} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{628}\u{67e}\u{631}\u{633}\u{6cc}\u{62f}. /help"),
                 )];
             }
             RateVerdict::Reject { warn: None } => return Vec::new(),
             RateVerdict::Allow => {}
         }
 
-        // ۲) مسیریابی فرمان (با نرمال‌سازی پسوند @Bot)
+        // 2) command routing (with @Bot-suffix normalization)
         let cmd = update.normalized_command(self.policy.bot_username.as_deref());
         let actions = match cmd.as_deref() {
             Some("start") => vec![self.welcome(update.chat_id, None)],
@@ -121,20 +121,20 @@ impl BotCore {
             Some("me") => vec![self.me(update.chat_id, update, now_ms, port).await],
             Some(_) => vec![Action::text(
                 update.chat_id,
-                "این دستور را ناشناخته بودم 🤔 — با /help فهرست فرمان‌ها را ببین.",
+                "\u{627}\u{6cc}\u{646} \u{62f}\u{633}\u{62a}\u{648}\u{631} \u{631}\u{627} \u{646}\u{627}\u{634}\u{646}\u{627}\u{62e}\u{62a}\u{647} \u{628}\u{648}\u{62f}\u{645} 🤔 — \u{628}\u{627} /help \u{641}\u{647}\u{631}\u{633}\u{62a} \u{641}\u{631}\u{645}\u{627}\u{646}‌\u{647}\u{627} \u{631}\u{627} \u{628}\u{628}\u{6cc}\u{646}.",
             )],
-            // پیام متنی عادی = نخست پاسخ‌گر فوری FAQ (صفر توکن — پورت بات هرمس؛
-            // پوشهٔ ۰۳ گنجینه)؛ اگر هیچ قلابی نخورد → فرصت طلایی معرفی همان
-            // خوش‌آمدِ جذابِ /start
+            // a plain text message = first the instant FAQ responder (zero tokens — a port of the Hermes bot;
+            // vault folder 03); if nothing hooks → the golden opportunity to pitch the same engaging
+            // /start welcome
             None => {
                 if let Some(answer) = kian_hermes::match_instant_faq(&update.text) {
                     vec![Action::text(update.chat_id, answer.to_owned())]
                 } else {
-                    vec![self.welcome(update.chat_id, Some("پیامت را گرفتم! 👋"))]
+                    vec![self.welcome(update.chat_id, Some("\u{67e}\u{6cc}\u{627}\u{645}\u{62a} \u{631}\u{627} \u{6af}\u{631}\u{641}\u{62a}\u{645}! 👋"))]
                 }
             }
         };
-        // ۳) برش روی مرز کاراکتر — سقف سیاست، سقف سخت تلگرام
+        // 3) truncation on a character boundary — the policy cap, the Telegram hard cap
         actions
             .into_iter()
             .map(|mut a| {
@@ -144,9 +144,9 @@ impl BotCore {
             .collect()
     }
 
-    // ── سقف نرخ ─────────────────────────────────────────────────────────────
+    // ── rate limit ─────────────────────────────────────────────────────────────
 
-    /// حکم نرخ per-chat — پنجرهٔ لغزان با ساعت تزریقی.
+    /// The per-chat rate verdict — a sliding window with the injected clock.
     fn rate_verdict(&mut self, chat_id: i64, now_ms: u64) -> RateVerdict {
         let window = self.policy.rate_window_ms;
         let max = usize::try_from(self.policy.rate_max_per_window).unwrap_or(usize::MAX);
@@ -158,7 +158,7 @@ impl BotCore {
             stamps.push_back(now_ms);
             return RateVerdict::Allow;
         }
-        // عبور از سقف — هشدار فقط یک‌بار در هر پنجره
+        // over the cap — warn only once per window
         let warned = self.last_warn.get(&chat_id).is_some_and(|w| now_ms - *w <= window);
         if warned {
             return RateVerdict::Reject { warn: None };
@@ -168,13 +168,13 @@ impl BotCore {
         RateVerdict::Reject { warn: Some((chat_id, retry_ms)) }
     }
 
-    // ── فرمان‌ها ─────────────────────────────────────────────────────────────
+    // ── commands ─────────────────────────────────────────────────────────────
 
-    /// پیام خوش‌آمد سه‌خطی — ارزش پیشنهادی پلتفرم + دکمه‌های شیشه‌ای ورود.
+    /// The three-line welcome message — the platform value proposition + glass entry buttons.
     ///
-    /// برای `/start` بدون پیش‌گفتار و برای پیام متنی عادی با یک سلام کوتاه
-    /// فرستاده می‌شود؛ در هر دو حالت دکمه‌های مستقیم ورود به مینی‌اپ و بازار
-    /// پایین پیام شناور است تا کاربر با یک تپ وارد شود.
+    /// Sent for `/start` with no preamble, and for a plain text message with a short greeting;
+    /// in both cases the direct mini-app and market entry buttons
+    /// float under the message so the user enters with a single tap.
     fn welcome(&self, chat_id: i64, preface: Option<&str>) -> BotAction {
         let mut text = String::new();
         if let Some(p) = preface {
@@ -183,11 +183,11 @@ impl BotCore {
         }
         text.push_str(
             concat!(
-                "✨ به پادشاهی KIAN خوش آمدی!\n\n",
-                "۱. با هوش مصنوعی در ۱ دقیقه وب‌اپ و ابزار HTML بساز ✨\n",
-                "۲. لینک فروشت را پخش کن و کریپتو بگیر 💎\n",
-                "۳. یا لینک محصولات بقیه را پخش کن و تا ۵۰٪ پورسانت آنی بگیر 🔗\n\n",
-                "همین حالا شروع کن 👇 (راهنما: /help)"
+                "✨ \u{628}\u{647} \u{67e}\u{627}\u{62f}\u{634}\u{627}\u{647}\u{6cc} KIAN \u{62e}\u{648}\u{634} \u{622}\u{645}\u{62f}\u{6cc}!\n\n",
+                "\u{6f1}. \u{628}\u{627} \u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc} \u{62f}\u{631} \u{6f1} \u{62f}\u{642}\u{6cc}\u{642}\u{647} \u{648}\u{628}‌\u{627}\u{67e} \u{648} \u{627}\u{628}\u{632}\u{627}\u{631} HTML \u{628}\u{633}\u{627}\u{632} ✨\n",
+                "\u{6f2}. \u{644}\u{6cc}\u{646}\u{6a9} \u{641}\u{631}\u{648}\u{634}\u{62a} \u{631}\u{627} \u{67e}\u{62e}\u{634} \u{6a9}\u{646} \u{648} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} \u{628}\u{6af}\u{6cc}\u{631} 💎\n",
+                "\u{6f3}. \u{6cc}\u{627} \u{644}\u{6cc}\u{646}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{627}\u{62a} \u{628}\u{642}\u{6cc}\u{647} \u{631}\u{627} \u{67e}\u{62e}\u{634} \u{6a9}\u{646} \u{648} \u{62a}\u{627} \u{6f5}\u{6f0}\u{66a} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{622}\u{646}\u{6cc} \u{628}\u{6af}\u{6cc}\u{631} 🔗\n\n",
+                "\u{647}\u{645}\u{6cc}\u{646} \u{62d}\u{627}\u{644}\u{627} \u{634}\u{631}\u{648}\u{639} \u{6a9}\u{646} 👇 (\u{631}\u{627}\u{647}\u{646}\u{645}\u{627}: /help)"
             ),
         );
         let market_url = format!("{}/market", self.policy.miniapp_url.trim_end_matches('/'));
@@ -196,39 +196,39 @@ impl BotCore {
             text,
             vec![
                 LinkButton {
-                    label: "🚀 ورود به مینی‌اپ KIAN".to_owned(),
+                    label: "🚀 \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN".to_owned(),
                     url: self.policy.miniapp_url.clone(),
                 },
-                LinkButton { label: "🛒 بازار KIAN".to_owned(), url: market_url },
+                LinkButton { label: "🛒 \u{628}\u{627}\u{632}\u{627}\u{631} KIAN".to_owned(), url: market_url },
             ],
         )
     }
 
-    /// `/link` — لینک مینی‌اپ + دکمه.
+    /// `/link` — mini-app link + button.
     fn link(&self, chat_id: i64) -> BotAction {
         Action::with_links(
             chat_id,
-            format!("مینی‌اپ KIAN:\n{}", self.policy.miniapp_url),
+            format!("\u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} KIAN:\n{}", self.policy.miniapp_url),
             vec![LinkButton {
-                label: "باز کردن مینی‌اپ".to_owned(),
+                label: "\u{628}\u{627}\u{632} \u{6a9}\u{631}\u{62f}\u{646} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}".to_owned(),
                 url: self.policy.miniapp_url.clone(),
             }],
         )
     }
 
-    /// `/economy` — اقتصاد ملی از کرنل (مادهٔ ۶).
+    /// `/economy` — the national economy from the kernel (Article 6).
     async fn economy(&self, chat_id: i64, port: &dyn KernelPort) -> BotAction {
         match port.economy().await {
             Ok(e) => Action::text(
                 chat_id,
                 format!(
-                    "اقتصاد ملی KIAN (مادهٔ ۶):\n\
-                     در گردش: {} Đ\n\
-                     خزانه: {} Đ\n\
-                     قفل اسکرو: {} Đ\n\
-                     کل ضرب: {} Đ — کل سوزانده: {} Đ\n\
-                     حساب‌ها: {} — امانت باز: {}\n\n\
-                     منبع: دفتر دوطرفهٔ کرنل — هیچ عددی دست‌ساز نیست.",
+                    "\u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f} \u{645}\u{644}\u{6cc} KIAN (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6}):\n\
+                     \u{62f}\u{631} \u{6af}\u{631}\u{62f}\u{634}: {} Đ\n\
+                     \u{62e}\u{632}\u{627}\u{646}\u{647}: {} Đ\n\
+                     \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648}: {} Đ\n\
+                     \u{6a9}\u{644} \u{636}\u{631}\u{628}: {} Đ — \u{6a9}\u{644} \u{633}\u{648}\u{632}\u{627}\u{646}\u{62f}\u{647}: {} Đ\n\
+                     \u{62d}\u{633}\u{627}\u{628}‌\u{647}\u{627}: {} — \u{627}\u{645}\u{627}\u{646}\u{62a} \u{628}\u{627}\u{632}: {}\n\n\
+                     \u{645}\u{646}\u{628}\u{639}: \u{62f}\u{641}\u{62a}\u{631} \u{62f}\u{648}\u{637}\u{631}\u{641}\u{647}\u{654} \u{6a9}\u{631}\u{646}\u{644} — \u{647}\u{6cc}\u{686} \u{639}\u{62f}\u{62f}\u{6cc} \u{62f}\u{633}\u{62a}‌\u{633}\u{627}\u{632} \u{646}\u{6cc}\u{633}\u{62a}.",
                     num(e.circulating),
                     num(e.treasury),
                     num(e.escrow_locked),
@@ -242,7 +242,7 @@ impl BotCore {
         }
     }
 
-    /// `/balance` — نشست شهروند از مسیر رسمی هویت، سپس تراز.
+    /// `/balance` — a citizen session via the official identity path, then the balance.
     async fn balance(
         &self,
         chat_id: i64,
@@ -255,10 +255,10 @@ impl BotCore {
             Ok(m) => Action::text(
                 chat_id,
                 format!(
-                    "تراز شما:\n\
-                     آزاد: {} Đ\n\
-                     قفل اسکرو: {} Đ\n\n\
-                     جزئیات ولت و بازار در مینی‌اپ.",
+                    "\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}:\n\
+                     \u{622}\u{632}\u{627}\u{62f}: {} Đ\n\
+                     \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648}: {} Đ\n\n\
+                     \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a} \u{648}\u{644}\u{62a} \u{648} \u{628}\u{627}\u{632}\u{627}\u{631} \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}.",
                     num(m.balance),
                     num(m.escrow_locked),
                 ),
@@ -267,7 +267,7 @@ impl BotCore {
         }
     }
 
-    /// `/me` — پروندهٔ شهروند.
+    /// `/me` — the citizen profile.
     async fn me(
         &self,
         chat_id: i64,
@@ -281,14 +281,14 @@ impl BotCore {
                 let ton = m
                     .ton_address
                     .as_deref()
-                    .map_or_else(|| "ثبت نشده (/me در مینی‌اپ)".to_owned(), str::to_owned);
+                    .map_or_else(|| "\u{62b}\u{628}\u{62a} \u{646}\u{634}\u{62f}\u{647} (/me \u{62f}\u{631} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e})".to_owned(), str::to_owned);
                 Action::text(
                     chat_id,
                     format!(
-                        "پروندهٔ شما:\n\
-                         حساب دفتر: {}\n\
+                        "\u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{634}\u{645}\u{627}:\n\
+                         \u{62d}\u{633}\u{627}\u{628} \u{62f}\u{641}\u{62a}\u{631}: {}\n\
                          username: @{}\n\
-                         آدرس TON: {}",
+                         \u{622}\u{62f}\u{631}\u{633} TON: {}",
                         m.account_id,
                         m.username.as_deref().unwrap_or("—"),
                         ton,
@@ -300,15 +300,15 @@ impl BotCore {
     }
 }
 
-// ── سازنده‌های کوچک ──────────────────────────────────────────────────────────
+// ── small constructors ──────────────────────────────────────────────────────────
 
 enum RateVerdict {
     Allow,
-    /// `warn: Some` فقط یک‌بار در پنجره؛ بعدش بی‌صدا.
+    /// `warn: Some` only once per window; silent afterwards.
     Reject { warn: Option<(i64, u64)> },
 }
 
-/// برش امن روی مرز کاراکتر — هرگز پنیکربیتی نمی‌شکند.
+/// Safe truncation on a character boundary — never splits a character in half.
 fn clip(text: String, cap: usize) -> String {
     if text.chars().count() <= cap {
         return text;
@@ -318,7 +318,7 @@ fn clip(text: String, cap: usize) -> String {
     s
 }
 
-/// سازندهٔ پرایوت اکشن‌ها — برش در `handle` انجام می‌شود.
+/// Private action constructor — truncation happens in `handle`.
 struct Action;
 
 impl Action {
@@ -330,34 +330,34 @@ impl Action {
         BotAction { chat_id, text, links }
     }
 
-    /// `/help` — فهرست فرمان‌ها (بدون نیاز به سیاست).
+    /// `/help` — the command list (no policy needed).
     fn help(chat_id: i64) -> BotAction {
         Self::text(
             chat_id,
             concat!(
-                "فرمان‌های بات KIAN:\n",
-                "/start — خوش‌آمد و ورود به مینی‌اپ\n",
-                "/balance — تراز Din و قفل اسکرو (نشست شهروند)\n",
-                "/me — پروندهٔ من (حساب دفتر، آدرس TON)\n",
-                "/economy — اقتصاد ملی (مادهٔ ۶)\n",
-                "/link — لینک مینی‌اپ\n",
-                "/id — شناسهٔ تلگرام من\n\n",
-                "هویت فقط از تلگرام می‌آید؛ رمز و کلیدی اینجا جایی وارد نمی‌شود."
+                "\u{641}\u{631}\u{645}\u{627}\u{646}‌\u{647}\u{627}\u{6cc} \u{628}\u{627}\u{62a} KIAN:\n",
+                "/start — \u{62e}\u{648}\u{634}‌\u{622}\u{645}\u{62f} \u{648} \u{648}\u{631}\u{648}\u{62f} \u{628}\u{647} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\n",
+                "/balance — \u{62a}\u{631}\u{627}\u{632} Din \u{648} \u{642}\u{641}\u{644} \u{627}\u{633}\u{6a9}\u{631}\u{648} (\u{646}\u{634}\u{633}\u{62a} \u{634}\u{647}\u{631}\u{648}\u{646}\u{62f})\n",
+                "/me — \u{67e}\u{631}\u{648}\u{646}\u{62f}\u{647}\u{654} \u{645}\u{646} (\u{62d}\u{633}\u{627}\u{628} \u{62f}\u{641}\u{62a}\u{631}\u{60c} \u{622}\u{62f}\u{631}\u{633} TON)\n",
+                "/economy — \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f} \u{645}\u{644}\u{6cc} (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6})\n",
+                "/link — \u{644}\u{6cc}\u{646}\u{6a9} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\n",
+                "/id — \u{634}\u{646}\u{627}\u{633}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{645}\u{646}\n\n",
+                "\u{647}\u{648}\u{6cc}\u{62a} \u{641}\u{642}\u{637} \u{627}\u{632} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{645}\u{6cc}‌\u{622}\u{6cc}\u{62f}\u{61b} \u{631}\u{645}\u{632} \u{648} \u{6a9}\u{644}\u{6cc}\u{62f}\u{6cc} \u{627}\u{6cc}\u{646}\u{62c}\u{627} \u{62c}\u{627}\u{6cc}\u{6cc} \u{648}\u{627}\u{631}\u{62f} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}."
             ),
         )
     }
 
-    /// `/id` — شناسهٔ تلگرام (بدون کرنل).
+    /// `/id` — the Telegram id (no kernel).
     fn ident(chat_id: i64, update: &BotUpdate) -> BotAction {
         let name = update.username.as_deref().unwrap_or("—");
         Self::text(
             chat_id,
-            format!("شناسهٔ تلگرام شما: {}\nusername: @{}", update.from_id, name),
+            format!("\u{634}\u{646}\u{627}\u{633}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{634}\u{645}\u{627}: {}\nusername: @{}", update.from_id, name),
         )
     }
 }
 
-/// قالب‌بندی عدد با جداکنندهٔ هزارگان (بی‌طرفِ لوکال — برای RTL همخوان).
+/// Number formatting with thousands separators (locale-neutral — RTL-friendly).
 fn num(n: i64) -> String {
     let s = n.abs().to_string();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
@@ -374,7 +374,7 @@ fn num(n: i64) -> String {
     out
 }
 
-// ── تست‌ها — همهٔ آفلاین با FakePort ─────────────────────────────────────────
+// ── tests — all offline with FakePort ─────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -383,7 +383,7 @@ mod tests {
     use async_trait::async_trait;
     use std::sync::Mutex;
 
-    /// پورت اسکریپت‌شده — صفر شبکه.
+    /// The scripted port — zero network.
     struct FakePort {
         economy: Mutex<Result<BotEconomy, BotError>>,
         me: Mutex<Result<BotMe, BotError>>,
@@ -459,9 +459,9 @@ mod tests {
         assert_eq!(start.len(), 1);
         assert!(!start[0].links.is_empty(), "start must carry miniapp buttons");
         assert!(start[0].text.contains("KIAN"));
-        // سه‌خط ارزش پیشنهادی + دکمهٔ بازار
-        assert!(start[0].text.contains("هوش مصنوعی"));
-        assert!(start[0].text.contains("۵۰٪ پورسانت"));
+        // three-line value proposition + market button
+        assert!(start[0].text.contains("\u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc}"));
+        assert!(start[0].text.contains("\u{6f5}\u{6f0}\u{66a} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}"));
         assert!(start[0].links.iter().any(|l| l.url.ends_with("/market")));
         let help = core.handle(&update("help"), NOW + 1, &port).await;
         assert!(help[0].text.contains("/balance"));
@@ -474,11 +474,11 @@ mod tests {
         let out = core.handle(&update("balance"), NOW, &port).await;
         assert!(out[0].text.contains("500"));
         assert!(out[0].text.contains("250"));
-        // کرنل خاموش/هویت غیرفعال → پیام صادقانه، نه عدد جعلی
+        // kernel down/identity disabled → an honest message, not a fake number
         let mut core2 = BotCore::new(BotPolicy::default());
         let broken = FakePort::broken();
         let out2 = core2.handle(&update("balance"), NOW, &broken).await;
-        assert!(out2[0].text.contains("غیرفعال"), "honest identity-disabled message");
+        assert!(out2[0].text.contains("\u{63a}\u{6cc}\u{631}\u{641}\u{639}\u{627}\u{644}"), "honest identity-disabled message");
     }
 
     #[tokio::test]
@@ -487,29 +487,29 @@ mod tests {
         let port = FakePort::ok();
         let out = core.handle(&update("economy"), NOW, &port).await;
         assert!(out[0].text.contains("1,234,567"), "thousands separator");
-        assert!(out[0].text.contains("مادهٔ ۶"));
+        assert!(out[0].text.contains("\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6}"));
         let mut core2 = BotCore::new(BotPolicy::default());
         let out2 = core2.handle(&update("economy"), NOW, &FakePort::broken()).await;
-        assert!(out2[0].text.contains("کرنل در دسترس نیست"));
+        assert!(out2[0].text.contains("\u{6a9}\u{631}\u{646}\u{644} \u{62f}\u{631} \u{62f}\u{633}\u{62a}\u{631}\u{633} \u{646}\u{6cc}\u{633}\u{62a}"));
     }
 
     #[tokio::test]
     async fn rate_limit_warns_once_then_goes_silent() {
         let mut core = BotCore::new(BotPolicy { rate_max_per_window: 3, ..BotPolicy::default() });
         let port = FakePort::ok();
-        // پیام‌های ۱..۳ مجاز
+        // messages 1..3 allowed
         for i in 0..3 {
             let out = core.handle(&update("id"), NOW + i, &port).await;
             assert_eq!(out.len(), 1, "msg {i} must pass");
         }
-        // چهارمین — هشدار یک‌بار
+        // the fourth — one warning
         let warn = core.handle(&update("id"), NOW + 4, &port).await;
         assert_eq!(warn.len(), 1);
-        assert!(warn[0].text.contains("آرام‌تر"));
-        // پنجم و ششم — بی‌صدا
+        assert!(warn[0].text.contains("\u{622}\u{631}\u{627}\u{645}‌\u{62a}\u{631}"));
+        // the fifth and sixth — silent
         assert_eq!(core.handle(&update("id"), NOW + 5, &port).await, [] as [BotAction; 0]);
         assert_eq!(core.handle(&update("id"), NOW + 6, &port).await, [] as [BotAction; 0]);
-        // پنجرهٔ جدید → باز مجاز
+        // a new window → allowed again
         let again = core.handle(&update("id"), NOW + 61_000, &port).await;
         assert_eq!(again.len(), 1);
     }
@@ -519,7 +519,7 @@ mod tests {
         let mut core = BotCore::new(BotPolicy::default());
         let port = FakePort::ok();
         let unknown = core.handle(&update("nope"), NOW, &port).await;
-        assert!(unknown[0].text.contains("ناشناخته"));
+        assert!(unknown[0].text.contains("\u{646}\u{627}\u{634}\u{646}\u{627}\u{62e}\u{62a}\u{647}"));
         let plain = core
             .handle(
                 &BotUpdate {
@@ -529,15 +529,15 @@ mod tests {
                     username: None,
                     command: None,
                     args: Vec::new(),
-                    text: "سلام".to_owned(),
+                    text: "\u{633}\u{644}\u{627}\u{645}".to_owned(),
                 },
                 NOW + 1,
                 &port,
             )
             .await;
-        // پیام متنی عادی → خوش‌آمد کامل با دکمه‌های مینی‌اپ (نه پاسخ خشک)
-        assert!(plain[0].text.contains("خوش آمدی"), "friendly welcome on plain text");
-        assert!(plain[0].text.contains("پورسانت"));
+        // a plain text message → the full welcome with mini-app buttons (not a dry reply)
+        assert!(plain[0].text.contains("\u{62e}\u{648}\u{634} \u{622}\u{645}\u{62f}\u{6cc}"), "friendly welcome on plain text");
+        assert!(plain[0].text.contains("\u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}"));
         assert!(!plain[0].links.is_empty(), "welcome carries miniapp buttons");
     }
 
@@ -547,7 +547,7 @@ mod tests {
         let port = FakePort::ok();
         let out = core.handle(&update("economy"), NOW, &port).await;
         assert!(out[0].text.chars().count() <= 40, "must truncate to policy cap");
-        // مرز کاراکتر — پنیکربیتی نمی‌شکند
+        // character boundary — never splits a character in half
         let _ = out[0].text.chars().last().expect("non-empty");
     }
 
@@ -561,12 +561,12 @@ mod tests {
         let mut u = update("balance");
         u.command = Some("balance@kiabot".to_owned());
         let out = core.handle(&u, NOW, &port).await;
-        assert!(out[0].text.contains("تراز شما"));
+        assert!(out[0].text.contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
     }
 
     #[tokio::test]
     async fn actions_never_carry_secrets() {
-        // توکن اساساً در orchestrator نیست — این تست قرارداد آینده را هم قفل می‌کند
+        // the token is not in the orchestrator at all — this test locks the future contract too
         const TOKEN: &str = "123456:ABC-TOKEN-SHOULD-NEVER-LEAK";
         let mut core = BotCore::new(BotPolicy::default());
         let port = FakePort::ok();
@@ -592,26 +592,26 @@ mod tests {
         assert_eq!(num(1000), "1,000");
     }
 
-    /// پیام متنی پرسش FAQ → پاسخ فوری صفرتوکنی؛ پیام بی‌ربط → خوش‌آمد عادی.
+    /// A FAQ question as plain text → an instant zero-token reply; an unrelated message → the regular welcome.
     #[tokio::test]
     async fn plain_text_questions_get_instant_faq_answers() {
         let mut core = BotCore::new(BotPolicy::default());
-        // پیام متنی (بدون فرمان) با کلیدواژهٔ اسکرو → پاسخ ثابت فوری
+        // a text message (no command) with the escrow keyword → the instant canned reply
         let mut u = update("");
         u.command = None;
-        u.text = "خرید با امنیت اسکرو چطوره؟".to_owned();
+        u.text = "\u{62e}\u{631}\u{6cc}\u{62f} \u{628}\u{627} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{686}\u{637}\u{648}\u{631}\u{647}\u{61f}".to_owned();
         let out = core.handle(&u, NOW, &FakePort::ok()).await;
         assert_eq!(out.len(), 1);
-        assert!(out[0].text.contains("اسکرو"), "پاسخ فوری: {}", out[0].text);
-        assert!(out[0].text.contains("پارلمان"));
-        // پیام بی‌ربط → مسیر خوش‌آمد عادی (نه FAQ)
+        assert!(out[0].text.contains("\u{627}\u{633}\u{6a9}\u{631}\u{648}"), "\u{67e}\u{627}\u{633}\u{62e} \u{641}\u{648}\u{631}\u{6cc}: {}", out[0].text);
+        assert!(out[0].text.contains("\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646}"));
+        // an unrelated message → the regular welcome path (not FAQ)
         let mut u2 = update("");
         u2.command = None;
-        u2.text = "سلام خوبی؟".to_owned();
+        u2.text = "\u{633}\u{644}\u{627}\u{645} \u{62e}\u{648}\u{628}\u{6cc}\u{61f}".to_owned();
         let out2 = core.handle(&u2, NOW, &FakePort::ok()).await;
         assert_eq!(out2.len(), 1);
-        assert!(!out2[0].text.contains("اسکرو"), "بی‌ربط نباید FAQ بگیرد");
-        // پاسخ FAQ زیر سقف برش تلگرام می‌ماند
+        assert!(!out2[0].text.contains("\u{627}\u{633}\u{6a9}\u{631}\u{648}"), "\u{628}\u{6cc}‌\u{631}\u{628}\u{637} \u{646}\u{628}\u{627}\u{6cc}\u{62f} FAQ \u{628}\u{6af}\u{6cc}\u{631}\u{62f}");
+        // the FAQ reply stays under the Telegram truncation cap
         assert!(out[0].text.chars().count() <= 4096);
     }
 }

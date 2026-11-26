@@ -1,13 +1,13 @@
-//! هندلرهای کیف پول چهارزنجیره M5 — متادیتا زنجیره‌ها، آدرس واریز کاربر و
-//! واریز USDT با چک‌سام‌های رسمی زنجیره.
+//! M5 four-chain wallet handlers — chain metadata, user deposit addresses and
+//! USDT deposits with the official chain checksums.
 //!
-//! گیت‌ها:
-//!  * متادیتا و خزانه — عمومی (شفافیت مادهٔ ۶؛ آدرس خزانه از env می‌آید).
-//!  * آدرس/واریز کاربر — نشست؛ آدرس‌ها با `kian-wallet` اعتبارسنجی می‌شوند
-//!    (`Base58Check` ترون، ۳۲بایت سولانا، `CRC16-XMODEM` تون، `EIP-55` بایننس‌چین)
-//!    — آدرس اشتباه هرگز ثبت نمی‌شود.
-//!  * تأیید/رد واریز — ادمین؛ تأیید از مسیر ضرب مادهٔ ۳ می‌گذرد (نرخ USDT از env)
-//!    — ضرب هرگز خودکار و بی‌ادمین نیست (همان قرارداد M3).
+//! Gates:
+//!  * Metadata and treasury — public (Article 6 transparency; the treasury address comes from env).
+//!  * User address/deposit — session; addresses are validated with `kian-wallet`
+//!    (Tron `Base58Check`, 32-byte Solana, TON `CRC16-XMODEM`, BNB Chain `EIP-55`)
+//!    — a wrong address is never registered.
+//!  * Deposit confirm/reject — admin; confirmation goes through the Article 3 mint path (USDT rate from env)
+//!    — minting is never automatic or admin-free (the same M3 contract).
 
 use axum::Json;
 use axum::extract::{Path, State};
@@ -28,7 +28,7 @@ use crate::handlers::parse_body;
 use crate::middleware::{require_admin, require_session};
 use crate::state::AppState;
 
-/// نگاشت خطای کیف پول → پاکت HTTP صادقانه.
+/// Map wallet errors → honest HTTP envelope.
 fn wallet_error(e: WalletError) -> ApiFailure {
     match e {
         WalletError::InvalidAddress { chain, detail } => {
@@ -41,12 +41,12 @@ fn wallet_error(e: WalletError) -> ApiFailure {
     }
 }
 
-/// تجزیهٔ زنجیره از سیم — رشتهٔ ناشناخته = 400 `INVALID_REQUEST`.
+/// Parse the chain from the wire — an unknown string = 400 `INVALID_REQUEST`.
 fn parse_chain(raw: &str) -> ApiResult<Chain> {
     Chain::from_str_raw(raw).ok_or_else(|| kian_contracts::HttpFailure::invalid_request(1).into())
 }
 
-/// نمای واریز از ردیف db — نقطهٔ واحد ساخت `UsdtDepositView`.
+/// Deposit view from the db row — the single construction point for `UsdtDepositView`.
 #[must_use]
 fn deposit_view(d: &UsdtDepositRow) -> UsdtDepositView {
     UsdtDepositView {
@@ -61,10 +61,10 @@ fn deposit_view(d: &UsdtDepositRow) -> UsdtDepositView {
     }
 }
 
-/// `GET /wallet/chains` — متادیتای چهار زنجیره + قرارداد کانونیک USDT. عمومی.
+/// `GET /wallet/chains` — metadata of the four chains + the canonical USDT contract. Public.
 ///
 /// # Errors
-/// هیچ — همیشه ۲۰۰.
+/// None — always 200.
 pub async fn chains_list() -> ApiResult<Json<ChainsResponse>> {
     let items = Chain::ALL
         .iter()
@@ -78,12 +78,12 @@ pub async fn chains_list() -> ApiResult<Json<ChainsResponse>> {
     Ok(Json(ChainsResponse { items }))
 }
 
-/// `GET /wallet/treasury` — شفافیت خزانهٔ چهار زنجیره + سیاست حراست. عمومی.
+/// `GET /wallet/treasury` — four-chain treasury transparency + custody policy. Public.
 ///
-/// آدرس‌ها فقط از env می‌آیند؛ خالی یعنی تنظیم‌نشده (صادقانه، نه مخفی).
+/// Addresses come only from env; empty means unset (honest, not hidden).
 ///
 /// # Errors
-/// هیچ — همیشه ۲۰۰ (اعتبارسنجی آدرس تنظیم‌نشده فقط فلگ صادقانه می‌دهد).
+/// None — always 200 (validation of an unset address only yields an honest flag).
 pub async fn treasury(State(state): State<Arc<AppState>>) -> ApiResult<Json<TreasuryResponse>> {
     let cfg = &state.config;
     let rows = [
@@ -103,19 +103,19 @@ pub async fn treasury(State(state): State<Arc<AppState>>) -> ApiResult<Json<Trea
         .collect();
     Ok(Json(TreasuryResponse {
         items,
-        movement_policy: "هر جابه‌جایی خزانه نیازمند لایحهٔ تصویب‌شدهٔ پارلمان است \
-                         (bill:PASSED)؛ مبالغ بالای آستانهٔ منشور رأی انسانی می‌خواهند \
-                         — مادهٔ ۶ شفافیت و مادهٔ ۷ HITL."
+        movement_policy: "\u{647}\u{631} \u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{644}\u{627}\u{6cc}\u{62d}\u{647}\u{654} \u{62a}\u{635}\u{648}\u{6cc}\u{628}‌\u{634}\u{62f}\u{647}\u{654} \u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{627}\u{633}\u{62a} \
+                         (bill:PASSED)\u{61b} \u{645}\u{628}\u{627}\u{644}\u{63a} \u{628}\u{627}\u{644}\u{627}\u{6cc} \u{622}\u{633}\u{62a}\u{627}\u{646}\u{647}\u{654} \u{645}\u{646}\u{634}\u{648}\u{631} \u{631}\u{623}\u{6cc} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{646}\u{62f} \
+                         — \u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6} \u{634}\u{641}\u{627}\u{641}\u{6cc}\u{62a} \u{648} \u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f7} HITL."
             .to_owned(),
     }))
 }
 
-/// `POST /wallet/addresses` — ثبت/به‌روزرسانی آدرس واریز کاربر. نشست. ۲۰۱.
+/// `POST /wallet/addresses` — upsert a user's deposit address. Session. 201.
 ///
-/// آدرس با چک‌سام رسمی زنجیره اعتبارسنجی می‌شود؛ آدرس بد → ۴۲۲ `INVALID_ADDRESS`.
+/// The address is validated against the official chain checksum; a bad address → 422 `INVALID_ADDRESS`.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ آدرس نامعتبر؛ 500 خطای SQL.
+/// 401 session; 400 invalid body; 422 invalid address; 500 SQL error.
 pub async fn set_address(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -147,10 +147,10 @@ pub async fn set_address(
     ))
 }
 
-/// `GET /wallet/addresses` — آدرس‌های من. نشست.
+/// `GET /wallet/addresses` — my addresses. Session.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 500 خطای SQL.
+/// 401 session; 500 SQL error.
 pub async fn my_addresses(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -172,14 +172,14 @@ pub async fn my_addresses(
     Ok(Json(MyAddressesResponse { items }))
 }
 
-/// `POST /wallet/usdt-deposits` — ثبت اثبات واریز USDT. نشست. ۲۰۱ `PENDING`.
+/// `POST /wallet/usdt-deposits` — register a USDT deposit proof. Session. 201 `PENDING`.
 ///
-/// اعتبارسنجی کامل در لبه: زنجیرهٔ معتبر، آدرس فرستنده با قواعد زنجیره، مبلغ
-/// دهدهی ≤۶ اعشار، هش ۸..=۱۲۸. همان هش روی همان زنجیره → ۴۲۲ (replay هرگز
-/// دوبار ضرب نمی‌شود).
+/// Full validation at the edge: a valid chain, sender address per chain rules, a decimal
+/// amount with ≤6 decimals, a hash of 8..=128. The same hash on the same chain → 422 (replay is
+/// never minted twice).
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ ۴۰۰ بدنهٔ نامعتبر؛ ۴۲۲ آدرس/مبلغ نامعتبر یا هش تکراری؛ 500 خطای SQL.
+/// 401 session; 400 invalid body; 422 invalid address/amount or duplicate hash; 500 SQL error.
 pub async fn create_usdt_deposit(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -236,10 +236,10 @@ pub async fn create_usdt_deposit(
     Ok((StatusCode::CREATED, Json(deposit_view(&row))))
 }
 
-/// `GET /wallet/usdt-deposits` — واریزهای من (۵۰ آخر). نشست.
+/// `GET /wallet/usdt-deposits` — my deposits (last 50). Session.
 ///
 /// # Errors
-/// ۴۰۱ نشست؛ 500 خطای SQL.
+/// 401 session; 500 SQL error.
 pub async fn list_my_usdt_deposits(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -256,13 +256,13 @@ pub async fn list_my_usdt_deposits(
     Ok(Json(UsdtDepositListResponse { items }))
 }
 
-/// `POST /wallet/usdt-deposits/{id}/confirm` — ادمین: راستی‌آزمایی + ضرب مادهٔ ۳.
+/// `POST /wallet/usdt-deposits/{id}/confirm` — admin: verification + Article 3 mint.
 ///
-/// نرخ از `KIAN_USDT_TO_DIN` (پیش‌فرض ۱۰۰۰ Đ/USDT)؛ محاسبهٔ صحیح:
-/// `micro_usdt × rate ÷ 1_000_000` — بدون float روی پول.
+/// The rate comes from `KIAN_USDT_TO_DIN` (default 1000 Đ/USDT); correct computation:
+/// `micro_usdt × rate ÷ 1_000_000` — no float on money.
 ///
 /// # Errors
-/// ۴۰۱ ادمین؛ 404 ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته یا زیر حداقل ضرب؛ 500 خطای SQL.
+/// 401 admin; 404 unknown; 422 already decided or below the mint minimum; 500 SQL error.
 pub async fn confirm_usdt_deposit(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -290,7 +290,7 @@ pub async fn confirm_usdt_deposit(
         .into());
     }
 
-    // مبلغ دیین = microUSDT × نرخ ÷ ۱٬۰۰۰٬۰۰۰ — در i128 با checked_mul برای جلوگیری از overflow i64
+    // Din amount = microUSDT × rate ÷ 1,000,000 — computed in i128 with checked_mul to prevent i64 overflow
     let rate = state.config.usdt_to_din_rate;
     let din_128 = i128::from(deposit.amount_micro)
         .checked_mul(i128::from(rate))
@@ -337,8 +337,8 @@ pub async fn confirm_usdt_deposit(
             .into()
         })?;
 
-    // ترتیب ایمن: اول ضرب با کلید یکسان‌سازی؛ فقط پس از موفقیت ضرب (یا replay
-    // موفق)، وضعیت واریز به CONFIRMED تغییر می‌کند تا در خطای سقف ضرب پول نسوزد.
+    // safe order: mint first with the idempotency key; only after the mint succeeds (or a successful
+    // replay), the deposit status flips to CONFIRMED so money never burns on a mint-cap error.
     let _mint = crate::handlers::wallet::mint_to_account(
         &state,
         &user.account_id,
@@ -359,10 +359,10 @@ pub async fn confirm_usdt_deposit(
     Ok(Json(deposit_view(&updated)))
 }
 
-/// `POST /wallet/usdt-deposits/{id}/reject` — ادمین: رد اثبات (بدون ضرب).
+/// `POST /wallet/usdt-deposits/{id}/reject` — admin: reject the proof (no mint).
 ///
 /// # Errors
-/// ۴۰۱ ادمین؛ 404 ناشناخته؛ ۴۲۲ قبلاً تصمیم‌گرفته؛ 500 خطای SQL.
+/// 401 admin; 404 unknown; 422 already decided; 500 SQL error.
 pub async fn reject_usdt_deposit(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -469,7 +469,7 @@ mod tests {
             "BSC on-chain unit is honest"
         );
 
-        // خزانه — بدون احراز؛ آدرس تنظیم‌شدهٔ معتبر فلگ true می‌گیرد
+        // treasury — no authentication; a valid configured address gets the true flag
         let res = app
             .clone()
             .oneshot(
@@ -489,7 +489,7 @@ mod tests {
             .find(|c| c["chain"] == "BSC")
             .unwrap();
         assert_eq!(bsc["configured"], true);
-        assert!(body["movementPolicy"].as_str().unwrap().contains("پارلمان"));
+        assert!(body["movementPolicy"].as_str().unwrap().contains("\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646}"));
     }
 
     #[tokio::test]
@@ -497,7 +497,7 @@ mod tests {
         let app = app().await;
         let token = login(&app, "40", "holder").await;
 
-        // چک‌سام خراب ترون — ۴۲۲ INVALID_ADDRESS
+        // broken Tron checksum — 422 INVALID_ADDRESS
         let res = app
             .clone()
             .oneshot(
@@ -516,7 +516,7 @@ mod tests {
         assert_eq!(res.status(), 422);
         assert_eq!(json_body(res).await["error"]["code"], "INVALID_ADDRESS");
 
-        // زنجیرهٔ ناشناخته — ۴۰۰
+        // unknown chain — 400
         let res = app
             .clone()
             .oneshot(
@@ -533,10 +533,10 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 400);
 
-        // آدرس معتبر BSC — ۲۰۱ و جایگزینی کار می‌کند
+        // valid BSC address — 201 and replacement works
         for addr in [
             "0x55d398326f99059fF775485246999027B3197955",
-            "55d398326f99059ff775485246999027b3197955", // همه‌کوچک — بدون چک‌سام
+            "55d398326f99059ff775485246999027b3197955", // all-lowercase — no checksum
         ] {
             let res = app
                 .clone()
@@ -554,7 +554,7 @@ mod tests {
                 .unwrap();
             assert_eq!(res.status(), 201, "{addr} must register");
         }
-        // فهرست من — فقط یک ردیف BSC (آخرین آدرس جایگزین شد)
+        // my list — only one BSC row (the last address replaced it)
         let res = app
             .clone()
             .oneshot(
@@ -576,12 +576,12 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(clippy::too_many_lines)] // چرخهٔ کامل واریز→تأیید→ضرب — خوانایی تست مهم‌تر است
+    #[allow(clippy::too_many_lines)] // full deposit→confirm→mint cycle — test readability matters more
     async fn usdt_deposit_confirm_mints_through_charter_path() {
         let app = app().await;
         let token = login(&app, "41", "staker").await;
 
-        // آدرس معتبر تون — از قرارداد کانونیک jUSDT (CRC معتبر)
+        // valid TON address — from the jUSDT canonical contract (valid CRC)
         let res = app
             .clone()
             .oneshot(
@@ -607,7 +607,7 @@ mod tests {
         assert_eq!(body["status"], "PENDING");
         let dep_id = body["id"].as_str().unwrap().to_owned();
 
-        // مبلغ بد — ۴۰۰ (اعتبارسنجی وایر در لبه، همان قرارداد M3)
+        // bad amount — 400 (wire validation at the edge, the same M3 contract)
         let res = app
             .clone()
             .oneshot(
@@ -634,7 +634,7 @@ mod tests {
             "more than 6 decimals must fail at the edge"
         );
 
-        // تأیید بدون ادمین — ۴۰۱
+        // confirm without admin — 401
         let res = app
             .clone()
             .oneshot(
@@ -648,7 +648,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // ادمین تأیید می‌کند — نرخ پیش‌فرض ۱۰۰۰ Đ/USDT → ۱٬۵۰۰ Đ
+        // admin confirms — default rate 1000 Đ/USDT → 1,500 Đ
         let res = app
             .clone()
             .oneshot(
@@ -679,7 +679,7 @@ mod tests {
         let me = json_body(res).await;
         assert_eq!(me["balance"], 1_500, "1.5 USDT × 1000 Đ/USDT");
 
-        // همان هش روی همان زنجیره — ۴۲۲ (هش تکراری دوبار ضرب نمی‌شود)
+        // same hash on the same chain — 422 (a duplicate hash is never minted twice)
         let res = app
             .clone()
             .oneshot(
@@ -702,7 +702,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
 
-        // تعیین تکلیف دوباره — ۴۲۲ (گذار یک‌طرفه)
+        // second resolution — 422 (one-way transition)
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -722,8 +722,8 @@ mod tests {
         let app = app().await;
         let token = login(&app, "42", "whale_usdt").await;
 
-        // ۲۰۰۰ USDT × ۱۰۰۰ Đ/USDT = ۲٬۰۰۰٬۰۰۰ Đ؛ برای عبور از سقف سالانهٔ ۵۰۰ میلیارد Đ:
-        // ۶۰۰٬۰۰۰٬۰۰۰ USDT × ۱۰۰۰ = ۶۰۰ میلیارد Đ > سقف
+        // 2000 USDT × 1000 Đ/USDT = 2,000,000 Đ; to exceed the annual cap of 500 billion Đ:
+        // 600,000,000 USDT × 1000 = 600 billion Đ > cap
         let res = app
             .clone()
             .oneshot(

@@ -1,10 +1,10 @@
-//! قراردادهای وایر M4 «مغز + پنل عملیات» — گیت‌وی AI، موتور هرمس، ناوگان
-//! A2A/MCP و اندپوینت‌های ادمین.
+//! M4 "brain + operations panel" wire contracts — AI gateway, Hermes engine,
+//! A2A/MCP fleet, and admin endpoints.
 //!
-//! قواعد فاز ۳ سر جایش است: `camelCase`، `null` صریح برای nullable، کلیدِ غایب
-//! برای optional، اعداد صحیح تا `2^53−1`. حساس‌ترین نکتهٔ امنیتی این ماژول:
-//! **خروجی AI هرگز کلید/راز برنمی‌گرداند** — `redactions` فهرست آنچه redact شد
-//! را گزارش می‌کند، نه خودِ راز را؛ و کارت A2A هیچ نشست یا کلیدی فاش نمی‌کند.
+//! Phase 3 rules stand: `camelCase`, explicit `null` for nullable, missing key
+//! for optional, integers up to `2^53−1`. This module's most sensitive security rule:
+//! **AI output never returns a key or secret** — `redactions` lists what was redacted,
+//! not the secret itself; and the A2A card never exposes a session or key.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -13,536 +13,536 @@ use utoipa::ToSchema;
 use crate::common::{Din, Id};
 use crate::market::ProductView;
 
-// ── گیت‌وی AI ───────────────────────────────────────────────────────────────
+// ── AI gateway ───────────────────────────────────────────────────────────────
 
-/// یک پیام در گفت‌وگوی AI — نقش‌های استاندارد `system|user|assistant`.
+/// One message in an AI conversation — standard `system|user|assistant` roles.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiMessage {
-    /// نقش پیام
+    /// Message role
     pub role: String,
-    /// متن پیام — قبل از ارسال به هر اسلات، redaction می‌شود
+    /// Message text — redacted before being sent to any slot
     pub content: String,
 }
 
-/// درخواست گفت‌وگو با گیت‌وی AI (فال‌بک سه‌اسلات).
+/// Chat request to the AI gateway (three-slot fallback).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiChatRequest {
-    /// پیام‌های گفت‌وگو — حداقل ۱
+    /// Conversation messages — at least 1
     pub messages: Vec<AiMessage>,
-    /// مهارت هرمس اختیاری — غایب یعنی مسیریابی خودکار
+    /// Optional Hermes skill — absent means automatic routing
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_id: Option<Id>,
 }
 
-/// پاسخ گیت‌وی — اسلات برنده + مصرف دقیق.
+/// Gateway response — winning slot + exact usage.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiChatResponse {
-    /// متن پاسخ (خروجی سپر هم روی آن می‌گذرد)
+    /// Reply text (shield output also passes through it)
     pub content: String,
-    /// ارائه‌دهندهٔ برنده — «primary/secondary/tertiary»
+    /// Winning provider — "primary/secondary/tertiary"
     pub provider: String,
-    /// مدل استفاده‌شده
+    /// Model used
     pub model: String,
-    /// توکن ورودی
+    /// Prompt tokens
     pub prompt_tokens: i64,
-    /// توکن خروجی
+    /// Completion tokens
     pub completion_tokens: i64,
-    /// مجموع توکن
+    /// Total tokens
     pub total_tokens: i64,
-    /// دستهٔ یافته‌های redaction (مثل `private_key_hex`) — خودِ راز هرگز نمی‌آید
+    /// Redaction finding categories (e.g. `private_key_hex`) — the secret itself never appears
     pub redactions: Vec<String>,
-    /// باقی‌ماندهٔ بودجهٔ روزانهٔ کاربر به توکن
+    /// User's remaining daily budget in tokens
     pub remaining_tokens: i64,
 }
 
-/// مصرف امروز کاربر در گیت‌وی — مبنای پاکت سخت بودجه.
+/// User's gateway usage today — basis of the hard budget cap.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiUsageResponse {
-    /// مجموع توکن امروز (UTC)
+    /// Total tokens today (UTC)
     pub total_tokens: i64,
-    /// تعداد فراخوانی‌های امروز
+    /// Today's call count
     pub calls: i64,
-    /// سقف روزانهٔ پیکربندی‌شده
+    /// Configured daily cap
     pub daily_cap: i64,
 }
 
-/// یک گروه لِین در استخر گیت‌وی — صادقانه: گروهِ بدون env کانفیگ `enabled: false`.
+/// One lane group in the gateway pool — honest: a group without env config reports `enabled: false`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiSlotView {
-    /// شمارهٔ گروه در ترتیب استخر (۱ مبنا)
+    /// Group number in pool order (1-based)
     pub slot: u8,
-    /// نام گروه (`primary`/`secondary`/`tertiary` یا تامین‌کنندهٔ سبک هرمس)
+    /// Group name (`primary`/`secondary`/`tertiary` or a Hermes-style provider)
     pub name: String,
-    /// مدل‌های گروه — فهرست جداشده با کاما؛ بدون env رشتهٔ خالی
+    /// Group models — comma-separated list; empty string without env
     pub model: String,
-    /// فعال = حداقل یک عضو گروه url+key+model کامل داشته باشد
+    /// Enabled = at least one group member has url+key+model complete
     pub enabled: bool,
 }
 
-/// وضعیت گیت‌وی AI — چیپ صادقانهٔ health و داشبورد ادمین.
+/// AI gateway status — the honest health chip and admin dashboard.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AiStatusResponse {
-    /// گیت‌وی فعال؟ حداقل یک عضو استخر کانفیگ‌شده
+    /// Gateway enabled? At least one pool member configured
     pub enabled: bool,
-    /// سقف روزانهٔ توکن هر کاربر
+    /// Per-user daily token cap
     pub daily_cap: i64,
-    /// گروه‌های استخر به ترتیب فال‌بک
+    /// Pool groups in fallback order
     pub slots: Vec<AiSlotView>,
-    /// اندازهٔ استخر تخت — تعداد کل ترکیب‌های `(url, key, model)` پس از ضرب دکارتی
+    /// Flat pool size — total `(url, key, model)` combinations after the Cartesian product
     pub pool_size: usize,
 }
 
-// ── موتور هرمس ──────────────────────────────────────────────────────────────
+// ── Hermes engine ──────────────────────────────────────────────────────────────
 
-/// نتیجهٔ سپر دفاعی روی ورودی/خروجی مهارت.
+/// Defensive shield verdict on skill input/output.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ShieldView {
     /// `ALLOW` / `REDACTED` / `BLOCKED`
     pub verdict: String,
-    /// دلیل مسدودسازی یا redaction — برای ALLOW `null` صریح
+    /// Blocking or redaction reason — explicit `null` for ALLOW
     pub reason: Option<String>,
 }
 
-/// نمای عمومی یک مهارت هرمس — قالب پرامپت هرگز روی سیم عمومی نمی‌آید.
+/// Public view of a Hermes skill — the prompt template never goes out on the public wire.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesSkillView {
-    /// شناسهٔ مهارت (`wallet.balance` و…)
+    /// Skill identifier (`wallet.balance` and so on)
     pub id: String,
-    /// عنوان فارسی
+    /// Persian title
     pub title: String,
-    /// دسته (`wallet`/`market`/`brain`/…)
+    /// Category (`wallet`/`market`/`brain`/…)
     pub category: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// `kernel` (اجرای قطعی روی کرنل) یا `llm` (قالب + گیت‌وی)
+    /// `kernel` (deterministic execution on the kernel) or `llm` (template + gateway)
     pub kind: String,
-    /// برآورد توکن برای بودجه
+    /// Token estimate for budgeting
     pub estimate_tokens: i64,
 }
 
-/// فهرست مهارت‌های هرمس.
+/// Hermes skill list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesSkillListResponse {
-    /// مهارت‌های فعال — جدیدترین مرتب‌سازی بر اساس شناسه
+    /// Enabled skills — newest-first sort by identifier
     pub items: Vec<HermesSkillView>,
 }
 
-/// درخواست اجرای مهارت — بدون `skillId` مسیریابی خودکار کلیدواژه‌ای.
+/// Skill run request — without `skillId`, keyword-based automatic routing.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesRunRequest {
-    /// شناسهٔ مهارت — غایب یعنی خودکار
+    /// Skill identifier — absent means automatic
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_id: Option<Id>,
-    /// ورودی کاربر
+    /// User input
     pub input: String,
 }
 
-/// پاسخ اجرای مهارت — شامل حکم سپر و امتیاز هویتی پس از این ران.
+/// Skill run response — includes the shield verdict and the identity score after this run.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesRunResponse {
-    /// شناسهٔ ران (`hrun:{uuid}`)
+    /// Run identifier (`hrun:{uuid}`)
     pub run_id: Id,
-    /// مهارت اجراشده — در مسیریابی خودکار، مهارتِ انتخاب‌شده گزارش می‌شود
+    /// Skill that ran — under automatic routing, the selected skill is reported
     pub skill_id: String,
-    /// خروجی مهارت
+    /// Skill output
     pub output: String,
-    /// حکم سپر روی ورودی
+    /// Shield verdict on the input
     pub shield: ShieldView,
-    /// دستهٔ یافته‌های redaction ورودی/خروجی
+    /// Input/output redaction finding categories
     pub redactions: Vec<String>,
-    /// ارائه‌دهنده — برای مهارت‌های kernel `null` صریح
+    /// Provider — explicit `null` for kernel skills
     pub provider: Option<String>,
-    /// مدل — برای مهارت‌های kernel `null` صریح
+    /// Model — explicit `null` for kernel skills
     pub model: Option<String>,
-    /// توکن مصرفی (مهارت kernel → ۰)
+    /// Tokens consumed (kernel skill → 0)
     pub tokens: i64,
-    /// امتیاز هویتی ۰..=۱۰۰ پس از این ران (RL هویت صادقانه از شمارش ران‌ها)
+    /// Identity score 0..=100 after this run (honest identity RL from run counting)
     pub identity_score: i64,
 }
 
-/// یک ران گذشتهٔ من — خروجی کامل فقط در خودِ ران؛ فهرست پیش‌نمایش کوتاه است.
+/// One of my past runs — full output only in the run itself; the list is a short preview.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesRunView {
-    /// شناسهٔ ران
+    /// Run identifier
     pub id: Id,
-    /// مهارت
+    /// Skill
     pub skill_id: String,
-    /// حکم سپر (`ALLOW`/`REDACTED`/`BLOCKED`)
+    /// Shield verdict (`ALLOW`/`REDACTED`/`BLOCKED`)
     pub shield: String,
-    /// توکن مصرفی
+    /// Tokens consumed
     pub tokens: i64,
-    /// نتیجهٔ ممیزی (`hermes.ok|blocked|failed`)
+    /// Audit outcome (`hermes.ok|blocked|failed`)
     pub outcome: String,
-    /// زمان ISO
+    /// ISO time
     pub at: String,
 }
 
-/// فهرست ران‌های من + امتیاز هویتی فعلی.
+/// My run list + current identity score.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HermesRunListResponse {
-    /// ران‌ها — جدیدترین اول
+    /// Runs — newest first
     pub items: Vec<HermesRunView>,
-    /// امتیاز هویتی ۰..=۱۰۰
+    /// Identity score 0..=100
     pub identity_score: i64,
 }
 
-// ── ناوگان A2A/MCP ──────────────────────────────────────────────────────────
+// ── A2A/MCP fleet ──────────────────────────────────────────────────────────
 
-/// یک ایجنت در ناوگان — وضعیت صادقانه (`active`/`registered`/`disabled`).
+/// One agent in the fleet — honest status (`active`/`registered`/`disabled`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentView {
-    /// شناسه ایجنت (`agent:{role}`)
+    /// Agent identifier (`agent:{role}`)
     pub id: String,
-    /// نام
+    /// Name
     pub name: String,
-    /// نقش — یکی از ۷ نقش ناوگان
+    /// Role — one of the 7 fleet roles
     pub role: String,
-    /// وضعیت — هیچ ایجنتی دروغ نمی‌گوید
+    /// Status — no agent ever lies
     pub status: String,
-    /// توضیح نقش
+    /// Role description
     pub description: String,
 }
 
-/// ناوگان + ابزارهای MCP — نمای عمومی شفاف.
+/// Fleet + MCP tools — a transparent public view.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FleetResponse {
-    /// ۷ ایجنت ناوگان
+    /// The 7 fleet agents
     pub agents: Vec<AgentView>,
-    /// گیت‌وی A2A فعال؟ (ادمین کلید دارد)
+    /// A2A gateway enabled? (the admin holds the key)
     pub a2a_enabled: bool,
-    /// ابزارهای MCP ثبت‌شده
+    /// Registered MCP tools
     pub mcp_tools: Vec<McpToolView>,
 }
 
-/// ابزار MCP — allowlist بسته؛ ابزار ناشناخته هرگز invoke نمی‌شود.
+/// MCP tool — closed allowlist; an unknown tool is never invoked.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct McpToolView {
-    /// نام ابزار (`kernel.economy` و…)
+    /// Tool name
     pub name: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// آرگومان‌های لازم به ترتیب
+    /// Required arguments in order
     pub args: Vec<String>,
-    /// فقط ادمین؟ (readهای عمومی false)
+    /// Admin only? (public reads are false)
     pub admin_only: bool,
 }
 
-/// فرستندهٔ کارت A2A.
+/// A2A card provider.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentCardProvider {
-    /// سازمان
+    /// Organization
     pub organization: String,
-    /// نشانی
+    /// URL
     pub url: String,
 }
 
-/// یک مهارت در کارت A2A — از فهرست مهارت‌های هرمس می‌آید.
+/// One skill in the A2A card — comes from the Hermes skill list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentCardSkill {
-    /// شناسه
+    /// Identifier
     pub id: String,
-    /// نام
+    /// Name
     pub name: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// برچسب‌ها
+    /// Tags
     pub tags: Vec<String>,
 }
 
-/// کارت کشف A2A — `/.well-known/agent-card.json`؛ هیچ کلیدی در آن نیست.
+/// A2A discovery card — `/.well-known/agent-card.json`; contains no keys.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentCardResponse {
-    /// نام ایجنت
+    /// Agent name
     pub name: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// URL سرویس
+    /// Service URL
     pub url: String,
-    /// نسخهٔ کیان
+    /// Kian version
     pub version: String,
-    /// نسخهٔ پروتکل
+    /// Protocol version
     pub protocol_version: String,
-    /// سازمان
+    /// Organization
     pub provider: AgentCardProvider,
-    /// مهارت‌ها (از هرمس)
+    /// Skills (from Hermes)
     pub skills: Vec<AgentCardSkill>,
 }
 
-/// ارسال پیام A2A بین ایجنت‌های ناوگان — فقط ادمین (گیت‌وی A2A).
+/// Send an A2A message between fleet agents — admin only (A2A gateway).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct A2aSendRequest {
-    /// فرستنده — باید ایجنت ثبت‌شده باشد
+    /// Sender — must be a registered agent
     pub from: Id,
-    /// گیرنده — باید ایجنت ثبت‌شده باشد
+    /// Recipient — must be a registered agent
     pub to: Id,
-    /// نوع پیام (`handoff`/`query`/`result`)
+    /// Message kind (`handoff`/`query`/`result`)
     pub kind: String,
-    /// بدنه
+    /// Body
     pub body: String,
 }
 
-/// یک پیام A2A.
+/// One A2A message.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct A2aMessageView {
-    /// شناسه پیام (`a2a:{uuid}`)
+    /// Message identifier (`a2a:{uuid}`)
     pub id: Id,
-    /// فرستنده
+    /// Sender
     pub from_agent: String,
-    /// گیرنده
+    /// Recipient
     pub to_agent: String,
-    /// نوع
+    /// Kind
     pub kind: String,
-    /// بدنه
+    /// Body
     pub body: String,
-    /// زمان ISO
+    /// ISO time
     pub at: String,
 }
 
-/// صندوق ورودی یک ایجنت.
+/// One agent's inbox.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct A2aInboxResponse {
-    /// پیام‌ها — جدیدترین اول
+    /// Messages — newest first
     pub items: Vec<A2aMessageView>,
 }
 
-/// فراخوانی ابزار MCP — فقط ابزارهای allowlist با آرگومان‌های دقیق.
+/// MCP tool invocation — allowlist tools only, with exact arguments.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct McpInvokeRequest {
-    /// نام ابزار
+    /// Tool name
     pub tool: Id,
-    /// آرگومان‌ها — JSON object
+    /// Arguments — JSON object
     pub arguments: Value,
 }
 
-/// نتیجهٔ ابزار MCP — هر شکلی که ابزار برگرداند؛ خطا از پاکت استاندارد می‌آید.
+/// MCP tool result — whatever shape the tool returns; errors come via the standard envelope.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct McpInvokeResponse {
-    /// نام ابزار
+    /// Tool name
     pub tool: String,
-    /// نتیجه
+    /// Result
     pub result: Value,
 }
 
-// ── پنل ادمین ───────────────────────────────────────────────────────────────
+// ── Admin panel ───────────────────────────────────────────────────────────────
 
-/// یک نقطهٔ سری درآمد ۱۴ روزه.
+/// One point of the 14-day revenue series.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RevenuePoint {
-    /// روز (YYYY-MM-DD)
+    /// Day (YYYY-MM-DD)
     pub day: String,
-    /// دیین درآمد همان روز
+    /// Revenue din for that day
     pub din: Din,
 }
 
-/// فروش به ازای فروشنده.
+/// Sales per seller.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SellerSalesView {
-    /// حساب فروشنده
+    /// Seller account
     pub seller_id: String,
-    /// مجموع فروش به دیین
+    /// Total sales in din
     pub din: Din,
 }
 
-/// فروش به ازای محصول.
+/// Sales per product.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductSalesView {
-    /// شناسهٔ محصول
+    /// Product identifier
     pub product_id: String,
-    /// عنوان — اگر محصول حذف شده `null` صریح
+    /// Title — explicit `null` if the product was deleted
     pub title: Option<String>,
-    /// مجموع فروش به دیین
+    /// Total sales in din
     pub din: Din,
 }
 
-/// نمای کلی ادمین — همهٔ شمارنده‌ها از کوئری‌های زندهٔ دیتابیس.
+/// Admin overview — every counter comes from live database queries.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminOverviewResponse {
-    /// کاربران تلگرام
+    /// Telegram users
     pub users: i64,
-    /// حساب‌های دفتر
+    /// Ledger accounts
     pub accounts: i64,
-    /// امانت‌ها
+    /// Escrows
     pub escrows: i64,
-    /// درخواست‌های HITL در انتظار
+    /// Pending HITL requests
     pub hitl_pending: i64,
-    /// کل ضرب‌شده (مادهٔ ۳)
+    /// Total minted (Article 3)
     pub minted_all_time: Din,
-    /// کل سوزانده‌شده
+    /// Total burned
     pub burned_all_time: Din,
-    /// کل فراخوانی‌های AI
+    /// Total AI calls
     pub ai_calls: i64,
-    /// سری درآمد ۱۴ روزه
+    /// 14-day revenue series
     pub revenue_series: Vec<RevenuePoint>,
-    /// فروش به ازای فروشنده
+    /// Sales per seller
     pub sales_by_seller: Vec<SellerSalesView>,
-    /// فروش به ازای محصول
+    /// Sales per product
     pub sales_by_product: Vec<ProductSalesView>,
 }
 
-/// یک درخواست HITL برای صف ادمین.
+/// One HITL request for the admin queue.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminHitlView {
-    /// شناسه درخواست
+    /// Request identifier
     pub id: Id,
-    /// نوع (`ESCROW_RELEASE`)
+    /// Kind (`ESCROW_RELEASE`)
     pub kind: String,
-    /// امانت مربوط
+    /// Related escrow
     pub escrow_id: String,
-    /// مبلغ
+    /// Amount
     pub amount: Din,
-    /// درخواست‌دهنده
+    /// Requester
     pub requester_id: String,
-    /// یادداشت درخواست — غایب یعنی ثبت نشده
+    /// Request note — absent means none was recorded
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
-    /// وضعیت (`PENDING`/`APPROVED`/`REJECTED`/`EXPIRED`)
+    /// Status (`PENDING`/`APPROVED`/`REJECTED`/`EXPIRED`)
     pub status: String,
-    /// زمان ایجاد ISO
+    /// ISO creation time
     pub created_at: String,
-    /// انقضا ISO
+    /// ISO expiry
     pub expires_at: String,
-    /// تصمیم‌گیرنده — تا تصمیم غایب
+    /// Decided by — absent until decided
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decided_by: Option<String>,
-    /// زمان تصمیم — تا تصمیم غایب
+    /// Decision time — absent until decided
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decided_at: Option<String>,
-    /// یادداشت تصمیم — غایب یعنی ثبت نشده
+    /// Decision note — absent means none was recorded
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decision_note: Option<String>,
 }
 
-/// فهرست صف HITL ادمین.
+/// Admin HITL queue list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminHitlListResponse {
-    /// درخواست‌ها — جدیدترین اول
+    /// Requests — newest first
     pub items: Vec<AdminHitlView>,
 }
 
-/// تصمیم ادمین روی HITL — تأیید یعنی تسویهٔ اتمی در همان فرمان.
+/// Admin HITL decision — approve means atomic settlement in the same command.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HitlDecisionRequest {
-    /// یادداشت تصمیم اختیاری
+    /// Optional decision note
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }
 
-/// نتیجهٔ تصمیم HITL.
+/// The result of the HITL decision.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HitlDecisionResponse {
-    /// شناسهٔ درخواست
+    /// Request identifier
     pub id: Id,
-    /// وضعیت پس از تصمیم (`APPROVED`/`REJECTED`)
+    /// Status after the decision (`APPROVED`/`REJECTED`)
     pub status: String,
-    /// زمان تصمیم ISO
+    /// ISO decision time
     pub decided_at: String,
-    /// آیا تسویهٔ پولی انجام شد؟ (فقط approve)
+    /// Was money settled? (approve only)
     pub settled: bool,
-    /// شناسهٔ تراکنش تسویه — در replay هم همان tx اصلی
+    /// Settlement transaction identifier — replay always yields the original tx
     pub tx_id: Option<String>,
-    /// آیا تسویه یک replay بود؟
+    /// Was the settlement a replay?
     pub replayed: bool,
 }
 
-/// یک ردیف ممیزی برای دنبالهٔ ادمین.
+/// One audit row for the admin trail.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminAuditEntry {
-    /// شناسه
+    /// Identifier
     pub id: Id,
-    /// عامل
+    /// Actor
     pub actor: String,
-    /// اقدام
+    /// Action
     pub action: String,
-    /// هدف — غایب یعنی بدون هدف
+    /// Target — absent means no target
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
-    /// متادیتا JSON رشته‌ای — غایب یعنی بدون متادیتا
+    /// String JSON metadata — absent means no metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<String>,
-    /// زمان ISO
+    /// ISO time
     pub at: String,
 }
 
-/// دنبالهٔ ممیزی ادمین.
+/// Admin audit trail.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminAuditListResponse {
-    /// ردیف‌ها — جدیدترین اول
+    /// Rows — newest first
     pub items: Vec<AdminAuditEntry>,
 }
 
-/// یک واریز TON در نمای ادمین — با کاربرش (برخلاف نمای کاربر M3).
+/// One TON deposit in the admin view — with its user (unlike the M3 user view).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminDepositView {
-    /// شناسه واریز
+    /// Deposit identifier
     pub id: Id,
-    /// کاربر ثبت‌کننده
+    /// Registering user
     pub user_id: String,
-    /// هش تراکنش زنجیره (UNIQUE — درس replay)
+    /// Chain transaction hash (UNIQUE — the replay lesson)
     pub tx_hash: String,
-    /// آدرس فرستنده
+    /// Sender address
     pub wallet_address: String,
-    /// مبلغ TON رشتهٔ دهدهی
+    /// Decimal-string TON amount
     pub amount_ton: String,
-    /// وضعیت (`PENDING`/`CONFIRMED`/`REJECTED`)
+    /// Status (`PENDING`/`CONFIRMED`/`REJECTED`)
     pub status: String,
-    /// زمان ثبت ISO
+    /// ISO recorded time
     pub created_at: String,
-    /// زمان تصمیم ISO — تا قبل از تکلیف غایب
+    /// ISO decision time — absent until adjudicated
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decided_at: Option<String>,
-    /// تصمیم‌گیرنده — تا قبل از تکلیف غایب
+    /// Decided by — absent until resolved
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decided_by: Option<String>,
 }
 
-/// فهرست واریزهای TON برای ادمین (همهٔ کاربران، قابل فیلتر وضعیت).
+/// TON deposit list for admins (all users, filterable by status).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminDepositListResponse {
-    /// واریزها — جدیدترین اول
+    /// Deposits — newest first
     pub items: Vec<AdminDepositView>,
 }
 
-/// فهرست محصولات برای ادمین — شامل غیرفعال‌ها (برخلاف نمای عمومی بازار).
+/// Product list for admins — includes inactive ones (unlike the public market view).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminProductListResponse {
-    /// همهٔ محصولات — جدیدترین اول
+    /// All products — newest first
     pub items: Vec<ProductView>,
 }
 
@@ -551,11 +551,11 @@ mod tests {
     use super::*;
     use serde_json::{from_str, to_string};
 
-    /// قرارداد وایر: پاسخ AI با null صریح و camelCase دور می‌زند.
+    /// Wire contract: the AI response round-trips with explicit null and camelCase.
     #[test]
     fn ai_chat_response_round_trips_camel_case() {
         let res = AiChatResponse {
-            content: "سلام".into(),
+            content: "\u{633}\u{644}\u{627}\u{645}".into(),
             provider: "primary".into(),
             model: "kian-model".into(),
             prompt_tokens: 12,
@@ -571,7 +571,7 @@ mod tests {
         assert_eq!(back, res);
     }
 
-    /// سپر دفاعی: verdict روی سیم `SCREAMING_SNAKE_CASE` است — مثل وضعیت اسکرو.
+    /// Defensive shield: the verdict is `SCREAMING_SNAKE_CASE` on the wire — like escrow status.
     #[test]
     fn shield_verdict_is_screaming_snake() {
         let blocked = ShieldView { verdict: "BLOCKED".into(), reason: Some("injection".into()) };
@@ -583,7 +583,7 @@ mod tests {
         assert_eq!(allow.reason, None);
     }
 
-    /// کارت A2A — کشف عمومی؛ نسخهٔ پروتکل و مهارت‌ها حتماً حاضرند.
+    /// A2A card — public discovery; the protocol version and skills must always be present.
     #[test]
     fn agent_card_shape_is_a2a_like() {
         let card = AgentCardResponse {
@@ -595,8 +595,8 @@ mod tests {
             provider: AgentCardProvider { organization: "KiaAgentX".into(), url: "https://kiaagentx.io".into() },
             skills: vec![AgentCardSkill {
                 id: "wallet.balance".into(),
-                name: "تراز من".into(),
-                description: "خوانش قطعی دفتر".into(),
+                name: "\u{62a}\u{631}\u{627}\u{632} \u{645}\u{646}".into(),
+                description: "\u{62e}\u{648}\u{627}\u{646}\u{634} \u{642}\u{637}\u{639}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}".into(),
                 tags: vec!["kernel".into()],
             }],
         };
@@ -606,7 +606,7 @@ mod tests {
         assert!(!wire.to_lowercase().contains("key"), "no credential marker in card: {wire}");
     }
 
-    /// فراخوانی MCP — arguments آزاد (object) ولی tool تایپ Id دارد.
+    /// MCP invocation — arguments is a free (object) value but tool is typed as Id.
     #[test]
     fn mcp_invoke_accepts_json_arguments() {
         let req: McpInvokeRequest = from_str(

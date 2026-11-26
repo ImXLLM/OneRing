@@ -1,4 +1,4 @@
-/* DropAgentX — AGENT: هرمسا embedded chat (platform engine + memory + skills)
+/* DropAgentX — AGENT: Hermes embedded chat (platform engine + memory + skills)
    v1.1 mobile: suggestion chips, keyboard-aware viewport (input never hidden
    under the OS keyboard), Enter=send on desktop / button on phones,
    session-persisted history, credit-aware send button. */
@@ -7,22 +7,22 @@ DGX.pages = DGX.pages || {};
 DGX.pages.agent = async (view) => {
   if (!DGX.user) await DGX.refreshMe();
 
-  const chips = ['یک محصول خفن پیشنهاد بده 🛍', 'برای فروش بهتر چی کار کنم؟',
-                 'یه اسم و شعار بساز ✍️', 'متن معرفی ربات برام بنویس ✈️'];
+  const chips = ['\u06cc\u06a9 \u0645\u062d\u0635\u0648\u0644 \u062e\u0641\u0646 \u067e\u06cc\u0634\u0646\u0647\u0627\u062f \u0628\u062f\u0647 🛍', '\u0628\u0631\u0627\u06cc \u0641\u0631\u0648\u0634 \u0628\u0647\u062a\u0631 \u0686\u06cc \u06a9\u0627\u0631 \u06a9\u0646\u0645\u061f',
+                 '\u06cc\u0647 \u0627\u0633\u0645 \u0648 \u0634\u0639\u0627\u0631 \u0628\u0633\u0627\u0632 ✍️', '\u0645\u062a\u0646 \u0645\u0639\u0631\u0641\u06cc \u0631\u0628\u0627\u062a \u0628\u0631\u0627\u0645 \u0628\u0646\u0648\u06cc\u0633 ✈️'];
 
   view.innerHTML = `
     <div style="background:var(--em-dim);border:1px solid var(--line);border-radius:14px;
          padding:11px 15px;margin-bottom:10px;font-size:12px;line-height:1.9">
-      <span style="display:inline-flex;vertical-align:-4px;margin-inline-end:4px">${DGX.icon('spark','ic-s')}</span> <b>هرمسا آنلاینه</b> — هر پیام ۱ کردیت · موجودی: <b class="num">${DGX.fmt(DGX.user?.credits || 0)}</b>
+      <span style="display:inline-flex;vertical-align:-4px;margin-inline-end:4px">${DGX.icon('spark','ic-s')}</span> <b>\u0647\u0631\u0645\u0633\u0627 \u0622\u0646\u0644\u0627\u06cc\u0646\u0647</b> — \u0647\u0631 \u067e\u06cc\u0627\u0645 \u06f1 \u06a9\u0631\u062f\u06cc\u062a · \u0645\u0648\u062c\u0648\u062f\u06cc: <b class="num">${DGX.fmt(DGX.user?.credits || 0)}</b>
     </div>
     <div class="chat-scroll" id="chatScroll"></div>
     <div class="qchips" id="qChips">
       ${chips.map(c => `<button class="chip">${c}</button>`).join('')}
     </div>
     <div class="agent-input">
-      <textarea id="agIn" rows="1" placeholder="پیامت را بنویس…" maxlength="800"
+      <textarea id="agIn" rows="1" placeholder="\u067e\u06cc\u0627\u0645\u062a \u0631\u0627 \u0628\u0646\u0648\u06cc\u0633…" maxlength="800"
         enterkeyhint="send"></textarea>
-      <button class="btn btn-primary" id="agSend" style="flex:none;width:60px" aria-label="ارسال">${DGX.icon('send')}</button>
+      <button class="btn btn-primary" id="agSend" style="flex:none;width:60px" aria-label="\u0627\u0631\u0633\u0627\u0644">${DGX.icon('send')}</button>
     </div>`;
 
   const scroll = DGX.$('#chatScroll'), inp = DGX.$('#agIn'),
@@ -39,7 +39,7 @@ DGX.pages.agent = async (view) => {
   };
   hist.forEach(m => paint(m.t, m.me));
   if (!hist.length)
-    paint('سلام عزیزم! من هرمسام 😊\\nهر چی لازم داری بپرس — گپ، ایده، ساخت فایل…', false);
+    paint('\u0633\u0644\u0627\u0645 \u0639\u0632\u06cc\u0632\u0645! \u0645\u0646 \u0647\u0631\u0645\u0633\u0627\u0645 😊\\n\u0647\u0631 \u0686\u06cc \u0644\u0627\u0632\u0645 \u062f\u0627\u0631\u06cc \u0628\u067e\u0631\u0633 — \u06af\u067e\u060c \u0627\u06cc\u062f\u0647\u060c \u0633\u0627\u062e\u062a \u0641\u0627\u06cc\u0644…', false);
 
   const bubble = (text, me) => {
     const b = paint(text, me);
@@ -70,7 +70,7 @@ DGX.pages.agent = async (view) => {
   async function sendMsg(text) {
     text = (text || inp.value).trim();
     if (!text || busy) return;
-    if (!DGX.requireAuth('گفتگو با هرمسا')) return;
+    if (!DGX.requireAuth('\u06af\u0641\u062a\u06af\u0648 \u0628\u0627 \u0647\u0631\u0645\u0633\u0627')) return;
     busy = true; send.disabled = true; inp.value = ''; inp.style.height = 'auto';
     chipBox.style.display = 'none';
     bubble(text, true); DGX.haptic('light');
@@ -84,7 +84,7 @@ DGX.pages.agent = async (view) => {
       sessionStorage.setItem('dgx_chat', JSON.stringify(hist.slice(-60)));
       DGX.refreshMe(); DGX.haptic('medium');
     } catch (e) {
-      typing.innerHTML = `⚠️ ${(e && e.msg) || 'ارور'}`;
+      typing.innerHTML = `⚠️ ${(e && e.msg) || '\u0627\u0631\u0648\u0631'}`;
       hist.pop(); sessionStorage.setItem('dgx_chat', JSON.stringify(hist.slice(-60)));
     }
     scroll.scrollTop = scroll.scrollHeight;

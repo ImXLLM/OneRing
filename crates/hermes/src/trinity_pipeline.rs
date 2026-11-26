@@ -1,29 +1,29 @@
-//! `trinity_pipeline` — قلب معماری `0xKIA`: خط لولهٔ سه‌کالبدیِ استودیوی حاکم
-//! (Wave 3 — سریِ تسک‌های Trinity Studio Pipeline).
+//! `trinity_pipeline` — the heart of the `0xKIA` architecture: the sovereign studio's three-body
+//! pipeline (Wave 3 — the Trinity Studio Pipeline task series).
 //!
-//! سه Avatar پشت سر هم، هر یک با DNA و کالیبراسیون قفل‌شده:
+//! Three Avatars back to back, each with locked DNA and calibration:
 //!
-//! 1. [`AlphaIgnitionPersona`] (`کالبد ۱: آلفا`) — شکارچیِ ایده و کامپایلرِ
-//!    مستر پرامپت و استراکچر پروژه (`IQ=136`، `EQ=122`، ترمز `0.04`، دمای
-//!    آنتروپی `0.88`). پنج اسلات کشف (`AlphaDiscoverySlots`) را استخراج
-//!    می‌کند و در آمادگیِ `≥ 80`، [`MasterPromptSpec`] و [`ProjectBlueprint`]
-//!    را قطعی کامپایل و قفل می‌کند.
-//! 2. [`CommandCenterOrchestrator`] (`کالبد ۲: اتاق فرمان`) — ارکستراتورِ
-//!    قضایی (`IQ=139`، `EQ=129`، ترمز `0.62`، سختیِ قضایی `0.96`) با
-//!    [`OpenBotSubAgentSpawner`]: کارخانهٔ ساب‌ایجنت‌های پویا با الگوی `۳×۹`
-//!    — ۳ لایهٔ پرامپتِ کش-امن ([`ThreeLayerSubAgentPrompt`]) × ژنومِ
-//!    نه‌لایه‌ای ([`NineFoldSubAgentGenome`]) با آلل‌های تصادفیِ قطعی از
+//! 1. [`AlphaIgnitionPersona`] (`Body 1: Alpha`) — the idea hunter and compiler of the
+//!    master prompt and project structure (`IQ=136`, `EQ=122`, brake `0.04`, entropy
+//!    temperature `0.88`). It extracts the five discovery slots ([`AlphaDiscoverySlots`])
+//!    and, at readiness `≥ 80`, compiles [`MasterPromptSpec`] and [`ProjectBlueprint`]
+//!    deterministically and locks them.
+//! 2. [`CommandCenterOrchestrator`] (`Body 2: Command Center`) — the judicial
+//!    orchestrator (`IQ=139`, `EQ=129`, brake `0.62`, judicial strictness `0.96`) with
+//!    [`OpenBotSubAgentSpawner`]: the dynamic-subagent factory with the `3×9` pattern
+//!    — 3 cache-safe prompt layers ([`ThreeLayerSubAgentPrompt`]) × the
+//!    nine-fold genome ([`NineFoldSubAgentGenome`]) with deterministic random alleles from
 //!    `session_seed + subagent_index`.
-//! 3. [`MaironSovereignJudge`] (`کالبد ۳: مایرون-۱۵۰`) — داورِ حاکمِ
-//!    اورکلاک‌شده (`IQ=150`، `EQ=145`، افقِ نگاه `۸`، نظریهٔ ذهن `۳`،
-//!    جاه‌طلبی `0.99`): نمرهٔ `REA` چهارستونی از `kian-domain`، مشاورهٔ
-//!    استراتژیک و حلقهٔ خودترمیمی [`execute_command_center_with_mairon_loop`]
-//!    — تا آرتیفکت از گیتِ `≥ 85` عبور نکند، ساب‌ایجنتِ مقصر دوباره
-//!    رهسپاری می‌شود (بیشینهٔ ۳ تلاش ترمیم).
+//! 3. [`MaironSovereignJudge`] (`Body 3: Mairon-150`) — the sovereign
+//!    overclocked judge (`IQ=150`, `EQ=145`, lookahead horizon `8`, theory of mind `3`,
+//!    ambition `0.99`): the four-pillar `REA` score from `kian-domain`, strategic
+//!    advisory and the self-healing loop [`execute_command_center_with_mairon_loop`]
+//!    — until the artifact passes the `≥ 85` gate, the guilty subagent is
+//!    re-dispatched (a maximum of 3 repair attempts).
 //!
-//! ثابت‌های DNA مایرون در `kian-domain::mairon_rea_and_reviews` قفل شده‌اند و
-//! اینجا با `pub use` بازصادر می‌شوند — منبعِ واحد حقیقت، بدون نسخهٔ موازی.
-//! همهٔ توابع قطعی‌اند؛ صفر IO، صفر ساعت پنهان، صفر `unsafe`.
+//! Mairon's DNA constants are locked in `kian-domain::mairon_rea_and_reviews` and
+//! re-exported here with `pub use` — the single source of truth, no parallel copy.
+//! All functions are deterministic; zero IO, zero hidden clocks, zero `unsafe`.
 #![forbid(unsafe_code)]
 #![allow(
     clippy::module_name_repetitions,
@@ -45,7 +45,7 @@ use kian_domain::mairon_rea_and_reviews::{
 use crate::approvals::deterministic_subagent_thread_id;
 use crate::discipline_gates::{audit_frontend_slop, SYSTEM_PROMPT_DYNAMIC_BOUNDARY};
 
-// ── DNA اورکلاکِ مایرون — قفل‌شده در دامنه، بازصادری در این ماژول ──────────
+// ── Mairon overclock DNA — locked in the domain, re-exported here ──────────
 pub use kian_domain::mairon_rea_and_reviews::{
     MAIRON_AMBITION_GAIN, MAIRON_LOOKAHEAD_HORIZON, MAIRON_OVERCLOCK_EQ, MAIRON_OVERCLOCK_IQ,
     MAIRON_TOM_ORDER, MARKETPLACE_APPROVAL_THRESHOLD,
@@ -53,63 +53,63 @@ pub use kian_domain::mairon_rea_and_reviews::{
 
 // ════════════════════════ Stage 1 — ALPHA ═════════════════════════════════
 
-/// IQ مؤثر آلفا — شکارچیِ ایده با انرژیِ خلاقِ رهاشده.
+/// Alpha's effective IQ — the idea hunter with unleashed creative energy.
 pub const ALPHA_EFFECTIVE_IQ: u16 = 136;
 
-/// EQ مؤثر آلفا — جذابیتِ بالا، کالیبراسیونِ گرم.
+/// Alpha's effective EQ — high charisma, warm calibration.
 pub const ALPHA_EFFECTIVE_EQ: u16 = 122;
 
-/// ترمزِ توقفِ آلفا — نزدیک به صفر: انرژیِ بی‌ترمز در فاز کشف.
+/// Alpha's stop brake — near zero: unbraked energy in the discovery phase.
 pub const ALPHA_INHIBITION_BRAKE: f32 = 0.04;
 
-/// دمای آنتروپیِ آلفا — خلاقیتِ پرنوسان پیش از قفل‌شدن.
+/// Alpha's entropy temperature — volatile creativity before locking.
 pub const ALPHA_ENTROPY_TEMP: f32 = 0.88;
 
-/// آستانهٔ قفلِ آلفا — در آمادگیِ `≥ 80` مستر پرامپت و استراکچر پروژه
-/// کامپایل و به اتاق فرمان تحویل می‌شود.
+/// Alpha's lock threshold — at readiness `≥ 80` the master prompt and project structure are
+/// compiled and handed to the command center.
 pub const ALPHA_READINESS_LOCK_THRESHOLD: u8 = 80;
 
-/// سقف کاراکتر هر اسلات استخراج‌شده — پیامِ کاربر به یک نقل‌قول جرقه‌ای
-/// فشرده می‌شود، نه کپی کامل.
+/// Character cap per extracted slot — the user's message is compressed into one spark quote,
+/// not copied in full.
 pub const ALPHA_SLOT_TEXT_MAX_CHARS: usize = 280;
 
-/// پنج اسلاتِ کشفِ آلفا — استخراجِ هر یک با کلیدواژه‌های دوزبانه (فا/EN).
+/// Alpha's five discovery slots — each extracted with bilingual (FA/EN) keywords.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AlphaDiscoverySlots {
-    /// هدفِ هسته و هویت محصول — مسئلهٔ دقیقی که حل می‌شود.
+    /// Core goal and product identity — the exact problem being solved.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub core_objective: Option<String>,
-    /// مخاطب هدف و حس UX — پرسونای کاربر + مُدِ موبایل‌فرست ۳۹۰px راست‌به‌چپ.
+    /// Target audience and UX feel — the user persona + the 390px RTL-first mobile-first mode.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target_audience_and_ux: Option<String>,
-    /// قابلیت‌های تعاملی — جریان‌های کاری اصلی و توانایی‌های فریمِ اول.
+    /// Interactive capabilities — the main workflows and first-frame abilities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interactive_features: Option<String>,
-    /// داده و APIهای بدون احراز — ماندگاری وضعیت و اتصال از ۱۲۰ API عمومی.
+    /// Unauthenticated data and APIs — state persistence and connectivity from 120 public APIs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub data_and_zero_auth_apis: Option<String>,
-    /// درآمدزایی و حلقهٔ وایرال — قیمت‌گذاری با KIAN/Stars (`XTR`) + سهم معرف.
+    /// Monetization and virality loop — pricing with KIAN/Stars (`XTR`) + referrer share.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub monetization_and_viral_loop: Option<String>,
 }
 
-/// شناسهٔ نوع اسلات — ترتیبِ اعلامِ اسلات‌های خام به کاربر را قطعی می‌کند.
+/// Slot-kind ID — makes the declaration order of raw slots to the user deterministic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AlphaSlotKind {
-    /// هدفِ هسته و هویت محصول.
+    /// Core goal and product identity.
     CoreObjective,
-    /// مخاطب هدف و حس UX.
+    /// Target audience and UX feel.
     TargetAudienceAndUx,
-    /// قابلیت‌های تعاملی.
+    /// Interactive capabilities.
     InteractiveFeatures,
-    /// داده و APIهای بدون احراز.
+    /// Unauthenticated data and APIs.
     DataAndZeroAuthApis,
-    /// درآمدزایی و حلقهٔ وایرال.
+    /// Monetization and virality loop.
     MonetizationAndViralLoop,
 }
 
 impl AlphaSlotKind {
-    /// شناسهٔ وایر — پایدار برای DTOها و کلاینت‌ها.
+    /// Wire ID — stable for DTOs and clients.
     pub fn as_str(self) -> &'static str {
         match self {
             Self::CoreObjective => "core_objective",
@@ -120,20 +120,20 @@ impl AlphaSlotKind {
         }
     }
 
-    /// برچسب فارسی — در پاسخ کشفِ آلفا به کاربر نمایش داده می‌شود.
+    /// Persian label — shown to the user in the Alpha discovery reply.
     pub fn fa_label(self) -> &'static str {
         match self {
-            Self::CoreObjective => "هدفِ هسته و هویت محصول",
-            Self::TargetAudienceAndUx => "مخاطب هدف و حس UX در ۳۹۰ پیکسل",
-            Self::InteractiveFeatures => "قابلیت‌های تعاملی فریمِ اول",
-            Self::DataAndZeroAuthApis => "داده و APIهای بدون احراز",
-            Self::MonetizationAndViralLoop => "درآمدزایی و حلقهٔ وایرال",
+            Self::CoreObjective => "\u{647}\u{62f}\u{641}\u{650} \u{647}\u{633}\u{62a}\u{647} \u{648} \u{647}\u{648}\u{6cc}\u{62a} \u{645}\u{62d}\u{635}\u{648}\u{644}",
+            Self::TargetAudienceAndUx => "\u{645}\u{62e}\u{627}\u{637}\u{628} \u{647}\u{62f}\u{641} \u{648} \u{62d}\u{633} UX \u{62f}\u{631} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644}",
+            Self::InteractiveFeatures => "\u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627}\u{6cc} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{641}\u{631}\u{6cc}\u{645}\u{650} \u{627}\u{648}\u{644}",
+            Self::DataAndZeroAuthApis => "\u{62f}\u{627}\u{62f}\u{647} \u{648} API\u{647}\u{627}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{627}\u{62d}\u{631}\u{627}\u{632}",
+            Self::MonetizationAndViralLoop => "\u{62f}\u{631}\u{622}\u{645}\u{62f}\u{632}\u{627}\u{6cc}\u{6cc} \u{648} \u{62d}\u{644}\u{642}\u{647}\u{654} \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644}",
         }
     }
 }
 
 impl AlphaDiscoverySlots {
-    /// آیا این اسلات پر شده است؟
+    /// Is this slot filled?
     pub fn is_filled(&self, kind: AlphaSlotKind) -> bool {
         match kind {
             AlphaSlotKind::CoreObjective => self.core_objective.is_some(),
@@ -144,7 +144,7 @@ impl AlphaDiscoverySlots {
         }
     }
 
-    /// پرکردن اسلات (اگر خام باشد) — مقدارِ اول همیشه برنده است.
+    /// Fill the slot (if raw) — the first value always wins.
     pub fn fill(&mut self, kind: AlphaSlotKind, value: String) {
         let slot = match kind {
             AlphaSlotKind::CoreObjective => &mut self.core_objective,
@@ -158,7 +158,7 @@ impl AlphaDiscoverySlots {
         }
     }
 
-    /// شمار اسلات‌های پرشده (`0..=5`).
+    /// Number of filled slots (`0..=5`).
     pub fn filled_count(&self) -> usize {
         [
             AlphaSlotKind::CoreObjective,
@@ -172,12 +172,12 @@ impl AlphaDiscoverySlots {
         .count()
     }
 
-    /// درصد آمادگی — هر اسلات `۲۰٪`.
+    /// Readiness percentage — each slot is `20%`.
     pub fn readiness_pct(&self) -> u8 {
         u8::try_from(self.filled_count() * 20).unwrap_or(100)
     }
 
-    /// اسلات‌های خام به ترتیب قطعی اعلام.
+    /// Raw slots in deterministic declaration order.
     pub fn missing_slots(&self) -> Vec<AlphaSlotKind> {
         [
             AlphaSlotKind::CoreObjective,
@@ -192,29 +192,29 @@ impl AlphaDiscoverySlots {
     }
 }
 
-/// کلیدواژه‌های استخراجِ اسلات‌ها — دوزبانه؛ تطبیق روی متنِ lowercase.
+/// Slot-extraction keywords — bilingual; matching on the lowercased text.
 const SLOT_KEYWORDS_CORE: &[&str] = &[
-    "هدف", "مسئله", "محصول", "بساز", "ایده", "پلتفرم", "ابزار", "problem", "product", "build",
+    "\u{647}\u{62f}\u{641}", "\u{645}\u{633}\u{626}\u{644}\u{647}", "\u{645}\u{62d}\u{635}\u{648}\u{644}", "\u{628}\u{633}\u{627}\u{632}", "\u{627}\u{6cc}\u{62f}\u{647}", "\u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645}", "\u{627}\u{628}\u{632}\u{627}\u{631}", "problem", "product", "build",
     "idea", "platform", "tool", "goal",
 ];
 const SLOT_KEYWORDS_AUDIENCE: &[&str] = &[
-    "مخاطب", "کاربر", "موبایل", "۳۹۰", "390", "راست‌به‌چپ", "rtl", "ltr", "audience", "user",
+    "\u{645}\u{62e}\u{627}\u{637}\u{628}", "\u{6a9}\u{627}\u{631}\u{628}\u{631}", "\u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644}", "\u{6f3}\u{6f9}\u{6f0}", "390", "\u{631}\u{627}\u{633}\u{62a}‌\u{628}\u{647}‌\u{686}\u{67e}", "rtl", "ltr", "audience", "user",
     "mobile", "persona", "ui", "ux", "design",
 ];
 const SLOT_KEYWORDS_FEATURES: &[&str] = &[
-    "تعاملی", "ویژگی", "قابلیت", "جریان", "دکمه", "فرم", "کلیک", "feature", "interactive",
+    "\u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}", "\u{648}\u{6cc}\u{698}\u{6af}\u{6cc}", "\u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}", "\u{62c}\u{631}\u{6cc}\u{627}\u{646}", "\u{62f}\u{6a9}\u{645}\u{647}", "\u{641}\u{631}\u{645}", "\u{6a9}\u{644}\u{6cc}\u{6a9}", "feature", "interactive",
     "workflow", "button", "form", "click", "drag",
 ];
 const SLOT_KEYWORDS_DATA: &[&str] = &[
-    "داده", "ذخیره", "پایگاه", "بدون لاگین", "بدون‌لاگین", "api", "data", "storage", "database",
+    "\u{62f}\u{627}\u{62f}\u{647}", "\u{630}\u{62e}\u{6cc}\u{631}\u{647}", "\u{67e}\u{627}\u{6cc}\u{6af}\u{627}\u{647}", "\u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646}", "\u{628}\u{62f}\u{648}\u{646}‌\u{644}\u{627}\u{6af}\u{6cc}\u{646}", "api", "data", "storage", "database",
     "zero-auth", "localstorage", "bind", "persist",
 ];
 const SLOT_KEYWORDS_MONETIZATION: &[&str] = &[
-    "درآمد", "قیمت", "فروش", "ستاره", "استار", "کمیسیون", "اشتراک", "پورسانت", "price",
+    "\u{62f}\u{631}\u{622}\u{645}\u{62f}", "\u{642}\u{6cc}\u{645}\u{62a}", "\u{641}\u{631}\u{648}\u{634}", "\u{633}\u{62a}\u{627}\u{631}\u{647}", "\u{627}\u{633}\u{62a}\u{627}\u{631}", "\u{6a9}\u{645}\u{6cc}\u{633}\u{6cc}\u{648}\u{646}", "\u{627}\u{634}\u{62a}\u{631}\u{627}\u{6a9}", "\u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}", "price",
     "monetize", "stars", "xtr", "kian", "affiliate", "viral", "revenue", "pricing",
 ];
 
-/// فشردن متنِ اسلات — فاصله‌های تکراری جمع و سقف کاراکتر اعمال می‌شود.
+/// Compress the slot text — repeated spaces are collapsed and the character cap applied.
 fn clamp_slot_text(raw: &str) -> String {
     let collapsed = raw.split_whitespace().collect::<Vec<_>>().join(" ");
     let mut out: String = collapsed.chars().take(ALPHA_SLOT_TEXT_MAX_CHARS).collect();
@@ -224,49 +224,49 @@ fn clamp_slot_text(raw: &str) -> String {
     out
 }
 
-/// درخواست intake آلفا — یک نوبت گفتگوی کشف.
+/// The Alpha intake request — one discovery conversation turn.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AlphaIntakeRequest {
-    /// شناسهٔ نشست ترینیتی (`trn:{uuid}` — ساخته‌شده در لبه یا ادامه‌ی قبلی).
+    /// Trinity session ID (`trn:{uuid}` — created at the edge or a continuation of the previous one).
     pub session_id: String,
-    /// حساب شهروندِ سازنده (`citizen:{tg_id}`).
+    /// Builder-citizen account (`citizen:{tg_id}`).
     pub citizen_id: String,
-    /// پیام خام کاربر در این نوبت.
+    /// The user's raw message in this turn.
     pub user_message: String,
-    /// اسلات‌های پرشدهٔ نوبت‌های قبل — قطعیِ سمت کلاینت.
+    /// Slots filled in previous turns — client-side deterministic.
     pub prior_slots: AlphaDiscoverySlots,
 }
 
-/// خروجی یک نوبت intake آلفا — یا ادامهٔ کشف، یا قفلِ تحویل به اتاق فرمان.
+/// Output of one Alpha intake turn — either continued discovery or the locked handoff to the command center.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AlphaIntakeOutcome {
-    /// اسلات‌های کلیدی هنوز خام‌اند — پاسخ جرقه‌ای آلفا + فهرست خام.
+    /// Key slots are still raw — Alpha's spark reply + the raw list.
     NeedsMoreDiscovery {
-        /// پاسخ فارسی آلفا (انرژیِ بی‌ترمز + درخواست دقیق اسلات‌های خام).
+        /// Alpha's Persian reply (unbraked energy + a precise request for the raw slots).
         alpha_reply_fa: String,
-        /// اسلات‌های خام به ترتیب قطعی.
+        /// Raw slots in deterministic order.
         missing_slots: Vec<AlphaSlotKind>,
-        /// درصد آمادگی (`0..=100`).
+        /// Readiness percentage (`0..=100`).
         readiness_pct: u8,
     },
-    /// آمادگی `≥ 80` — مستر پرامپت و استراکچر پروژه قفل و تحویل شد.
+    /// Readiness `≥ 80` — the master prompt and project structure were locked and handed over.
     LockedForCommandCenter {
-        /// پیام تحویل فارسی آلفا به اتاق فرمان.
+        /// Alpha's Persian handoff message to the command center.
         alpha_handoff_fa: String,
-        /// مستر پرامپت کامپایل‌شدهٔ قطعی.
+        /// The deterministic compiled master prompt.
         master_prompt: MasterPromptSpec,
-        /// استراکچر پروژه (درخت ماژول‌ها با تخصصِ هدف).
+        /// Project structure (the module tree with target expertise).
         blueprint: ProjectBlueprint,
     },
 }
 
-/// کالبد ۱ — آلفا: شکارچیِ ایده و کامپایلرِ مستر پرامپت و استراکچر پروژه.
+/// Body 1 — Alpha: the idea hunter and compiler of the master prompt and project structure.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct AlphaIgnitionPersona;
 
 impl AlphaIgnitionPersona {
-    /// جدول کلیدواژه‌های استخراج اسلات — عمومی برای لبهٔ HTTP تا به‌روزرسانیِ
-    /// اسلات‌های وایر بدون نسخهٔ موازیِ کلیدواژه‌ها انجام شود.
+    /// Slot-extraction keyword table — shared with the HTTP edge so wire-slot updates
+    /// happen without a parallel keyword copy.
     pub fn slot_keyword_table() -> Vec<(AlphaSlotKind, &'static [&'static str])> {
         vec![
             (AlphaSlotKind::CoreObjective, SLOT_KEYWORDS_CORE),
@@ -277,7 +277,7 @@ impl AlphaIgnitionPersona {
         ]
     }
 
-    /// پردازش یک نوبت کشف — استخراجِ قطعی اسلات‌ها از کلیدواژه‌های دوزبانه.
+    /// Process one discovery turn — deterministic slot extraction from bilingual keywords.
     pub fn process_intake(&self, req: &AlphaIntakeRequest) -> AlphaIntakeOutcome {
         let mut slots = req.prior_slots.clone();
         let hay = req.user_message.to_lowercase();
@@ -299,11 +299,11 @@ impl AlphaIgnitionPersona {
             let master = MasterPromptSpec::compile(&slots, &req.session_id, &req.citizen_id);
             let blueprint = ProjectBlueprint::compile(&slots, &master.project_name);
             let alpha_handoff_fa = format!(
-                "🔒 آلفا قفل شد — آمادگی {readiness}٪. مستر پرامپت کامپایل شد \
-                 (hash {hash}) و استراکچر پروژهٔ «{project}» با {modules} ماژول \
-                 به اتاق فرمان (IQ=139/EQ=129، سختیِ قضایی 0.96) تحویل شد؛ \
-                 کارخانهٔ ساب‌ایجنت‌های OpenBot با DNA نه‌لایه‌ای منتظرِ \
-                 فرمانِ اجراست.",
+                "🔒 \u{622}\u{644}\u{641}\u{627} \u{642}\u{641}\u{644} \u{634}\u{62f} — \u{622}\u{645}\u{627}\u{62f}\u{6af}\u{6cc} {readiness}\u{66a}. \u{645}\u{633}\u{62a}\u{631} \u{67e}\u{631}\u{627}\u{645}\u{67e}\u{62a} \u{6a9}\u{627}\u{645}\u{67e}\u{627}\u{6cc}\u{644} \u{634}\u{62f} \
+                 (hash {hash}) \u{648} \u{627}\u{633}\u{62a}\u{631}\u{627}\u{6a9}\u{686}\u{631} \u{67e}\u{631}\u{648}\u{698}\u{647}\u{654} «{project}» \u{628}\u{627} {modules} \u{645}\u{627}\u{698}\u{648}\u{644} \
+                 \u{628}\u{647} \u{627}\u{62a}\u{627}\u{642} \u{641}\u{631}\u{645}\u{627}\u{646} (IQ=139/EQ=129\u{60c} \u{633}\u{62e}\u{62a}\u{6cc}\u{650} \u{642}\u{636}\u{627}\u{6cc}\u{6cc} 0.96) \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{634}\u{62f}\u{61b} \
+                 \u{6a9}\u{627}\u{631}\u{62e}\u{627}\u{646}\u{647}\u{654} \u{633}\u{627}\u{628}‌\u{627}\u{6cc}\u{62c}\u{646}\u{62a}‌\u{647}\u{627}\u{6cc} OpenBot \u{628}\u{627} DNA \u{646}\u{647}‌\u{644}\u{627}\u{6cc}\u{647}‌\u{627}\u{6cc} \u{645}\u{646}\u{62a}\u{638}\u{631}\u{650} \
+                 \u{641}\u{631}\u{645}\u{627}\u{646}\u{650} \u{627}\u{62c}\u{631}\u{627}\u{633}\u{62a}.",
                 hash = &master.spec_hash[..12],
                 project = master.project_name,
                 modules = blueprint.modules.len(),
@@ -314,20 +314,20 @@ impl AlphaIgnitionPersona {
                 .iter()
                 .map(|k| k.fa_label())
                 .collect::<Vec<_>>()
-                .join("، ");
+                .join("\u{60c} ");
             let alpha_reply_fa = format!(
-                "⚡ آلفا فعال شد — IQ={ALPHA_EFFECTIVE_IQ}، EQ={ALPHA_EFFECTIVE_EQ}، \
-                 ترمزِ توقف {ALPHA_INHIBITION_BRAKE}، دمای آنتروپی {ALPHA_ENTROPY_TEMP}. \
-                 جرقهٔ تو {filled} از ۵ اسلات را روشن کرد ({readiness}٪ آمادگی).\
+                "⚡ \u{622}\u{644}\u{641}\u{627} \u{641}\u{639}\u{627}\u{644} \u{634}\u{62f} — IQ={ALPHA_EFFECTIVE_IQ}\u{60c} EQ={ALPHA_EFFECTIVE_EQ}\u{60c} \
+                 \u{62a}\u{631}\u{645}\u{632}\u{650} \u{62a}\u{648}\u{642}\u{641} {ALPHA_INHIBITION_BRAKE}\u{60c} \u{62f}\u{645}\u{627}\u{6cc} \u{622}\u{646}\u{62a}\u{631}\u{648}\u{67e}\u{6cc} {ALPHA_ENTROPY_TEMP}. \
+                 \u{62c}\u{631}\u{642}\u{647}\u{654} \u{62a}\u{648} {filled} \u{627}\u{632} \u{6f5} \u{627}\u{633}\u{644}\u{627}\u{62a} \u{631}\u{627} \u{631}\u{648}\u{634}\u{646} \u{6a9}\u{631}\u{62f} ({readiness}\u{66a} \u{622}\u{645}\u{627}\u{62f}\u{6af}\u{6cc}).\
                  {missing_block}\
-                 هر اسلاتِ خام را در یک جملهٔ دقیق بده؛ در {threshold}٪ آمادگی، \
-                 مستر پرامپت و استراکچر پروژه را قفل می‌کنم و به اتاق فرمان \
-                 تحویل می‌دهم.",
+                 \u{647}\u{631} \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{62e}\u{627}\u{645} \u{631}\u{627} \u{62f}\u{631} \u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647}\u{654} \u{62f}\u{642}\u{6cc}\u{642} \u{628}\u{62f}\u{647}\u{61b} \u{62f}\u{631} {threshold}\u{66a} \u{622}\u{645}\u{627}\u{62f}\u{6af}\u{6cc}\u{60c} \
+                 \u{645}\u{633}\u{62a}\u{631} \u{67e}\u{631}\u{627}\u{645}\u{67e}\u{62a} \u{648} \u{627}\u{633}\u{62a}\u{631}\u{627}\u{6a9}\u{686}\u{631} \u{67e}\u{631}\u{648}\u{698}\u{647} \u{631}\u{627} \u{642}\u{641}\u{644} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{648} \u{628}\u{647} \u{627}\u{62a}\u{627}\u{642} \u{641}\u{631}\u{645}\u{627}\u{646} \
+                 \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{62f}\u{647}\u{645}.",
                 filled = slots.filled_count(),
                 missing_block = if missing.is_empty() {
                     String::new()
                 } else {
-                    format!(" هنوز خام است: {missing_fa}.")
+                    format!(" \u{647}\u{646}\u{648}\u{632} \u{62e}\u{627}\u{645} \u{627}\u{633}\u{62a}: {missing_fa}.")
                 },
                 threshold = ALPHA_READINESS_LOCK_THRESHOLD,
             );
@@ -336,34 +336,34 @@ impl AlphaIgnitionPersona {
     }
 }
 
-/// مستر پرامپت قطعیِ کامپایل‌شده — قرارداد تحویل آلفا به اتاق فرمان.
+/// The deterministic compiled master prompt — Alpha's handoff contract to the command center.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MasterPromptSpec {
-    /// دستورِ سیستمیِ دقیق (قانون‌های حاکم + کالیبراسیون آلفا).
+    /// The exact system directive (sovereign rules + Alpha calibration).
     pub system_directive: String,
-    /// مشخصهٔ عملکردی — از پنج اسلاتِ استخراج‌شده.
+    /// Functional spec — from the five extracted slots.
     pub functional_spec: String,
-    /// قیدهای UX در ۳۹۰ پیکسل — موبایل‌فرست، RTL-first، صفر سرریز.
+    /// UX constraints at 390 pixels — mobile-first, RTL-first, zero overflow.
     pub ux_390_constraints: String,
-    /// معیارهای راستی‌آزمایی — گیت‌های عینیِ پیش از انتشار.
+    /// Verification criteria — objective gates before release.
     pub verification_criteria: Vec<String>,
-    /// متنِ کاملِ مستر پرامپت (ترکیب نهایی همهٔ بخش‌ها).
+    /// The full master-prompt text (the final composition of all sections).
     pub compiled_prompt: String,
-    /// اثر انگشت SHA-256 متنِ کامپایل‌شده — پایداریِ کش بین ساب‌ایجنت‌ها.
+    /// SHA-256 fingerprint of the compiled text — cache stability across subagents.
     pub spec_hash: String,
-    /// نام محصولِ مشتق‌شده از اسلاتِ هدفِ هسته.
+    /// Product name derived from the core-goal slot.
     pub project_name: String,
-    /// شناسهٔ نشست ترینیتی.
+    /// Trinity session ID.
     pub session_id: String,
-    /// پیشنهاد قیمت مایرون به ستارهٔ تلگرام (`XTR`) — مشتقِ قطعی از اسلاتِ درآمد.
+    /// Mairon's price suggestion in Telegram Stars (`XTR`) — a deterministic derivative of the monetization slot.
     pub price_stars_hint: u64,
 }
 
 impl MasterPromptSpec {
-    /// کامپایل قطعی مستر پرامپت از اسلات‌های پرشده.
+    /// Deterministic compilation of the master prompt from the filled slots.
     ///
-    /// اسلاتِ خام در زمان قفل، با جای‌بانِ صادقانهٔ «خام در نوبتِ قفل» در
-    /// مشخصهٔ عملکردی ثبت می‌شود — اتاق فرمان با پیش‌فرضِ مایرون پیش می‌رود.
+    /// A raw slot at lock time is recorded in the functional spec with the honest placeholder
+    /// "raw at lock time" — the command center proceeds with Mairon's defaults.
     pub fn compile(
         slots: &AlphaDiscoverySlots,
         session_id: &str,
@@ -372,16 +372,16 @@ impl MasterPromptSpec {
         let project_name = derive_project_name(slots);
         let slot_line = |label: &str, value: Option<&String>| {
             value.map_or_else(
-                || format!("- {label}: (خام در نوبتِ قفل — پیش‌فرضِ مایرون اعمال می‌شود)"),
+                || format!("- {label}: (\u{62e}\u{627}\u{645} \u{62f}\u{631} \u{646}\u{648}\u{628}\u{62a}\u{650} \u{642}\u{641}\u{644} — \u{67e}\u{6cc}\u{634}‌\u{641}\u{631}\u{636}\u{650} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} \u{627}\u{639}\u{645}\u{627}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f})"),
                 |v| format!("- {label}: {v}"),
             )
         };
         let functional_spec = [
-            slot_line("هدفِ هسته", slots.core_objective.as_ref()),
-            slot_line("مخاطب و UX", slots.target_audience_and_ux.as_ref()),
-            slot_line("قابلیت‌های تعاملی", slots.interactive_features.as_ref()),
-            slot_line("داده و APIهای بدون احراز", slots.data_and_zero_auth_apis.as_ref()),
-            slot_line("درآمدزایی و حلقهٔ وایرال", slots.monetization_and_viral_loop.as_ref()),
+            slot_line("\u{647}\u{62f}\u{641}\u{650} \u{647}\u{633}\u{62a}\u{647}", slots.core_objective.as_ref()),
+            slot_line("\u{645}\u{62e}\u{627}\u{637}\u{628} \u{648} UX", slots.target_audience_and_ux.as_ref()),
+            slot_line("\u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627}\u{6cc} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}", slots.interactive_features.as_ref()),
+            slot_line("\u{62f}\u{627}\u{62f}\u{647} \u{648} API\u{647}\u{627}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{627}\u{62d}\u{631}\u{627}\u{632}", slots.data_and_zero_auth_apis.as_ref()),
+            slot_line("\u{62f}\u{631}\u{622}\u{645}\u{62f}\u{632}\u{627}\u{6cc}\u{6cc} \u{648} \u{62d}\u{644}\u{642}\u{647}\u{654} \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644}", slots.monetization_and_viral_loop.as_ref()),
         ]
         .join("\n");
         let system_directive = format!(
@@ -432,7 +432,7 @@ impl MasterPromptSpec {
     }
 }
 
-/// نام محصولِ قطعی — پنج واژهٔ اولِ اسلاتِ هدفِ هسته.
+/// The deterministic product name — the first five words of the core-goal slot.
 fn derive_project_name(slots: &AlphaDiscoverySlots) -> String {
     let raw = slots
         .core_objective
@@ -447,7 +447,7 @@ fn derive_project_name(slots: &AlphaDiscoverySlots) -> String {
     }
 }
 
-/// نام لاتینِ امنِ محصول برای نشاندن در ویژگی‌های HTML.
+/// The product's safe Latin name for embedding in HTML attributes.
 fn derive_project_slug(slots: &AlphaDiscoverySlots) -> String {
     let name = derive_project_name(slots);
     let slug: String = name
@@ -464,33 +464,33 @@ fn derive_project_slug(slots: &AlphaDiscoverySlots) -> String {
     }
 }
 
-/// یک ماژول درختِ پروژه — مسیر، نقش، وابستگی‌ها و تخصصِ ساب‌ایجنتِ هدف.
+/// One project-tree module — path, role, dependencies and the target subagent's expertise.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BlueprintModule {
-    /// مسیر نسبی ماژول در آرتیفکت (`data-module` روی تگِ همان ماژول).
+    /// The module's relative path in the artifact (`data-module` on that module's tag).
     pub path: String,
-    /// نقش کارکردی ماژول.
+    /// The module's functional role.
     pub role: String,
-    /// مسیرهای ماژول‌هایی که این ماژول به آن‌ها وابسته است.
+    /// Paths of the modules this module depends on.
     pub dependencies: Vec<String>,
-    /// تخصص ساب‌ایجنتِ هدف برای اجرای این ماژول.
+    /// The target subagent's expertise for executing this module.
     pub specialty: SubAgentSpecialty,
 }
 
-/// استراکچر پروژه — درخت ماژول‌های قطعیِ مشتق از اسلات‌ها.
+/// Project structure — the deterministic module tree derived from the slots.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProjectBlueprint {
-    /// نام محصول.
+    /// Product name.
     pub project_name: String,
-    /// نام لاتینِ امن (slug) برای ویژگی‌های HTML.
+    /// The safe Latin name (slug) for HTML attributes.
     pub project_slug: String,
-    /// ماژول‌ها به ترتیب قطعی.
+    /// Modules in deterministic order.
     pub modules: Vec<BlueprintModule>,
 }
 
 impl ProjectBlueprint {
-    /// کامپایل قطعی استراکچر پروژه از اسلات‌ها — چهار ماژولِ پایه همیشه
-    /// حضور دارند و سه ماژولِ شرطی با اسلات‌های تعاملی/داده/درآمد می‌آیند.
+    /// Deterministic compilation of the project structure from the slots — the four base modules are
+    /// always present and the three conditional modules come with the interaction/data/monetization slots.
     pub fn compile(slots: &AlphaDiscoverySlots, project_name: &str) -> Self {
         let project_slug = derive_project_slug(slots);
         let mut modules = vec![
@@ -549,40 +549,40 @@ impl ProjectBlueprint {
 
 // ════════════════════ Stage 2 — COMMAND CENTER ═══════════════════════════
 
-/// IQ مؤثر اتاق فرمان — ارکستراتورِ قضایی.
+/// Command Center's effective IQ — the judicial orchestrator.
 pub const LOGIC_EFFECTIVE_IQ: u16 = 139;
 
-/// EQ مؤثر اتاق فرمان — هوش هیجانیِ پیش‌بینیِ تیم.
+/// Command Center's effective EQ — the team-forecasting emotional intelligence.
 pub const LOGIC_EFFECTIVE_EQ: u16 = 129;
 
-/// ترمزِ توقفِ اتاق فرمان — انضباطِ بالا و تکانش‌پذیریِ پایین.
+/// Command Center's stop brake — high discipline, low impulsivity.
 pub const LOGIC_INHIBITION_BRAKE: f32 = 0.62;
 
-/// سختیِ قضایی اتاق فرمان — دقتِ لمسیِ بالای `0.95` در پذیرشِ خروجی.
+/// Command Center's judicial strictness — above-`0.95` tactile precision in accepting output.
 pub const LOGIC_FORENSIC_STRICTNESS: f32 = 0.96;
 
-/// بیشینهٔ تلاش‌های ترمیم در حلقهٔ خودترمیمیِ اتاق فرمان ↔ مایرون.
+/// Maximum repair attempts in the Command Center ↔ Mairon self-healing loop.
 pub const MAX_OPENBOT_REPAIR_ATTEMPTS: u32 = 3;
 
-/// تخصص ساب‌ایجنت — نگاشت ماژول به متخصص؛ متخصصِ دامنهٔ سفارشی هم مجاز است.
+/// Subagent expertise — maps module to specialist; a custom domain specialist is also allowed.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SubAgentSpecialty {
-    /// معمار UX در ۳۹۰ پیکسل — پوسته، تایپوگرافی، صفر سرریز.
+    /// The 390-pixel UX architect — the shell, typography, zero overflow.
     UiUxArchitect390,
-    /// موتور منطق هسته — حالتِ خالص، جریان‌های کاری.
+    /// The core logic engine — pure state, workflows.
     CoreLogicEngine,
-    /// پل امنیت و API — SSRF، صفر راز، APIهای عمومیِ بدون احراز.
+    /// The security and API bridge — SSRF, zero secrets, unauthenticated public APIs.
     SecurityAndApiBridge,
-    /// راستی‌آزمایی و پرداخت نهایی — پروب‌های تجربی، ضد-اسلوپ.
+    /// Verification and final payment — empirical probes, anti-slop.
     VerificationAndPolish,
-    /// حلقهٔ درآمدزایی و وایرال — KIAN/Stars (`XTR`) و سهم معرف.
+    /// The monetization and virality loop — KIAN/Stars (`XTR`) and the referrer share.
     MonetizationAndViralLoop,
-    /// متخصصِ دامنهٔ سفارشی — با نام آزاد (OpenBot dynamic spawning).
+    /// The custom domain specialist — with a free-form name (OpenBot dynamic spawning).
     Custom(String),
 }
 
 impl SubAgentSpecialty {
-    /// نام وایر — پایدار برای DTO و XML.
+    /// Wire name — stable for DTO and XML.
     pub fn as_str(&self) -> String {
         match self {
             Self::UiUxArchitect390 => "ui_ux_architect_390".to_owned(),
@@ -594,19 +594,19 @@ impl SubAgentSpecialty {
         }
     }
 
-    /// برچسب فارسی تخصص.
+    /// The expertise's Persian label.
     pub fn fa_label(&self) -> String {
         match self {
-            Self::UiUxArchitect390 => "معمار UX در ۳۹۰ پیکسل".to_owned(),
-            Self::CoreLogicEngine => "موتور منطق هسته".to_owned(),
-            Self::SecurityAndApiBridge => "پل امنیت و API".to_owned(),
-            Self::VerificationAndPolish => "راستی‌آزمایی و پرداخت نهایی".to_owned(),
-            Self::MonetizationAndViralLoop => "حلقهٔ درآمدزایی و وایرال".to_owned(),
-            Self::Custom(name) => format!("متخصص سفارشی: {name}"),
+            Self::UiUxArchitect390 => "\u{645}\u{639}\u{645}\u{627}\u{631} UX \u{62f}\u{631} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644}".to_owned(),
+            Self::CoreLogicEngine => "\u{645}\u{648}\u{62a}\u{648}\u{631} \u{645}\u{646}\u{637}\u{642} \u{647}\u{633}\u{62a}\u{647}".to_owned(),
+            Self::SecurityAndApiBridge => "\u{67e}\u{644} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{648} API".to_owned(),
+            Self::VerificationAndPolish => "\u{631}\u{627}\u{633}\u{62a}\u{6cc}‌\u{622}\u{632}\u{645}\u{627}\u{6cc}\u{6cc} \u{648} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{646}\u{647}\u{627}\u{6cc}\u{6cc}".to_owned(),
+            Self::MonetizationAndViralLoop => "\u{62d}\u{644}\u{642}\u{647}\u{654} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{632}\u{627}\u{6cc}\u{6cc} \u{648} \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644}".to_owned(),
+            Self::Custom(name) => format!("\u{645}\u{62a}\u{62e}\u{635}\u{635} \u{633}\u{641}\u{627}\u{631}\u{634}\u{6cc}: {name}"),
         }
     }
 
-    /// حالتِ فشرده‌سازی `Caveman` پیش‌فرضِ هر تخصص.
+    /// The `Caveman` compression mode, the default of every expertise.
     pub fn default_caveman(&self) -> CavemanIntensity {
         match self {
             Self::UiUxArchitect390 | Self::VerificationAndPolish => CavemanIntensity::Lite,
@@ -617,7 +617,7 @@ impl SubAgentSpecialty {
     }
 }
 
-/// لاتین‌سازیِ امنِ نامِ تخصص سفارشی برای شناسه‌های XML/وایر.
+/// Safe Latinization of the custom expertise name for XML/wire IDs.
 fn slugify_name(name: &str) -> String {
     let slug: String = name
         .to_lowercase()
@@ -632,21 +632,21 @@ fn slugify_name(name: &str) -> String {
     }
 }
 
-/// شدت فشرده‌سازی `Caveman` — اقتصاد توکنِ هر ساب‌ایجنت (`Off|Lite|Full|Ultra`).
+/// `Caveman` compression intensity — each subagent's token economy (`Off|Lite|Full|Ultra`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CavemanIntensity {
-    /// بدون فشرده‌سازی — خروجی کامل.
+    /// No compression — full output.
     Off,
-    /// فشرده‌سازی سبک.
+    /// Light compression.
     Lite,
-    /// فشرده‌سازی کامل.
+    /// Full compression.
     Full,
-    /// فشرده‌سازی بیشینه — فقط سیگنال.
+    /// Maximum compression — signal only.
     Ultra,
 }
 
 impl CavemanIntensity {
-    /// شناسهٔ وایر.
+    /// Wire ID.
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Off => "off",
@@ -657,39 +657,39 @@ impl CavemanIntensity {
     }
 }
 
-/// قلابِ توقف ساب‌ایجنت — مرزهای `۴۵۰ ثانیه` استال نرم و `۱۲۰۰ ثانیه` تایم‌اوت سخت.
+/// Subagent stop hook — soft-stall boundary at `450 seconds` and hard-timeout boundary at `1200 seconds`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SubagentStallWatchdog {
-    /// مرزِ استال نرم — در این مرز سیگنالِ مداخلهٔ ارکستراتور صادر می‌شود.
+    /// Soft-stall boundary — at this boundary the orchestrator's intervention signal fires.
     pub soft_stall_secs: u64,
-    /// مرزِ تایم‌اوت سخت — در این مرز ران ساب‌ایجنت فسخ می‌شود.
+    /// Hard-timeout boundary — at this boundary the subagent run is terminated.
     pub hard_timeout_secs: u64,
 }
 
-/// حکم قلابِ توقف در یک لحظهٔ زمانی.
+/// The stop hook's verdict at one point in time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum WatchdogVerdict {
-    /// در مرز امن.
+    /// Within the safe boundary.
     Healthy,
-    /// استالِ نرم — مداخلهٔ ارکستراتور لازم است.
+    /// Soft stall — orchestrator intervention is required.
     SoftStall,
-    /// تایم‌اوت سخت — فسخ و رهسپاریِ دوباره.
+    /// Hard timeout — terminate and re-dispatch.
     HardTimeout,
 }
 
 impl SubagentStallWatchdog {
-    /// مرز استال نرمِ حاکم (`450s`).
+    /// The sovereign soft-stall boundary (`450s`).
     pub const SOFT_STALL_SECS: u64 = 450;
 
-    /// مرز تایم‌اوت سختِ حاکم (`1200s`).
+    /// The sovereign hard-timeout boundary (`1200s`).
     pub const HARD_TIMEOUT_SECS: u64 = 1200;
 
-    /// قلابِ حاکمِ ترینیتی با مرزهای قفل‌شدهٔ `450s/1200s`.
+    /// The Trinity sovereign hook with locked `450s/1200s` boundaries.
     pub fn sovereign() -> Self {
         Self { soft_stall_secs: Self::SOFT_STALL_SECS, hard_timeout_secs: Self::HARD_TIMEOUT_SECS }
     }
 
-    /// حکم در لحظهٔ `elapsed_secs` از آغاز ران.
+    /// The verdict at `elapsed_secs` since the run started.
     pub fn verdict_for(&self, elapsed_secs: u64) -> WatchdogVerdict {
         if elapsed_secs >= self.hard_timeout_secs {
             WatchdogVerdict::HardTimeout
@@ -701,7 +701,7 @@ impl SubagentStallWatchdog {
     }
 }
 
-/// PRNG قطعی SplitMix64 — آلل‌های تصادفی از `session_seed + subagent_index`.
+/// Deterministic SplitMix64 PRNG — random alleles from `session_seed + subagent_index`.
 fn splitmix64(state: &mut u64) -> u64 {
     *state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
     let mut z = *state;
@@ -710,29 +710,29 @@ fn splitmix64(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-/// یک عدد واحد در `[0, 1)` از جریان SplitMix64 — بدون تبدیلِ کستِ نامطمئن.
+/// A single number in `[0, 1)` from the SplitMix64 stream — no unsafe-cast conversion.
 fn splitmix_unit(state: &mut u64) -> f64 {
     let z = splitmix64(state);
-    let top = u32::try_from(z >> 40).unwrap_or(0); // z >> 40 < 2^24 — همیشه جا می‌شود
+    let top = u32::try_from(z >> 40).unwrap_or(0); // z >> 40 < 2^24 — always fits
     f64::from(top) / 16_777_216.0
 }
 
-/// آلل‌های تصادفیِ قطعی ساب‌ایجنت — خرده‌صفاتِ سفارشیِ هر نه‌لایه.
+/// The subagent's deterministic random alleles — custom traits of each nine-fold layer.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct SubAgentAlleles {
-    /// چگالی جراحی — دقتِ حداقلیِ تغییر در سطح ماژول.
+    /// Surgical density — minimal-change precision at module level.
     pub surgical_density: f64,
-    /// مهارتِ صنعتگری UX — وسواسِ تایپوگرافی و ریتم.
+    /// UX craftsmanship skill — obsession with typography and rhythm.
     pub ux_craft: f64,
-    /// پارانویای لبه‌ها — پوششِ حالت‌های مرزی.
+    /// Edge paranoia — coverage of boundary states.
     pub edge_case_paranoia: f64,
-    /// سرعتِ اجرا — تمایل به خروجیِ سریع و حداقلی.
+    /// Execution speed — bias toward fast, minimal output.
     pub execution_velocity: f64,
-    /// بذرِ آلل — بازتولیدِ قطعیِ همان DNA.
+    /// Allele seed — deterministic reproduction of the same DNA.
     pub allele_seed: u64,
 }
 
-/// مشتقِ قطعی آلل‌ها از `session_seed + subagent_index` — همان بذر، همان DNA.
+/// Deterministic derivation of alleles from `session_seed + subagent_index` — same seed, same DNA.
 fn derive_alleles(session_seed: u64, subagent_index: u32) -> SubAgentAlleles {
     let mut st = session_seed ^ u64::from(subagent_index).wrapping_mul(0x9E37_79B9_7F4A_7C15);
     let surgical_density = 0.55 + 0.40 * splitmix_unit(&mut st);
@@ -742,7 +742,7 @@ fn derive_alleles(session_seed: u64, subagent_index: u32) -> SubAgentAlleles {
     SubAgentAlleles { surgical_density, ux_craft, edge_case_paranoia, execution_velocity, allele_seed: st }
 }
 
-/// لایهٔ ۱ — هستهٔ ثابتِ قوانین حاکم؛ بین همهٔ ساب‌ایجنت‌ها کش-پین می‌شود.
+/// Layer 1 — the immutable core of sovereign rules; cache-pinned across all subagents.
 pub const LAYER1_STABLE_CORE: &str = "SOVEREIGN CODING LAWS (cache-pinned across every OpenBot \
     sub-agent): (1) zero unsafe — `#![forbid(unsafe_code)]` is non-negotiable; (2) 390px \
     mobile-first zero-overflow — no horizontal scroll below 391px; (3) RTL-first typography \
@@ -754,20 +754,20 @@ pub const LAYER1_STABLE_CORE: &str = "SOVEREIGN CODING LAWS (cache-pinned across
     probe — no claim without evidence; (9) surgical diffs — touch only the assigned module \
     surface.";
 
-/// الگوی پرامپت سه‌لایهٔ کش-امن — لایهٔ ۱ و ۲ کش-پین، لایهٔ ۳ پویا.
+/// The cache-safe three-layer prompt pattern — layers 1 and 2 cache-pinned, layer 3 dynamic.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ThreeLayerSubAgentPrompt {
-    /// لایهٔ ۱ — قوانین حاکمِ تغییرناپذیر (کش-پین بین همهٔ ساب‌ایجنت‌ها).
+    /// Layer 1 — immutable sovereign rules (cache-pinned across all subagents).
     pub layer1_stable_core: String,
-    /// لایهٔ ۲ — قراردادهای نشست ساخت: مستر پرامپت + استراکچر پروژه (کش-پین per-build).
+    /// Layer 2 — build-session contracts: master prompt + project structure (cache-pinned per-build).
     pub layer2_blueprint_context: String,
-    /// لایهٔ ۳ — محولهٔ دقیق ماژول + بذرِ آلل‌ها (پویا، پس از مرزِ کش).
+    /// Layer 3 — the module's exact assignment + allele seed (dynamic, beyond the cache boundary).
     pub layer3_dynamic_assignment: String,
 }
 
 impl ThreeLayerSubAgentPrompt {
-    /// رندر کامل — لایه‌های کش-پین قبل از [`SYSTEM_PROMPT_DYNAMIC_BOUNDARY`]
-    /// و بلوکِ پویا پس از آن تا پیشوندِ ایستا در کش ارائه‌دهنده پایدار بماند.
+    /// Full render — cache-pinned layers before [`SYSTEM_PROMPT_DYNAMIC_BOUNDARY`]
+    /// and the dynamic block after it, so the static prefix stays stable in provider caches.
     pub fn render(&self) -> String {
         format!(
             "{l1}\n{l2}\n{boundary}\n{l3}",
@@ -779,41 +779,41 @@ impl ThreeLayerSubAgentPrompt {
     }
 }
 
-/// گزارش گیتِ پاک‌ساز — صفر نشانگر ناتمام، صفر رز جای‌بانی، صفر اسلوپ.
+/// Sanitizer gate report — zero unfinished markers, zero placeholder secrets, zero slop.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SanitizerReport {
-    /// شمار نشانگرهای ناتمام (`todo/TODO/FIXME/XXX/todo!()`).
+    /// Count of unfinished markers (`todo/TODO/FIXME/XXX/todo!()`).
     pub todo_markers: usize,
-    /// شمار رازهای جای‌بانی (`sk-…`، `AKIA…`، `BEGIN PRIVATE KEY`، `ghp_…`).
+    /// Count of placeholder secrets (`sk-…`, `AKIA…`, `BEGIN PRIVATE KEY`, `ghp_…`).
     pub placeholder_secrets: usize,
-    /// شمار بلوک‌های `unsafe` (`unsafe {` یا `unsafe fn`).
+    /// Count of `unsafe` blocks (`unsafe {` or `unsafe fn`).
     pub unsafe_markers: usize,
-    /// شمار متنِ جای‌بانیِ `lorem ipsum`.
+    /// Count of `lorem ipsum` placeholder text.
     pub lorem_markers: usize,
-    /// نشانه‌های AI-slop یافت‌شده (`audit_frontend_slop`) — فقط روی آرتیفکت.
+    /// AI-slop markers found (`audit_frontend_slop`) — on the artifact only.
     pub slop_tells: Vec<String>,
-    /// عبور از گیت — همهٔ شمارنده‌ها صفر و اسلوپ خالی.
+    /// Gate pass — all counters zero and slop empty.
     pub passed: bool,
 }
 
-/// الگوهای رازِ جای‌بانی — هر رخداد، گیتِ پاک‌ساز را می‌شکند.
+/// Placeholder-secret patterns — every hit breaks the sanitizer gate.
 const SECRET_PATTERNS: &[&str] = &[
     "sk-", "akia", "begin private key", "begin rsa private key", "ghp_", "api_key=\"",
     "password=\"", "token=\"",
 ];
 
-/// الگوهای نشانگر ناتمام.
+/// Unfinished-marker patterns.
 const TODO_PATTERNS: &[&str] = &["todo", "fixme", "xxx", "todo!()"];
 
-/// الگوهای بلوک unsafe.
+/// unsafe-block patterns.
 const UNSAFE_PATTERNS: &[&str] = &["unsafe {", "unsafe fn"];
 
-/// شمار رخدادهای همهٔ الگوها در متن (پس از lowercase).
+/// Hit count of all patterns in the text (after lowercasing).
 fn count_pattern_occurrences(lower: &str, patterns: &[&str]) -> usize {
     patterns.iter().map(|p| lower.matches(p).count()).sum()
 }
 
-/// اجرای گیتِ پاک‌سازِ DNA — شمارنده‌های ساختاری بدون ممیزیِ اسلوپ (پرامپت).
+/// Run the DNA sanitizer gate — structural counters without the slop audit (prompt).
 pub fn run_sanitizer_gate(text: &str) -> SanitizerReport {
     let lower = text.to_lowercase();
     let todo_markers = count_pattern_occurrences(&lower, TODO_PATTERNS);
@@ -827,7 +827,7 @@ pub fn run_sanitizer_gate(text: &str) -> SanitizerReport {
     SanitizerReport { todo_markers, placeholder_secrets, unsafe_markers, lorem_markers, slop_tells: Vec::new(), passed }
 }
 
-/// اجرای گیتِ پاک‌سازِ آرتیفکت — شمارنده‌های ساختاری + ممیزیِ کاملِ اسلوپ.
+/// Run the artifact sanitizer gate — structural counters + full slop audit.
 pub fn run_artifact_sanitizer(html: &str) -> SanitizerReport {
     let mut report = run_sanitizer_gate(html);
     report.slop_tells = audit_frontend_slop(html)
@@ -838,32 +838,32 @@ pub fn run_artifact_sanitizer(html: &str) -> SanitizerReport {
     report
 }
 
-/// ژنومِ نه‌لایه‌ای ساب‌ایجنت OpenBot — الگوی `۳×۹`: سه لایهٔ پرامپت ×
-/// نه فاکتور ژنوم، هر ساب‌ایجنت با DNAِ یکتا اما سازگار با کش.
+/// The OpenBot subagent nine-fold genome — the `3×9` pattern: three prompt layers ×
+/// nine genome factors; each subagent gets unique DNA that stays cache-compatible.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::struct_field_names)]
 pub struct NineFoldSubAgentGenome {
-    /// f01 — توپولوژی و هارنس: کالیبراسیون IQ/EQ/نگاهِ جلو + مرزهای قلابِ توقف.
+    /// f01 — topology and harness: IQ/EQ/lookahead calibration + stop-hook boundaries.
     pub f01_topology_and_harness: String,
-    /// f02 — قیدهای سخت: `forbid(unsafe)`، صفر سرریز ۳۹۰، گارد SSRF، صفر راز.
+    /// f02 — hard constraints: `forbid(unsafe)`, zero 390 overflow, SSRF guard, zero secrets.
     pub f02_hard_constraints: Vec<String>,
-    /// f03 — اقتصاد توکن: حالتِ `Caveman`.
+    /// f03 — token economy: the `Caveman` mode.
     pub f03_token_economics: CavemanIntensity,
-    /// f04 — آلل‌های تصادفیِ قطعی از `session_seed + subagent_index`.
+    /// f04 — deterministic random alleles from `session_seed + subagent_index`.
     pub f04_stochastic_alleles: SubAgentAlleles,
-    /// f05 — بازیابیِ خطا: قرارداد خودترمیمیِ ۳-تلاشیِ OpenBot.
+    /// f05 — error recovery: the OpenBot 3-attempt self-healing contract.
     pub f05_failure_recovery: String,
-    /// f06 — پرامپت XML کامپایل‌شدهٔ کامل (`<openbot_subagent_dna>`).
+    /// f06 — the fully compiled XML prompt (`<openbot_subagent_dna>`).
     pub f06_compiled_xml_prompt: String,
-    /// f07 — گیتِ پاک‌ساز: صفر `todo!()`، صفر رازِ جای‌بانی، صفر اسلوپ.
+    /// f07 — sanitizer gate: zero `todo!()`, zero placeholder secrets, zero slop.
     pub f07_sanitizer_gate: SanitizerReport,
-    /// f08 — پروب‌های تجربیِ اختصاصیِ ماژول.
+    /// f08 — module-specific empirical probes.
     pub f08_empirical_probes: Vec<String>,
-    /// f09 — کارت تحویل: قراردادِ بازگشت به اتاق فرمان.
+    /// f09 — delivery card: the contract for returning to the command center.
     pub f09_handoff_card: String,
 }
 
-/// گریزِ XML برای محتوای متنیِ داخل بلوکِ DNA.
+/// XML escaping for textual content inside the DNA block.
 fn xml_escape(text: &str) -> String {
     text.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -871,39 +871,39 @@ fn xml_escape(text: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// ساب‌ایجنتِ رهسپارشدهٔ OpenBot — DNAِ کاملِ یکتا برای یک ماژول.
+/// The dispatched OpenBot subagent — complete unique DNA for one module.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SpawnedSubAgent {
-    /// شمار ردیفی ساب‌ایجنت در ناوگانِ این نشست (`0..`).
+    /// Row-wise subagent index in this session's fleet (`0..`).
     pub subagent_index: u32,
-    /// تخصصِ متخصص.
+    /// The specialist's expertise.
     pub specialty: SubAgentSpecialty,
-    /// ماژول(های) محول‌شده.
+    /// The assigned module(s).
     pub assigned_modules: Vec<String>,
-    /// شناسهٔ نخِ قطعی (`deterministic_subagent_thread_id`).
+    /// The deterministic thread ID (`deterministic_subagent_thread_id`).
     pub thread_id: String,
-    /// پرامپت سه‌لایهٔ کش-امن.
+    /// The cache-safe three-layer prompt.
     pub prompt: ThreeLayerSubAgentPrompt,
-    /// ژنوم نه‌لایه‌ای.
+    /// The nine-fold genome.
     pub genome: NineFoldSubAgentGenome,
 }
 
-/// کارخانهٔ ساب‌ایجنت‌های OpenBot — رهسپاریِ پویا با DNAِ یکتا.
+/// The OpenBot subagent factory — dynamic dispatch with unique DNA.
 #[derive(Debug, Clone)]
 pub struct OpenBotSubAgentSpawner {
-    /// شناسهٔ نشست ترینیتی (والدِ نخ‌ها).
+    /// The Trinity session ID (parent of the threads).
     session_id: String,
-    /// بذر تصادفیِ قطعی نشست.
+    /// The session's deterministic random seed.
     session_seed: u64,
 }
 
 impl OpenBotSubAgentSpawner {
-    /// ساخت کارخانه روی یک نشست.
+    /// Build the factory on one session.
     pub fn new(session_id: &str, session_seed: u64) -> Self {
         Self { session_id: session_id.to_owned(), session_seed }
     }
 
-    /// پروب‌های تجربیِ پیش‌فرض هر تخصص — f08.
+    /// The default empirical probes per expertise — f08.
     fn probes_for(specialty: &SubAgentSpecialty) -> Vec<String> {
         match specialty {
             SubAgentSpecialty::UiUxArchitect390 => vec![
@@ -932,8 +932,8 @@ impl OpenBotSubAgentSpawner {
         }
     }
 
-    /// کامپایل XML نه‌لایه (f06) — بلوک کاملِ `<openbot_subagent_dna>`.
-    #[allow(clippy::too_many_arguments)] // قراردادِ DNAِ کامل — نه ورودیِ نام‌دارِ صریح
+    /// Compile the nine-fold XML (f06) — the complete `<openbot_subagent_dna>` block.
+    #[allow(clippy::too_many_arguments)] // the complete DNA contract — no explicit named inputs
     fn compile_xml_prompt(
         session_id: &str,
         index: u32,
@@ -987,7 +987,7 @@ impl OpenBotSubAgentSpawner {
         )
     }
 
-    /// رهسپاریِ یک ساب‌ایجنت با DNAِ کاملِ یکتا برای یک ماژول.
+    /// Dispatch one subagent with complete unique DNA for one module.
     pub fn spawn(
         &self,
         subagent_index: u32,
@@ -1046,8 +1046,8 @@ impl OpenBotSubAgentSpawner {
             &watchdog,
             caveman,
         );
-        // گیتِ پاک‌ساز روی بلوکِ DNAِ کامپایل‌شده اجرا می‌شود — لایهٔ ۱ قانون‌ها را
-        // با نامشان نقل می‌کند (متای قانون)، پس شمارش روی XMLِ نه‌لایه معتبر است.
+        // the sanitizer gate runs on the compiled DNA block — layer 1 quotes the rules
+        // by name (rule metadata), so counting over the nine-fold XML is valid.
         let f07 = run_sanitizer_gate(&f06);
         let f01 = format!(
             "IQ={LOGIC_EFFECTIVE_IQ} EQ={LOGIC_EFFECTIVE_EQ} lookahead=2 | \
@@ -1096,7 +1096,7 @@ impl OpenBotSubAgentSpawner {
         }
     }
 
-    /// رهسپاریِ کل ناوگان — یک ساب‌ایجنت به ازای هر ماژولِ استراکچر پروژه.
+    /// Dispatch the whole fleet — one subagent per project-structure module.
     pub fn spawn_fleet(
         &self,
         master: &MasterPromptSpec,
@@ -1113,38 +1113,38 @@ impl OpenBotSubAgentSpawner {
     }
 }
 
-// ── مونتاژ آرتیفکت — هر ساب‌ایجنت سهمِ قطعیِ ماژول خودش را می‌سازد ─────────
+// ── Artifact assembly — each subagent builds its own module's deterministic share ─────────
 
-/// نشانهٔ مرزِ ماژول در آرتیفکت — امضای یکپارچگیِ معماری.
+/// The module-boundary marker in the artifact — the architectural integrity signature.
 pub const MODULE_BOUNDARY_MARKER: &str = "<!-- ══ mairon-boundary:";
 
-/// نشانهٔ تقویتِ مرز پس از ترمیم معماری (رهسپاریِ دوبارهٔ CoreLogicEngine).
+/// The boundary-reinforcement marker after an architectural repair (re-dispatch of CoreLogicEngine).
 pub const BOUNDARY_REINFORCED_MARKER: &str = "boundary-reinforced: mairon-pass";
 
-/// نشانهٔ بلوکِ پرداخت UX پس از ترمیم (رهسپاریِ دوبارهٔ UiUxArchitect390).
+/// The UX-payment block marker after a repair (re-dispatch of UiUxArchitect390).
 pub const UX_POLISH_MARKER: &str = "data-ux-polish=\"mairon-pass";
 
-/// آرتیفکت مونتاژشدهٔ یک‌صفحه‌ای — خروجیِ مرحلهٔ ۲ و ورودیِ داوریِ مرحلهٔ ۳.
+/// The assembled single-page artifact — the output of stage 2 and the input of stage 3 adjudication.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AssembledArtifact {
-    /// HTML کاملِ محصول.
+    /// The product's full HTML.
     pub html: String,
-    /// ماژول‌های یکپارچه‌شده (با `data-module` قابل راستی‌آزمایی).
+    /// Integrated modules (verifiable via `data-module`).
     pub integrated_modules: Vec<String>,
-    /// شمار پروب‌های تجربیِ تزریق‌شده (`data-probe="probe-…"`).
+    /// Count of injected empirical probes (`data-probe="probe-…"`).
     pub probe_count: usize,
-    /// گذرِ ترمیم (`0` = مونتاژ نخست، `1..=3` = پس از فرمانِ مایرون).
+    /// Repair pass (`0` = first assembly, `1..=3` = after a Mairon directive).
     pub repair_pass: u32,
 }
 
 impl AssembledArtifact {
-    /// حجم آرتیفکت بر حسب بایت.
+    /// Artifact size in bytes.
     pub fn bytes(&self) -> usize {
         self.html.len()
     }
 }
 
-/// گریزِ HTML برای متنِ مشتق از کاربر در آرتیفکت.
+/// HTML escaping for user-derived text in the artifact.
 fn html_escape(text: &str) -> String {
     text.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -1153,7 +1153,7 @@ fn html_escape(text: &str) -> String {
         .replace('\'', "&#39;")
 }
 
-/// قالب پوستهٔ HTML — جای‌بان‌ها با `.replace` پر می‌شوند (بدون کِش‌مکشِ بریس).
+/// The HTML shell template — placeholders filled with `.replace` (no brace conflicts).
 const ARTIFACT_SHELL: &str = "<!doctype html>\n<html lang=\"fa\" dir=\"rtl\">\n<head>\n\
 <meta charset=\"utf-8\">\n\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
@@ -1180,7 +1180,7 @@ __KIA_PROBES__\
 __KIA_REINFORCED__\
 </body>\n</html>\n";
 
-/// قالب بخشِ قهرمان — متن‌های مشتق از کاربر پیش از نشاندن گریز می‌شوند.
+/// The hero-section template — user-derived text is escaped before insertion.
 const HERO_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/index.html -->\n\
 <section class=\"hero\" data-module=\"src/index.html\" data-allele-seed=\"__KIA_SEED_HERO__\">\n\
 <h1 class=\"hero-title\">__KIA_TITLE__</h1>\n\
@@ -1190,7 +1190,7 @@ const HERO_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/index.html -->\n\
 </div>\n\
 </section>\n";
 
-/// قالب هستهٔ منطقِ خالص — بدون IO، بدون unsafe.
+/// The pure-logic-core template — no IO, no unsafe.
 const CORE_JS_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/core.js -->\n\
 <script data-module=\"src/js/core.js\" data-allele-seed=\"__KIA_SEED_CORE__\">\n\
 const KiaCore = (() => {\n\
@@ -1201,7 +1201,7 @@ const KiaCore = (() => {\n\
 })();\n\
 </script>\n";
 
-/// قالب تعاملات فریمِ اول.
+/// The first-frame interactions template.
 const INTERACTIONS_JS_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/interactions.js -->\n\
 <script data-module=\"src/js/interactions.js\">\n\
 const KiaInteractions = (() => {\n\
@@ -1217,7 +1217,7 @@ const KiaInteractions = (() => {\n\
 })();\n\
 </script>\n";
 
-/// قالب پل APIهای عمومیِ بدون احراز با گارد SSRF — صفر راز روی وایر.
+/// The unauthenticated public-API bridge template with the SSRF guard — zero secrets on the wire.
 const API_BINDINGS_JS_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/api-bindings.js -->\n\
 <script data-module=\"src/js/api-bindings.js\">\n\
 const KiaApi = (() => {\n\
@@ -1236,7 +1236,7 @@ const KiaApi = (() => {\n\
 })();\n\
 </script>\n";
 
-/// قالب حلقهٔ درآمدزایی و وایرال — قیمت Stars (`XTR`) + سهم معرف.
+/// The monetization and virality loop template — Stars (`XTR`) pricing + referrer share.
 const MONETIZATION_JS_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/monetization.js -->\n\
 <script data-module=\"src/js/monetization.js\">\n\
 const KiaMonetization = (() => {\n\
@@ -1248,14 +1248,14 @@ const KiaMonetization = (() => {\n\
 })();\n\
 </script>\n";
 
-/// قالب خود-بررسیِ گذرِ صفر — پروب‌ها فقط با فرمانِ مایرون تزریق می‌شوند.
+/// The pass-zero self-check template — probes are injected only on Mairon's order.
 const SELF_CHECK_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/verification-probes.js -->\n\
 <script data-module=\"src/js/verification-probes.js\">\n\
 /* self-check (pass 0): empirical probes are stage-gated behind Mairon's repair directive */\n\
 /* self-check: proof before pride — no completion claim without fresh evidence */\n\
 </script>\n";
 
-/// قالب بلوکِ پروب‌های تجربی — پس از فرمانِ ترمیمِ مایرون.
+/// The empirical-probes block template — after Mairon's repair order.
 const PROBES_BLOCK_TEMPLATE: &str = "<!-- ══ mairon-boundary: src/js/verification-probes.js (empirical) -->\n\
 <div id=\"mairon-empirical-probes\" data-repair-pass=\"__KIA_PASS__\">\n\
 __KIA_PROBE_SPANS__\
@@ -1271,7 +1271,7 @@ const KiaProbes = {\n\
 };\n\
 </script>\n";
 
-/// قالب بلوکِ پرداختِ UX پس از فرمانِ ترمیم — تایپوگرافی و ریتمِ باز-تثبیت‌شده.
+/// The UX-payment block template after the repair order — typography and rhythm re-established.
 const UX_POLISH_TEMPLATE: &str = "<!-- mairon ux polish pass __KIA_PASS__: hardening re-affirmed -->\n\
 <style __KIA_POLISH_ATTR__>\n\
 main#app { padding-inline: 16px; }\n\
@@ -1279,13 +1279,13 @@ main#app { padding-inline: 16px; }\n\
 .hero-sub { font-size: 0.95rem; opacity: 0.8; }\n\
 </style>\n";
 
-/// نخستین عدد صحیح در متن (رقم لاتین یا فارسی) — پیشنهاد قیمت از اسلاتِ درآمد.
+/// The first integer in the text (Latin or Persian digit) — the price suggestion from the monetization slot.
 fn first_number_in(text: &str) -> Option<u64> {
     let mut buf = String::new();
     for ch in text.chars() {
         let digit = match ch {
             '0'..='9' => ch,
-            '۰'..='۹' => char::from_u32(u32::from('0') + (u32::from(ch) - u32::from('۰')))
+            '\u{6f0}'..='\u{6f9}' => char::from_u32(u32::from('0') + (u32::from(ch) - u32::from('\u{6f0}')))
                 .unwrap_or('0'),
             _ => {
                 if !buf.is_empty() {
@@ -1303,7 +1303,7 @@ fn first_number_in(text: &str) -> Option<u64> {
     }
 }
 
-/// پیشنهاد قیمت مایرون از اسلاتِ درآمدزایی — پیش‌فرضِ `۱۵۰⭐` در نبودِ عدد.
+/// Mairon's price suggestion from the monetization slot — default `150⭐` when no number is present.
 fn derive_price_stars(slots: &AlphaDiscoverySlots) -> u64 {
     slots
         .monetization_and_viral_loop
@@ -1313,19 +1313,19 @@ fn derive_price_stars(slots: &AlphaDiscoverySlots) -> u64 {
         .unwrap_or(150)
 }
 
-/// کالبد ۲ — اتاق فرمان: ارکستراتورِ قضایی با کارخانهٔ ساب‌ایجنت‌های OpenBot.
+/// Body 2 — Command Center: the judicial orchestrator with the OpenBot subagent factory.
 #[derive(Debug, Clone)]
 pub struct CommandCenterOrchestrator {
-    /// شناسهٔ نشست ترینیتی.
+    /// Trinity session ID.
     pub session_id: String,
-    /// حساب شهروندِ سازنده.
+    /// The builder-citizen account.
     pub citizen_id: String,
-    /// بذر تصادفیِ قطعی نشست — منبعِ آلل‌های کل ناوگان.
+    /// The session's deterministic random seed — the allele source of the whole fleet.
     pub session_seed: u64,
 }
 
 impl CommandCenterOrchestrator {
-    /// ساخت ارکستراتور روی نشستِ قفل‌شدهٔ آلفا.
+    /// Build the orchestrator on the locked Alpha session.
     pub fn new(session_id: &str, citizen_id: &str, session_seed: u64) -> Self {
         Self {
             session_id: session_id.to_owned(),
@@ -1334,8 +1334,8 @@ impl CommandCenterOrchestrator {
         }
     }
 
-    /// بذرِ قطعی از شناسهٔ نشست — ۸ بایتِ اولِ SHA-256؛ در نبودِ بذرِ صریحِ
-    /// کلاینت، ناوگان همچنان بازتولید‌پذیر می‌ماند.
+    /// Deterministic seed from the session ID — the first 8 bytes of SHA-256; without an explicit client
+    /// seed, the fleet still stays reproducible.
     pub fn session_seed_from_session(session_id: &str) -> u64 {
         let digest = Sha256::digest(session_id.as_bytes());
         let mut seed = [0u8; 8];
@@ -1343,7 +1343,7 @@ impl CommandCenterOrchestrator {
         u64::from_be_bytes(seed)
     }
 
-    /// ناوگانِ OpenBot این نشست — یک متخصص به ازای هر ماژول.
+    /// This session's OpenBot fleet — one specialist per module.
     pub fn spawn_openbot_fleet(
         &self,
         master: &MasterPromptSpec,
@@ -1352,10 +1352,10 @@ impl CommandCenterOrchestrator {
         OpenBotSubAgentSpawner::new(&self.session_id, self.session_seed).spawn_fleet(master, blueprint)
     }
 
-    /// مونتاژ آرتیفکت یک‌صفحه‌ای از سهمِ قطعیِ هر ساب‌ایجنت.
+    /// Assemble the single-page artifact from each subagent's deterministic share.
     ///
-    /// * `repair_pass == 0` — مونتاژِ نخست؛ پروب‌ها سنجه‌بستهٔ فرمانِ مایرون‌اند.
-    /// * `repair_pass >= 1` — فقط فرمان‌های صادرشدهٔ داور اعمال می‌شوند.
+    /// * `repair_pass == 0` — first assembly; probes are sealed behind Mairon's directive.
+    /// * `repair_pass >= 1` — only the judge's issued directives are applied.
     fn assemble_artifact(
         fleet: &[SpawnedSubAgent],
         master: &MasterPromptSpec,
@@ -1373,22 +1373,22 @@ impl CommandCenterOrchestrator {
         let objective = master
             .functional_spec
             .lines()
-            .find(|l| l.starts_with("- هدفِ هسته"))
+            .find(|l| l.starts_with("- \u{647}\u{62f}\u{641}\u{650} \u{647}\u{633}\u{62a}\u{647}"))
             .map_or(String::new(), |l| {
-                l.trim_start_matches("- هدفِ هسته: ").chars().take(140).collect()
+                l.trim_start_matches("- \u{647}\u{62f}\u{641}\u{650} \u{647}\u{633}\u{62a}\u{647}: ").chars().take(140).collect()
             });
         let audience = master
             .functional_spec
             .lines()
-            .find(|l| l.starts_with("- مخاطب و UX"))
+            .find(|l| l.starts_with("- \u{645}\u{62e}\u{627}\u{637}\u{628} \u{648} UX"))
             .map_or(String::new(), |l| {
-                l.trim_start_matches("- مخاطب و UX: ").chars().take(80).collect()
+                l.trim_start_matches("- \u{645}\u{62e}\u{627}\u{637}\u{628} \u{648} UX: ").chars().take(80).collect()
             });
         let features = master
             .functional_spec
             .lines()
-            .find(|l| l.starts_with("- قابلیت‌های تعاملی"))
-            .map_or("workflow فریمِ اول", |l| l.trim_start_matches("- قابلیت‌های تعاملی: "))
+            .find(|l| l.starts_with("- \u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627}\u{6cc} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}"))
+            .map_or("workflow \u{641}\u{631}\u{6cc}\u{645}\u{650} \u{627}\u{648}\u{644}", |l| l.trim_start_matches("- \u{642}\u{627}\u{628}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627}\u{6cc} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}: "))
             .chars()
             .take(120)
             .collect::<String>();
@@ -1476,76 +1476,76 @@ impl CommandCenterOrchestrator {
 
 // ════════════════════ Stage 3 — MAIRON-150 ═══════════════════════════════
 
-/// سقفِ امتیاز ستون — از دامنه (`MAX_PILLAR_SCORE = 25`).
+/// The pillar score cap — from the domain (`MAX_PILLAR_SCORE = 25`).
 use kian_domain::mairon_rea_and_reviews::MAX_PILLAR_SCORE;
 
-/// هر ستون زیرِ این آستانه، فرمانِ ترمیمِ اختصاصیِ همان تخصص را می‌گیرد.
+/// Any pillar below this threshold receives the repair directive targeted at its own expertise.
 const PILLAR_REPAIR_TRIGGER: u8 = MAX_PILLAR_SCORE;
 
-/// کالیبراسیونِ معماری — پایه به ازای هر ماژولِ استراکچر پروژه.
+/// Architecture calibration — a base amount per project-structure module.
 const ARCH_BASE: usize = 6;
 const ARCH_PER_MODULE: usize = 2;
 const ARCH_INTEGRATED_BONUS: usize = 3;
 const ARCH_BOUNDARY_BONUS: usize = 2;
 const ARCH_REINFORCED_BONUS: usize = 2;
 
-/// کالیبراسیونِ UX — پایه + نشانگرهای RTL/۳۹۰/وزیرمتن/پرداخت.
+/// UX calibration — base + RTL/390/Vazirmatn/payment markers.
 const UX_BASE: usize = 17;
 const UX_MARKER_BONUS: usize = 2;
 const UX_SLOP_PENALTY: usize = 4;
 const UX_LOREM_PENALTY: usize = 3;
 
-/// کالیبراسیونِ راستی‌آزمایی — پایه + سه امتیاز به ازای هر پروب تجربی.
+/// Verification calibration — base + three points per empirical probe.
 const VERIFICATION_BASE: usize = 2;
 const VERIFICATION_PER_PROBE: usize = 3;
 
-/// کالیبراسیونِ امنیت — پایهٔ کامل، کسر به ازای هر رخدادِ ممنوع.
+/// Security calibration — full base, minus a deduction per forbidden hit.
 const SECURITY_BASE: usize = 25;
 const SECURITY_PER_SECRET: usize = 6;
 const SECURITY_PER_TODO: usize = 4;
 const SECURITY_PER_UNSAFE: usize = 5;
 
-/// بستنِ امتیاز ستون در `0..=25` — ورودیِ سرکش، حکمِ قانونی (قرارداد دامنه).
+/// Clamp the pillar score into `0..=25` — rogue input, legal verdict (domain contract).
 fn clamp25(value: usize) -> u8 {
     u8::try_from(value.min(usize::from(MAX_PILLAR_SCORE))).unwrap_or(MAX_PILLAR_SCORE)
 }
 
-/// فرمانِ ترمیمِ مایرون — رهسپاریِ اختصاصیِ ساب‌ایجنتِ مقصر با دستورِ دوزبانه.
+/// Mairon's repair directive — targeted re-dispatch of the guilty subagent with a bilingual order.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MaironRepairDirective {
-    /// گذرِ ترمیم (`1..=MAX_OPENBOT_REPAIR_ATTEMPTS`).
+    /// Repair pass (`1..=MAX_OPENBOT_REPAIR_ATTEMPTS`).
     pub attempt: u32,
-    /// تخصصِ ساب‌ایجنتِ مقصر — مخاطبِ رهسپاریِ دوباره.
+    /// The guilty subagent's expertise — the re-dispatch target.
     pub target_specialty: SubAgentSpecialty,
-    /// ستونِ REAِ زیرِ آستانه (`architecture` | `security_hardening` | …).
+    /// The REA pillar below threshold (`architecture` | `security_hardening` | …).
     pub pillar: String,
-    /// دستورِ اصلاح (انگلیسی — لایهٔ فنی).
+    /// The fix directive (English — the technical layer).
     pub directive_en: String,
-    /// دستورِ اصلاح (فارسی — صدای داور).
+    /// The fix directive (Persian — the judge's voice).
     pub directive_fa: String,
 }
 
-/// مشاورهٔ استراتژیک مایرون با کالیبراسیونِ قفل‌شدهٔ `IQ=150 / EQ=145`.
+/// Mairon strategic advisory with the locked `IQ=150 / EQ=145` calibration.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MaironStrategicAdvisory {
-    /// IQ اورکلاک داور (`150`).
+    /// The judge's overclocked IQ (`150`).
     pub iq: u16,
-    /// EQ اورکلاک داور (`145`).
+    /// The judge's overclocked EQ (`145`).
     pub eq: u16,
-    /// افقِ نگاهِ بازی‌نظری (`8` گام).
+    /// The game-theoretic lookahead horizon (`8` steps).
     pub lookahead_horizon: u8,
-    /// مرتبهٔ نظریهٔ ذهن (`3`).
+    /// The theory-of-mind order (`3`).
     pub tom_order: u8,
-    /// خلاصهٔ نگاهِ هشت‌گامی — تاب‌آوریِ معماری و مسیرِ مقیاس‌پذیری.
+    /// The eight-step lookahead summary — architectural resilience and the scaling path.
     pub eight_step_lookahead_summary: String,
-    /// قلابِ روان‌شناختیِ خریدار و پیشنهاد قیمت/معرف (فارسی، ToM-3).
+    /// The buyer's psychological hook and the price/referrer suggestion (Persian, ToM-3).
     pub third_order_tom_market_hook_fa: String,
-    /// فرمان‌های ترمیم برای اتاق فرمان — خالی یعنی آهنگری پذیرفته شده.
+    /// Repair directives for the command center — empty means the forging is accepted.
     pub repair_directives: Vec<MaironRepairDirective>,
 }
 
 impl MaironStrategicAdvisory {
-    /// مشاورهٔ کامل برای یک آهنگریِ ترینیتی (استراکچر پروژه + مستر پرامپت).
+    /// Full advisory for one Trinity forging (project structure + master prompt).
     pub fn for_blueprint(
         blueprint: &ProjectBlueprint,
         master: &MasterPromptSpec,
@@ -1569,13 +1569,13 @@ impl MaironStrategicAdvisory {
             price = price,
         );
         let third_order_tom_market_hook_fa = format!(
-            "🧠 مایرون (IQ={iq}/EQ={eq}، نظریهٔ ذهن مرتبهٔ {tom}، جاه‌طلبی {amb}): \
-             خریدار در گامِ سومِ تصمیم به خودش می‌گوید «اگر امروز نخرم، همین ابزار \
-             فردا از دستم درمی‌رود» — قلابِ روان‌شناختیِ «{project}»: دقیقاً همان \
-             دردِ روزمرهٔ مخاطب را در ۳۹۰ پیکسل، بدون لاگین و بدون کارت بانکی حل \
-             می‌کند. قیمت‌گذاریِ بهینه: {price} ستارهٔ تلگرام (XTR) با سهم معرف ۱۰٪ \
-             (1000 bps) تا هر خریدار خودش به بازتوزیع برسد؛ زیر {low} اعتماد \
-             نمی‌سازد و بالاتر از {high} نرخ تبدیل می‌افتد.",
+            "🧠 \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} (IQ={iq}/EQ={eq}\u{60c} \u{646}\u{638}\u{631}\u{6cc}\u{647}\u{654} \u{630}\u{647}\u{646} \u{645}\u{631}\u{62a}\u{628}\u{647}\u{654} {tom}\u{60c} \u{62c}\u{627}\u{647}‌\u{637}\u{644}\u{628}\u{6cc} {amb}): \
+             \u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631} \u{62f}\u{631} \u{6af}\u{627}\u{645}\u{650} \u{633}\u{648}\u{645}\u{650} \u{62a}\u{635}\u{645}\u{6cc}\u{645} \u{628}\u{647} \u{62e}\u{648}\u{62f}\u{634} \u{645}\u{6cc}‌\u{6af}\u{648}\u{6cc}\u{62f} «\u{627}\u{6af}\u{631} \u{627}\u{645}\u{631}\u{648}\u{632} \u{646}\u{62e}\u{631}\u{645}\u{60c} \u{647}\u{645}\u{6cc}\u{646} \u{627}\u{628}\u{632}\u{627}\u{631} \
+             \u{641}\u{631}\u{62f}\u{627} \u{627}\u{632} \u{62f}\u{633}\u{62a}\u{645} \u{62f}\u{631}\u{645}\u{6cc}‌\u{631}\u{648}\u{62f}» — \u{642}\u{644}\u{627}\u{628}\u{650} \u{631}\u{648}\u{627}\u{646}‌\u{634}\u{646}\u{627}\u{62e}\u{62a}\u{6cc}\u{650} «{project}»: \u{62f}\u{642}\u{6cc}\u{642}\u{627}\u{64b} \u{647}\u{645}\u{627}\u{646} \
+             \u{62f}\u{631}\u{62f}\u{650} \u{631}\u{648}\u{632}\u{645}\u{631}\u{647}\u{654} \u{645}\u{62e}\u{627}\u{637}\u{628} \u{631}\u{627} \u{62f}\u{631} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644}\u{60c} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646} \u{648} \u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{627}\u{631}\u{62a} \u{628}\u{627}\u{646}\u{6a9}\u{6cc} \u{62d}\u{644} \
+             \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}. \u{642}\u{6cc}\u{645}\u{62a}‌\u{6af}\u{630}\u{627}\u{631}\u{6cc}\u{650} \u{628}\u{647}\u{6cc}\u{646}\u{647}: {price} \u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} (XTR) \u{628}\u{627} \u{633}\u{647}\u{645} \u{645}\u{639}\u{631}\u{641} \u{6f1}\u{6f0}\u{66a} \
+             (1000 bps) \u{62a}\u{627} \u{647}\u{631} \u{62e}\u{631}\u{6cc}\u{62f}\u{627}\u{631} \u{62e}\u{648}\u{62f}\u{634} \u{628}\u{647} \u{628}\u{627}\u{632}\u{62a}\u{648}\u{632}\u{6cc}\u{639} \u{628}\u{631}\u{633}\u{62f}\u{61b} \u{632}\u{6cc}\u{631} {low} \u{627}\u{639}\u{62a}\u{645}\u{627}\u{62f} \
+             \u{646}\u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{62f} \u{648} \u{628}\u{627}\u{644}\u{627}\u{62a}\u{631} \u{627}\u{632} {high} \u{646}\u{631}\u{62e} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{627}\u{641}\u{62a}\u{62f}.",
             iq = MAIRON_OVERCLOCK_IQ,
             eq = MAIRON_OVERCLOCK_EQ,
             tom = MAIRON_TOM_ORDER,
@@ -1597,68 +1597,68 @@ impl MaironStrategicAdvisory {
     }
 }
 
-/// حکمِ حاکمِ مایرون روی یک آهنگری — نمرهٔ REA دامنه + مشاورهٔ استراتژیک.
-/// (ساختارهای دامنه بدون serde هستند — این حکم فقط در حافظه جریان دارد.)
+/// Mairon's sovereign verdict on a forging — the domain REA score + strategic advisory.
+/// (domain structures are serde-free — this verdict flows in memory only.)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MaironSovereignVerdict {
-    /// حکم چهارستونیِ دامنه (`0..=100` + خطوط قرمز + نشان مرئی).
+    /// The domain's four-pillar verdict (`0..=100` + red lines + a visible badge).
     pub verdict: MaironProductVerdict,
-    /// مشاورهٔ استراتژیک `IQ=150 / EQ=145`.
+    /// Strategic advisory `IQ=150 / EQ=145`.
     pub advisory: MaironStrategicAdvisory,
 }
 
-/// یک دورِ ترمیم در حلقهٔ خودترمیمیِ اتاق فرمان ↔ مایرون.
+/// One repair round in the Command Center ↔ Mairon self-healing loop.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RepairRound {
-    /// گذرِ ترمیم (`1..=3`).
+    /// Repair pass (`1..=3`).
     pub attempt: u32,
-    /// نمرهٔ پیش از اعمال فرمان‌ها.
+    /// The score before the directives were applied.
     pub score_before: u8,
-    /// فرمان‌های صادرشدهٔ داور در همین گذر.
+    /// The judge's directives issued in this pass.
     pub directives: Vec<MaironRepairDirective>,
-    /// نمرهٔ پس از رهسپاریِ دوباره و داوریِ تازه.
+    /// The score after re-dispatch and fresh adjudication.
     pub score_after: u8,
-    /// آیا در همین گذر از گیت `≥ 85` عبور شد؟
+    /// Did this pass cross the `≥ 85` gate?
     pub approved: bool,
 }
 
-/// خروجیِ کاملِ خط لولهٔ ترینیتی — مانیفست DNA، آرتیفکت، حکم نهایی و تاریخچه.
+/// The complete Trinity pipeline output — the DNA manifest, artifact, final verdict and history.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TrinityForgeOutcome {
-    /// شناسهٔ نشست ترینیتی.
+    /// Trinity session ID.
     pub session_id: String,
-    /// حساب شهروندِ سازنده.
+    /// The builder-citizen account.
     pub citizen_id: String,
-    /// نام محصول.
+    /// Product name.
     pub project_name: String,
-    /// مانیفست DNA ناوگانِ OpenBot (الگوی `۳×۹`).
+    /// The OpenBot fleet's DNA manifest (the `3×9` pattern).
     pub manifest: Vec<SpawnedSubAgent>,
-    /// آرتیفکت نهایی مونتاژشده.
+    /// The final assembled artifact.
     pub artifact: AssembledArtifact,
-    /// حکم نهایی مایرون (نمره + مشاوره).
+    /// Mairon's final verdict (score + advisory).
     pub final_verdict: MaironSovereignVerdict,
-    /// تاریخچهٔ دورهای ترمیم (خالی = عبور در مونتاژِ نخست).
+    /// Repair-round history (empty = passed on the first assembly).
     pub repair_history: Vec<RepairRound>,
-    /// شمار تلاش‌های ترمیم مصرف‌شده (`0..=3`).
+    /// Repair attempts consumed (`0..=3`).
     pub repair_attempts_used: u32,
-    /// آهنگری پذیرفته شده؟ (`final_verdict.verdict.approved_for_listing`).
+    /// Forging accepted? (`final_verdict.verdict.approved_for_listing`).
     pub approved: bool,
 }
 
-/// کالبد ۳ — مایرون-۱۵۰: داورِ REAِ اورکلاک‌شده و گیتِ بازارِ ۵-ستاره.
+/// Body 3 — Mairon-150: the overclocked REA judge and the 5-star market gate.
 #[derive(Debug, Clone)]
 pub struct MaironSovereignJudge {
-    /// شناسهٔ محصولِ داوری‌شده (نشست ترینیتی یا `prod:{uuid}` بازار).
+    /// The ID of the judged product (a Trinity session or a marketplace `prod:{uuid}`).
     product_id: String,
 }
 
 impl MaironSovereignJudge {
-    /// داور روی یک شناسهٔ محصول.
+    /// Judge on one product ID.
     pub fn new(product_id: &str) -> Self {
         Self { product_id: product_id.to_owned() }
     }
 
-    /// استخراجِ خطوط قرمز از گزارش پاک‌ساز — خط قرمز با نمره بخشیده نمی‌شود.
+    /// Extract red lines from the sanitizer report — a red line is never traded for score.
     fn derive_hard_failures(report: &SanitizerReport) -> Vec<String> {
         let mut hard = Vec::new();
         if report.todo_markers > 0 {
@@ -1681,7 +1681,7 @@ impl MaironSovereignJudge {
         hard
     }
 
-    /// استخراجِ چهار ستون REA از ویژگی‌های واقعیِ آرتیفکت — قطعی و قابل آزمون.
+    /// Extract the four REA pillars from the artifact's real properties — deterministic and testable.
     fn derive_pillars(
         artifact: &AssembledArtifact,
         blueprint: &ProjectBlueprint,
@@ -1720,7 +1720,7 @@ impl MaironSovereignJudge {
         MaironReaPillarScores { architecture, security_hardening, ux_and_anti_slop, verification_proof }
     }
 
-    /// داوری قطعی آرتیفکت مونتاژشده — حکم دامنه + مشاورهٔ `IQ=150/EQ=145`.
+    /// Deterministic adjudication of the assembled artifact — domain verdict + `IQ=150/EQ=145` advisory.
     pub fn judge_artifact(
         &self,
         artifact: &AssembledArtifact,
@@ -1737,8 +1737,8 @@ impl MaironSovereignJudge {
         MaironSovereignVerdict { verdict, advisory }
     }
 
-    /// فرمان‌های ترمیم — نگاشتِ ستونِ زیرِ آستانه به تخصصِ مقصر، به ترتیب قطعی:
-    /// نخست خطوط قرمزِ امنیتی، سپس راستی‌آزمایی، UX و معماری.
+    /// Repair directives — map each below-threshold pillar to the guilty expertise, in deterministic order:
+    /// security red lines first, then verification, UX and architecture.
     pub fn repair_directives(
         &self,
         verdict: &MaironProductVerdict,
@@ -1754,8 +1754,8 @@ impl MaironSovereignJudge {
                 directive_en: "Purge every unfinished marker and placeholder secret, re-run the \
                     sanitizer gate until passed=true, and re-assert the SSRF allowlist."
                     .to_owned(),
-                directive_fa: "همهٔ نشانگرهای ناتمام و رازهای جای‌بانی را پاک کن؛ گیتِ پاک‌ساز \
-                    را تا عبورِ کامل دوباره اجرا کن و اجازه‌نامهٔ SSRF را باز-تثبیت کن."
+                directive_fa: "\u{647}\u{645}\u{647}\u{654} \u{646}\u{634}\u{627}\u{646}\u{6af}\u{631}\u{647}\u{627}\u{6cc} \u{646}\u{627}\u{62a}\u{645}\u{627}\u{645} \u{648} \u{631}\u{627}\u{632}\u{647}\u{627}\u{6cc} \u{62c}\u{627}\u{6cc}‌\u{628}\u{627}\u{646}\u{6cc} \u{631}\u{627} \u{67e}\u{627}\u{6a9} \u{6a9}\u{646}\u{61b} \u{6af}\u{6cc}\u{62a}\u{650} \u{67e}\u{627}\u{6a9}‌\u{633}\u{627}\u{632} \
+                    \u{631}\u{627} \u{62a}\u{627} \u{639}\u{628}\u{648}\u{631}\u{650} \u{6a9}\u{627}\u{645}\u{644} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{627}\u{62c}\u{631}\u{627} \u{6a9}\u{646} \u{648} \u{627}\u{62c}\u{627}\u{632}\u{647}‌\u{646}\u{627}\u{645}\u{647}\u{654} SSRF \u{631}\u{627} \u{628}\u{627}\u{632}-\u{62a}\u{62b}\u{628}\u{6cc}\u{62a} \u{6a9}\u{646}."
                     .to_owned(),
             });
         }
@@ -1767,8 +1767,8 @@ impl MaironSovereignJudge {
                 directive_en: "Inject 2x modules + 4 empirical probe assertions (data-probe \
                     elements) and run them green before re-submission — proof before pride."
                     .to_owned(),
-                directive_fa: "پروب‌های تجربی (دو برابرِ ماژول‌ها + چهار) را تزریق کن و سبزِ \
-                    اجرا را پیش از ارائهٔ دوباره ضمیمه کن — شاهد پیش از افتخار."
+                directive_fa: "\u{67e}\u{631}\u{648}\u{628}‌\u{647}\u{627}\u{6cc} \u{62a}\u{62c}\u{631}\u{628}\u{6cc} (\u{62f}\u{648} \u{628}\u{631}\u{627}\u{628}\u{631}\u{650} \u{645}\u{627}\u{698}\u{648}\u{644}‌\u{647}\u{627} + \u{686}\u{647}\u{627}\u{631}) \u{631}\u{627} \u{62a}\u{632}\u{631}\u{6cc}\u{642} \u{6a9}\u{646} \u{648} \u{633}\u{628}\u{632}\u{650} \
+                    \u{627}\u{62c}\u{631}\u{627} \u{631}\u{627} \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{627}\u{631}\u{627}\u{626}\u{647}\u{654} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{636}\u{645}\u{6cc}\u{645}\u{647} \u{6a9}\u{646} — \u{634}\u{627}\u{647}\u{62f} \u{67e}\u{6cc}\u{634} \u{627}\u{632} \u{627}\u{641}\u{62a}\u{62e}\u{627}\u{631}."
                     .to_owned(),
             });
         }
@@ -1780,8 +1780,8 @@ impl MaironSovereignJudge {
                 directive_en: "Apply the 390px hardening polish pass, strip every slop tell, and \
                     re-affirm the Vazirmatn RTL stack."
                     .to_owned(),
-                directive_fa: "گذرِ پرداختِ سخت‌سازِ ۳۹۰ پیکسل را اعمال کن، هر نشانهٔ اسلوپ را \
-                    بکن و پشتهٔ وزیرمتن راست‌به‌چپ را باز-تثبیت کن.".to_owned(),
+                directive_fa: "\u{6af}\u{630}\u{631}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}\u{650} \u{633}\u{62e}\u{62a}‌\u{633}\u{627}\u{632}\u{650} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644} \u{631}\u{627} \u{627}\u{639}\u{645}\u{627}\u{644} \u{6a9}\u{646}\u{60c} \u{647}\u{631} \u{646}\u{634}\u{627}\u{646}\u{647}\u{654} \u{627}\u{633}\u{644}\u{648}\u{67e} \u{631}\u{627} \
+                    \u{628}\u{6a9}\u{646} \u{648} \u{67e}\u{634}\u{62a}\u{647}\u{654} \u{648}\u{632}\u{6cc}\u{631}\u{645}\u{62a}\u{646} \u{631}\u{627}\u{633}\u{62a}‌\u{628}\u{647}‌\u{686}\u{67e} \u{631}\u{627} \u{628}\u{627}\u{632}-\u{62a}\u{62b}\u{628}\u{6cc}\u{62a} \u{6a9}\u{646}.".to_owned(),
             });
         }
         if p.architecture < PILLAR_REPAIR_TRIGGER {
@@ -1792,14 +1792,14 @@ impl MaironSovereignJudge {
                 directive_en: "Reinforce module boundary markers and complete integration of \
                     every blueprint path (data-module attributes)."
                     .to_owned(),
-                directive_fa: "مرزهای ماژول را تقویت کن و یکپارچگیِ همهٔ مسیرهای استراکچر \
-                    پروژه (ویژگیِ data-module) را کامل کن.".to_owned(),
+                directive_fa: "\u{645}\u{631}\u{632}\u{647}\u{627}\u{6cc} \u{645}\u{627}\u{698}\u{648}\u{644} \u{631}\u{627} \u{62a}\u{642}\u{648}\u{6cc}\u{62a} \u{6a9}\u{646} \u{648} \u{6cc}\u{6a9}\u{67e}\u{627}\u{631}\u{686}\u{6af}\u{6cc}\u{650} \u{647}\u{645}\u{647}\u{654} \u{645}\u{633}\u{6cc}\u{631}\u{647}\u{627}\u{6cc} \u{627}\u{633}\u{62a}\u{631}\u{627}\u{6a9}\u{686}\u{631} \
+                    \u{67e}\u{631}\u{648}\u{698}\u{647} (\u{648}\u{6cc}\u{698}\u{6af}\u{6cc}\u{650} data-module) \u{631}\u{627} \u{6a9}\u{627}\u{645}\u{644} \u{6a9}\u{646}.".to_owned(),
             });
         }
         out
     }
 
-    /// داوریِ مستقلِ محصولِ بازار (`preview_html` محصول) — مُهرِ دو-کلیدیِ
+    /// Independent adjudication of a marketplace product (the product's `preview_html`) — the two-key seal of
     /// [`kian_domain::mairon_rea_and_reviews::confirm_and_publish_product`].
     pub fn judge_market_product(product_id: &str, preview_html: &str) -> MaironProductVerdict {
         let report = run_artifact_sanitizer(preview_html);
@@ -1836,14 +1836,14 @@ impl MaironSovereignJudge {
     }
 }
 
-// ── حلقهٔ خودترمیمیِ اتاق فرمان ↔ مایرون ──────────────────────────────────
+// ── Command-center ↔ Mairon self-healing loop ──────────────────────────────────
 
 impl CommandCenterOrchestrator {
-    /// اجرای کاملِ اتاق فرمان با حلقهٔ خودترمیمیِ مایرون.
+    /// Run the full command center with the Mairon self-healing loop.
     ///
-    /// مونتاژِ نخست → داوریِ مایرون؛ اگر نمره `< 85` یا خط قرمز، فرمان‌های
-    /// [`MaironRepairDirective`] به ساب‌ایجنتِ مقصر رهسپاری می‌شود (بیشینهٔ
-    /// [`MAX_OPENBOT_REPAIR_ATTEMPTS`]) تا آهنگری از گیت عبور کند.
+    /// First assembly → Mairon adjudication; if the score is `< 85` or there is a red line, the
+    /// [`MaironRepairDirective`] orders are re-dispatched to the guilty subagent (up to
+    /// [`MAX_OPENBOT_REPAIR_ATTEMPTS`]) until the forging passes the gate.
     pub fn execute_command_center_with_mairon_loop(
         &self,
         master: &MasterPromptSpec,
@@ -1897,19 +1897,19 @@ impl CommandCenterOrchestrator {
 mod tests {
     use super::*;
 
-    /// پنج اسلاتِ کامل — صحنهٔ استانداردِ آزمون‌ها.
+    /// Five complete slots — the standard test fixture.
     fn full_slots() -> AlphaDiscoverySlots {
         AlphaDiscoverySlots {
-            core_objective: Some("فروشگاه ابزارهای بهره‌وری برای فریلنسرهای فارسی‌زبان".to_owned()),
+            core_objective: Some("\u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647} \u{627}\u{628}\u{632}\u{627}\u{631}\u{647}\u{627}\u{6cc} \u{628}\u{647}\u{631}\u{647}‌\u{648}\u{631}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}".to_owned()),
             target_audience_and_ux: Some(
-                "فریلنسرهای فارسی‌زبان، موبایل‌فرست در ۳۹۰ پیکسل راست‌به‌چپ".to_owned(),
+                "\u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}\u{60c} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644}‌\u{641}\u{631}\u{633}\u{62a} \u{62f}\u{631} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644} \u{631}\u{627}\u{633}\u{62a}‌\u{628}\u{647}‌\u{686}\u{67e}".to_owned(),
             ),
-            interactive_features: Some("سبد خرید، فرم سفارش و جریان پرداخت تعاملی".to_owned()),
+            interactive_features: Some("\u{633}\u{628}\u{62f} \u{62e}\u{631}\u{6cc}\u{62f}\u{60c} \u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{648} \u{62c}\u{631}\u{6cc}\u{627}\u{646} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc}".to_owned()),
             data_and_zero_auth_apis: Some(
-                "ذخیره در localStorage و اتصال به APIهای عمومی بدون لاگین".to_owned(),
+                "\u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{62f}\u{631} localStorage \u{648} \u{627}\u{62a}\u{635}\u{627}\u{644} \u{628}\u{647} API\u{647}\u{627}\u{6cc} \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646}".to_owned(),
             ),
             monetization_and_viral_loop: Some(
-                "قیمت ۲۰۰ ستاره با ۱۰٪ پورسانت معرف و حلقهٔ وایرال".to_owned(),
+                "\u{642}\u{6cc}\u{645}\u{62a} \u{6f2}\u{6f0}\u{6f0} \u{633}\u{62a}\u{627}\u{631}\u{647} \u{628}\u{627} \u{6f1}\u{6f0}\u{66a} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{645}\u{639}\u{631}\u{641} \u{648} \u{62d}\u{644}\u{642}\u{647}\u{654} \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644}".to_owned(),
             ),
         }
     }
@@ -1923,12 +1923,12 @@ mod tests {
         })
     }
 
-    /// پیامی که چهار اسلات را روشن می‌کند (بدون درآمدزایی) — آمادگی ۸۰٪.
-    const FOUR_SLOT_MESSAGE: &str = "می‌خواهم یک محصول بسازم: سازندهٔ ابزار بهره‌وری. \
-        مخاطب فریلنسر فارسی‌زبان است و موبایل‌فرست با rtl کار می‌کند. \
-        باید فرم سفارش تعاملی داشته باشد. داده‌ها در api عمومی بدون لاگین ذخیره می‌شوند.";
+    /// A message that lights up four slots (no monetization) — 80% readiness.
+    const FOUR_SLOT_MESSAGE: &str = "\u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{6cc}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645}: \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{627}\u{628}\u{632}\u{627}\u{631} \u{628}\u{647}\u{631}\u{647}‌\u{648}\u{631}\u{6cc}. \
+        \u{645}\u{62e}\u{627}\u{637}\u{628} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646} \u{627}\u{633}\u{62a} \u{648} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644}‌\u{641}\u{631}\u{633}\u{62a} \u{628}\u{627} rtl \u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}. \
+        \u{628}\u{627}\u{6cc}\u{62f} \u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62f}\u{627}\u{634}\u{62a}\u{647} \u{628}\u{627}\u{634}\u{62f}. \u{62f}\u{627}\u{62f}\u{647}‌\u{647}\u{627} \u{62f}\u{631} api \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646} \u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}.";
 
-    /// DNA آلفا قفل است.
+    /// Alpha's DNA is locked.
     #[test]
     fn alpha_dna_constants_are_locked() {
         assert_eq!(ALPHA_EFFECTIVE_IQ, 136);
@@ -1938,7 +1938,7 @@ mod tests {
         assert_eq!(ALPHA_READINESS_LOCK_THRESHOLD, 80);
     }
 
-    /// DNA اتاق فرمان و داورِ بازصادری از دامنه قفل است — منبعِ واحد حقیقت.
+    /// The command-center and judge DNA re-exported from the domain is locked — single source of truth.
     #[test]
     fn logic_and_mairon_dna_constants_are_locked() {
         let (iq_alpha, iq_logic, iq_mairon) =
@@ -1958,26 +1958,26 @@ mod tests {
         assert!(eq_mairon > eq_logic);
     }
 
-    /// استخراجِ اسلات‌ها با کلیدواژه‌های دوزبانه — قطعی و بدون بازنویسی.
+    /// Slot extraction with bilingual keywords — deterministic, no overwrite.
     #[test]
     fn slot_extraction_is_deterministic_and_never_overwrites() {
         let out = intake(FOUR_SLOT_MESSAGE, AlphaDiscoverySlots::default());
         let AlphaIntakeOutcome::LockedForCommandCenter { master_prompt, blueprint, .. } = out else {
             panic!("four slots = 80% readiness must lock");
         };
-        assert!(master_prompt.functional_spec.contains("سازندهٔ ابزار"));
+        assert!(master_prompt.functional_spec.contains("\u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{627}\u{628}\u{632}\u{627}\u{631}"));
         assert!(blueprint.modules.iter().any(|m| m.path == "src/js/api-bindings.js"));
         assert!(!blueprint.modules.iter().any(|m| m.path == "src/js/monetization.js"));
-        // بازنویسی ممنوع — مقدارِ اول همیشه برنده است
+        // overwrite is forbidden — the first value always wins
         let mut slots = full_slots();
-        slots.fill(AlphaSlotKind::CoreObjective, "نباید جایگزین شود".to_owned());
-        assert!(slots.core_objective.unwrap().contains("فروشگاه ابزار"));
+        slots.fill(AlphaSlotKind::CoreObjective, "\u{646}\u{628}\u{627}\u{6cc}\u{62f} \u{62c}\u{627}\u{6cc}\u{6af}\u{632}\u{6cc}\u{646} \u{634}\u{648}\u{62f}".to_owned());
+        assert!(slots.core_objective.unwrap().contains("\u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647} \u{627}\u{628}\u{632}\u{627}\u{631}"));
     }
 
-    /// آمادگیِ ناقص → NeedsMoreDiscovery با فهرستِ خام به ترتیب قطعی.
+    /// Incomplete readiness → NeedsMoreDiscovery with the raw list in deterministic order.
     #[test]
     fn alpha_needs_more_discovery_lists_missing_slots_in_order() {
-        let out = intake("می‌خواهم یک محصول بسازم که فرم تعاملی دارد", AlphaDiscoverySlots::default());
+        let out = intake("\u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{6cc}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645} \u{6a9}\u{647} \u{641}\u{631}\u{645} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62f}\u{627}\u{631}\u{62f}", AlphaDiscoverySlots::default());
         let AlphaIntakeOutcome::NeedsMoreDiscovery { alpha_reply_fa, missing_slots, readiness_pct } =
             out
         else {
@@ -1987,11 +1987,11 @@ mod tests {
         assert_eq!(missing_slots.len(), 3);
         assert_eq!(missing_slots[0], AlphaSlotKind::TargetAudienceAndUx);
         assert_eq!(missing_slots.last().copied(), Some(AlphaSlotKind::MonetizationAndViralLoop));
-        assert!(alpha_reply_fa.contains("آلفا فعال شد"));
-        assert!(alpha_reply_fa.contains("مخاطب هدف و حس UX"));
+        assert!(alpha_reply_fa.contains("\u{622}\u{644}\u{641}\u{627} \u{641}\u{639}\u{627}\u{644} \u{634}\u{62f}"));
+        assert!(alpha_reply_fa.contains("\u{645}\u{62e}\u{627}\u{637}\u{628} \u{647}\u{62f}\u{641} \u{648} \u{62d}\u{633} UX"));
     }
 
-    /// قفل در ۸۰٪ — مستر پرامپت + استراکچر پروژه قطعی و بازتولیدپذیر.
+    /// Locked at 80% — the master prompt + project structure are deterministic and reproducible.
     #[test]
     fn alpha_locks_at_eighty_pct_with_deterministic_spec() {
         let out = intake(FOUR_SLOT_MESSAGE, AlphaDiscoverySlots::default());
@@ -2000,8 +2000,8 @@ mod tests {
         else {
             panic!("must lock");
         };
-        assert!(alpha_handoff_fa.contains("آلفا قفل شد"));
-        assert!(alpha_handoff_fa.contains("۸۰") || alpha_handoff_fa.contains("80"));
+        assert!(alpha_handoff_fa.contains("\u{622}\u{644}\u{641}\u{627} \u{642}\u{641}\u{644} \u{634}\u{62f}"));
+        assert!(alpha_handoff_fa.contains("\u{6f8}\u{6f0}") || alpha_handoff_fa.contains("80"));
         let again = intake(FOUR_SLOT_MESSAGE, AlphaDiscoverySlots::default());
         let AlphaIntakeOutcome::LockedForCommandCenter { master_prompt: m2, blueprint: b2, .. } =
             again
@@ -2016,7 +2016,7 @@ mod tests {
         assert_eq!(blueprint.project_name, master_prompt.project_name);
     }
 
-    /// استراکچر پروژه — چهار ماژول پایه + سه ماژولِ شرطی با تخصصِ هدف.
+    /// Project structure — four base modules + three conditional modules with target expertise.
     #[test]
     fn blueprint_modules_derive_from_slots_with_specialties() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:t", "citizen:900");
@@ -2032,12 +2032,12 @@ mod tests {
         assert_eq!(api.specialty, SubAgentSpecialty::SecurityAndApiBridge);
         let money = bp.modules.iter().find(|m| m.path == "src/js/monetization.js").unwrap();
         assert_eq!(money.specialty, SubAgentSpecialty::MonetizationAndViralLoop);
-        assert_eq!(master.price_stars_hint, 200, "۲۰۰ در اسلات درآمد → 200");
+        assert_eq!(master.price_stars_hint, 200, "\u{6f2}\u{6f0}\u{6f0} \u{62f}\u{631} \u{627}\u{633}\u{644}\u{627}\u{62a} \u{62f}\u{631}\u{622}\u{645}\u{62f} → 200");
         let none = MasterPromptSpec::compile(&AlphaDiscoverySlots::default(), "trn:x", "c");
         assert_eq!(none.price_stars_hint, 150);
     }
 
-    /// آلل‌های تصادفیِ قطعی — همان بذر همان DNA؛ بذرِ متفاوت DNAِ متفاوت.
+    /// Deterministic random alleles — same seed, same DNA; a different seed, different DNA.
     #[test]
     fn alleles_are_deterministic_per_seed_and_index() {
         let a0 = derive_alleles(42, 0);
@@ -2053,7 +2053,7 @@ mod tests {
         assert!((0.45..=0.95).contains(&a0.execution_velocity));
     }
 
-    /// PRNG واحد — بازهٔ `[0,1)` و بازتولیدپذیری.
+    /// A single PRNG — the `[0,1)` range and reproducibility.
     #[test]
     fn splitmix_unit_stays_in_zero_one() {
         let mut st = 7_u64;
@@ -2063,7 +2063,7 @@ mod tests {
         }
     }
 
-    /// پرامپت سه‌لایه — مرزِ کش دقیقاً یک‌بار؛ لایه‌های ثابت قبل، پویا بعد.
+    /// The three-layer prompt — the cache boundary exactly once; fixed layers first, dynamic after.
     #[test]
     fn three_layer_prompt_pins_cache_boundary_once() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:t", "citizen:900");
@@ -2080,7 +2080,7 @@ mod tests {
         assert!(dynamic_part.contains("src/index.html"));
     }
 
-    /// قلابِ توقف ساب‌ایجنت — مرزهای `450s/1200s` دقیق.
+    /// The subagent stop hook — exact `450s/1200s` boundaries.
     #[test]
     fn stall_watchdog_enforces_sovereign_bounds() {
         let wd = SubagentStallWatchdog::sovereign();
@@ -2092,7 +2092,7 @@ mod tests {
         assert_eq!(wd.verdict_for(1200), WatchdogVerdict::HardTimeout);
     }
 
-    /// ژنوم نه‌لایه‌ای — همهٔ f01..f09 پر، پاک‌ساز سبز، XML کامل.
+    /// Nine-fold genome — all of f01..f09 filled, sanitizer green, full XML.
     #[test]
     fn nine_fold_genome_is_complete_and_clean() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:t", "citizen:900");
@@ -2119,21 +2119,21 @@ mod tests {
         assert!(g.f09_handoff_card.contains("HANDOFF -> Command Center"));
         assert_eq!(agent.thread_id.len(), 36, "thread id is RFC uuid-shaped");
         assert_eq!(agent.thread_id.matches('-').count(), 4);
-        // بازتولیدپذیریِ نخ
+        // thread reproducibility
         let agent2 = spawner.spawn(2, &bp.modules[2], &master, &bp);
         assert_eq!(agent.thread_id, agent2.thread_id);
     }
 
-    /// فهرست سفارشیِ تخصص — لاتین‌سازیِ امن برای XML/وایر.
+    /// Custom expertise list — safe Latinization for XML/wire.
     #[test]
     fn custom_specialty_is_slugified() {
         let custom = SubAgentSpecialty::Custom("Quant Chart DNA < specialist>".to_owned());
         assert_eq!(custom.as_str(), "custom_quantchartdnaspecialist");
-        assert!(custom.fa_label().contains("متخصص سفارشی"));
+        assert!(custom.fa_label().contains("\u{645}\u{62a}\u{62e}\u{635}\u{635} \u{633}\u{641}\u{627}\u{631}\u{634}\u{6cc}"));
         assert_eq!(custom.default_caveman(), CavemanIntensity::Full);
     }
 
-    /// ناوگان — یک متخصص به ازای هر ماژول؛ تخصص‌های سفارشی هم مجاز.
+    /// The fleet — one specialist per module; custom expertises are allowed too.
     #[test]
     fn fleet_matches_blueprint_one_agent_per_module() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:t", "citizen:900");
@@ -2145,13 +2145,13 @@ mod tests {
             assert_eq!(agent.subagent_index, u32::try_from(i).unwrap());
             assert_eq!(agent.assigned_modules, vec![bp.modules[i].path.clone()]);
         }
-        // آلل‌های یکتا در ناوگان — DNA یکتا برای هر ساب‌ایجنت
+        // unique alleles across the fleet — unique DNA per subagent
         let seeds: Vec<u64> = fleet.iter().map(|a| a.genome.f04_stochastic_alleles.allele_seed).collect();
         let unique = seeds.iter().collect::<std::collections::HashSet<_>>();
         assert_eq!(unique.len(), seeds.len(), "allele seeds must be unique per sub-agent");
     }
 
-    /// گیتِ پاک‌ساز — هر چهار خانوادهٔ ممنوع را می‌یابد؛ متنِ سالم سبز می‌ماند.
+    /// Sanitizer gate — finds all four forbidden families; clean text stays green.
     #[test]
     fn sanitizer_gate_catches_all_dirty_families() {
         let dirty = "let k = sk-abc123; /* TODO fix */ const x = AKIA1234; unsafe { /* lorem ipsum */ }";
@@ -2165,7 +2165,7 @@ mod tests {
         assert!(clean.passed);
     }
 
-    /// حکمِ پایه زیرِ گیت و پس از یک گذرِ ترمیم بالای گیت — قلبِ حلقهٔ خودترمیمی.
+    /// Base verdict below the gate and above it after one repair pass — the heart of the self-healing loop.
     #[test]
     fn base_assembly_fails_gate_and_repair_pass_clears_it() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:loop", "citizen:900");
@@ -2207,7 +2207,7 @@ mod tests {
         );
     }
 
-    /// حلقهٔ خودترمیمی — عبور در ≤ ۳ تلاش با تاریخچهٔ بهبودِ نمره.
+    /// Self-healing loop — passes within ≤ 3 attempts with a score-improvement history.
     #[test]
     fn self_healing_loop_clears_mairon_gate_within_three_attempts() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:loop", "citizen:900");
@@ -2227,7 +2227,7 @@ mod tests {
         assert!(out.artifact.html.contains("mairon-empirical-probes"));
     }
 
-    /// حلقهٔ خودترمینی قطعی — همان نشست، همان آهنگری.
+    /// Deterministic self-healing loop — same session, same forging.
     #[test]
     fn sovereign_loop_is_fully_deterministic() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:det", "citizen:900");
@@ -2237,14 +2237,14 @@ mod tests {
         let b = CommandCenterOrchestrator::new("trn:det", "citizen:900", 4242)
             .execute_command_center_with_mairon_loop(&master, &bp);
         assert_eq!(a, b);
-        // بذرِ متفاوت — ناوگانِ متفاوت اما همان گیتِ عبور
+        // different seed — a different fleet yet the same gate pass
         let c = CommandCenterOrchestrator::new("trn:det", "citizen:900", 777)
             .execute_command_center_with_mairon_loop(&master, &bp);
         assert!(c.approved);
         assert_ne!(a.manifest[0].genome.f04_stochastic_alleles, c.manifest[0].genome.f04_stochastic_alleles);
     }
 
-    /// بذرِ نشست — قطعی از شناسهٔ نشست.
+    /// Session seed — deterministic from the session ID.
     #[test]
     fn session_seed_is_derived_deterministically() {
         let s1 = CommandCenterOrchestrator::session_seed_from_session("trn:abc");
@@ -2254,7 +2254,7 @@ mod tests {
         assert_ne!(s1, s3);
     }
 
-    /// مشاورهٔ استراتژیک مایرون — کالیبراسیونِ ۱۵۰/۱۴۵ قفل، ToM-3 و قیمتِ XTR.
+    /// Mairon strategic advisory — locked 150/145 calibration, ToM-3 and the XTR price.
     #[test]
     fn mairon_advisory_carries_locked_calibration_and_tom3_hook() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:adv", "citizen:900");
@@ -2269,11 +2269,11 @@ mod tests {
             .eight_step_lookahead_summary
             .contains(&format!("{} hard-boundary modules", bp.modules.len())));
         assert!(advisory.third_order_tom_market_hook_fa.contains("IQ=150/EQ=145"));
-        assert!(advisory.third_order_tom_market_hook_fa.contains("200 ستارهٔ تلگرام (XTR)"));
+        assert!(advisory.third_order_tom_market_hook_fa.contains("200 \u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} (XTR)"));
         assert!(advisory.third_order_tom_market_hook_fa.contains("1000 bps"));
     }
 
-    /// فرمان‌های ترمیم — نگاشتِ ستونِ خام به تخصصِ مقصر به ترتیب قطعی.
+    /// Repair directives — map the raw pillar to the guilty expertise in deterministic order.
     #[test]
     fn repair_directives_map_weak_pillars_to_responsible_specialties() {
         let judge = MaironSovereignJudge::new("trn:dir");
@@ -2291,7 +2291,7 @@ mod tests {
         assert_eq!(targets[1], &SubAgentSpecialty::UiUxArchitect390);
         assert_eq!(targets[2], &SubAgentSpecialty::CoreLogicEngine);
         assert!(directives.iter().all(|d| d.attempt == 1));
-        // خط قرمز → فرمانِ امنیتی پیش از همه
+        // red line → the security directive first of all
         let dirty = evaluate_user_product_with_mairon("trn:dir", MaironReaPillarScores {
             architecture: 25,
             security_hardening: 19,
@@ -2303,24 +2303,24 @@ mod tests {
         assert_eq!(dirty_dirs[0].pillar, "security_hardening");
     }
 
-    /// داوریِ مستقلِ محصول بازار — آرتیفکتِ درست عبور می‌کند، خام و آلوده رد.
+    /// Independent adjudication of a marketplace product — a correct artifact passes; raw and contaminated fail.
     #[test]
     fn market_product_gate_accepts_only_forged_artifacts() {
         let good = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
             <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
             <style>body{font-family:'Vazirmatn',sans-serif;max-width: 390px;}</style>\
             </head><body>\
-            <section aria-label=\"الف\">داشبورد</section><section>گزارش</section><section>تنظیمات</section>\
+            <section aria-label=\"\u{627}\u{644}\u{641}\">\u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}</section><section>\u{6af}\u{632}\u{627}\u{631}\u{634}</section><section>\u{62a}\u{646}\u{638}\u{6cc}\u{645}\u{627}\u{62a}</section>\
             <script>/* assert: 390px zero-overflow */</script>\
             </body></html>";
         let verdict = MaironSovereignJudge::judge_market_product("prod:good", good);
         assert!(verdict.approved_for_listing, "score = {}", verdict.total_score);
         assert!(verdict.visible_badge.contains("Forge-Grade"));
-        // خام → ردِ صادقانه
+        // raw → honest rejection
         let empty = MaironSovereignJudge::judge_market_product("prod:empty", "<p></p>");
         assert!(!empty.approved_for_listing);
         assert!(empty.total_score < MARKETPLACE_APPROVAL_THRESHOLD);
-        // آلوده → خط قرمز، حتی با نمرهٔ بالا بخشیده نمی‌شود
+        // contaminated → red line, never traded even for a high score
         let dirty = format!("{good}<!-- TODO: add auth later -->");
         let dirty_verdict = MaironSovereignJudge::judge_market_product("prod:dirty", &dirty);
         assert!(!dirty_verdict.approved_for_listing);
@@ -2330,30 +2330,30 @@ mod tests {
             .any(|f| f.contains("unfinished work markers")));
     }
 
-    /// استخراجِ قیمت — رقم فارسی/لاتین از اسلاتِ درآمد؛ پیش‌فرضِ ۱۵۰⭐.
+    /// Price extraction — a Persian/Latin digit from the monetization slot; default 150⭐.
     #[test]
     fn price_hint_parses_latin_and_persian_digits() {
-        assert_eq!(first_number_in("قیمت ۳۰۰ ستاره"), Some(300));
+        assert_eq!(first_number_in("\u{642}\u{6cc}\u{645}\u{62a} \u{6f3}\u{6f0}\u{6f0} \u{633}\u{62a}\u{627}\u{631}\u{647}"), Some(300));
         assert_eq!(first_number_in("price 250 XTR"), Some(250));
-        assert_eq!(first_number_in("بدون عدد"), None);
+        assert_eq!(first_number_in("\u{628}\u{62f}\u{648}\u{646} \u{639}\u{62f}\u{62f}"), None);
         assert_eq!(derive_price_stars(&full_slots()), 200);
         assert_eq!(derive_price_stars(&AlphaDiscoverySlots::default()), 150);
     }
 
-    /// الگوی `۳×۹` — سه لایه × نه فاکتور در مانیفستِ وایرِ کامل.
+    /// The `3×9` pattern — three layers × nine factors in the complete wire manifest.
     #[test]
     fn three_by_nine_pattern_manifest_is_complete() {
         let master = MasterPromptSpec::compile(&full_slots(), "trn:39", "citizen:900");
         let bp = ProjectBlueprint::compile(&full_slots(), &master.project_name);
         let orch = CommandCenterOrchestrator::new("trn:39", "citizen:900", 42);
         let out = orch.execute_command_center_with_mairon_loop(&master, &bp);
-        // سه لایه در هر ساب‌ایجنت — هر لایه امضای محتواییِ خودش را دارد
+        // three layers per subagent — each layer carries its own content signature
         for agent in &out.manifest {
             assert!(agent.prompt.layer1_stable_core.contains("SOVEREIGN CODING LAWS"));
             assert!(agent.prompt.layer2_blueprint_context.contains("BUILD SESSION CONTEXT"));
             assert!(agent.prompt.layer3_dynamic_assignment.contains("ASSIGNMENT (dynamic)"));
         }
-        // نه فاکتور ژنوم: f01..f09 — هر فاکتور امضای محتواییِ خودش را دارد
+        // nine genome factors: f01..f09 — each factor carries its own content signature
         let g = &out.manifest[0].genome;
         assert!(g.f01_topology_and_harness.contains("IQ=139"));
         assert_eq!(g.f02_hard_constraints.len(), 6);

@@ -19,11 +19,11 @@ export function SubsystemGrid() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-black sm:text-4xl">
-            پنج زیرسیستمِ <span className="text-royal-400">پادشاهی</span>
+            &#x67e;&#x646;&#x62c; &#x632;&#x6cc;&#x631;&#x633;&#x6cc;&#x633;&#x62a;&#x645;&#x650; <span className="text-royal-400">&#x67e;&#x627;&#x62f;&#x634;&#x627;&#x647;&#x6cc;</span>
           </h2>
           <p className="mx-auto mt-3 max-w-2xl leading-7 text-zinc-400">
-            ارزش اکوسیستم روی پنج ستون تقسیم شده — وزن هر ستون بر اساس تحلیل ۱۸ مخزن legacy
-            محاسبه شده است.
+            &#x627;&#x631;&#x632;&#x634; &#x627;&#x6a9;&#x648;&#x633;&#x6cc;&#x633;&#x62a;&#x645; &#x631;&#x648;&#x6cc; &#x67e;&#x646;&#x62c; &#x633;&#x62a;&#x648;&#x646; &#x62a;&#x642;&#x633;&#x6cc;&#x645; &#x634;&#x62f;&#x647; — &#x648;&#x632;&#x646; &#x647;&#x631; &#x633;&#x62a;&#x648;&#x646; &#x628;&#x631; &#x627;&#x633;&#x627;&#x633; &#x62a;&#x62d;&#x644;&#x6cc;&#x644; &#x6f1;&#x6f8; &#x645;&#x62e;&#x632;&#x646; legacy
+            &#x645;&#x62d;&#x627;&#x633;&#x628;&#x647; &#x634;&#x62f;&#x647; &#x627;&#x633;&#x62a;.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export function SubsystemGrid() {
                         <Icon className="size-6 text-royal-400 transition-colors group-hover:text-gold-400" aria-hidden />
                       </span>
                       <Badge className="border-gold-400/40 bg-gold-400/10 text-gold-400 hover:bg-gold-400/10">
-                        وزن {s.weight}٪
+                        &#x648;&#x632;&#x646; {s.weight}&#x66a;
                       </Badge>
                     </div>
                     <div>

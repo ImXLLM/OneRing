@@ -1,20 +1,20 @@
-//! شکل سیمی رویدادها — JSON بایت‌به‌بایت همان چیزی که `JSON.stringify` در
-//! `back/domain/src/events.ts` می‌سازد، تا dual-run و مصرف‌کنندهٔ outbox
-//! (بات فاز ۵) هر دو طرف TS و Rust یک داده ببینند.
+//! The events' wire shape — JSON byte-for-byte identical to what `JSON.stringify` produces
+//! in `back/domain/src/events.ts`, so dual-run and the outbox consumer
+//! (the phase 5 bot) see the same data on both the TS and Rust sides.
 //!
-//! قواعد کپی از TS:
-//!  - فیلدهای اختیاریِ `None` کلاً حذف می‌شوند (مثل `undefined` در
-//!    `JSON.stringify`) — `null` نوشته نمی‌شود.
-//!  - نام‌ها camelCase: `escrowId`، `sellerNet`، `idempotencyKey` و…
-//!  - `kind` برای `TransactionPosted` ثابت است و برای اسکرو همان رشتهٔ
-//!    کانانیکی `EscrowEventKind` (مثل `EscrowReleased`).
+//! Rules copied from TS:
+//!  - Optional `None` fields are dropped entirely (like `undefined` in
+//!    `JSON.stringify`) — `null` is never written.
+//!  - Names are camelCase: `escrowId`, `sellerNet`, `idempotencyKey`, etc.
+//!  - `kind` is fixed for `TransactionPosted` and for escrow is the canonical
+//!    `EscrowEventKind` string (e.g. `EscrowReleased`).
 //!
-//! تست‌های طلایی همین ماژول جلوی انحراف شکل را می‌گیرند؛ در فاز ۳ تولید
-//! قرارداد (serde + utoipa) از همین شکل به‌عنوان منبع حقیقت استفاده می‌کند.
+//! This module's golden tests guard against shape drift; in phase 3, contract
+//! generation (serde + utoipa) uses this shape as the source of truth.
 
 use kian_domain::{DomainEvent, EscrowEvent, TransactionPostedEvent};
 
-/// رشتهٔ `kind` رویداد — یکسان با TS (ستون `OutboxEvent.kind`).
+/// The event's `kind` string — identical to TS (the `OutboxEvent.kind` column).
 #[must_use]
 pub fn event_kind(event: &DomainEvent) -> &'static str {
     match event {
@@ -23,7 +23,7 @@ pub fn event_kind(event: &DomainEvent) -> &'static str {
     }
 }
 
-/// JSON payload رویداد — شکل `JSON.stringify(event)` در TS.
+/// The event's JSON payload — the `JSON.stringify(event)` shape in TS.
 #[must_use]
 pub fn event_payload(event: &DomainEvent) -> String {
     let mut m = serde_json::Map::new();
@@ -124,7 +124,7 @@ mod tests {
                 "escrowId": "e1"
             })
         );
-        // هیچ فیلد null یا فیلد اضافه‌ای نباید باشد
+        // no null fields or extra fields allowed
         assert!(v.get("amount").is_none());
         assert!(v.get("reason").is_none());
         assert_eq!(

@@ -1,18 +1,18 @@
-//! پورت `back/server/scripts/migrate-legacy.ts` — پل روز-اول از دیتابیس
-//! بازیابی‌شدهٔ Railway به v3.
+//! Port of `back/server/scripts/migrate-legacy.ts` — the day-one bridge from the
+//! recovered Railway database to v3.
 //!
-//! رفتار یک‌به‌یک با نسخهٔ TS:
-//!  ۱. برنامهٔ genesis از ردیف‌های خام لگاسی (floor هر شهروند — ADR-002)
-//!  ۲. اگر genesis قبلاً هست (`legacy:genesis:v1`) → خروج امنِ replay با
-//!     گزارش آشتی — اجرای دوم هرگز دوبار ضرب نمی‌کند.
-//!  ۳. dry-run → فقط برنامه، هیچ نوشتنی.
-//!  ۴. درج: ۴۶۶ حساب `user:tg:<id>` + تراکنش genesis + ردیف audit
-//!     `legacy.adjustment` با ریز گپ −63.0 + ۳۰ محصول `legacy-<id>`.
+//! One-to-one behavior with the TS version:
+//!  1. the genesis plan from the raw legacy rows (floor of every citizen — ADR-002)
+//!  2. if genesis already exists (`legacy:genesis:v1`) → a safe replay exit with
+//!     a reconciliation report — a second run never mints twice.
+//!  3. dry-run → plan only, no writes.
+//!  4. inserts: 466 `user:tg:<id>` accounts + the genesis transaction + an audit row
+//!     `legacy.adjustment` with the −63.0 gap detail + 30 `legacy-<id>` products.
 //!
-//! یک تفاوت عمدی و سخت‌گیرانه‌تر از TS: ردیف‌های مالی genesis مستقیم درج
-//! نمی‌شوند؛ از تابع خالص `post()` دامنهٔ فاز ۱ می‌گذرند (الگوی
-//! load → apply → persist). یعنی اگر شهروندی floor منفی داشته باشد یا
-//! ردیف‌ها ناتوازن شوند، «دامنه» مهاجرت را رد می‌کند — fail-closed.
+//! One deliberate, stricter difference from TS: genesis financial rows are not inserted
+//! directly; they pass through the Phase 1 domain’s pure `post()` function (the
+//! load → apply → persist pattern). So if any citizen has a negative floor or the
+//! rows become unbalanced, the "domain" rejects the migration — fail-closed.
 
 use crate::error::{DbError, DbResult};
 use crate::genesis::{plan_genesis, GENESIS_KEY, GENESIS_TX_ID};
@@ -22,40 +22,40 @@ use crate::store::{
 use kian_domain::{AccountKind, PostCommand, Posting, MINT_ACCOUNT_ID};
 use sqlx::Row;
 
-/// گزارش مهاجرت — خطوط آمادهٔ چاپ + پرچم‌های وضعیت.
+/// Migration report — print-ready lines + status flags.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MigrateReport {
-    /// خطوط گزارش (فارسی/انگلیسی مخلوط مثل کنسول TS)
+    /// Report lines (Persian/English mix, like the TS console)
     pub lines: Vec<String>,
-    /// آیا genesis از قبل بود و replay شد؟
+    /// Was genesis already present and replayed?
     pub replayed: bool,
-    /// آیا dry-run بود؟
+    /// Was this a dry-run?
     pub dry_run: bool,
 }
 
-/// گزارش آشتی — همان `reconcile` در TS.
+/// Reconciliation report — the same `reconcile` as in TS.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReconcileReport {
-    /// Σ کیف کاربران — عدد پذیرش: ۱۸۷٬۶۷۲ Đ
+    /// Σ user wallets — acceptance figure: 187,672 Đ
     pub users_sum: i64,
-    /// تعداد کاربران
+    /// user count
     pub user_count: usize,
-    /// تعداد کل حساب‌ها (کاربر + سیستمی)
+    /// total account count (user + system)
     pub account_count: usize,
-    /// آیا تراز آزمایشی برقرار است؟
+    /// Does the trial balance hold?
     pub balanced: bool,
-    /// Σ همهٔ ردیف‌ها — باید ۰ باشد
+    /// Σ of all rows — must be 0
     pub trial_sum: i64,
-    /// تعداد محصولات موجود
+    /// available product count
     pub product_count: i64,
-    /// تعداد محصولات لگاسی که باید وارد می‌شدند
+    /// legacy products that had to be imported
     pub expected_products: i64,
-    /// تعداد ردیف‌های تعدیل لگاسی
+    /// legacy adjustment row count
     pub adjustment_rows: i64,
 }
 
 impl ReconcileReport {
-    /// خطوط چاپی گزارش — همان قالب TS.
+    /// Report print lines — the same format as TS.
     #[must_use]
     pub fn lines(&self) -> Vec<String> {
         vec![
@@ -75,10 +75,10 @@ impl ReconcileReport {
     }
 }
 
-/// آشتی فروشگاه هدف — برای خروج replay و پایان مهاجرت (مثل `reconcile` در TS).
+/// Reconcile the target store — for the replay exit and migration end (like `reconcile` in TS).
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn reconcile(store: &V3Store, expected_products: i64) -> DbResult<ReconcileReport> {
     let accounts = store.list_accounts_with_balances().await?;
     let users: Vec<_> = accounts.iter().filter(|a| a.id.starts_with("user:")).collect();
@@ -105,11 +105,11 @@ pub async fn reconcile(store: &V3Store, expected_products: i64) -> DbResult<Reco
     })
 }
 
-/// اجرای مهاجرت لگاسی روی فروشگاه هدف.
+/// Run the legacy migration against the target store.
 ///
 /// # Errors
-/// خطای SQL، نقض ثبات در دامنه (fail-closed)، یا لگاسی خوانده‌نشدنی.
-#[allow(clippy::cast_possible_truncation)] // floor() پیش از cast — گردکردن صریح ADR-002
+/// SQL error, an invariant violation in the domain (fail-closed), or unreadable legacy data.
+#[allow(clippy::cast_possible_truncation)] // floor() before cast — the ADR-002 explicit rounding
 pub async fn migrate_legacy(
     store: &V3Store,
     users: &[crate::genesis::LegacyUserRow],
@@ -135,7 +135,7 @@ pub async fn migrate_legacy(
 
     store.ensure_system_accounts().await?;
 
-    // اجرای دوم → خروج امنِ replay با گزارش آشتی (بدون دو ضرب).
+    // second run → safe replay exit with the reconciliation report (no double mint).
     let mut conn = store.acquire_conn().await?;
     if tx_by_key(&mut conn, GENESIS_KEY).await?.is_some() {
         lines.push("[migrate] genesis already present — replay-safe exit.".into());
@@ -155,14 +155,14 @@ pub async fn migrate_legacy(
         return Ok(MigrateReport { lines, replayed: false, dry_run });
     }
 
-    // تراکنش اصلی — همه یا هیچ.
+    // main transaction — all or nothing.
     let mut tx = store.begin_tx().await?;
     for c in &plan.citizens {
         crate::store::insert_account(&mut tx, &c.account_id, AccountKind::User, Some(&c.label))
             .await?;
     }
 
-    // genesis از مسیر دامنهٔ خالص — fail-closed (سخت‌گیرانه‌تر از TS).
+    // genesis through the pure domain path — fail-closed (stricter than TS).
     let ledger = load_ledger_state(&mut tx).await?;
     let mut postings = vec![Posting::new(MINT_ACCOUNT_ID, -plan.sum_din)];
     postings.extend(
@@ -181,7 +181,7 @@ pub async fn migrate_legacy(
     let posted = kian_domain::post(&ledger, &cmd).map_err(DbError::from)?;
     insert_tx_with_postings(&mut tx, &posted.tx, Some(GENESIS_KEY)).await?;
 
-    // ردیف audit — ریز گپ −63.0 برای همیشه قابل اثبات می‌ماند.
+    // audit row — the −63.0 gap detail stays provable forever.
     let meta = serde_json::json!({
         "legacyUsers": users.len(),
         "legacyTransactions": tx_count,
@@ -196,7 +196,7 @@ pub async fn migrate_legacy(
     insert_audit(&mut tx, "legacy-migration", "legacy.adjustment", Some("ledger"), Some(&meta))
         .await?;
 
-    // ۳۰ محصول لگاسی — تحویل فقط از `link` (فایل‌های دیسک Railway برای همیشه رفتند).
+    // 30 legacy products — delivery via `link` only (the Railway disk files are gone for good).
     for p in products {
         let title: String = p.title.chars().take(120).collect();
         let description: String =

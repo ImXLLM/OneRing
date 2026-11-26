@@ -1,11 +1,11 @@
-//! هندلرهای ناوگان A2A/MCP (M4) — کارت کشف، ناوگان، پیام A2A، ابزار MCP.
+//! A2A/MCP fleet handlers (M4) — discovery card, fleet, A2A messages, MCP tools.
 //!
-//! امنیت: کارت و ناوگان و فهرست ابزارها عمومی (شفافیت — هیچ کلیدی در پاسخ
-//! نیست)؛ ارسال/صندوق A2A و invoke ابزارهای MCP **ادمین** با `X-KIAN-Key` —
-//! ایجنت‌ها زیرساخت قابل‌اعتمادند، نه شهروند.
+//! Security: the card, fleet and tool list are public (transparency — no keys appear
+//! in a response); A2A send/inbox and MCP tool invoke are **admin** via `X-KIAN-Key` —
+//! agents are trusted infrastructure, not citizens.
 //!
-//! بوت: [`seed_agents`] — ۷ نقش از `kian_agents::ROLES`؛ seed فقط بار اول
-//! می‌نویسد و وضعیت ادمین را هرگز بازنویسی نمی‌کند.
+//! Boot: [`seed_agents`] — 7 roles from `kian_agents::ROLES`; the seed writes only on first run
+//! and never overwrites admin status.
 
 use axum::extract::{Path, State};
 use axum::http::HeaderMap;
@@ -26,10 +26,10 @@ use crate::handlers::safe_wire_id;
 use crate::middleware::require_admin;
 use crate::state::AppState;
 
-/// بذر ناوگان — از بوت (`main`)؛ فقط ردیف‌های غایب.
+/// Fleet seeding — from boot (`main`); missing rows only.
 ///
 /// # Errors
-/// خطای SQL.
+/// SQL error.
 pub async fn seed_agents(store: &kian_db::V3Store) -> Result<(), kian_db::DbError> {
     for (id, name, role, status, description) in role_seed() {
         store
@@ -45,10 +45,10 @@ pub async fn seed_agents(store: &kian_db::V3Store) -> Result<(), kian_db::DbErro
     Ok(())
 }
 
-/// `GET /.well-known/agent-card.json` — کشف عمومی A2A؛ مهارت‌ها از هرمس.
+/// `GET /.well-known/agent-card.json` — public A2A discovery; skills come from Hermes.
 ///
 /// # Errors
-/// ۵۰۰ خطای db — خواندن مهارت‌های فعال.
+/// 500 db error — reading active skills.
 pub async fn agent_card(State(state): State<Arc<AppState>>) -> ApiResult<Json<AgentCardResponse>> {
     let skills = state
         .store
@@ -69,22 +69,22 @@ pub async fn agent_card(State(state): State<Arc<AppState>>) -> ApiResult<Json<Ag
         description: "Money kernel + Hermes brain — the KIAN ecosystem brain".into(),
         url: base.clone(),
         version: crate::VERSION.to_owned(),
-        // نسخهٔ پروتکل صادقانه — پیاده‌سازی خودِ کیان از مفهوم A2A
+        // honest protocol version — Kian’s own implementation of the A2A concept
         protocol_version: kian_agents::card::PROTOCOL_VERSION.to_owned(),
         provider: AgentCardProvider { organization: "KiaAgentX".into(), url: base },
         skills,
     }))
 }
 
-/// اطمینان از حضور ناوگان — بوت اصلی می‌کارد؛ برای دیتابیس‌های تازه هم idempotent.
+/// Ensure the fleet exists — the main boot seeds it; idempotent for fresh databases too.
 async fn ensure_fleet(state: &AppState) -> Result<(), ApiFailure> {
     seed_agents(&state.store).await.map_err(ApiFailure::from)
 }
 
-/// `GET /agents/fleet` — عمومی؛ ۷ ایجنت + ابزارهای MCP، وضعیت صادقانه.
+/// `GET /agents/fleet` — public; 7 agents + MCP tools, honest status.
 ///
 /// # Errors
-/// ۵۰۰ خطای db — `ensure_fleet` یا خواندن ناوگان.
+/// 500 db error — `ensure_fleet` or the fleet read.
 pub async fn fleet(State(state): State<Arc<AppState>>) -> ApiResult<Json<FleetResponse>> {
     ensure_fleet(&state).await?;
     let rows = state.store.list_agents().await.map_err(ApiFailure::from)?;
@@ -112,13 +112,13 @@ pub async fn fleet(State(state): State<Arc<AppState>>) -> ApiResult<Json<FleetRe
     }))
 }
 
-/// `POST /a2a/messages` — ادمین؛ فرستنده/گیرنده باید ایجنت ثبت‌شده باشند.
+/// `POST /a2a/messages` — admin; sender/recipient must be registered agents.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ایجنت ناشناخته، ۴۲۲ نوع پیام نامعتبر.
+/// 401/503 admin, 404 unknown agent, 422 invalid message type.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database ids.
 pub async fn a2a_send(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -157,13 +157,13 @@ pub async fn a2a_send(
     }))
 }
 
-/// `GET /a2a/messages/{agent}` — ادمین؛ صندوق ورودی ایجنت.
+/// `GET /a2a/messages/{agent}` — admin; agent inbox.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ایجنت ناشناخته.
+/// 401/503 admin, 404 unknown agent.
 ///
 /// # Panics
-/// هیچ‌گاه روی ورودی کاربر — `expect` فقط روی شناسه‌های wire-safe دیتابیس.
+/// Never on user input — `expect` only on wire-safe database ids.
 pub async fn a2a_inbox(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -190,10 +190,10 @@ pub async fn a2a_inbox(
     }))
 }
 
-/// `GET /mcp/tools` — عمومی؛ allowlist شفاف.
+/// `GET /mcp/tools` — public; transparent allowlist.
 ///
 /// # Errors
-/// هیچ — همیشه ۲۰۰ (allowlist ثابت کد).
+/// None — always 200 (code-fixed allowlist).
 pub async fn mcp_tools(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec<McpToolView>>> {
     let _ = &state;
     Ok(Json(TOOLS
@@ -207,10 +207,10 @@ pub async fn mcp_tools(State(state): State<Arc<AppState>>) -> ApiResult<Json<Vec
         .collect()))
 }
 
-/// `POST /mcp/invoke` — ادمین؛ فقط ابزارهای allowlist با آرگومان کامل.
+/// `POST /mcp/invoke` — admin; allowlisted tools only, with full arguments.
 ///
 /// # Errors
-/// ۴۰۱/۵۰۳ ادمین، ۴۰۴ ابزار ناشناخته، ۴۲۲ آرگومان نقص، ۵۰۰ db.
+/// 401/503 admin, 404 unknown tool, 422 defective argument, 500 db.
 pub async fn mcp_invoke(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -243,7 +243,7 @@ pub async fn mcp_invoke(
             })
         }
         "kernel.health" => {
-            // دفتر پاسخ می‌دهد؟ — همان liveness عمیق health
+            // does the ledger answer? — the same deep liveness as health
             state.store.economy_summary().await.map_err(ApiFailure::from)?;
             serde_json::json!({ "status": "ok", "service": "kian-server" })
         }
@@ -344,7 +344,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// ناوگان عمومی — ۷ ایجنت با وضعیت صادقانه + ۸ ابزار MCP.
+    /// Public fleet — 7 agents with honest status + 8 MCP tools.
     #[tokio::test]
     async fn fleet_is_public_and_honest() {
         let app = app().await;
@@ -357,21 +357,21 @@ mod tests {
         let agents = body["agents"].as_array().unwrap();
         assert_eq!(agents.len(), 7);
         assert_eq!(body["mcpTools"].as_array().unwrap().len(), 8);
-        // ناوگان ۷/۷ فعال (گنجینهٔ strategic-5repos): مغز + پنج متخصص + نگهبانِ
-        // هندلر راستی‌آزمایی — ترتیب دیتابیس الفبایی است
+        // fleet 7/7 active (strategic-5repos treasury): brain + five specialists + the
+        // verification handler — database ordering is alphabetical
         let orch = agents.iter().find(|a| a["role"] == "orchestrator").expect("orchestrator");
         assert_eq!(orch["status"], "active");
         let merchant = agents.iter().find(|a| a["role"] == "merchant").expect("merchant");
         assert_eq!(merchant["status"], "active");
         let guardian = agents.iter().find(|a| a["role"] == "guardian").expect("guardian");
-        assert_eq!(guardian["status"], "active", "نگهبان با هندلر امنیت فعال است");
+        assert_eq!(guardian["status"], "active", "\u{646}\u{6af}\u{647}\u{628}\u{627}\u{646} \u{628}\u{627} \u{647}\u{646}\u{62f}\u{644}\u{631} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{641}\u{639}\u{627}\u{644} \u{627}\u{633}\u{62a}");
         let active_count = agents.iter().filter(|a| a["status"] == "active").count();
-        assert_eq!(active_count, 7, "ناوگان ۷/۷ فعال");
+        assert_eq!(active_count, 7, "\u{646}\u{627}\u{648}\u{6af}\u{627}\u{646} \u{6f7}/\u{6f7} \u{641}\u{639}\u{627}\u{644}");
         let wire = body.to_string().to_lowercase();
         assert!(!wire.contains("test-admin-key"), "fleet must never leak the admin key");
     }
 
-    /// کارت A2A در مسیر استاندارد well-known — عمومی، بدون کلید.
+    /// A2A card at the standard well-known path — public, no key.
     #[tokio::test]
     async fn agent_card_is_public() {
         let app = app().await;
@@ -390,13 +390,13 @@ mod tests {
         assert_eq!(body["provider"]["organization"], "KiaAgentX");
     }
 
-    /// گیت‌وی ایجنت‌ها فقط ادمین — بدون کلید ۴۰۱؛ ایجنت ناشناخته ۴۰۴.
+    /// Agent gateway is admin-only — 401 without a key; unknown agent 404.
     #[tokio::test]
     async fn a2a_is_admin_only_with_agent_guard() {
         let app = app().await;
-        let payload = r#"{"from":"agent:orchestrator","to":"agent:support","kind":"handoff","body":"سلام"}"#;
+        let payload = r#"{"from":"agent:orchestrator","to":"agent:support","kind":"handoff","body":"Hello"}"#;
 
-        // بدون کلید
+        // without a key
         let res = app
             .clone()
             .oneshot(
@@ -410,7 +410,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // با کلید — ارسال سالم
+        // with a key — healthy send
         let res = app
             .clone()
             .oneshot(
@@ -427,7 +427,7 @@ mod tests {
         let body = body_json(res).await;
         assert!(body["id"].as_str().unwrap().starts_with("a2a:"));
 
-        // صندوق گیرنده
+        // recipient inbox
         let res = app
             .clone()
             .oneshot(
@@ -442,7 +442,7 @@ mod tests {
         let body = body_json(res).await;
         assert_eq!(body["items"].as_array().unwrap().len(), 1);
 
-        // ایجنت ناشناخته → ۴۰۴
+        // unknown agent → 404
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -456,12 +456,12 @@ mod tests {
         assert_eq!(res.status(), 404);
     }
 
-    /// MCP — ابزار ناشناخته ۴۰۴؛ آرگومان نقص ۴۲۲؛ economy با کلید ۲۰۰.
+    /// MCP — unknown tool 404; defective argument 422; economy with a key 200.
     #[tokio::test]
     async fn mcp_invoke_is_guarded_and_validated() {
         let app = app().await;
 
-        // بدون کلید
+        // without a key
         let res = app
             .clone()
             .oneshot(
@@ -475,7 +475,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 401);
 
-        // ابزار ناشناخته
+        // unknown tool
         let res = app
             .clone()
             .oneshot(
@@ -491,7 +491,7 @@ mod tests {
         assert_eq!(res.status(), 404);
         assert_eq!(body_json(res).await["error"]["code"], "MCP_TOOL_NOT_FOUND");
 
-        // آرگومان نقص
+        // defective argument
         let res = app
             .clone()
             .oneshot(
@@ -507,7 +507,7 @@ mod tests {
         assert_eq!(res.status(), 422);
         assert_eq!(body_json(res).await["error"]["code"], "MCP_INVALID_ARGUMENTS");
 
-        // خوانش عمومی با کلید
+        // public read with a key
         let res = app
             .clone()
             .oneshot(

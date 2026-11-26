@@ -1,1 +1,1 @@
-# @kian/config — پیش‌تنظیمات مشترک (tsconfig/eslint/tailwind)
+# @kian/config — Shared Presets (tsconfig/eslint/tailwind)

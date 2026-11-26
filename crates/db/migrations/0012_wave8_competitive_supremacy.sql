@@ -1,13 +1,13 @@
--- مهاجرت 0012 — موتورِ برتریِ رقابتی (Wave 8 — Commit #28)
+-- Migration 0012 — the competitive supremacy engine (Wave 8 — Commit #28)
 --
--- سه جدولِ additive برای چهار ستونِ برتری:
--- - `AgentCheckpoint`: چک‌پوینت‌هایِ تغییرناپذیرِ وضعیتِ ایجنت (LangGraph-style
---   time-travel؛ انشعاب از هر گامِ تاریخی بدونِ اجرایِ مجددِ گام‌هایِ پیشین)؛
--- - `WorkflowDagRun`: ران‌هایِ DAG پویا با ترتیبِ توپولوژیکِ Kahn (Dify/n8n)؛
--- - `SweSandboxAudit`: ممیزیِ سندباکسِ `Plan → Verify → Self-Heal` با مُهرِ
---   مایرون (OpenHands/Replit Agent).
+-- three additive tables for the four supremacy pillars:
+-- - `AgentCheckpoint`: immutable agent-state checkpoints (LangGraph-style
+--   time-travel; branch from any historical step without re-running earlier steps);
+-- - `WorkflowDagRun`: dynamic DAG runs with Kahn topological ordering (Dify/n8n);
+-- - `SweSandboxAudit`: the `Plan → Verify → Self-Heal` sandbox audit sealed
+--   by Mairon (OpenHands/Replit Agent).
 --
--- هیچ جدولِ دفتریِ دوطرفه‌ای لمس نمی‌شود — صفرجمعِ `Posting` دست‌نخورده می‌ماند.
+-- no double-entry ledger table is touched — the `Posting` zero-sum stays untouched.
 
 CREATE TABLE IF NOT EXISTS "AgentCheckpoint" (
     "id" TEXT PRIMARY KEY,

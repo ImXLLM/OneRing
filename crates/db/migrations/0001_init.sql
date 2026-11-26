@@ -1,11 +1,11 @@
--- 0001_init — اسکیمای کامل v3 — یک‌به‌یک مطابق back/server/prisma/schema.prisma
--- (نام جدول‌ها، ستون‌ها و ایندکس‌ها «دقیقاً» همان است تا dual-run فاز ۸ بتواند
---  بدون تبدیل، روی همان فایل SQLite که Prisma ساخته بنشیند.)
---  * همه CREATE ها IF NOT EXISTS هستند: روی دیتابیس تازه می‌سازد، روی دیتابیسِ
---    ساخته‌شده توسط Prisma بی‌اثر است (idempotent).
---  * DATETIME ها رشته ISO-8601 UTC با پسوند Z هستند (قرارداد دامنه: EPOCH_ISO).
---  * ADR-003: ترازها ذخیره نمی‌شوند — «Posting» تنها منبع حقیقت است و تراز
---    همیشه با SUM(amount) مشتق می‌شود.
+-- 0001_init — complete v3 schema — one-to-one mirror of back/server/prisma/schema.prisma
+-- (table, column and index names are kept "exactly" identical so the phase-8 dual-run
+--  can sit on the very SQLite file Prisma produced, without any conversion.)
+--  * every CREATE is IF NOT EXISTS: creates on a fresh database, no-ops on a database
+--    already built by Prisma (idempotent).
+--  * DATETIMEs are ISO-8601 UTC strings with a Z suffix (domain convention: EPOCH_ISO).
+--  * ADR-003: balances are not stored — "Posting" is the single source of truth and the
+--    balance is always derived with SUM(amount).
 
 CREATE TABLE IF NOT EXISTS "Account" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS "Account" (
 
 CREATE TABLE IF NOT EXISTS "Tx" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    -- قید یکتایی کلید یکسان‌سازی — تضمین اینکه «مسابقه‌ی retry دوبار پول
-    -- جابه‌جا نمی‌کند» (ADR-003 + فاز ۲)
+    -- idempotency-key uniqueness constraint — guarantees that "a retry race never
+    -- moves money twice" (ADR-003 + phase 2)
     "idempotencyKey" TEXT,
     "memo" TEXT,
     "at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -57,7 +57,7 @@ CREATE INDEX IF NOT EXISTS "Escrow_status_idx" ON "Escrow" ("status");
 CREATE TABLE IF NOT EXISTS "OutboxEvent" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "kind" TEXT NOT NULL,
-    -- JSON-encoded DomainEvent — شکل سیمیِ یکسان با JSON.stringify در TS
+    -- JSON-encoded DomainEvent — same wire shape as JSON.stringify in TS
     "payload" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "published" BOOLEAN NOT NULL DEFAULT false
@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS "Product" (
     "description" TEXT NOT NULL,
     "priceDin" INTEGER NOT NULL,
     "category" TEXT,
-    -- درس لگاسی: فایل‌ها روی دیسک موقت Railway از بین رفتند — محتوای تحویل
-    -- از این به بعد داخل خود ردیف ذخیره می‌شود.
+    -- legacy lesson: files on the Railway ephemeral disk were lost — delivery content
+    -- is now stored inside the row itself.
     "deliveryPayload" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -1,32 +1,32 @@
 "use client";
 
 /**
- * قاب رندر امن HTML برای محصولات تک‌صفحه‌ای تعاملی KIAN.
+ * Secure HTML rendering frame for KIAN interactive single-page products.
  *
- * امنیت حیاتی:
- * - تنها `sandbox="allow-scripts"` فعال است.
- * - `allow-same-origin` و `allow-top-navigation` عمداً حذف شده‌اند تا کد JS داخل
- *   محصول HTML هرگز نتواند به `localStorage`، کوکی یا توکن نشست مینی‌اپ KIAN دسترسی یابد.
+ * Critical security:
+ * - Only `sandbox="allow-scripts"` is enabled.
+ * - `allow-same-origin` and `allow-top-navigation` are deliberately omitted so the JS code inside
+ *   an HTML product can never reach `localStorage`, cookies, or the KIAN mini-app session token.
  */
 
 import { useEffect, useState } from "react";
 import { Download, Maximize2, RotateCw, ShieldCheck, X } from "lucide-react";
 
 export type HtmlPreviewFrameProps = {
-  /** سند کامل HTML برای رندر داخل `iframe` ایزوله */
+  /** The complete HTML document to render inside the isolated `iframe` */
   html: string;
-  /** نسخهٔ دانلودی سند — پیش‌فرض همان `html`؛ برای پیش‌نمایش گاردخورده و
-   *  دانلود سند کاملِ دست‌نخورده فرق می‌کنند. */
+  /** Downloadable version of the document — defaults to `html`; the guard-fed preview and
+   *  the untouched full-document download differ. */
   downloadHtml?: string;
-  /** عنوان نمایشی قاب و فایل دانلودی */
+  /** Display title for the frame and the downloaded file */
   title?: string;
-  /** نمایش دکمهٔ دانلود فایل `.html` مستقل (مناسب حالت تحویل پس از خرید) */
+  /** Show the download button for the standalone `.html` file (fits the post-purchase delivery mode) */
   allowDownload?: boolean;
-  /** نام فایل دانلودی (مثلاً `kian-app.html`) */
+  /** Downloaded file name (e.g. `kian-app.html`) */
   downloadFilename?: string;
-  /** کلاس ارتفاع قاب درون‌صفحه‌ای */
+  /** Height class for the in-page frame */
   heightClassName?: string;
-  /** برچسب کوتاه کنار عنوان قاب */
+  /** Short label beside the frame title */
   badgeLabel?: string;
 };
 
@@ -42,11 +42,11 @@ function sanitizeFilename(name: string): string {
 export function HtmlPreviewFrame({
   html,
   downloadHtml,
-  title = "پیش‌نمایش زنده HTML",
+  title = "\u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634 \u0632\u0646\u062f\u0647 HTML",
   allowDownload = false,
   downloadFilename,
   heightClassName = "h-[420px]",
-  badgeLabel = "سندباکس ایزوله",
+  badgeLabel = "\u0633\u0646\u062f\u0628\u0627\u06a9\u0633 \u0627\u06cc\u0632\u0648\u0644\u0647",
 }: HtmlPreviewFrameProps) {
   const [reloadKey, setReloadKey] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
@@ -61,7 +61,7 @@ export function HtmlPreviewFrame({
   }, [fullscreen]);
 
   const handleDownload = () => {
-    // نسخهٔ دانلودی سند کامل است — گارد پیش‌نمایش (`html`) به فایل محصول نشت نمی‌کند.
+    // The download version is the full document — the preview guard (`html`) does not leak into the product file.
     const artifact = downloadHtml ?? html;
     if (!artifact) return;
     const blob = new Blob([artifact], { type: "text/html;charset=utf-8" });
@@ -78,7 +78,7 @@ export function HtmlPreviewFrame({
   if (!html.trim()) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-8 text-center text-xs text-zinc-500">
-        <span>هنوز پیش‌نمایش HTML برای این محصول ثبت نشده است.</span>
+        <span>&#x647;&#x646;&#x648;&#x632; &#x67e;&#x6cc;&#x634;‌&#x646;&#x645;&#x627;&#x6cc;&#x634; HTML &#x628;&#x631;&#x627;&#x6cc; &#x627;&#x6cc;&#x646; &#x645;&#x62d;&#x635;&#x648;&#x644; &#x62b;&#x628;&#x62a; &#x646;&#x634;&#x62f;&#x647; &#x627;&#x633;&#x62a;.</span>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export function HtmlPreviewFrame({
   return (
     <>
       <div className="overflow-hidden rounded-2xl border border-royal-500/30 bg-zinc-950 shadow-xl shadow-black/40">
-        {/* نوار ابزار قاب */}
+        {/* Frame toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 bg-zinc-900/90 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <ShieldCheck className="size-4 shrink-0 text-emerald-400" aria-hidden />
@@ -100,36 +100,36 @@ export function HtmlPreviewFrame({
             <button
               type="button"
               onClick={() => setReloadKey((k) => k + 1)}
-              title="تازه‌سازی پیش‌نمایش"
+              title="\u062a\u0627\u0632\u0647‌\u0633\u0627\u0632\u06cc \u067e\u06cc\u0634‌\u0646\u0645\u0627\u06cc\u0634"
               className="flex items-center gap-1 rounded-lg bg-zinc-800 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-zinc-700"
             >
               <RotateCw className="size-3.5" aria-hidden />
-              <span>تازه‌سازی</span>
+              <span>&#x62a;&#x627;&#x632;&#x647;‌&#x633;&#x627;&#x632;&#x6cc;</span>
             </button>
             <button
               type="button"
               onClick={() => setFullscreen(true)}
-              title="بزرگ‌نمایی تمام‌صفحه"
+              title="\u0628\u0632\u0631\u06af‌\u0646\u0645\u0627\u06cc\u06cc \u062a\u0645\u0627\u0645‌\u0635\u0641\u062d\u0647"
               className="flex items-center gap-1 rounded-lg bg-royal-500/20 px-2 py-1 text-[11px] font-semibold text-gold-400 ring-1 ring-gold-400/30 hover:bg-royal-500/30"
             >
               <Maximize2 className="size-3.5" aria-hidden />
-              <span>تمام‌صفحه</span>
+              <span>&#x62a;&#x645;&#x627;&#x645;‌&#x635;&#x641;&#x62d;&#x647;</span>
             </button>
             {allowDownload && (
               <button
                 type="button"
                 onClick={handleDownload}
-                title="دانلود فایل HTML مستقل"
+                title="&#x62f;&#x627;&#x646;&#x644;&#x648;&#x62f; &#x641;&#x627;&#x6cc;&#x644; HTML &#x645;&#x633;&#x62a;&#x642;&#x644;"
                 className="flex items-center gap-1 rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-400/35 hover:bg-emerald-500/30"
               >
                 <Download className="size-3.5" aria-hidden />
-                <span>دانلود .html</span>
+                <span>&#x62f;&#x627;&#x646;&#x644;&#x648;&#x62f; .html</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* قاب ایزوله — بدون allow-same-origin و بدون allow-top-navigation */}
+        {/* Isolated frame — no allow-same-origin and no allow-top-navigation */}
         <iframe
           key={`inline-${reloadKey}`}
           title={title}
@@ -140,7 +140,7 @@ export function HtmlPreviewFrame({
         />
       </div>
 
-      {/* مودال تمام‌صفحه */}
+      {/* Fullscreen modal */}
       {fullscreen && (
         <div
           className="fixed inset-0 z-50 flex flex-col bg-zinc-950/95 backdrop-blur-md"
@@ -160,7 +160,7 @@ export function HtmlPreviewFrame({
                 className="flex items-center gap-1 rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
               >
                 <RotateCw className="size-3.5" aria-hidden />
-                تازه‌سازی
+                &#x62a;&#x627;&#x632;&#x647;‌&#x633;&#x627;&#x632;&#x6cc;
               </button>
               {allowDownload && (
                 <button
@@ -169,13 +169,13 @@ export function HtmlPreviewFrame({
                   className="flex items-center gap-1 rounded-lg bg-emerald-500/20 px-2.5 py-1.5 text-xs font-bold text-emerald-300 ring-1 ring-emerald-400/35 hover:bg-emerald-500/30"
                 >
                   <Download className="size-3.5" aria-hidden />
-                  دانلود .html
+                  &#x62f;&#x627;&#x646;&#x644;&#x648;&#x62f; .html
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setFullscreen(false)}
-                aria-label="بستن تمام‌صفحه"
+                aria-label="\u0628\u0633\u062a\u0646 \u062a\u0645\u0627\u0645‌\u0635\u0641\u062d\u0647"
                 className="grid size-8 place-items-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
               >
                 <X className="size-4" aria-hidden />
@@ -184,7 +184,7 @@ export function HtmlPreviewFrame({
           </div>
           <iframe
             key={`full-${reloadKey}`}
-            title={`${title} — تمام‌صفحه`}
+            title={`${title} — \u062a\u0645\u0627\u0645‌\u0635\u0641\u062d\u0647`}
             srcDoc={html}
             sandbox="allow-scripts"
             referrerPolicy="no-referrer"

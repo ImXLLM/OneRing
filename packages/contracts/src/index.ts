@@ -1,17 +1,17 @@
 import { z } from "zod";
 
 /**
- * قراردادهای وایر KIAN — قرینهٔ TypeScript محاسبات crates/domain و crates/contracts.
+ * KIAN wire contracts — a TypeScript mirror of the crates/domain and crates/contracts computations.
  *
- * منبع حقیقت: Rust (کامیون crates/contracts با utoipa + گلدن‌تست‌ها) → اینجا فقط
- * mirror با Zod برای کلاینت‌های وب/مینی‌اپ. قواعد سیم: camelCase، null صریح برای
- * nullable، صحیح تا 2^53−1 (Din) — همان legacy تا dual-run بدون تبدیل کار کند.
+ * Source of truth: Rust (the crates/contracts crate with utoipa + golden tests) → here only
+ * a Zod mirror for web/mini-app clients. Wire rules: camelCase, explicit null for
+ * nullable fields, integers up to 2^53−1 (Din) — same as legacy so dual-run works without conversion.
  */
 
-/** Din — واحد پول عدد صحیح؛ سقف 2^53−1 (مرز Number.MAX_SAFE_INTEGER عمداً حفظ شده) */
+/** Din — the integer money unit; cap 2^53−1 (the Number.MAX_SAFE_INTEGER boundary deliberately preserved) */
 export const DinAmount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 
-/** هشت حالت ماشین امانت — یک‌به‌یک با `kian_domain::EscrowStatus` (SCREAMING_SNAKE_CASE) */
+/** The eight escrow state-machine states — one-to-one with `kian_domain::EscrowStatus` (SCREAMING_SNAKE_CASE) */
 export const EscrowStatus = z.enum([
   "CREATED",
   "FUNDED",
@@ -23,7 +23,7 @@ export const EscrowStatus = z.enum([
   "EXPIRED",
 ]);
 
-/** نمای امانت روی سیم — قرینهٔ `EscrowView` در crates/contracts/src/escrows.rs */
+/** Escrow wire view — mirror of `EscrowView` in crates/contracts/src/escrows.rs */
 export const EscrowView = z.object({
   id: z.string(),
   buyerId: z.string(),
@@ -39,14 +39,14 @@ export const EscrowView = z.object({
   expiresAt: z.string().nullable(),
 });
 
-/** پاسخ استاندارد اقدام امانت — قرینهٔ `EscrowActionResponse` */
+/** Standard escrow-action response — mirror of `EscrowActionResponse` */
 export const EscrowActionResponse = z.object({
   escrow: EscrowView,
   txId: z.string().nullable(),
   replayed: z.boolean(),
 });
 
-/** نمای حساب — تراز مشتق از `Posting` (ADR-003: ترازها ذخیره نمی‌شوند) */
+/** Account view — balance derived from `Posting` (ADR-003: balances are not stored) */
 export const AccountView = z.object({
   id: z.string(),
   kind: z.string(),
@@ -55,7 +55,7 @@ export const AccountView = z.object({
   createdAt: z.string(),
 });
 
-/** بدنهٔ خطای یکدست — همیشه `{ error: { code, message, meta? } }` */
+/** Uniform error body — always `{ error: { code, message, meta? } }` */
 export const ErrorEnvelope = z.object({
   error: z.object({
     code: z.string(),
@@ -64,7 +64,7 @@ export const ErrorEnvelope = z.object({
   }),
 });
 
-/** خلاصهٔ اقتصاد — `GET /api/v1/economy` (شفافیت مادهٔ ۶؛ عمومی و فقط‌خواندنی) */
+/** Economy summary — `GET /api/v1/economy` (Article 6 transparency; public and read-only) */
 export const EconomySummary = z.object({
   currency: z.literal("DNX"),
   symbol: z.literal("Đ"),
@@ -74,7 +74,7 @@ export const EconomySummary = z.object({
   mintedAllTime: DinAmount,
   burnedAllTime: DinAmount,
   mintedThisYear: DinAmount,
-  /** سقف ضرب سالانهٔ منشور — مادهٔ ۳ */
+  /** Charter annual mint cap — Article 3 */
   yearlyMintCap: DinAmount,
   genesisSupply: DinAmount,
   trialBalanceSum: z.number().int(),
@@ -83,7 +83,7 @@ export const EconomySummary = z.object({
   openEscrows: z.number().int(),
 });
 
-/** لایوهنس — `GET /api/v1/health` (کمی از فاز legacy؛ bot/ai در M2 صادقانه disabled) */
+/** Liveness — `GET /api/v1/health` (a holdover from the legacy phase; bot/ai honestly disabled in M2) */
 export const HealthResponse = z.object({
   status: z.literal("ok"),
   service: z.literal("kian-kernel-server"),
@@ -96,7 +96,7 @@ export const HealthResponse = z.object({
   uptime: z.number().optional(),
 });
 
-// ---------- درخواست‌ها ----------
+// ---------- Requests ----------
 
 export const CreateAccountRequest = z.object({
   id: z.string().min(1).max(120),
@@ -116,7 +116,7 @@ export const CreateEscrowRequest = z.object({
   sellerId: z.string().min(1),
   amount: DinAmount,
   productRef: z.string().max(128).optional(),
-  /** TTL ساعت (۱ تا ۷۲۰) */
+  /** TTL in hours (1 to 720) */
   ttlHours: z.number().int().min(1).max(720).optional(),
 });
 
@@ -124,19 +124,19 @@ export const EscrowActionRequest = z.object({
   idempotencyKey: z.string().max(160).optional(),
 });
 
-// ---------- بازار، آرتیفکت HTML، رفرال و تحویل (فاز ۳) ----------
+// ---------- Marketplace, HTML artifact, referral, and delivery (phase 3) ----------
 
-/** سقف حجم محتوای تحویل محصول (۱۵۰ کیلوبایت برای HTML تعاملی) */
+/** Product delivery content size cap (150 kilobytes for interactive HTML) */
 export const MAX_DELIVERY_PAYLOAD_BYTES = 150_000;
 
-/** سقف حجم پیش‌نمایش عمومی HTML پیش از خرید (۵۰ کیلوبایت) */
+/** Public HTML preview size cap before purchase (50 kilobytes) */
 export const MAX_PREVIEW_HTML_BYTES = 50_000;
 
-/** نرخ پیش‌فرض و سقف پورسانت معرف بر حسب نقاط پایه */
+/** Default rate and cap of the affiliate commission, in basis points */
 export const DEFAULT_AFFILIATE_BPS = 1_000;
 export const MAX_AFFILIATE_BPS = 5_000;
 
-/** نمای عمومی محصول — قرینهٔ `ProductView` در crates/contracts/src/market.rs */
+/** Public product view — mirror of `ProductView` in crates/contracts/src/market.rs */
 export const ProductView = z.object({
   id: z.string(),
   sellerId: z.string(),
@@ -183,7 +183,7 @@ export const MyMarketResponse = z.object({
   orders: z.array(EscrowView),
 });
 
-/** پاسخ تحویل محتوای کامل محصول — قرینهٔ `EscrowDeliveryView` */
+/** Full product content delivery response — mirror of `EscrowDeliveryView` */
 export const EscrowDeliveryView = z.object({
   escrowId: z.string(),
   productId: z.string(),
@@ -198,7 +198,7 @@ export const DisputeEscrowRequest = z.object({
   idempotencyKey: z.string().max(160).optional(),
 });
 
-// ---------- استودیوی ساخت محصول HTML با AI (فاز ۴) ----------
+// ---------- AI-powered HTML product-builder studio (phase 4) ----------
 
 export const BuilderMessageView = z.object({
   id: z.number().int(),
@@ -296,7 +296,7 @@ export type BuilderChatResponseT = z.infer<typeof BuilderChatResponse>;
 export type PublishBuilderRequestT = z.infer<typeof PublishBuilderRequest>;
 export type PublishBuilderResponseT = z.infer<typeof PublishBuilderResponse>;
 
-/** گذارهای مجاز ماشین امانت — قرینهٔ ADR-004 (فقط برای UI؛ حقیقت سمت کرنل است) */
+/** Allowed escrow state-machine transitions — mirror of ADR-004 (UI only; truth lives in the kernel) */
 export const ESCROW_TRANSITIONS: Record<EscrowStatusT, readonly EscrowStatusT[]> = {
   CREATED: ["FUNDED", "CANCELLED"],
   FUNDED: ["DELIVERED", "DISPUTED", "EXPIRED"],
@@ -308,7 +308,7 @@ export const ESCROW_TRANSITIONS: Record<EscrowStatusT, readonly EscrowStatusT[]>
   EXPIRED: [],
 };
 
-/** اندپوینت‌های کرنل پول M2 — مرجع کلاینت (همه ادمین به‌جز health/economy) */
+/** M2 money-kernel endpoints — client reference (all admin except health/economy) */
 export const M2_ENDPOINTS = {
   health: "GET /api/v1/health",
   economy: "GET /api/v1/economy",
@@ -329,10 +329,10 @@ export const M2_ENDPOINTS = {
   burn: "POST /api/v1/wallet/burn",
 } as const;
 
-/** کلید هدر احراز ادمین — fail-closed (سرور بدون کلید = اندپوینت‌های ادمین خاموش) */
+/** Admin auth header key — fail-closed (server without a key = admin endpoints off) */
 export const KIAN_KEY_HEADER = "X-KIAN-Key";
 
-// ── فاز ۶ — درخواست برداشت کریپتویی (TON / USDT روی TON, TRX, SOL, BSC) ───────
+// ── Phase 6 — crypto withdrawal requests (TON / USDT on TON, TRX, SOL, BSC) ───────
 
 export const withdrawalChainSchema = z.enum(["TON", "TRX", "SOL", "BSC"]);
 export type WithdrawalChainT = z.infer<typeof withdrawalChainSchema>;
@@ -370,15 +370,15 @@ export const withdrawalListResponseSchema = z.object({
 });
 export type WithdrawalListResponseT = z.infer<typeof withdrawalListResponseSchema>;
 
-// ── فاز M3 — هویت، نشست و واریز TON (قرینهٔ crates/contracts/src/auth.rs) ─────
+// ── Phase M3 — identity, session, and TON deposits (mirror of crates/contracts/src/auth.rs) ─────
 
-/** درخواست احراز تلگرام — رشتهٔ خام initData بدون دست‌کاری. */
+/** Telegram authentication request — the raw initData string, untouched. */
 export const telegramAuthRequestSchema = z.object({
   initData: z.string().min(1),
 });
 export type TelegramAuthRequestT = z.infer<typeof telegramAuthRequestSchema>;
 
-/** نمای کاربر — `username` اختیاری است (کلید غایب روی سیم، نه null). */
+/** User view — `username` is optional (a missing key on the wire, not null). */
 export const userViewSchema = z.object({
   id: z.string(),
   telegramId: z.string(),
@@ -396,11 +396,11 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponseT = z.infer<typeof authResponseSchema>;
 
-// ── حالت توسعه/دمو — ورود یک‌کلیکی و شیر اعتبار (فقط KIAN_DEV_MODE=1) ──────
+// ── Development/demo mode — one-click login and faucet (KIAN_DEV_MODE=1 only) ──────
 
 /**
- * درخواست ورود دمو/توسعه‌دهنده — قرینهٔ `DevLoginRequest` در crates/contracts/src/auth.rs.
- * همهٔ فیلدها غیر از tgUserId اختیاری با پیش‌فرض‌های معقول؛ tgUserId فقط ارقام.
+ * Demo/developer login request — mirror of `DevLoginRequest` in crates/contracts/src/auth.rs.
+ * All fields except tgUserId are optional with sensible defaults; tgUserId is digits only.
  */
 export const devLoginRequestSchema = z.object({
   tgUserId: z.string().regex(/^[0-9]{1,20}$/),
@@ -410,31 +410,31 @@ export const devLoginRequestSchema = z.object({
 });
 export type DevLoginRequestT = z.infer<typeof devLoginRequestSchema>;
 
-/** پرسوناهای آمادهٔ تستِ امشب — هم‌تراز با loginAsDemoPersona در مینی‌اپ. */
+/** Personas ready for tonight's testing — aligned with loginAsDemoPersona in the mini-app. */
 export const DEMO_PERSONAS = {
-  creator: { tgUserId: "1001", username: "creator_demo", firstName: "سازنده (Creator)" },
-  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "خریدار (Buyer)" },
-  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "بازاریاب (Affiliate)" },
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "\u0633\u0627\u0632\u0646\u062f\u0647 (Creator)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "\u062e\u0631\u06cc\u062f\u0627\u0631 (Buyer)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "\u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628 (Affiliate)" },
 } as const;
 export type DemoPersona = keyof typeof DEMO_PERSONAS;
 
-/** شناسه‌های تلگرامی پرسوناهای دمو — برای بارِ پرسونای فعال در UI. */
+/** Telegram IDs of the demo personas — for loading the active persona in the UI. */
 export const DEMO_PERSONA_TG_IDS: readonly string[] = Object.values(DEMO_PERSONAS).map(
   (p) => p.tgUserId,
 );
 
-/** مقدار پیش‌فرض شیرِ اعتبار — ۵٬۰۰۰ KIAN به micro. */
+/** Default faucet amount — 5,000 KIAN in micro. */
 export const FAUCET_DEFAULT_MICRO = 5_000_000_000;
-/** سقف هر برداشت شیر — ۵۰٬۰۰۰ KIAN به micro. */
+/** Per-withdrawal faucet cap — 50,000 KIAN in micro. */
 export const FAUCET_MAX_MICRO = 50_000_000_000;
 
-/** درخواست شیرِ اعتبار آزمایشی — قرینهٔ `FaucetRequest` در crates/contracts. */
+/** Experimental faucet request — mirror of `FaucetRequest` in crates/contracts. */
 export const faucetRequestSchema = z.object({
   amountMicro: z.number().int().min(1).max(FAUCET_MAX_MICRO).optional(),
 });
 export type FaucetRequestT = z.infer<typeof faucetRequestSchema>;
 
-/** ردیف تاریخچهٔ کیف — `memo` همیشه روی سیم است (null صریح). */
+/** Wallet history row — `memo` is always on the wire (explicit null). */
 export const walletTxViewSchema = z.object({
   txId: z.string(),
   amount: z.number().int(),
@@ -443,7 +443,7 @@ export const walletTxViewSchema = z.object({
 });
 export type WalletTxViewT = z.infer<typeof walletTxViewSchema>;
 
-/** `meResponseSchema` — تراز مشتق از دفتر دوطرفه. */
+/** `meResponseSchema` — balance derived from the double-entry ledger. */
 export const meResponseSchema = z.object({
   user: userViewSchema,
   balance: DinAmount,
@@ -457,7 +457,7 @@ export const setTonAddressRequestSchema = z.object({
 });
 export type SetTonAddressRequestT = z.infer<typeof setTonAddressRequestSchema>;
 
-/** درخواست ثبت اثبات واریز TON — مبلغ رشتهٔ دهدهی (هرگز float). */
+/** TON deposit-proof registration request — amount as a decimal string (never float). */
 export const tonDepositCreateRequestSchema = z.object({
   txHash: z.string().min(8).max(128),
   walletAddress: z.string().min(8).max(120),
@@ -481,7 +481,7 @@ export const tonDepositListResponseSchema = z.object({
 });
 export type TonDepositListResponseT = z.infer<typeof tonDepositListResponseSchema>;
 
-// ── فاز M2 — پاسخ جابه‌جایی کیف و سوزاندن (قرینهٔ crates/contracts/src/wallet.rs) ──
+// ── Phase M2 — wallet transfer and burn responses (mirror of crates/contracts/src/wallet.rs) ──
 
 export const burnRequestSchema = z.object({
   accountId: z.string().min(1),
@@ -499,7 +499,7 @@ export const walletMoveResponseSchema = z.object({
 });
 export type WalletMoveResponseT = z.infer<typeof walletMoveResponseSchema>;
 
-/** درخواست تأیید پرداخت برداشت توسط ادمین. */
+/** Admin approval request for a withdrawal payment. */
 export const confirmWithdrawalRequestSchema = z.object({
   txHash: z.string().min(8).max(128),
 });

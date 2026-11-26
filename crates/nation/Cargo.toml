@@ -4,10 +4,10 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "دولت HITL — پارلمان، آستانه ۵۰,۰۰۰ Đ، اقتصاد Đ"
+description = "\u062f\u0648\u0644\u062a HITL — \u067e\u0627\u0631\u0644\u0645\u0627\u0646\u060c \u0622\u0633\u062a\u0627\u0646\u0647 \u06f5\u06f0,\u06f0\u06f0\u06f0 Đ\u060c \u0627\u0642\u062a\u0635\u0627\u062f Đ"
 
 [dependencies]
-# گره با منشور — گیت مادهٔ ۷ از دامنهٔ خالص می‌آید (یک منبع حقیقت)
+# Node with a charter — the Article 7 gate comes from the pure domain (single source of truth)
 kian-domain = { path = "../domain" }
 thiserror = { workspace = true }
 

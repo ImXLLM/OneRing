@@ -1,120 +1,120 @@
-//! قراردادهای استودیوی ادراک‌سیار — ابراستودیوی ۹-مدالیتیِ صفر-هزینه و
-//! ویترین پورتفولیو (Wave 5 — Step 2/4).
+//! Contracts for the mobile-perception studio — the zero-cost 9-modality superstudio and
+//! portfolio showcase (Wave 5 — Step 2/4).
 //!
-//! چهار DTO روی وایر:
-//! - [`StudioUxProfilesResponse`] — سه لایهٔ شناختی + ۹ مدالیتی + گزارشِ
-//!   ۶ درمانِ قضاییِ پورتفولیو؛
-//! - [`StudioGenerateRequest`] / [`StudioGenerateResponse`] — تولیدِ زندهٔ
-//!   آرتیفکت با باندلِ دوگانهٔ `Fishkal+Cosmos`، بسته‌بندیِ ARDA و فورجِ
-//!   مایرون؛
-//! - [`PortfolioCatalogResponse`] — ویترینِ غنی‌شده با ارتقای دو
-//!   ویترینیِ برتر، توکن‌های گلسِ تاریک و پالتِ فرمانِ کیبورد-اول.
+//! Four DTOs on the wire:
+//! - [`StudioUxProfilesResponse`] — three cognitive tiers + 9 modalities + the report of
+//!   the portfolio's 6 forensic remedies;
+//! - [`StudioGenerateRequest`] / [`StudioGenerateResponse`] — live artifact generation with the
+//!   dual `Fishkal+Cosmos` bundle, ARDA packaging, and the
+//!   Mairon forge;
+//! - [`PortfolioCatalogResponse`] — the enriched showcase with the two top
+//!   showcase upgrades, dark glass tokens, and the keyboard-first command palette.
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// یک لایهٔ شناختی روی وایر — پروفایلِ مورفِ UX.
+/// A cognitive tier on the wire — the UX morph profile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CognitiveTierView {
-    /// شناسهٔ لایه (`ToySpark` | `CreatorStudio` | `ProTerminal`).
+    /// Tier id (`ToySpark` | `CreatorStudio` | `ProTerminal`).
     pub tier: String,
-    /// برچسب بومی.
+    /// Native label.
     pub fa_label: String,
-    /// باند سنی/هوشی.
+    /// Age/mental band.
     pub age_band: String,
-    /// سقفِ اقدامِ هر صفحه.
+    /// Cap on actions per screen.
     pub max_actions_per_screen: u32,
-    /// حداقلِ هدفِ لمسی (پیکسل).
+    /// Minimum touch target (pixels).
     pub min_tap_target_px: u32,
-    /// سقفِ واژهٔ هر برچسب.
+    /// Word cap per label.
     pub max_words_per_label: u32,
-    /// جادوگرِ صوتی؟
+    /// Voice wizard?
     pub voice_guided: bool,
-    /// سندباکسِ صفر-زیان؟
+    /// Zero-loss sandbox?
     pub zero_loss_sandbox: bool,
-    /// کیبورد-اول؟
+    /// Keyboard-first?
     pub keyboard_first: bool,
-    /// خلاصهٔ چیدمان.
+    /// Layout summary.
     pub layout_summary: String,
 }
 
-/// یک مدالیتی روی وایر.
+/// A modality on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StudioModalityView {
-    /// شناسهٔ مدالیتی (`search` | `deep` | … | `sfx`).
+    /// Modality id (`search` | `deep` | … | `sfx`).
     pub modality: String,
-    /// برچسب بومی.
+    /// Native label.
     pub fa_label: String,
-    /// احرازِ لازم — همیشه `none`.
+    /// Required auth — always `none`.
     pub auth: String,
-    /// موتورِ اجرایی.
+    /// Execution engine.
     pub engine: String,
-    /// همیشه `true` — گیتِ صفر-هزینه.
+    /// Always `true` — the zero-cost gate.
     pub zero_cost: bool,
 }
 
-/// یک درمانِ قضایی روی وایر.
+/// A forensic remedy on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PortfolioSafetyFixView {
-    /// شناسهٔ درمان (`1..=6`).
+    /// Remedy id (`1..=6`).
     pub fix_id: u32,
-    /// عنوانِ درمان.
+    /// Remedy title.
     pub title: String,
-    /// وضعیت — همیشه `fixed`.
+    /// Status — always `fixed`.
     pub status: String,
-    /// شاهدِ قطعی.
+    /// Deterministic evidence.
     pub evidence: String,
 }
 
-/// گزارشِ ۶ درمانِ قضاییِ `KiaAgentX/portfolio`.
+/// The `KiaAgentX/portfolio` 6-forensic-remedy report.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PortfolioSafetyReportView {
-    /// شمارِ درمان‌های اعمال‌شده — همیشه `6`.
+    /// Count of applied remedies — always `6`.
     pub fixed_count: u32,
-    /// همیشه `true`.
+    /// Always `true`.
     pub all_fixed: bool,
-    /// ردیفِ هر درمان به ترتیب.
+    /// Each remedy's row, in order.
     pub fixes: Vec<PortfolioSafetyFixView>,
 }
 
-/// پاسخ `GET /api/v1/studio/ux-profiles` — مورفِ شناختی + مدالیتی‌ها + ایمنی.
+/// Response of `GET /api/v1/studio/ux-profiles` — cognitive morph + modalities + safety.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StudioUxProfilesResponse {
-    /// سه لایهٔ شناختی به ترتیبِ نردبان.
+    /// The three cognitive tiers in ladder order.
     pub tiers: Vec<CognitiveTierView>,
-    /// ۹ مدالیتیِ صفر-هزینه.
+    /// The 9 zero-cost modalities.
     pub modalities: Vec<StudioModalityView>,
-    /// گزارشِ ۶ درمانِ قضایی.
+    /// The 6-forensic-remedy report.
     pub portfolio_safety: PortfolioSafetyReportView,
-    /// امضای باندل (`studio-ux-profiles-v1`).
+    /// Bundle signature (`studio-ux-profiles-v1`).
     pub signature: String,
 }
 
-/// درخواست `POST /api/v1/studio/generate`.
+/// Request of `POST /api/v1/studio/generate`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StudioGenerateRequest {
-    /// پرامپتِ سازنده — از یک جملهٔ کودک تا مشخصهٔ مهندسی.
+    /// Builder prompt — from a child's sentence to an engineering spec.
     pub prompt: String,
-    /// مدالیتیِ هدف (`search` | `deep` | `agent` | `workspace` | `voice` | `image` | `video` | `copy` | `sfx`).
+    /// Target modality (`search` | `deep` | `agent` | `workspace` | `voice` | `image` | `video` | `copy` | `sfx`).
     pub modality: String,
-    /// لایهٔ صریح — اختیاری؛ پیش‌فرض: استنتاجِ تلمتری.
+    /// Explicit tier — optional; default: telemetry inference.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cognitive_tier: Option<String>,
-    /// زبانِ مبدأ — اختیاری؛ پیش‌فرض: تشخیصِ قطعیِ ARDA.
+    /// Source language — optional; default: ARDA's deterministic detection.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub origin_locale: Option<String>,
-    /// زبان‌های هدف — اختیاری؛ پیش‌فرض: هر ۲۰ زبانِ سیاره‌ای.
+    /// Target languages — optional; default: all 20 planetary languages.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_locales: Option<Vec<String>>,
 }
 
-/// کارتِ پروژهٔ ویترین روی وایر — ۱۲ کلیدِ کانونی + پسوندهای تجاری.
+/// Showcase project card on the wire — 12 canonical keys + commercial extensions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StorefrontProjectCardView {
@@ -130,7 +130,7 @@ pub struct StorefrontProjectCardView {
     pub stack: Vec<String>,
     /// `highlights`.
     pub highlights: Vec<String>,
-    /// `Preview` — HTML زندهٔ پیش‌نمایش.
+    /// `Preview` — live preview HTML.
     pub preview: String,
     /// `sourceDir`.
     pub source_dir: String,
@@ -142,110 +142,110 @@ pub struct StorefrontProjectCardView {
     pub file_count: u32,
     /// `featured`.
     pub featured: bool,
-    /// قیمت به میکرو-کیان.
+    /// Price in micro-Kian.
     pub price_ukian: u64,
-    /// قیمت به ستارهٔ تلگرام.
+    /// Price in Telegram Stars.
     pub price_xtr_stars: u32,
-    /// قیمت به میکرو-`USDC`.
+    /// Price in micro-`USDC`.
     pub price_usdc_micros: u64,
-    /// نمرهٔ REA مایرون.
+    /// Mairon's REA score.
     pub rea_score: u8,
-    /// نشانیِ `SKILL.md`.
+    /// Address of the `SKILL.md`.
     pub skill_md_url: String,
-    /// شمارِ زبان‌های سیاره‌ای.
+    /// Count of planetary languages.
     pub supported_locales_count: u8,
-    /// نشانِ لایهٔ شناختی.
+    /// Cognitive-tier badge.
     pub cognitive_tier_badge: String,
 }
 
-/// باندلِ دوگانهٔ رویه‌ای روی وایر.
+/// The procedural dual bundle on the wire.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DualBundleView {
-    /// موتور A — `Fishkal` اقیانوس + بلوم.
+    /// Engine A — the `Fishkal` ocean + bloom.
     pub fishkal_js: String,
-    /// موتور B — `Cosmos` ستاره‌باران + سینتِ دیلی-بازخورد.
+    /// Engine B — the `Cosmos` starfall + a daily-feedback synth.
     pub cosmos_js: String,
-    /// چرخهٔ عمرِ مشترکِ توقفِ RAF (Fix #6).
+    /// Shared lifecycle for RAF stop (Fix #6).
     pub pause_lifecycle_js: String,
-    /// امضای باندل.
+    /// Bundle signature.
     pub signature: String,
-    /// مُهر `sha256`.
+    /// `sha256` stamp.
     pub content_sha256: String,
 }
 
-/// پاسخ `POST /api/v1/studio/generate` — آرتیفکتِ کاملِ قابل بازی.
+/// Response of `POST /api/v1/studio/generate` — the complete playable artifact.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StudioGenerateResponse {
-    /// شناسهٔ آفرینش (`studio:<uuid>`) — ماندگار در `studio_creations`.
+    /// Creation id (`studio:<uuid>`) — persisted in `studio_creations`.
     pub creation_id: String,
-    /// لایهٔ شناختیِ مورف‌شده.
+    /// The morphed cognitive tier.
     pub cognitive_tier: String,
-    /// مدالیتیِ مولد.
+    /// The generating modality.
     pub modality: String,
-    /// عنوانِ قطعی.
+    /// The deterministic title.
     pub title: String,
-    /// آرتیفکتِ کامل با باندلِ تزریقیِ ARDA.
+    /// The complete artifact with the ARDA-injected bundle.
     pub artifact_html: String,
-    /// باندلِ دوگانهٔ `Fishkal+Cosmos`.
+    /// The dual `Fishkal+Cosmos` bundle.
     pub dual_bundle: DualBundleView,
-    /// کارتِ ویترینِ آمادهٔ فروش.
+    /// The storefront-ready showcase card.
     pub storefront_card: StorefrontProjectCardView,
-    /// نوارِ پرچمِ دایره‌ایِ ARDA برای کارت بازار.
+    /// ARDA's circular flag ribbon for the market card.
     pub circular_flag_strip_html: String,
-    /// زبانِ مبدأ.
+    /// Source language.
     pub origin_locale: String,
-    /// زبان‌های فعالِ باندل.
+    /// The bundle's active languages.
     pub supported_locales: Vec<String>,
-    /// `SKILL.md` فورج‌شدهٔ مایرون (همیشه حاضر — REA بالای گیت).
+    /// The Mairon-forged `SKILL.md` (always present — REA above the gate).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_md: Option<String>,
-    /// `skill.json` فورج‌شده.
+    /// The forged `skill.json`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_json: Option<String>,
-    /// نمرهٔ REA قطعی (`88..=97`).
+    /// Deterministic REA score (`88..=97`).
     pub rea_score: u8,
-    /// قیمت به میکرو-کیان.
+    /// Price in micro-Kian.
     pub price_ukian: u64,
-    /// قیمت به ستارهٔ تلگرام.
+    /// Price in Telegram Stars.
     pub price_xtr_stars: u32,
-    /// مُهرِ زمانِ تولید (ISO-8601).
+    /// Generation timestamp (ISO-8601).
     pub created_at: String,
 }
 
-/// پالتِ فرمان روی وایر — کیبورد-اول.
+/// Command palette on the wire — keyboard-first.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CommandPaletteView {
-    /// میان‌برهای بازکردن (`Ctrl+K` / `Meta+K` / `/`).
+    /// Open shortcuts (`Ctrl+K` / `Meta+K` / `/`).
     pub open_shortcuts: Vec<String>,
-    /// میان‌برِ تمرکز.
+    /// Focus shortcut.
     pub focus_shortcut: String,
-    /// کیبورد-اول؟
+    /// Keyboard-first?
     pub keyboard_first: bool,
-    /// کلیدهای ناوبری.
+    /// Navigation keys.
     pub navigation_keys: Vec<String>,
-    /// JS آمادهٔ تزریقِ پالت.
+    /// Ready-to-inject palette JS.
     pub js: String,
 }
 
-/// پاسخ `GET /api/v1/studio/portfolio-catalog` — ویترینِ غنی‌شده.
+/// Response of `GET /api/v1/studio/portfolio-catalog` — the enriched showcase.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PortfolioCatalogResponse {
-    /// کاتالوگِ غنی‌شده — دو `featured` برتر در صدر.
+    /// The enriched catalog — the two top `featured` entries up front.
     pub projects: Vec<StorefrontProjectCardView>,
-    /// `slug`های دو ویترینیِ برتر.
+    /// The slugs of the two top showcase items.
     pub featured_top: Vec<String>,
-    /// توکن‌های گلسِ تاریک (CSS خام).
+    /// Dark glass tokens (raw CSS).
     pub css_tokens: String,
-    /// پیکربندیِ پالتِ فرمان.
+    /// Command palette configuration.
     pub command_palette: CommandPaletteView,
-    /// ریشهٔ قابل‌حملِ کاتالوگ (Fix #1) — بدونِ گریزِ والد.
+    /// The catalog's portable root (Fix #1) — no parent escape.
     pub portfolio_root: String,
-    /// گزارشِ ۶ درمانِ قضایی.
+    /// The 6-forensic-remedy report.
     pub portfolio_safety: PortfolioSafetyReportView,
-    /// امضای باندل (`portfolio-storefront-v1`).
+    /// Bundle signature (`portfolio-storefront-v1`).
     pub signature: String,
 }

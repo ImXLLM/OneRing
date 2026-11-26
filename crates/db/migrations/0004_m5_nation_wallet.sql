@@ -1,21 +1,21 @@
--- 0004_m5_nation_wallet — حاکمیت (پارلمان HITL) + کیف پول USDT چهارزنجیره
+-- 0004_m5_nation_wallet — governance (HITL parliament) + four-chain USDT wallet
 --
--- قراردادها همان 0002/0003:
---  * نام‌گذاری PascalCase با کوتیشن.
---  * DATETIME رشتهٔ ISO-8601 UTC با پسوند Z.
---  * جدول‌ها IF NOT EXISTS — idempotent روی هر دیتابیسی.
---  * هیچ پولی اینجا زندگی نمی‌کند — تراز فقط از Posting مشتق می‌شود (ADR-003)؛
---    لایحه/رأی شواهد حاکمیتی‌اند و واریز USDT اثبات کاربر تا راستی‌آزمایی ادمین.
+-- Conventions are the same as 0002/0003:
+--  * PascalCase naming with quotes.
+--  * DATETIME is an ISO-8601 UTC string with a Z suffix.
+--  * tables are IF NOT EXISTS — idempotent on any database.
+--  * no money lives here — the balance is derived only from Posting (ADR-003);
+--    bills/votes are governance evidence and the USDT deposit is user proof until admin verification.
 
--- لایحه‌های پارلمان — گذارها در kian-nation، شمارش‌ها پس از بستن اینجا ثبت می‌شوند
+-- parliament bills — transitions live in kian-nation; tallies are recorded here after closing
 CREATE TABLE IF NOT EXISTS "Bill" (
     "id" TEXT NOT NULL PRIMARY KEY,
     -- escrowRelease / treasuryMove
     "kind" TEXT NOT NULL,
-    -- شناسهٔ اسکرو یا حساب مقصد
+    -- escrow id or destination account
     "subject" TEXT NOT NULL,
     "amountDin" INTEGER NOT NULL DEFAULT 0,
-    -- release / refund — فقط escrowRelease
+    -- release / refund — escrowRelease only
     "resolution" TEXT,
     "title" TEXT NOT NULL,
     -- OPEN / PASSED / REJECTED / EXECUTED
@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS "Bill" (
     "openedAt" DATETIME NOT NULL,
     "closedAt" DATETIME,
     "executedAt" DATETIME,
-    -- مادهٔ ۷ — مبلغ ≥ ۵۰,۰۰۰ Đ رأی انسانی می‌خواهد (قطعی در زمان باز شدن)
+    -- article 7 — amounts >= 50,000 Đ require a human vote (deterministic at open time)
     "hitlRequired" BOOLEAN NOT NULL DEFAULT false,
-    -- شمارش قطعی پس از بستن — شفافیت مادهٔ ۶
+    -- deterministic tally after closing — article-6 transparency
     "votesYes" INTEGER NOT NULL DEFAULT 0,
     "votesNo" INTEGER NOT NULL DEFAULT 0,
     "humanYes" INTEGER NOT NULL DEFAULT 0
@@ -35,12 +35,12 @@ CREATE TABLE IF NOT EXISTS "Bill" (
 
 CREATE INDEX IF NOT EXISTS "Bill_status_idx" ON "Bill" ("status", "openedAt");
 
--- رأی‌ها — هر رأی‌دهنده یک‌بار به ازای هر لایحه (قید UNIQUE؛ گیت درون kian-nation)
+-- votes — one vote per voter per bill (UNIQUE constraint; gating inside kian-nation)
 CREATE TABLE IF NOT EXISTS "BillVote" (
     "billId" TEXT NOT NULL,
-    -- citizen:… (نشست انسانی) یا agent:… (A2A)
+    -- citizen:… (human session) or agent:… (A2A)
     "voter" TEXT NOT NULL,
-    -- انسان؟ — گیت مادهٔ ۷ روی همین ستون بسته می‌شود
+    -- human? — the article-7 gate closes on this column
     "isHuman" BOOLEAN NOT NULL DEFAULT false,
     "approve" BOOLEAN NOT NULL,
     "createdAt" DATETIME NOT NULL,
@@ -48,12 +48,12 @@ CREATE TABLE IF NOT EXISTS "BillVote" (
     FOREIGN KEY ("billId") REFERENCES "Bill"("id") ON DELETE CASCADE
 );
 
--- آدرس واریز کاربر به ازای هر زنجیره — هر (کاربر، زنجیره) یک آدرس
+-- user deposit address per chain — one address per (user, chain)
 CREATE TABLE IF NOT EXISTS "WalletAddress" (
     "userId" TEXT NOT NULL,
     -- TRX / SOL / TON / BSC
     "chain" TEXT NOT NULL,
-    -- سمت سرور با چک‌سام رسمی زنجیره اعتبارسنجی شده (kian-wallet)
+    -- server-side validated with the chain's official checksum (kian-wallet)
     "address" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL,
     PRIMARY KEY ("userId", "chain")
@@ -61,17 +61,17 @@ CREATE TABLE IF NOT EXISTS "WalletAddress" (
 
 CREATE INDEX IF NOT EXISTS "WalletAddress_address_idx" ON "WalletAddress" ("address");
 
--- واریز USDT — اثبات کاربر؛ همان قرارداد TonDeposit با چهار زنجیره
+-- USDT deposit — user proof; the TonDeposit contract extended to four chains
 CREATE TABLE IF NOT EXISTS "UsdtDeposit" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "chain" TEXT NOT NULL,
-    -- هش تراکنش زنجیره — UNIQUE روی (chain, txHash): «همان هش دوبار ضرب نمی‌شود»
+    -- on-chain tx hash — UNIQUE on (chain, txHash): "the same hash is never minted twice"
     "txHash" TEXT NOT NULL,
     "fromAddress" TEXT NOT NULL,
-    -- مقیاس micro-USDT (۱۰⁻⁶) — صحیح، بدون float
+    -- micro-USDT scale (10⁻⁶) — integer, no float
     "amountMicro" INTEGER NOT NULL,
-    -- رشتهٔ دهدهی اعلامی کاربر (≤۶ اعشار) — برای نمایش صادقانه
+    -- user-declared decimal string (<= 6 decimals) — for honest display
     "amountUsdt" TEXT NOT NULL,
     -- PENDING / CONFIRMED / REJECTED
     "status" TEXT NOT NULL DEFAULT 'PENDING',

@@ -1,17 +1,17 @@
-//! قراردادهای وایرِ Wave 9 (Commit #29) — استودیوی HUD عصبی، آزمایشگاهِ
-//! ۱۰-DNA، موتورِ UXِ Grok و ماتریسِ i18nِ روزِ اول.
+//! Wave 9 wire contracts (Commit #29) — the neural HUD studio, the
+//! 10-DNA lab, the Grok UX engine, and the day-one i18n matrix.
 //!
-//! DTOهای روی وایر برای هشت اندپوینتِ تازه:
-//! - `GET  /api/v1/hud/presets` / `POST /api/v1/hud/synthesize` — کاتالوگِ
-//!   ۸ پیش‌تن + سنتزِ پویا ([`HudPresetsResponse`], [`HudSynthesizeResponse`])؛
-//! - `GET  /api/v1/grok/ui-bundle` / `POST /api/v1/grok/chat-turn` — بستهٔ
-//!   UIِ «مادهٔ تاریکِ کیهانی» + نوبتِ چتِ امضایی ([`GrokUiBundleResponse`],
-//!   [`GrokChatTurnResponse`])؛
+//! On-wire DTOs for the eight new endpoints:
+//! - `GET  /api/v1/hud/presets` / `POST /api/v1/hud/synthesize` — the catalog of
+//!   8 presets + dynamic synthesis ([`HudPresetsResponse`], [`HudSynthesizeResponse`]);
+//! - `GET  /api/v1/grok/ui-bundle` / `POST /api/v1/grok/chat-turn` — the
+//!   "cosmic dark matter" UI + the signature chat turn ([`GrokUiBundleResponse`],
+//!   [`GrokChatTurnResponse`]);
 //! - `GET  /api/v1/i18n/ecosystem-matrix` / `POST /api/v1/i18n/apply-patch` —
-//!   ماتریسِ ۲۰ لوکال + پچِ داغ ([`I18nMatrixResponse`],
-//!   [`I18nApplyPatchResponse`])؛
+//!   the 20-locale matrix + hot patch ([`I18nMatrixResponse`],
+//!   [`I18nApplyPatchResponse`]);
 //! - `GET  /api/v1/admin/lab-telemetry` / `POST /api/v1/admin/export-training-dataset`
-//!   — رصدخانهٔ لاگِ ادمین + صادراتِ RLHF/SFT ([`AdminLabTelemetryResponse`],
+//!   — the admin log observatory + RLHF/SFT export ([`AdminLabTelemetryResponse`],
 //!   [`AdminExportTrainingDatasetResponse`]).
 
 use std::collections::BTreeMap;
@@ -19,417 +19,417 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-// ── HUD — کاتالوگ و سنتز ────────────────────────────────────────────────────
+// ── HUD — catalog and synthesis ────────────────────────────────────────────────────
 
-/// نمایِ یک پیش‌تنِ HUD روی وایر.
+/// A HUD preset view on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HudPresetView {
-    /// شناسهٔ یکتا — `mwie`، `kia-monopoly-core`، …
+    /// Unique ID — `mwie`, `kia-monopoly-core`, …
     pub slug: String,
-    /// عنوانِ نمایشی.
+    /// Display title.
     pub title: String,
-    /// شعارِ زیرِ عنوان.
+    /// Subtitle tagline.
     pub tagline: String,
-    /// رنگِ accent به هگز.
+    /// Accent color in hex.
     pub accent_hex: String,
-    /// نشانِ گوشهٔ HUD.
+    /// HUD corner badge.
     pub badge: String,
-    /// خاستگاه — `upstream` | `kia_sovereign` | `synthesized`.
+    /// Origin — `upstream` | `kia_sovereign` | `synthesized`.
     pub source: String,
-    /// برچسب‌هایِ گره‌ها.
+    /// Node labels.
     pub node_labels: Vec<String>,
 }
 
-/// پاسخِ `GET /api/v1/hud/presets` — کاتالوگِ ۸ پیش‌تن.
+/// `GET /api/v1/hud/presets` response — the 8-preset catalog.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HudPresetsResponse {
-    /// پیش‌تن‌ها به ترتیبِ ثابت.
+    /// Presets in fixed order.
     pub presets: Vec<HudPresetView>,
-    /// امضایِ استودیوی HUD.
+    /// HUD studio signature.
     pub signature: String,
 }
 
-/// درخواستِ `POST /api/v1/hud/synthesize`.
+/// `POST /api/v1/hud/synthesize` request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HudSynthesizeRequest {
-    /// نامِ مخزن — مبنایِ قطعیِ سنتزِ پیش‌تن.
+    /// Repository name — the deterministic basis of preset synthesis.
     pub repo_name: String,
-    /// شعارِ اختیاری.
+    /// Optional tagline.
     #[serde(default)]
     pub tagline: Option<String>,
-    /// رنگِ accent اختیاری — `#RRGGBB` یا `#RGB`.
+    /// Optional accent color — `#RRGGBB` or `#RGB`.
     #[serde(default)]
     pub accent_hex: Option<String>,
-    /// نسبت — `9:16` | `16:9`؛ پیش‌فرض `9:16`.
+    /// Aspect ratio — `9:16` | `16:9`; default `9:16`.
     #[serde(default)]
     pub aspect: Option<String>,
-    /// رزولوشن — `720p` | `1080p`؛ پیش‌فرض `1080p`.
+    /// Resolution — `720p` | `1080p`; default `1080p`.
     #[serde(default)]
     pub resolution: Option<String>,
-    /// فریم‌ریت — `24` | `60`؛ پیش‌فرض `24`.
+    /// Frame rate — `24` | `60`; default `24`.
     #[serde(default)]
     pub fps: Option<String>,
-    /// مدت بر حسبِ ثانیه — ۱..=۱۸۰؛ پیش‌فرض ۶۰.
+    /// Duration in seconds — 1..=180; default 60.
     #[serde(default)]
     pub duration_sec: Option<u32>,
 }
 
-/// پاسخِ `POST /api/v1/hud/synthesize` — بستهٔ HTML + فرمان‌هایِ `FFmpeg`.
+/// `POST /api/v1/hud/synthesize` response — the HTML package + `FFmpeg` commands.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HudSynthesizeResponse {
-    /// پیش‌تنِ سنتزشده.
+    /// The synthesized preset.
     pub preset: HudPresetView,
-    /// بستهٔ HTML5 قطعی (`window.seekTo` + `WebAudio`).
+    /// The deterministic HTML5 package (`window.seekTo` + `WebAudio`).
     pub html: String,
-    /// SHA-256 بستهٔ HTML.
+    /// SHA-256 of the HTML package.
     pub html_sha256: String,
-    /// عرضِ فریم.
+    /// Frame width.
     pub frame_width: u32,
-    /// ارتفاعِ فریم.
+    /// Frame height.
     pub frame_height: u32,
-    /// فریم‌ریت.
+    /// Frame rate.
     pub fps: u32,
-    /// مدت بر حسبِ ثانیه.
+    /// Duration in seconds.
     pub duration_sec: u32,
-    /// تعدادِ گره‌ها — ۱۸۰.
+    /// Node count — 180.
     pub node_count: usize,
-    /// تعدادِ یال‌ها.
+    /// Edge count.
     pub edge_count: usize,
-    /// فرمانِ `FFmpeg` صدا — argv قطعی با محدودگرِ مستر.
+    /// `FFmpeg` audio command — deterministic argv with the master limiter.
     pub audio_command_argv: Vec<String>,
-    /// فرمانِ `FFmpeg` ویدئو — argv قطعی با `+faststart`.
+    /// `FFmpeg` video command — deterministic argv with `+faststart`.
     pub video_command_argv: Vec<String>,
-    /// آیا رانِ رندر در `NeuralHudRenderJob` ماندگار شد.
+    /// Whether the render run persisted in `NeuralHudRenderJob`.
     pub persisted: bool,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }
 
-// ── Grok — بستهٔ UI و نوبتِ چت ──────────────────────────────────────────────
+// ── Grok — UI bundle and chat turn ──────────────────────────────────────────────
 
-/// پارامترهایِ `GET /api/v1/grok/ui-bundle`.
+/// `GET /api/v1/grok/ui-bundle` parameters.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokUiBundleQuery {
-    /// لوکال — `fa` | `en` | اسلاتِ پچ؛ پیش‌فرض `fa`.
+    /// Locale — `fa` | `en` | a patch slot; default `fa`.
     #[serde(default)]
     pub locale: Option<String>,
-    /// لایهٔ UX — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
+    /// UX layer — `toyspark` | `simple` | `creator_studio` | `pro_terminal`.
     #[serde(default)]
     pub ux_tier: Option<String>,
-    /// پرسونا — `fun_witty` | `unhinged_roast` | `regular_balanced` |
+    /// Persona — `fun_witty` | `unhinged_roast` | `regular_balanced` |
     /// `mairon_sovereign`.
     #[serde(default)]
     pub persona: Option<String>,
 }
 
-/// پاسخِ `GET /api/v1/grok/ui-bundle`.
+/// `GET /api/v1/grok/ui-bundle` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokUiBundleResponse {
-    /// سندِ HTML مستقل.
+    /// Self-contained HTML document.
     pub html: String,
-    /// لوکالِ فعال.
+    /// Active locale.
     pub locale: String,
-    /// جهت — `rtl` | `ltr`.
+    /// Direction — `rtl` | `ltr`.
     pub direction: String,
-    /// لایهٔ UX.
+    /// UX layer.
     pub ux_tier: String,
-    /// پرسونا.
+    /// Persona.
     pub persona: String,
-    /// چیپ‌هایِ اکشنِ سریع — ۶.
+    /// Quick-action chips — 6.
     pub chips: Vec<String>,
-    /// سه پیشنهادِ روحِ بعدی.
+    /// Three next-vibe suggestions.
     pub ghost_follow_ups: Vec<String>,
-    /// امضایِ CSSِ «مادهٔ تاریکِ کیهانی».
+    /// The "cosmic dark matter" CSS signature.
     pub css_signature: String,
-    /// تعدادِ اسلات‌هایِ لوکال — ۲۰.
+    /// Locale slot count — 20.
     pub locale_slots: usize,
 }
 
-/// درخواستِ `POST /api/v1/grok/chat-turn`.
+/// `POST /api/v1/grok/chat-turn` request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokChatTurnRequest {
-    /// متنِ کاربر.
+    /// User text.
     pub prompt: String,
-    /// لوکال؛ پیش‌فرض `fa`.
+    /// Locale; default `fa`.
     #[serde(default)]
     pub locale: Option<String>,
-    /// لایهٔ UX؛ پیش‌فرض `pro_terminal`.
+    /// UX layer; default `pro_terminal`.
     #[serde(default)]
     pub ux_tier: Option<String>,
-    /// پرسونا؛ پیش‌فرض `regular_balanced`.
+    /// Persona; default `regular_balanced`.
     #[serde(default)]
     pub persona: Option<String>,
-    /// نوارِ `DeepSearch` فعال؟ پیش‌فرض خاموش.
+    /// `DeepSearch` bar enabled? Default off.
     #[serde(default)]
     pub deep_search: Option<bool>,
-    /// آکاردئونِ تفکر فعال؟ پیش‌فرض روشن.
+    /// Thinking accordion enabled? Default on.
     #[serde(default)]
     pub think: Option<bool>,
 }
 
-/// یک گامِ استدلالِ مرئی.
+/// One visible reasoning step.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokThinkStepView {
-    /// متنِ گام.
+    /// Step text.
     pub step: String,
 }
 
-/// یک منبعِ راستی‌آزمایی‌شده.
+/// One verified source.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokCitationView {
-    /// عنوانِ منبع.
+    /// Source title.
     pub title: String,
-    /// دامنه.
+    /// Domain.
     pub domain: String,
-    /// راستی‌آزمایی‌شده؟
+    /// Verified?
     pub verified: bool,
 }
 
-/// پاسخِ `POST /api/v1/grok/chat-turn`.
+/// `POST /api/v1/grok/chat-turn` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GrokChatTurnResponse {
-    /// گام‌هایِ آکاردئونِ تفکر.
+    /// Thinking-accordion steps.
     pub thinking_steps: Vec<GrokThinkStepView>,
-    /// مدتِ تفکر بر حسبِ میلی‌ثانیه.
+    /// Thinking duration in milliseconds.
     pub thinking_duration_ms: u32,
-    /// منابعِ `DeepSearch`.
+    /// `DeepSearch` sources.
     pub citations: Vec<GrokCitationView>,
-    /// متنِ پاسخ.
+    /// Reply text.
     pub response_text: String,
-    /// سه چیپِ روحِ بعدی.
+    /// Three next-vibe chips.
     pub ghost_follow_ups: Vec<String>,
-    /// پرسونا.
+    /// Persona.
     pub persona: String,
-    /// مدلِ روت‌شده.
+    /// Routed model.
     pub model_slug: String,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// لایهٔ UX.
+    /// UX layer.
     pub ux_tier: String,
 }
 
-// ── i18n — ماتریس و پچ ──────────────────────────────────────────────────────
+// ── i18n — matrix and patch ──────────────────────────────────────────────────────
 
-/// نمایِ یک لوکال روی وایر.
+/// A locale view on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct I18nLocaleView {
-    /// کدِ لوکال.
+    /// Locale code.
     pub code: String,
-    /// نامِ انگلیسی.
+    /// English name.
     pub name: String,
-    /// نامِ بومی.
+    /// Native name.
     pub native_name: String,
-    /// جهت — `rtl` | `ltr`.
+    /// Direction — `rtl` | `ltr`.
     pub direction: String,
-    /// فونتِ اصیل.
+    /// Authentic font.
     pub font_family: String,
-    /// پرچمِ SVG (`viewBox="0 0 20 14"`).
+    /// SVG flag (`viewBox="0 0 20 14"`).
     pub flag_svg: String,
-    /// نمونهٔ نویسهٔ بومی.
+    /// Native sample character.
     pub glyph_sample: String,
-    /// وضعیت — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
+    /// Status — `ACTIVE_DAY1` | `PATCH_READY_SLOT`.
     pub state: String,
-    /// تکمیل بر حسبِ bps.
+    /// Completeness in bps.
     pub completion_bps: u32,
-    /// لوکالِ fallback.
+    /// Fallback locale.
     pub fallback: String,
 }
 
-/// پاسخِ `GET /api/v1/i18n/ecosystem-matrix`.
+/// `GET /api/v1/i18n/ecosystem-matrix` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct I18nMatrixResponse {
-    /// ۲۰ لوکال به ترتیبِ ثابت.
+    /// 20 locales in fixed order.
     pub locales: Vec<I18nLocaleView>,
-    /// تعدادِ فعال‌هایِ روزِ اول — ۲ (`fa`، `en`).
+    /// Day-one active count — 2 (`fa`, `en`).
     pub active_day1: usize,
-    /// تعدادِ اسلات‌هایِ آمادهٔ پچ — ۱۸.
+    /// Patch-ready slot count — 18.
     pub patch_ready: usize,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }
 
-/// یک مدخلِ پچِ ترجمه روی وایر.
+/// One translation-patch entry on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct I18nPatchEntryDto {
-    /// ماژولِ پنل — یکی از ۹ ماژول.
+    /// Panel module — one of the 9 modules.
     pub module: String,
-    /// کلید.
+    /// Key.
     pub key: String,
-    /// مقدارِ بومی‌شده.
+    /// Localized value.
     pub value: String,
 }
 
-/// درخواستِ `POST /api/v1/i18n/apply-patch`.
+/// `POST /api/v1/i18n/apply-patch` request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct I18nApplyPatchRequest {
-    /// کدِ لوکالِ هدف.
+    /// Target locale code.
     pub locale_code: String,
-    /// مدخل‌هایِ پچ.
+    /// Patch entries.
     pub patch_entries: Vec<I18nPatchEntryDto>,
 }
 
-/// پاسخِ `POST /api/v1/i18n/apply-patch`.
+/// `POST /api/v1/i18n/apply-patch` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct I18nApplyPatchResponse {
-    /// کدِ لوکال.
+    /// Locale code.
     pub locale_code: String,
-    /// وضعیتِ پس از پچ.
+    /// Post-patch status.
     pub activation_state: String,
-    /// تکمیلِ جدید بر حسبِ bps.
+    /// New completeness in bps.
     pub completion_bps: u32,
-    /// تعدادِ مدخل‌هایِ اعمال‌شده.
+    /// Number of applied entries.
     pub applied_count: usize,
-    /// نسخهٔ پچ.
+    /// Patch version.
     pub patch_version: String,
-    /// مدخل‌هایِ اعمال‌شده (`module.key` → مقدار).
+    /// Applied entries (`module.key` → value).
     pub applied_entries: BTreeMap<String, String>,
-    /// آیا در `LocalePatchRegistry` ماندگار شد.
+    /// Whether it persisted in `LocalePatchRegistry`.
     pub persisted: bool,
 }
 
-// ── ادمین — رصدخانهٔ آزمایشگاه و صادراتِ RLHF ───────────────────────────────
+// ── Admin — lab observatory and RLHF export ───────────────────────────────
 
-/// نمایِ یک مدخلِ تلمتریِ آزمایشگاه روی وایر — ۱:۱ با `UserLabTelemetryLog`.
+/// A lab telemetry entry view on the wire — 1:1 with `UserLabTelemetryLog`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LabTelemetryEntryView {
-    /// شناسهٔ قطعی — `lab:{dna}:{hour}:{turn}`.
+    /// Deterministic ID — `lab:{dna}:{hour}:{turn}`.
     pub id: String,
-    /// کدِ کوهورت.
+    /// Cohort code.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// ساعتِ ۰..۲۴.
+    /// Hour 0..24.
     pub hour_offset: u32,
-    /// لایهٔ UX.
+    /// UX layer.
     pub ux_tier: String,
-    /// لوکال.
+    /// Locale.
     pub locale: String,
-    /// پرسونا.
+    /// Persona.
     pub grok_persona: String,
-    /// مدلِ روت‌شده.
+    /// Routed model.
     pub model_slug: String,
-    /// حالتِ روتینگ.
+    /// Routing mode.
     pub routing_mode: String,
-    /// پرامپتِ کاربر.
+    /// User prompt.
     pub prompt_text: String,
-    /// ردِ تفکر به JSON.
+    /// Thinking trace as JSON.
     pub thinking_trace_json: String,
-    /// پاسخ.
+    /// Reply.
     pub response_text: String,
-    /// امتیازِ REA.
+    /// REA score.
     pub rea_score: u8,
-    /// تأخیر بر حسبِ ms.
+    /// Latency in ms.
     pub latency_ms: u32,
-    /// قابلِ آموزش؟
+    /// Trainable?
     pub usable_for_training: bool,
-    /// مُهرِ زمانِ ISO.
+    /// ISO timestamp.
     pub created_at: String,
 }
 
-/// سلامتِ یک کوهورت روی وایر.
+/// A cohort's health on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CohortHealthView {
-    /// کدِ کوهورت.
+    /// Cohort code.
     pub dna_code: String,
-    /// هندل کاربر.
+    /// User handle.
     pub user_handle: String,
-    /// نوبت‌ها.
+    /// Turns.
     pub turns: usize,
-    /// میانگینِ REA.
+    /// Mean REA.
     pub avg_rea_score: u8,
-    /// غیرقابلِ آموزش.
+    /// Untrainable.
     pub unusable: usize,
-    /// اصطکاک.
+    /// Friction.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Recovered friction.
     pub friction_recovered: usize,
-    /// مدلِ غالب.
+    /// Dominant model.
     pub dominant_model: String,
-    /// لوکال‌هایِ دیده‌شده.
+    /// Locales seen.
     pub locales: Vec<String>,
 }
 
-/// داشبوردِ ادمین روی وایر.
+/// The admin dashboard on the wire.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminLabDashboardView {
-    /// کلِ مدخل‌ها.
+    /// Total entries.
     pub total_entries: usize,
-    /// سلامتِ کوهورت‌ها.
+    /// Cohort healths.
     pub cohort_health: Vec<CohortHealthView>,
-    /// توزیعِ مدل.
+    /// Model distribution.
     pub by_model: BTreeMap<String, usize>,
-    /// توزیعِ لوکال.
+    /// Locale distribution.
     pub by_locale: BTreeMap<String, usize>,
-    /// توزیعِ لایهٔ UX.
+    /// UX-layer distribution.
     pub by_ux_tier: BTreeMap<String, usize>,
-    /// توزیعِ پرسونا.
+    /// Persona distribution.
     pub by_persona: BTreeMap<String, usize>,
-    /// میانگینِ REA.
+    /// Mean REA.
     pub avg_rea_score: u8,
-    /// کمینهٔ REA.
+    /// Min REA.
     pub min_rea_score: u8,
-    /// بیشینهٔ REA.
+    /// Max REA.
     pub max_rea_score: u8,
-    /// غیرقابلِ آموزش.
+    /// Untrainable.
     pub unusable_entries: usize,
-    /// کلِ اصطکاک.
+    /// Total friction.
     pub friction_events: usize,
-    /// اصطکاکِ بهبودیافته.
+    /// Recovered friction.
     pub friction_recovered: usize,
 }
 
-/// پاسخِ `GET /api/v1/admin/lab-telemetry`.
+/// `GET /api/v1/admin/lab-telemetry` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminLabTelemetryResponse {
-    /// مدخل‌هایِ تلمتریِ ماندگار (تا سقفِ limit).
+    /// Persisted telemetry entries (up to the limit cap).
     pub entries: Vec<LabTelemetryEntryView>,
-    /// داشبوردِ تجمیعی.
+    /// The aggregate dashboard.
     pub dashboard: AdminLabDashboardView,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }
 
-/// درخواستِ `POST /api/v1/admin/export-training-dataset`.
+/// `POST /api/v1/admin/export-training-dataset` request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminExportTrainingDatasetRequest {
-    /// آستانهٔ REA — فقط مدخل‌هایِ با `rea_score >=` این مقدار.
+    /// REA threshold — only entries with `rea_score >=` this value.
     pub min_rea_score: u8,
 }
 
-/// پاسخِ `POST /api/v1/admin/export-training-dataset`.
+/// `POST /api/v1/admin/export-training-dataset` response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminExportTrainingDatasetResponse {
-    /// JSONLِ SFT (ChatML/ShareGPT).
+    /// SFT JSONL (ChatML/ShareGPT).
     pub sft_jsonl: String,
-    /// JSONLِ DPO (`prompt/chosen/rejected`).
+    /// DPO JSONL (`prompt/chosen/rejected`).
     pub dpo_jsonl: String,
-    /// رکوردهایِ SFT.
+    /// SFT records.
     pub sft_records: usize,
-    /// رکوردهایِ DPO.
+    /// DPO records.
     pub dpo_records: usize,
-    /// آستانهٔ اعمال‌شده.
+    /// The applied threshold.
     pub min_rea_score: u8,
-    /// امضا.
+    /// Signature.
     pub signature: String,
 }

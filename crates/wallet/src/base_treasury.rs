@@ -1,61 +1,61 @@
-//! خزانهٔ حاکمِ `Base` — جنگِ اول به ازِ صلحِ آخر (Wave 7 — Step 4/4).
+//! The sovereign `Base` treasury — first war for the last peace (Wave 7 — Step 4/4).
 //!
-//! چهار جریانِ درآمدِ روزِ اول روی Ethereum **Base Mainnet** (`Chain ID: 8453`):
-//!  * جریان ۱ — مالیاتِ منشورِ ۱۰٪ (`1000 bps`) روی هر فروشِ بازارخانه؛
-//!  * جریان ۲ — تقسیمِ وابستهٔ برنامه‌پذیرِ ۱۰٪ تا ۵۰٪ (`1000..=5000 bps`) —
-//!    قانونِ «فروشِ مستقیمِ بی‌معرف»: وقتی معرف `None` است، پایشِ پیش‌فرضِ
-//!    ۱۰٪ مستقیم به خزانهٔ حاکم می‌رود → سهمِ کلِ پلتفرم `2000 bps` (۲۰٪)
-//!    و سهمِ سازنده `8000 bps` (۸۰٪)؛
-//!  * جریان ۳ — بوست‌های لحظه‌ای با مارژینِ ۱۰۰٪ (`FeaturedSlot24h`,
-//!    `MaironFastTrackAudit`, `ViralSwarmAmplifier`) — همه به خزانهٔ حاکم؛
-//!  * جریان ۴ — اسپردِ تسویهٔ لحظه‌ای و برداشتِ بین‌زنجیره‌ای `1.5%`
+//! Four day-one revenue streams on Ethereum **Base Mainnet** (`Chain ID: 8453`):
+//!  * Stream 1 — the 10% charter tax (`1000 bps`) on every marketplace sale;
+//!  * Stream 2 — a programmable affiliate split of 10% to 50% (`1000..=5000 bps`) —
+//!    the "no-referrer direct sale" rule: when the referrer is `None`, the default
+//!    10% share goes straight to the sovereign treasury → a total platform share of `2000 bps` (20%)
+//!    and a creator share of `8000 bps` (80%);
+//!  * Stream 3 — instant boosts at a 100% margin (`FeaturedSlot24h`,
+//!    `MaironFastTrackAudit`, `ViralSwarmAmplifier`) — all to the sovereign treasury;
+//!  * Stream 4 — the instant-settlement and cross-chain-withdrawal spread `1.5%`
 //!    (`150 bps`).
 //!
-//! همهٔ محاسبات روی [`Precise`] (موتورِ دقتِ Wave 6) با مبلغِ مقیاسِ
-//! میکرو (`10^-6` واحدِ نمایش) انجام می‌شود — صفر float روی پول، صفر
-//! اتلافِ گرد کردن: جمعِ پاهای دفتری همیشه دقیقاً برابرِ مبلغِ ناخالص است.
+//! All computation runs on [`Precise`] (the Wave 6 precision engine) with micro-scale
+//! amounts (`10^-6` display units) — zero floats on money, zero
+//! rounding leakage: the sum of ledger legs always exactly equals the gross amount.
 
 use std::fmt;
 
 use crate::ccxt_core::Precise;
 
-// ── شبکهٔ Base ───────────────────────────────────────────────────────────────
+// ── Base network ───────────────────────────────────────────────────────────────
 
-/// شناسهٔ زنجیرهٔ Base Mainnet — قراردادِ سختِ لایهٔ وایر.
+/// Base Mainnet chain ID — a hard wire-layer contract.
 pub const BASE_MAINNET_CHAIN_ID: u64 = 8453;
 
-/// RPC عمومیِ Base Mainnet.
+/// Base Mainnet public RPC.
 pub const BASE_MAINNET_RPC_URL: &str = "https://mainnet.base.org";
 
-/// مرورگرِ زنجیرهٔ Base — dossier تأییدِ توکن اینجا زندگی می‌کند.
+/// Base block explorer — the token-verification dossier lives here.
 pub const BASE_BLOCK_EXPLORER: &str = "https://basescan.org";
 
-/// قراردادِ کانونیکِ USDC بومیِ Base (EIP-55، منبعِ رسمیِ Circle/Base).
+/// The canonical native Base USDC contract (EIP-55, official Circle/Base source).
 pub const BASE_USDC_CONTRACT: &str = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
-/// عرضهٔ ثابتِ `$0xKIA` روی Base — یک میلیارد توکن، ۱۸ اعشار، هرگز صِبر نمی‌شود.
+/// The fixed `$0xKIA` supply on Base — one billion tokens, 18 decimals, never minted again.
 pub const ZERO_X_KIA_TOTAL_SUPPLY_BASE_UNITS: i128 = 1_000_000_000i128 * 10i128.pow(18);
 
-// ── دارایی‌های تسویه ─────────────────────────────────────────────────────────
+// ── Settlement assets ─────────────────────────────────────────────────────────
 
-/// دارایی‌های تسویهٔ پشتیبانی‌شده — دفترِ داخلی همیشه مقیاسِ میکرو (`10^-6`
-/// واحدِ نمایش)؛ تبدیلِ on-chain با `decimals` هر دارایی انجام می‌شود.
+/// Supported settlement assets — the internal ledger is always in micro scale (`10^-6`
+/// display units); on-chain conversion uses each asset's `decimals`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SettlementAsset {
-    /// تلگرام استارز (`XTR`) — داخلی/آفلاین؛ توکنِ Base نیست.
+    /// Telegram Stars (`XTR`) — internal/offline; not a Base token.
     TelegramStarsXtr,
-    /// اتریومِ بومیِ Base — ۱۸ اعشار.
+    /// Base-native ETH — 18 decimals.
     BaseNativeEth,
-    /// USDC بومیِ Base (`0x8335…2913`) — ۶ اعشار.
+    /// Base-native USDC (`0x8335…2913`) — 6 decimals.
     BaseNativeUsdc,
-    /// `$0xKIA` ERC-20 روی Base — ۱۸ اعشار، عرضهٔ ثابتِ ۱ میلیارد.
+    /// `$0xKIA` ERC-20 on Base — 18 decimals, a fixed 1-billion supply.
     ZeroXKiaBaseToken,
-    /// واحدِ دفتریِ داخلی `µKIAN` — ۶ اعشار، هرگز روی زنجیره نیست.
+    /// The internal `µKIAN` ledger unit — 6 decimals, never on-chain.
     InternalMicroKian,
 }
 
 impl SettlementAsset {
-    /// همهٔ دارایی‌ها به ترتیبِ canonical.
+    /// All assets in canonical order.
     pub const ALL: [SettlementAsset; 5] = [
         Self::TelegramStarsXtr,
         Self::BaseNativeEth,
@@ -64,8 +64,8 @@ impl SettlementAsset {
         Self::InternalMicroKian,
     ];
 
-    /// نمادِ وایر — همان `code` قراردادِ وایرِ on-chain.
-        #[allow(clippy::match_same_arms)] // نمادهای وایر عمداً صریح‌اند
+    /// Wire symbol — the on-chain wire contract's `code`.
+        #[allow(clippy::match_same_arms)] // wire symbols are deliberately explicit
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
@@ -77,8 +77,8 @@ impl SettlementAsset {
         }
     }
 
-    /// اعشارِ نمایشِ واحد — دفترِ داخلی همیشه `10^-6` از این واحد است.
-    #[allow(clippy::match_same_arms)] // اعشارِ هر دارایی عمداً صریح است
+    /// Unit display decimals — the internal ledger is always `10^-6` of this unit.
+    #[allow(clippy::match_same_arms)] // each asset's decimals are deliberately explicit
     #[must_use]
     pub const fn display_decimals(self) -> u32 {
         match self {
@@ -90,7 +90,7 @@ impl SettlementAsset {
         }
     }
 
-    /// آدرسِ قراردادِ توکنِ روی Base — داراییِ بومی/داخلی `None`.
+    /// Token contract address on Base — `None` for native/internal assets.
     #[must_use]
     pub const fn base_contract_address(self) -> Option<&'static str> {
         match self {
@@ -100,7 +100,7 @@ impl SettlementAsset {
         }
     }
 
-    /// آیا این دارایی پرداختِ `EIP-681` روی `Base` دارد؟ (`XTR` و `µKIAN` ندارند.)
+    /// Does this asset support `EIP-681` payment on `Base`? (`XTR` and `µKIAN` do not.)
     #[must_use]
     pub const fn is_onchain_settleable(self) -> bool {
         matches!(
@@ -109,7 +109,7 @@ impl SettlementAsset {
         )
     }
 
-    /// یکتایِ وایر — همان مقدارِ سریال‌شده در جدولِ
+    /// Wire unique key — the same value serialized in the
     /// `sovereign_treasury_splits.settlement_asset`.
     #[must_use]
     pub const fn wire_id(self) -> &'static str {
@@ -129,24 +129,24 @@ impl fmt::Display for SettlementAsset {
     }
 }
 
-// ── خطا ──────────────────────────────────────────────────────────────────────
+// ── Errors ──────────────────────────────────────────────────────────────────────
 
-/// خطای خزانهٔ Base — fail-closed؛ تقسیمِ نامتوازن هرگز بیرون نمی‌رود.
+/// Base treasury error — fail-closed; an unbalanced split never escapes.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum BaseTreasuryError {
-    /// مبلغِ ناخالصِ میکرو نامعتبر (≤ ۰ یا بیرونِ `i64`).
+    /// Invalid micro gross amount (≤ 0 or outside `i64`).
     #[error("invalid gross amount: {0} micros")]
     InvalidGrossAmount(i128),
-    /// پایشِ وابسته بیرونِ `1000..=5000 bps`.
+    /// Affiliate share outside `1000..=5000 bps`.
     #[error("affiliate bps {0} outside charter window 1000..=5000")]
     AffiliateBpsOutOfRange(u32),
-    /// شناسهٔ حسابِ خالی (خریدار/سازنده/معرف).
+    /// Empty account ID (buyer/creator/referrer).
     #[error("empty account id for leg: {0}")]
     EmptyAccountId(&'static str),
-    /// سرریزِ موتورِ دقت یا تبدیلِ on-chain — عملیات رد می‌شود.
+    /// Precision-engine or on-chain-conversion overflow — the operation is rejected.
     #[error("precision overflow in treasury math")]
     Overflow,
-    /// داراییِ تسویه برای این عملیات روی Base قابلِ پرداخت نیست (XTR/µKIAN).
+    /// The settlement asset is not payable on Base for this operation (XTR/µKIAN).
     #[error("asset {0} is not on-chain settleable on Base for EIP-681")]
     NotOnChainSettleable(&'static str),
 }
@@ -157,26 +157,26 @@ impl From<crate::ccxt_core::PreciseError> for BaseTreasuryError {
     }
 }
 
-// ── جریان ۳: لایه‌های بوست ────────────────────────────────────────────────────
+// ── Stream 3: boost tiers ────────────────────────────────────────────────────
 
-/// لایهٔ بوستِ لحظه‌ای — مارژینِ ۱۰۰٪ به `system:kia_sovereign_treasury`.
+/// Instant boost tier — a 100% margin to `system:kia_sovereign_treasury`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoostTier {
-    /// اسلاتِ ویژهٔ ۲۴ساعته — `250 XTR` / `$5.00 USDC` / `5,000,000 µKIAN`.
+    /// 24-hour featured slot — `250 XTR` / `$5.00 USDC` / `5,000,000 µKIAN`.
     FeaturedSlot24h,
-    /// ممیزیِ فست‌ترکِ مایرون — `100 XTR` / `$2.00 USDC` / `2,000,000 µKIAN`.
+    /// Mairon fast-track audit — `100 XTR` / `$2.00 USDC` / `2,000,000 µKIAN`.
     MaironFastTrackAudit,
-    /// تقویت‌گرِ سوآرمِ ویروسی — `500 XTR` / `$10.00 USDC` / `10,000,000 µKIAN`.
+    /// Viral swarm amplifier — `500 XTR` / `$10.00 USDC` / `10,000,000 µKIAN`.
     ViralSwarmAmplifier,
 }
 
 impl BoostTier {
-    /// همهٔ لایه‌ها به ترتیبِ canonical.
+    /// All tiers in canonical order.
     pub const ALL: [BoostTier; 3] =
         [Self::FeaturedSlot24h, Self::MaironFastTrackAudit, Self::ViralSwarmAmplifier];
 
-    /// قیمتِ میکرویِ XTR — واحدِ نمایشِ XTR صفر اعشار است، پس میکرو =
-    /// واحد × 10^6.
+    /// XTR micro price — the XTR display unit has zero decimals, so micro =
+    /// unit × 10^6.
     #[must_use]
     pub const fn price_xtr_micros(self) -> i64 {
         match self {
@@ -186,7 +186,7 @@ impl BoostTier {
         }
     }
 
-    /// قیمتِ میکرویِ USDC — ۶ اعشار، پس میکرو = واحدِ on-chain.
+    /// USDC micro price — 6 decimals, so micro = the on-chain unit.
     #[must_use]
     pub const fn price_usdc_micros(self) -> i64 {
         match self {
@@ -196,7 +196,7 @@ impl BoostTier {
         }
     }
 
-    /// قیمتِ میکرویِ `µKIAN`.
+    /// `µKIAN` micro price.
     #[must_use]
     pub const fn price_micro_kian(self) -> i64 {
         match self {
@@ -206,7 +206,7 @@ impl BoostTier {
         }
     }
 
-    /// مسیریابیِ جریان ۳ — همیشه `10_000 bps` (۱۰۰٪) به خزانهٔ حاکم.
+    /// Stream 3 routing — always `10_000 bps` (100%) to the sovereign treasury.
     #[must_use]
     pub const fn routing_bps(self) -> i64 {
         let _ = self;
@@ -214,61 +214,61 @@ impl BoostTier {
     }
 }
 
-// ── منشورِ روزِ اول ──────────────────────────────────────────────────────────
+// ── Day-one charter ──────────────────────────────────────────────────────────
 
-/// مخرجِ bps — ۱۰٬۰۰۰ = ۱۰۰٪.
+/// bps denominator — 10,000 = 100%.
 pub const BPS_DENOMINATOR: i128 = 10_000;
 
-/// جریان ۱ — مالیاتِ منشورِ ۱۰٪.
+/// Stream 1 — the 10% charter tax.
 pub const CHARTER_TAX_BPS: i64 = 1_000;
 
-/// جریان ۲ — کفِ پایشِ وابسته (۱۰٪).
+/// Stream 2 — the affiliate share floor (10%).
 pub const AFFILIATE_MIN_BPS: i64 = 1_000;
 
-/// جریان ۲ — سقفِ پایشِ وابسته (۵۰٪).
+/// Stream 2 — the affiliate share cap (50%).
 pub const AFFILIATE_MAX_BPS: i64 = 5_000;
 
-/// جریان ۲ — پایشِ پیش‌فرض (۱۰٪).
+/// Stream 2 — the default share (10%).
 pub const AFFILIATE_DEFAULT_BPS: i64 = 1_000;
 
-/// جریان ۲ — قانونِ «فروشِ مستقیمِ بی‌معرف»: پایشِ ۱۰٪ به خزانهٔ حاکم.
+/// Stream 2 — the "no-referrer direct sale" rule: the 10% share goes to the sovereign treasury.
 pub const UNREFERRED_AFFILIATE_TO_TREASURY_BPS: i64 = 1_000;
 
-/// جریان ۴ — اسپردِ برداشتِ بین‌زنجیره‌ای (۱.۵٪).
+/// Stream 4 — the cross-chain withdrawal spread (1.5%).
 pub const WITHDRAWAL_SPREAD_BPS: i64 = 150;
 
-/// حسابِ خزانهٔ حاکم — مقصدِ همهٔ جریان‌هایِ پلتفرمی.
+/// The sovereign treasury account — destination of all platform streams.
 pub const KIA_SOVEREIGN_TREASURY_ACCOUNT: &str = "system:kia_sovereign_treasury";
 
-/// امضایِ موتورِ خزانه — برای smoke test و لاگ‌ها.
+/// Treasury engine signature — for smoke tests and logs.
 pub const BASE_TREASURY_SIGNATURE: &str = "base-treasury::day-one-4-stream::8453";
 
-/// منشورِ آهنینِ روزِ اول — «جنگ اول به از صلح آخر».
+/// The day-one iron charter — "first war for the last peace".
 ///
-/// چهار جریانِ درآمدِ حاکمیتی با پارامترهایِ ثابتِ منشور؛ تقسیمِ اتمی با
-/// [`compute_day_one_atomic_split`] از همین قرارداد ساخته می‌شود.
+/// Four sovereign revenue streams with fixed charter parameters; the atomic split is
+/// built by [`compute_day_one_atomic_split`] from this very contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DayOneRevenueCharter {
-    /// جریان ۱ — مالیاتِ منشور (`1000 bps`).
+    /// Stream 1 — charter tax (`1000 bps`).
     pub charter_tax_bps: i64,
-    /// جریان ۲ — پایشِ وابستهٔ پیکربندی‌پذیر (`1000..=5000 bps`).
+    /// Stream 2 — configurable affiliate share (`1000..=5000 bps`).
     pub affiliate_bps: i64,
-    /// جریان ۴ — اسپردِ برداشت (`150 bps`).
+    /// Stream 4 — withdrawal spread (`150 bps`).
     pub withdrawal_spread_bps: i64,
 }
 
 impl DayOneRevenueCharter {
-    /// نمونهٔ canonical منشور — تنها پیکربندیِ مجازِ روزِ اول.
+    /// The canonical charter sample — the only permitted day-one configuration.
     pub const DAY_ONE: Self = Self {
         charter_tax_bps: CHARTER_TAX_BPS,
         affiliate_bps: AFFILIATE_DEFAULT_BPS,
         withdrawal_spread_bps: WITHDRAWAL_SPREAD_BPS,
     };
 
-    /// اعتبارسنجیِ پیکربندی — پایشِ وابسته باید درونِ پنجرهٔ منشور باشد.
+    /// Configuration validation — the affiliate share must lie inside the charter window.
     ///
     /// # Errors
-    /// [`BaseTreasuryError::AffiliateBpsOutOfRange`] بیرونِ `1000..=5000`.
+    /// [`BaseTreasuryError::AffiliateBpsOutOfRange`] outside `1000..=5000`.
     pub fn validate(&self) -> Result<(), BaseTreasuryError> {
         if !(AFFILIATE_MIN_BPS..=AFFILIATE_MAX_BPS).contains(&self.affiliate_bps) {
             return Err(BaseTreasuryError::AffiliateBpsOutOfRange(
@@ -285,24 +285,24 @@ impl Default for DayOneRevenueCharter {
     }
 }
 
-// ── پاهای دفتریِ دوطرفه ──────────────────────────────────────────────────────
+// ── Double-sided ledger legs ──────────────────────────────────────────────────────
 
-/// گونهٔ پایِ دفتری — بدهکارِ خریدار همیشه منفی، اعتبارها مثبت؛
+/// Ledger leg kind — the buyer debit is always negative, credits positive;
 /// `buyer_debit + kia_treasury + affiliate + creator == 0`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SplitLegKind {
-    /// بدهکارِ خریدار (منفی).
+    /// Buyer debit (negative).
     BuyerDebit,
-    /// اعتبارِ خزانهٔ حاکم (جریان ۱ + پایشِ بی‌معرفِ جریان ۲ + جریان ۳/۴).
+    /// Sovereign treasury credit (stream 1 + the referrer-less stream-2 share + streams 3/4).
     KiaTreasuryCredit,
-    /// اعتبارِ معرف (جریان ۲ وقتی معرف موجود است).
+    /// Referrer credit (stream 2 when a referrer is present).
     AffiliateCredit,
-    /// اعتبارِ سازنده — باقیماندهٔ اتمی.
+    /// Creator credit — the atomic remainder.
     CreatorCredit,
 }
 
 impl SplitLegKind {
-    /// برچسبِ وایر.
+    /// Wire label.
     #[must_use]
     pub const fn wire_id(self) -> &'static str {
         match self {
@@ -314,51 +314,51 @@ impl SplitLegKind {
     }
 }
 
-/// یک پایِ دفتریِ دوطرفه — مبلغِ علامت‌دارِ میکرویی.
+/// One double-sided ledger leg — a signed micro amount.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LedgerSplitLeg {
-    /// گونهٔ پای.
+    /// Leg kind.
     pub leg_kind: SplitLegKind,
-    /// حسابِ دفتری (`user:{id}` یا `system:kia_sovereign_treasury`).
+    /// Ledger account (`user:{id}` or `system:kia_sovereign_treasury`).
     pub account_id: String,
-    /// مبلغِ علامت‌دارِ میکرویی — بدهکار منفی، اعتبار مثبت.
+    /// Signed micro amount — debits negative, credits positive.
     pub amount_micros: i128,
-    /// نرخِ bps اعلامیِ این پای (۰ برای بدهکارِ خریدار).
+    /// This leg's declared bps rate (0 for the buyer debit).
     pub bps: i64,
-    /// داراییِ تسویه.
+    /// Settlement asset.
     pub asset: SettlementAsset,
-    /// یادداشتِ منشور — کدام جریان این پای را می‌سازد.
+    /// Charter note — which stream forms this leg.
     pub note: String,
 }
 
-/// نتیجهٔ تقسیمِ اتمیِ روزِ اول — متوازن به صورتِ ساختاری.
+/// The day-one atomic split result — balanced by construction.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DayOneAtomicSplit {
-    /// چهار پایِ دفتری (ترتیبِ canonical: بدهکار، خزانه، وابسته، سازنده).
+    /// Four ledger legs (canonical order: debit, treasury, affiliate, creator).
     pub legs: Vec<LedgerSplitLeg>,
-    /// مبلغِ ناخالصِ میکرویی.
+    /// Gross micro amount.
     pub gross_amount_micros: i128,
-    /// جمعِ میکروهایِ رسیده به خزانهٔ حاکم.
+    /// Sum of micros reaching the sovereign treasury.
     pub kia_treasury_micros: i128,
-    /// میکروهایِ رسیده به معرف (۰ وقتی بی‌معرف).
+    /// Micros reaching the referrer (0 when referrer-less).
     pub referrer_micros: i128,
-    /// خالصِ سازنده.
+    /// Creator net.
     pub creator_net_micros: i128,
-    /// سهمِ مؤثرِ پلتفرم بر حسب bps — `2000` روی فروشِ مستقیمِ بی‌معرف.
+    /// Effective platform share in bps — `2000` on a referrer-less direct sale.
     pub effective_platform_bps: i64,
-    /// اثباتِ صفرجمع — بازچکِ [`Precise`] روی جمعِ پاها.
+    /// Zero-sum proof — a [`Precise`] recheck over the leg sum.
     pub zero_sum_verified: bool,
-    /// داراییِ تسویه.
+    /// Settlement asset.
     pub settlement_asset: SettlementAsset,
-    /// گونهٔ سناریو (`marketplace_sale` | `instant_boost`).
+    /// Scenario kind (`marketplace_sale` | `instant_boost`).
     pub scenario: &'static str,
 }
 
 impl DayOneAtomicSplit {
-    /// اثباتِ صفرجمع با موتورِ [`Precise`] — جمعِ پاها باید دقیقاً صفر باشد.
+    /// Zero-sum proof with the [`Precise`] engine — the leg sum must be exactly zero.
     ///
     /// # Errors
-    /// [`BaseTreasuryError::Overflow`] روی سرریز.
+    /// [`BaseTreasuryError::Overflow`] on overflow.
     pub fn verify_zero_sum_precise(&self) -> Result<bool, BaseTreasuryError> {
         let mut acc = Precise::zero();
         for leg in &self.legs {
@@ -368,19 +368,19 @@ impl DayOneAtomicSplit {
     }
 }
 
-// ── موتورِ تقسیمِ اتمی ───────────────────────────────────────────────────────
+// ── Atomic split engine ───────────────────────────────────────────────────────
 
-/// تقسیمِ اتمیِ دوطرفهٔ «فروشِ بازارخانه» بر پایهٔ منشورِ روزِ اول.
+/// The double-sided atomic split of a "marketplace sale" under the day-one charter.
 ///
-/// ترتیبِ اتمی: مالیاتِ منشور (۱۰٪) → پایشِ وابسته (وقتی معرف هست) →
-/// سازنده = باقیماندهٔ دقیق. وقتی معرف `None` است، پایشِ پیش‌فرضِ `1000 bps`
-/// مستقیم به خزانهٔ حاکم می‌رود (قانونِ فروشِ مستقیم) — سهمِ کلِ پلتفرم
-/// `2000 bps` و سازنده `8000 bps`. گرد کردنِ پاها روی سازنده می‌بندد تا
-/// جمعِ پاها دقیقاً برابرِ ناخالص باشد (صفر اتلاف).
+/// Atomic order: charter tax (10%) → affiliate share (when a referrer is present) →
+/// creator = the exact remainder. When the referrer is `None`, the default `1000 bps` share
+/// goes straight to the sovereign treasury (the direct-sale rule) — total platform share
+/// `2000 bps` and creator `8000 bps`. Leg rounding closes on the creator so
+/// the leg sum exactly equals the gross (zero leakage).
 ///
 /// # Errors
-/// مبلغِ نامعتبر، پایشِ بیرونِ پنجره، شناسهٔ خالی، یا سرریزِ دقت.
-#[allow(clippy::too_many_lines)] // چهار پایِ دفتری با همهٔ قواعدِ منشور
+/// Invalid amount, share outside the window, empty ID, or precision overflow.
+#[allow(clippy::too_many_lines)] // four ledger legs with all charter rules
 pub fn compute_day_one_atomic_split(
     charter: &DayOneRevenueCharter,
     asset: SettlementAsset,
@@ -403,7 +403,7 @@ pub fn compute_day_one_atomic_split(
     if referrer_user_id.is_some_and(|r| r.trim().is_empty()) {
         return Err(BaseTreasuryError::EmptyAccountId("referrer"));
     }
-    // پنجرهٔ پایش: وقتی معرف هست، پایشِ اعلامی باید درونِ پنجرهٔ منشور باشد.
+    // share window: when a referrer is present, the declared share must lie inside the charter window.
     if referrer_user_id.is_some()
         && !(AFFILIATE_MIN_BPS..=AFFILIATE_MAX_BPS).contains(&affiliate_bps)
     {
@@ -415,9 +415,9 @@ pub fn compute_day_one_atomic_split(
     let gross = Precise::from_i128(gross_micros);
     let denom = Precise::from_i128(BPS_DENOMINATOR);
 
-    // جریان ۱ — مالیاتِ منشور: floor(gross × bps / 10000).
+    // stream 1 — charter tax: floor(gross × bps / 10000).
     let tax_micros = bps_floor(gross, charter.charter_tax_bps, &denom)?;
-    // جریان ۲ — پایش: معرف‌دار → پایشِ اعلامی؛ بی‌معرف → پیش‌فرضِ ۱۰٪ به خزانه.
+    // stream 2 — share: referrer present → declared share; referrer-less → the default 10% to the treasury.
     let affiliate_bps_effective: i64 = if referrer_user_id.is_some() {
         affiliate_bps
     } else {
@@ -425,19 +425,19 @@ pub fn compute_day_one_atomic_split(
     };
     let affiliate_micros = bps_floor(gross, affiliate_bps_effective, &denom)?;
 
-    // سازنده = باقیماندهٔ اتمی — اتلافِ گرد کردن اینجا می‌بندد (صفر اتلافِ کل).
+    // creator = the atomic remainder — rounding leakage closes here (zero total leakage).
     let creator_micros = gross.sub(&tax_micros)?.sub(&affiliate_micros)?.coeff;
     if creator_micros < 0 {
         return Err(BaseTreasuryError::InvalidGrossAmount(gross_micros));
     }
 
-    // جمعِ خزانه = جریان ۱ + (جریان ۲ وقتی بی‌معرف) .
+    // treasury sum = stream 1 + (stream 2 when referrer-less).
     let treasury_micros =
         tax_micros.add(&if referrer_user_id.is_none() { affiliate_micros } else { Precise::zero() })?;
     let referrer_micros =
         if referrer_user_id.is_some() { affiliate_micros } else { Precise::zero() };
 
-    // سهمِ مؤثرِ پلتفرم با دقتِ Precise: (خزانه + وابسته) × 10000 / gross.
+    // effective platform share at Precise precision: (treasury + affiliate) × 10000 / gross.
     let platform_total = treasury_micros.add(&referrer_micros)?;
     let platform_bps = platform_total
         .mul(&denom)?
@@ -499,8 +499,8 @@ pub fn compute_day_one_atomic_split(
         note: "Creator residual — atomic remainder, zero rounding loss".to_owned(),
     });
 
-    // پاهای وابستهٔ بی‌معرف به خزانه می‌روند — پایِ «اعتبارِ وابسته» در
-    // این حالت مقدارِ صفر دارد (خزانه هر دو جریان را در پایِ خود دارد).
+    // referrer-less affiliate legs go to the treasury — the "affiliate credit" leg
+    // carries zero in this mode (the treasury holds both streams in its own leg).
     if referrer_user_id.is_none() {
         legs[2].amount_micros = 0;
         legs[2].bps = 0;
@@ -518,7 +518,7 @@ pub fn compute_day_one_atomic_split(
         scenario: "marketplace_sale",
     };
 
-    // اثباتِ نهایی — تقسیمِ نامتوازن هرگز بیرون نمی‌رود.
+    // final proof — an unbalanced split never escapes.
     let precise_ok = split.verify_zero_sum_precise()?;
     let int_sum: i128 = split.legs.iter().map(|l| l.amount_micros).sum();
     if !precise_ok || int_sum != 0 || split.creator_net_micros <= 0 {
@@ -527,10 +527,10 @@ pub fn compute_day_one_atomic_split(
     Ok(split)
 }
 
-/// تقسیمِ اتمیِ جریان ۳ — بوستِ لحظه‌ای: ۱۰۰٪ (۱۰٬۰۰۰ bps) به خزانهٔ حاکم.
+/// Stream 3 atomic split — instant boost: 100% (10,000 bps) to the sovereign treasury.
 ///
 /// # Errors
-/// مبلغِ نامعتبر، شناسهٔ خالی، یا سرریزِ دقت.
+/// Invalid amount, empty ID, or precision overflow.
 pub fn compute_instant_boost_split(
     asset: SettlementAsset,
     tier: BoostTier,
@@ -541,10 +541,10 @@ pub fn compute_instant_boost_split(
         SettlementAsset::BaseNativeUsdc => i128::from(tier.price_usdc_micros()),
         SettlementAsset::InternalMicroKian => i128::from(tier.price_micro_kian()),
         SettlementAsset::BaseNativeEth | SettlementAsset::ZeroXKiaBaseToken => {
-            // روی Base بوست با ETH یا $0xKIA هم قابلِ پرداخت است — مبلغِ
-            // میکرویی را فراخوان می‌دهد؛ اینجا قیمتیِ کانونیکِ USDC معادل
-            // به‌کار نمی‌رود، پس ورودیِ مستقیم لازم است. این شاخه فقط
-            // قیمتِ XTR معادلِ کانونیک را نگه می‌دارد.
+            // on Base, a boost is also payable in ETH or $0xKIA — the caller
+            // supplies the micro amount; the canonical USDC equivalent pricing
+            // is not applied here, so a direct input is required. This branch only
+            // keeps the canonical XTR equivalent price.
             i128::from(tier.price_xtr_micros())
         }
     };
@@ -583,7 +583,7 @@ pub fn compute_instant_boost_split(
         settlement_asset: asset,
         scenario: "instant_boost",
     };
-    // صفرجمعِ دوپایه — سازنده/وابسته در جریان ۳ وجود ندارند.
+    // two-leg zero sum — creator/affiliate do not exist in stream 3.
     let _ = tier;
     let ok = split.verify_zero_sum_precise()?;
     let int_sum: i128 = split.legs.iter().map(|l| l.amount_micros).sum();
@@ -594,7 +594,7 @@ pub fn compute_instant_boost_split(
     Ok(split)
 }
 
-/// برچسبِ انسانیِ لایهٔ بوست.
+/// Human-readable boost tier label.
 #[must_use]
 fn tier_label(tier: BoostTier) -> &'static str {
     match tier {
@@ -604,18 +604,18 @@ fn tier_label(tier: BoostTier) -> &'static str {
     }
 }
 
-/// جریان ۴ — اسپردِ تسویهٔ لحظه‌ای و برداشتِ بین‌زنجیره‌ای (`150 bps`).
+/// Stream 4 — the instant-settlement and cross-chain-withdrawal spread (`150 bps`).
 ///
-/// خروجی: (خالصِ رسیده به کاربر، اسپردِ خزانه) — صفر اتلاف: دو کف جمعاً
-/// دقیقاً برابرِ ورودی.
+/// Output: (net reaching the user, treasury spread) — zero leakage: the two halves together
+/// exactly equal the input.
 ///
 /// # Errors
-/// مبلغِ نامعتبر یا سرریز.
+/// Invalid amount or overflow.
 pub fn compute_withdrawal_spread_split(
     asset: SettlementAsset,
     gross_micros: i128,
 ) -> Result<(i128, i128), BaseTreasuryError> {
-    let _ = asset; // دارایی فقط برای قراردادِ امضایِ یکدستِ وایر — اسپرد مستقل از دارایی است.
+    let _ = asset; // the asset exists only for the unified wire-signature contract — the spread is asset-independent.
     if gross_micros <= 0 {
         return Err(BaseTreasuryError::InvalidGrossAmount(gross_micros));
     }
@@ -625,11 +625,11 @@ pub fn compute_withdrawal_spread_split(
     let net = gross.sub(&spread)?;
     let net_c = net.coeff;
     let spread_c = spread.coeff;
-    debug_assert_eq!(net_c + spread_c, gross_micros, "جریان ۴ — صفر اتلاف");
+    debug_assert_eq!(net_c + spread_c, gross_micros, "\u{62c}\u{631}\u{6cc}\u{627}\u{646} \u{6f4} — \u{635}\u{641}\u{631} \u{627}\u{62a}\u{644}\u{627}\u{641}");
     Ok((net_c, spread_c))
 }
 
-/// floor(gross × bps / 10000) روی [`Precise`] — بدون float.
+/// floor(gross × bps / 10000) on [`Precise`] — no floats.
 fn bps_floor(gross: Precise, bps: i64, denom: &Precise) -> Result<Precise, BaseTreasuryError> {
     let scaled = gross.mul(&Precise::from_i128(i128::from(bps)))?;
     let q = scaled.div(denom, 0)?;
@@ -638,17 +638,17 @@ fn bps_floor(gross: Precise, bps: i64, denom: &Precise) -> Result<Precise, BaseT
 
 // ── EIP-681 ──────────────────────────────────────────────────────────────────
 
-/// ساختِ URI پرداختِ `EIP-681` روی `Base` — لینکِ یک‌کلیکیِ `Trust Wallet` /
-/// `Coinbase Wallet` / `MetaMask` با `chain_id` اجباریِ `8453`.
+/// Build the `EIP-681` payment URI on `Base` — the one-click link for `Trust Wallet` /
+/// `Coinbase Wallet` / `MetaMask` with the mandatory `chain_id` of `8453`.
 ///
-///  * `ETH` بومی → `ethereum:<recipient>@8453?value=<wei>`
+///  * native `ETH` → `ethereum:<recipient>@8453?value=<wei>`
 ///  * `ERC-20`  → `ethereum:<token>@8453/transfer?address=<recipient>&uint256=<base>`
 ///
-/// دارایی‌های غیر on-chain (`XTR`, `µKIAN`) خطا می‌دهند — هیچ URI جعلی
-/// ساخته نمی‌شود.
+/// Non-on-chain assets (`XTR`, `µKIAN`) error out — no fake URI is
+/// ever built.
 ///
 /// # Errors
-/// داراییِ غیرقابلِ تسویهٔ on-chain یا سرریزِ تبدیلِ اعشار.
+/// An asset not settleable on-chain, or a decimal-conversion overflow.
 pub fn build_base_eip681_payment_uri(
     asset: SettlementAsset,
     recipient_address: &str,
@@ -663,7 +663,7 @@ pub fn build_base_eip681_payment_uri(
     if amount_micros <= 0 {
         return Err(BaseTreasuryError::InvalidGrossAmount(amount_micros));
     }
-    // تبدیلِ میکرو (10^-6 نمایش) به واحدِ on-chain: base = micros × 10^(d-6).
+    // micro (10^-6 display) to on-chain unit conversion: base = micros × 10^(d-6).
     let d = i32::try_from(asset.display_decimals()).map_err(|_| BaseTreasuryError::Overflow)?;
     let exp = d - 6;
     let base_units: i128 = if exp >= 0 {
@@ -688,37 +688,37 @@ pub fn build_base_eip681_payment_uri(
     }
 }
 
-// ── descriptor قراردادها ─────────────────────────────────────────────────────
+// ── Contract descriptors ─────────────────────────────────────────────────────
 
-/// خلاصهٔ ممیزیِ `ZeroXKiaToken.sol` — معماریِ تمیزِ ۱۰۰/۱۰۰
+/// `ZeroXKiaToken.sol` audit summary — a clean 100/100 architecture
 /// `GoPlus` & `TokenSniffer`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(clippy::struct_excessive_bools)] // هر bool یک بندِ ممیزیِ GoPlus است
+#[allow(clippy::struct_excessive_bools)] // each bool is a GoPlus audit clause
 pub struct ZeroXKiaTokenAudit {
-    /// مسیرِ منبع در مخزن.
+    /// Source path in the repository.
     pub source_path: String,
-    /// نسخهٔ Solidity.
+    /// Solidity version.
     pub solidity_version: String,
-    /// عرضهٔ ثابت — مضرِ واحدِ `on-chain`.
+    /// Fixed supply — matching the `on-chain` unit.
     pub total_supply_base_units: i128,
-    /// mint پس از constructor — همیشه `false`.
+    /// Post-constructor mint — always `false`.
     pub post_constructor_mint: bool,
-    /// blacklist — همیشه `false`.
+    /// Blacklist — always `false`.
     pub blacklist: bool,
-    /// pause — همیشه `false`.
+    /// Pause — always `false`.
     pub pause: bool,
-    /// مالیاتِ mutable — همیشه `false`.
+    /// Mutable tax — always `false`.
     pub mutable_tax_trap: bool,
     /// EIP-2612 `permit`.
     pub eip2612_permit: bool,
-    /// `burn` کاربر.
+    /// User `burn`.
     pub user_burn: bool,
-    /// مجوزِ MIT.
+    /// MIT license.
     pub license: &'static str,
 }
 
 impl ZeroXKiaTokenAudit {
-    /// descriptor کانونیک — منطبق بر منبعِ `contracts/base/ZeroXKiaToken.sol`.
+    /// The canonical descriptor — matches the `contracts/base/ZeroXKiaToken.sol` source.
     #[must_use]
     pub fn canonical() -> Self {
         Self {
@@ -736,34 +736,34 @@ impl ZeroXKiaTokenAudit {
     }
 }
 
-/// خلاصهٔ ممیزیِ `KiaBaseEscrowTreasury.sol` — امانتِ غیرحضانتی و
-/// تقسیم‌گرِ اتمیِ جریانِ روزِ اول.
+/// `KiaBaseEscrowTreasury.sol` audit summary — non-custodial escrow and
+/// the day-one stream atomic splitter.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KiaBaseEscrowTreasuryAudit {
-    /// مسیرِ منبع در مخزن.
+    /// Source path in the repository.
     pub source_path: String,
-    /// نسخهٔ Solidity.
+    /// Solidity version.
     pub solidity_version: String,
-    /// خزانهٔ حاکمِ immuttable — آدرسِ on-chain.
+    /// The immutable sovereign treasury — on-chain address.
     pub kia_treasury: String,
-    /// توکن‌هایِ تسویهٔ مجاز ( whitelist بسته).
+    /// Permitted settlement tokens (a closed whitelist).
     pub allowed_assets: Vec<&'static str>,
-    /// توابعِ روی‌زنجیره.
+    /// On-chain functions.
     pub entrypoints: Vec<&'static str>,
-    /// قفلِ non-reentrant.
+    /// The non-reentrant lock.
     pub non_reentrant_guard: bool,
-    /// مالیاتِ منشور (`1000 bps`).
+    /// Charter tax (`1000 bps`).
     pub charter_tax_bps: i64,
-    /// پنجرهٔ پایشِ وابسته.
+    /// The affiliate share window.
     pub affiliate_bps_window: String,
-    /// اسپردِ برداشت (`150 bps`).
+    /// Withdrawal spread (`150 bps`).
     pub withdrawal_spread_bps: i64,
-    /// مجوزِ MIT.
+    /// MIT license.
     pub license: &'static str,
 }
 
 impl KiaBaseEscrowTreasuryAudit {
-    /// descriptor کانونیک.
+    /// The canonical descriptor.
     #[must_use]
 pub fn canonical() -> Self {
         Self {
@@ -794,7 +794,7 @@ pub fn canonical() -> Self {
 mod tests {
     use super::*;
 
-    const GROSS: i128 = 100_000_000; // 100.00 واحدِ نمایش — دقیقِ قابلِ تقسیم
+    const GROSS: i128 = 100_000_000; // 100.00 display units — exactly divisible
 
     #[test]
     fn charter_constants_are_ironclad() {
@@ -821,7 +821,7 @@ mod tests {
         assert_eq!(split.kia_treasury_micros, 10_000_000);
         assert_eq!(split.referrer_micros, 10_000_000);
         assert_eq!(split.creator_net_micros, 80_000_000);
-        assert_eq!(split.effective_platform_bps, 2_000, "۱۰٪ مالیات + ۱۰٪ وابسته");
+        assert_eq!(split.effective_platform_bps, 2_000, "\u{6f1}\u{6f0}\u{66a} \u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a} + \u{6f1}\u{6f0}\u{66a} \u{648}\u{627}\u{628}\u{633}\u{62a}\u{647}");
         assert_eq!(split.legs.len(), 4);
         assert_eq!(split.legs[0].amount_micros, -GROSS);
         assert_eq!(split.legs[1].account_id, "system:kia_sovereign_treasury");
@@ -841,11 +841,11 @@ mod tests {
             AFFILIATE_DEFAULT_BPS,
         )
         .unwrap();
-        assert_eq!(split.kia_treasury_micros, 20_000_000, "۲۰٪ به خزانهٔ حاکم");
+        assert_eq!(split.kia_treasury_micros, 20_000_000, "\u{6f2}\u{6f0}\u{66a} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} \u{62d}\u{627}\u{6a9}\u{645}");
         assert_eq!(split.referrer_micros, 0);
-        assert_eq!(split.creator_net_micros, 80_000_000, "۸۰٪ به سازنده");
+        assert_eq!(split.creator_net_micros, 80_000_000, "\u{6f8}\u{6f0}\u{66a} \u{628}\u{647} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}");
         assert_eq!(split.effective_platform_bps, 2_000);
-        // پایِ وابستهٔ بی‌معرف صفر است — خزانه هر دو جریان را حمل می‌کند.
+        // the referrer-less affiliate leg is zero — the treasury carries both streams.
         assert_eq!(split.legs[2].amount_micros, 0);
         assert_eq!(split.legs[1].amount_micros, 20_000_000);
     }
@@ -891,7 +891,7 @@ mod tests {
 
     #[test]
     fn zero_sum_holds_via_precise_on_odd_amounts() {
-        // مبلغِ کج — گرد کردن فقط روی سازنده می‌بندد؛ صفر اتلافِ کل.
+        // an odd amount — rounding closes on the creator only; zero total leakage.
         for gross in [3i128, 7, 12_345_678, GROSS, 999_999_999] {
             let split = compute_day_one_atomic_split(
                 &DayOneRevenueCharter::DAY_ONE,

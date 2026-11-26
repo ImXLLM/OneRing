@@ -44,7 +44,7 @@ with httpx.Client(timeout=45) as c:
         headers={"Authorization": f"Bearer {env['KIAN_AI_PRIMARY_KEY']}",
                  "HTTP-Referer": "https://kian.app", "X-Title": "KIAN Studio"},
         json={"model": model,
-              "messages": [{"role": "user", "content": "فقط کلمهٔ «سلام» را بنویس."}]})
+              "messages": [{"role": "user", "content": "Write only the word «Hello»."}]})
     print(json.dumps({"status": r.status_code, "model": model,
                       "head": r.text[:120].replace("\n", " ") if r.status_code != 200 else ""}))
 PY
@@ -111,7 +111,7 @@ with httpx.Client(timeout=120) as c:
     chat = c.post(
         f"{api}/builder/sessions/{sid}/chat",
         headers=hdr,
-        json={"message": "می‌خوام برای بازار کیان یک ماشین‌حساب ریسک ترید بسازم: موجودی، درصد ریسک، حد ضرر و حجم پوزیشن. دارک نئون، RTL فارسی.", "forceGenerate": True},
+        json={"message": "I want to build a trade risk calculator for the KIAN market: balance, risk percentage, stop-loss, and position size. Dark neon, RTL Persian.", "forceGenerate": True},
     )
     chat.raise_for_status()
     out["chat_ms"] = int((time.perf_counter() - t0) * 1000)
@@ -151,7 +151,7 @@ if preflight_live:
     assert out["chat"]["html_doctype"] and out["chat"]["html_close"], "LLM HTML must be a full document"
     verdict = "PASS — Slot 1 (openrouter/free) returned HTTP 200, usedFallback=false, real LLM Persian RTL artifact generated & published"
 else:
-    # همهٔ لِین‌ها مرده‌اند — قرارداد تاب‌آوری پورت brain.py: تاب‌آوری نرم به سنتز محلی، هرگز ۵۰۳
+    # all lanes are dead — the brain.py port's resilience contract: fail soft to local synthesis, never 503
     assert used is True, f"all lanes dead → graceful degradation expected (usedFallback=true), got {used}"
     assert out["chat"]["html_doctype"] and out["chat"]["html_close"], "synthesized artifact must be a full document"
     assert out["chat"]["html_rtl"], "synthesized artifact must be Persian RTL"

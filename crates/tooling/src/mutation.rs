@@ -1,21 +1,21 @@
-//! موتور موتاسیون بذردار — پورت `fuzz_lite.rs` پروژهٔ DropAgentX-pro.
+//! The seeded mutation engine — port of `fuzz_lite.rs` from the DropAgentX-pro project.
 //!
-//! xorshift64 قطعی و بدون وابستگی؛ جهش‌ها: جایگزینی/درج/حذف بایت، برش،
-//! درج رشتهٔ تزریق و بایت‌های UTF-8 شکسته — همان ترکیب‌هایی که fuzz واقعی
-//! در چند دقیقه می‌یابد، اینجا به‌صورت `#[test]` همیشه‌روشن.
+//! Deterministic, dependency-free xorshift64; mutations: byte replace/insert/delete, truncation,
+//! injection-string and broken UTF-8 byte insertion — the same combinations real fuzzing
+//! finds within minutes, here as always-on `#[test]` cases.
 
-/// گشتیابی قطعی xorshift64 — بدون وابستگی، بدون nightly.
+/// Deterministic xorshift64 PRNG — no dependencies, no nightly.
 pub struct Rng(u64);
 
 impl Rng {
-    /// بذر اولیه — صفر ممنوع (xorshift روی صفر می‌میرد).
+    /// Initial seed — zero is forbidden (xorshift dies on zero).
     #[must_use]
     pub fn seeded(seed: u64) -> Self {
         Self(if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed })
     }
 
-    /// عدد تصادفی بعدی — عین `fuzz_lite.rs` (صفت `Iterator` نیست —
-    /// PRNG اختصاصیِ فاز؛ نام port fidelity را حفظ می‌کند).
+    /// Next random number — exactly `fuzz_lite.rs` (not the `Iterator` trait —
+    /// the phase's dedicated PRNG; the name preserves port fidelity).
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> u64 {
         let mut x = self.0;
@@ -26,9 +26,9 @@ impl Rng {
         x
     }
 
-    /// جهش بایت‌آرایه — حذف/درج/جایگزینی بایت + برش + درج بایت خراب UTF-8.
-    /// برش `u64→usize` در PRNG فاز فقط مادولو می‌شود — روی هدف ۳۲بیت هم
-    /// توزیع جهش تغییر معنایی نمی‌کند؛ allow هدف‌مندِ صریح.
+    /// Mutate a byte array — byte delete/insert/replace + truncation + broken UTF-8 byte insertion.
+    /// The `u64→usize` truncation in the phase PRNG is only a modulo — on a 32-bit target too
+    /// the mutation distribution stays semantically unchanged; an explicit, targeted allow.
     #[allow(clippy::cast_possible_truncation)]
     pub fn mutate(&mut self, bytes: &mut Vec<u8>) {
         if bytes.is_empty() {
@@ -52,7 +52,7 @@ impl Rng {
                 let keep = (self.next() as usize) % bytes.len();
                 bytes.truncate(keep);
             }
-            // درج بایت‌های ادامهٔ UTF-8 شکسته — خصمانه‌ترین حالت پارسرها
+            // inserting broken UTF-8 continuation bytes — the most hostile case for parsers
             _ => {
                 let i = (self.next() as usize) % bytes.len();
                 bytes.insert(i, 0xF0);
@@ -66,7 +66,7 @@ impl Rng {
 mod tests {
     use super::*;
 
-    /// قطعیت — همان بذر، همان دنباله.
+    /// Determinism — same seed, same sequence.
     #[test]
     fn rng_is_deterministic() {
         let mut a = Rng::seeded(42);
@@ -77,15 +77,15 @@ mod tests {
         assert_ne!(Rng::seeded(1).next(), Rng::seeded(2).next());
     }
 
-    /// بذر صفر هم دنبالهٔ زنده می‌دهد.
+    /// A zero seed still yields a live sequence.
     #[test]
     fn zero_seed_is_alive() {
         let mut r = Rng::seeded(0);
         assert_ne!(r.next(), 0);
     }
 
-    /// جهش هرگز روی دادهٔ خالی panic نمی‌کند و روی دادهٔ غیرخالی هیچ گزارشی
-    /// از خود باقی نمی‌گذارد (بدون کش، بدون سرریز).
+    /// Mutation never panics on empty data and leaves no report
+    /// of itself on non-empty data (no cache, no overflow).
     #[test]
     fn mutation_is_safe_on_all_shapes() {
         let mut rng = Rng::seeded(0x1234_5678);

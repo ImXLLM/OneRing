@@ -83,7 +83,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>سیستم شیشه‌ای مایع</title>
+<title>&#x633;&#x6cc;&#x633;&#x62a;&#x645; &#x634;&#x6cc;&#x634;&#x647;‌&#x627;&#x6cc; &#x645;&#x627;&#x6cc;&#x639;</title>
 <style>
 :root{
   --ink: oklch(0.27 0.05 290);
@@ -404,19 +404,19 @@ svg{display:block}
 <div class="shell">
   <header class="topbar">
     <div class="greet">
-      <h1 id="greet">عصر بخیر، رامین</h1>
-      <p id="today">امروز</p>
+      <h1 id="greet">&#x639;&#x635;&#x631; &#x628;&#x62e;&#x6cc;&#x631;&#x60c; &#x631;&#x627;&#x645;&#x6cc;&#x646;</h1>
+      <p id="today">&#x627;&#x645;&#x631;&#x648;&#x632;</p>
     </div>
     <div class="status">
-      <span class="chip glass-lite"><span data-icon="sun"></span>تهران · ۲۴°</span>
-      <span class="chip glass-lite clock" id="clock" aria-label="ساعت">۰۰:۰۰</span>
-      <button class="chip glass-lite icon-chip" id="muteBtn" aria-label="قطع صدا" aria-pressed="false"><span data-icon="volume"></span></button>
+      <span class="chip glass-lite"><span data-icon="sun"></span>&#x62a;&#x647;&#x631;&#x627;&#x646; · &#x6f2;&#x6f4;°</span>
+      <span class="chip glass-lite clock" id="clock" aria-label="&#x633;&#x627;&#x639;&#x62a;">&#x6f0;&#x6f0;:&#x6f0;&#x6f0;</span>
+      <button class="chip glass-lite icon-chip" id="muteBtn" aria-label="&#x642;&#x637;&#x639; &#x635;&#x62f;&#x627;" aria-pressed="false"><span data-icon="volume"></span></button>
     </div>
   </header>
 
   <main class="stage">
     <!-- Music -->
-    <section class="glass card music" data-card id="musicCard" aria-label="پخش‌کننده صوتی مایع">
+    <section class="glass card music" data-card id="musicCard" aria-label="&#x67e;&#x62e;&#x634;‌&#x6a9;&#x646;&#x646;&#x62f;&#x647; &#x635;&#x648;&#x62a;&#x6cc; &#x645;&#x627;&#x6cc;&#x639;">
       <div class="blobs"><div class="blobs-goo">
         <i class="blob" style="width:170px;height:170px;left:-30px;bottom:-60px;background:oklch(0.82 0.12 40)"></i>
         <i class="blob" style="width:120px;height:120px;left:90px;bottom:-40px;background:oklch(0.78 0.12 300)"></i>
@@ -426,35 +426,35 @@ svg{display:block}
       <div class="content">
         <div class="card-head">
           <div class="titlewrap" id="titleWrap">
-            <p class="eyebrow">پخش‌کننده صوتی مایع</p>
-            <h2 id="trackTitle">باران در شیراز</h2>
-            <p class="muted" id="trackArtist">ارکستر مصنوعی · آلبوم شیشه</p>
+            <p class="eyebrow">&#x67e;&#x62e;&#x634;‌&#x6a9;&#x646;&#x646;&#x62f;&#x647; &#x635;&#x648;&#x62a;&#x6cc; &#x645;&#x627;&#x6cc;&#x639;</p>
+            <h2 id="trackTitle">&#x628;&#x627;&#x631;&#x627;&#x646; &#x62f;&#x631; &#x634;&#x6cc;&#x631;&#x627;&#x632;</h2>
+            <p class="muted" id="trackArtist">&#x627;&#x631;&#x6a9;&#x633;&#x62a;&#x631; &#x645;&#x635;&#x646;&#x648;&#x639;&#x6cc; · &#x622;&#x644;&#x628;&#x648;&#x645; &#x634;&#x6cc;&#x634;&#x647;</p>
           </div>
-          <button class="icon-btn" id="likeBtn" aria-label="پسندیدن" aria-pressed="false"><span data-icon="heart"></span></button>
+          <button class="icon-btn" id="likeBtn" aria-label="&#x67e;&#x633;&#x646;&#x62f;&#x6cc;&#x62f;&#x646;" aria-pressed="false"><span data-icon="heart"></span></button>
         </div>
-        <div class="disc-stage" id="discStage" role="button" tabindex="0" aria-label="پخش یا توقف">
+        <div class="disc-stage" id="discStage" role="button" tabindex="0" aria-label="&#x67e;&#x62e;&#x634; &#x6cc;&#x627; &#x62a;&#x648;&#x642;&#x641;">
           <div class="disc-holder">
-            <div class="disc" id="disc"><div class="disc-label" id="discLabel">۰۱</div></div>
+            <div class="disc" id="disc"><div class="disc-label" id="discLabel">&#x6f0;&#x6f1;</div></div>
             <div class="disc-glare"></div>
           </div>
           <canvas id="wave"></canvas>
         </div>
         <div class="scrub">
-          <span id="tCur">۰:۰۰</span>
+          <span id="tCur">&#x6f0;:&#x6f0;&#x6f0;</span>
           <div class="lslider" id="scrub"></div>
-          <span id="tDur">۳:۲۴</span>
+          <span id="tDur">&#x6f3;:&#x6f2;&#x6f4;</span>
         </div>
         <div class="controls">
-          <button class="ctl" id="prevBtn" aria-label="قبلی"><span data-icon="prev"></span></button>
-          <button class="ctl play" id="playBtn" aria-label="پخش"></button>
-          <button class="ctl" id="nextBtn" aria-label="بعدی"><span data-icon="next"></span></button>
+          <button class="ctl" id="prevBtn" aria-label="&#x642;&#x628;&#x644;&#x6cc;"><span data-icon="prev"></span></button>
+          <button class="ctl play" id="playBtn" aria-label="&#x67e;&#x62e;&#x634;"></button>
+          <button class="ctl" id="nextBtn" aria-label="&#x628;&#x639;&#x62f;&#x6cc;"><span data-icon="next"></span></button>
         </div>
         <div class="vol"><span data-icon="volume"></span><div class="lslider" id="volSlider"></div></div>
       </div>
     </section>
 
     <!-- Habits -->
-    <section class="glass card habits" data-card id="habitsCard" aria-label="ماتریس عادت‌ها">
+    <section class="glass card habits" data-card id="habitsCard" aria-label="&#x645;&#x627;&#x62a;&#x631;&#x6cc;&#x633; &#x639;&#x627;&#x62f;&#x62a;‌&#x647;&#x627;">
       <div class="blobs"><div class="blobs-goo">
         <i class="blob" style="width:150px;height:150px;right:-40px;bottom:-60px;background:oklch(0.84 0.1 60)"></i>
         <i class="blob" style="width:110px;height:110px;right:80px;bottom:-50px;background:oklch(0.82 0.1 160)"></i>
@@ -462,24 +462,24 @@ svg{display:block}
       <div class="sheen"></div>
       <div class="content">
         <div class="card-head">
-          <div><p class="eyebrow">ماتریس عادت‌ها</p><h2>این هفته</h2></div>
-          <span class="pill" id="habitPill">۰٪</span>
+          <div><p class="eyebrow">&#x645;&#x627;&#x62a;&#x631;&#x6cc;&#x633; &#x639;&#x627;&#x62f;&#x62a;‌&#x647;&#x627;</p><h2>&#x627;&#x6cc;&#x646; &#x647;&#x641;&#x62a;&#x647;</h2></div>
+          <span class="pill" id="habitPill">&#x6f0;&#x66a;</span>
         </div>
         <div class="hgrid" id="hgrid"></div>
-        <div class="hfoot"><span>ثبت‌شده تا امروز</span><b id="habitFoot">۰ از ۰</b></div>
+        <div class="hfoot"><span>&#x62b;&#x628;&#x62a;‌&#x634;&#x62f;&#x647; &#x62a;&#x627; &#x627;&#x645;&#x631;&#x648;&#x632;</span><b id="habitFoot">&#x6f0; &#x627;&#x632; &#x6f0;</b></div>
       </div>
     </section>
 
     <!-- Orb -->
-    <section class="orb-zone" id="orbZone" aria-label="کره وضعیت و تمرکز">
-      <p class="eyebrow">کره وضعیت و تمرکز</p>
+    <section class="orb-zone" id="orbZone" aria-label="&#x6a9;&#x631;&#x647; &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x648; &#x62a;&#x645;&#x631;&#x6a9;&#x632;">
+      <p class="eyebrow">&#x6a9;&#x631;&#x647; &#x648;&#x636;&#x639;&#x6cc;&#x62a; &#x648; &#x62a;&#x645;&#x631;&#x6a9;&#x632;</p>
       <div class="orb-wrap" id="orbWrap">
         <div class="orb-glow" id="orbGlow"></div>
-        <canvas id="orb" aria-label="کره انرژی، برای تحریک ضربه بزنید" role="img"></canvas>
-        <div class="orb-read"><small>انرژی سیستم</small><strong id="energy">۰٪</strong></div>
-        <div class="orb-chip glass-lite chip-a"><span>تمرکز ذهنی</span><b id="focusChip">عمیق · ۷۲٪</b></div>
-        <div class="orb-chip glass-lite chip-b"><span>ضربان قلب</span><b id="hrChip">۶۸ ضربه</b></div>
-        <div class="orb-chip glass-lite chip-c"><span>ریتم تنفس</span><b id="breathChip">دم</b></div>
+        <canvas id="orb" aria-label="&#x6a9;&#x631;&#x647; &#x627;&#x646;&#x631;&#x698;&#x6cc;&#x60c; &#x628;&#x631;&#x627;&#x6cc; &#x62a;&#x62d;&#x631;&#x6cc;&#x6a9; &#x636;&#x631;&#x628;&#x647; &#x628;&#x632;&#x646;&#x6cc;&#x62f;" role="img"></canvas>
+        <div class="orb-read"><small>&#x627;&#x646;&#x631;&#x698;&#x6cc; &#x633;&#x6cc;&#x633;&#x62a;&#x645;</small><strong id="energy">&#x6f0;&#x66a;</strong></div>
+        <div class="orb-chip glass-lite chip-a"><span>&#x62a;&#x645;&#x631;&#x6a9;&#x632; &#x630;&#x647;&#x646;&#x6cc;</span><b id="focusChip">&#x639;&#x645;&#x6cc;&#x642; · &#x6f7;&#x6f2;&#x66a;</b></div>
+        <div class="orb-chip glass-lite chip-b"><span>&#x636;&#x631;&#x628;&#x627;&#x646; &#x642;&#x644;&#x628;</span><b id="hrChip">&#x6f6;&#x6f8; &#x636;&#x631;&#x628;&#x647;</b></div>
+        <div class="orb-chip glass-lite chip-c"><span>&#x631;&#x6cc;&#x62a;&#x645; &#x62a;&#x646;&#x641;&#x633;</span><b id="breathChip">&#x62f;&#x645;</b></div>
       </div>
       <div class="glass focus-panel" data-card>
         <div class="blobs"><div class="blobs-goo">
@@ -488,18 +488,18 @@ svg{display:block}
         </div></div>
         <div class="sheen"></div>
         <div class="content">
-          <div class="fp-row"><span>شدت تمرکز</span><b id="focusVal">۷۲٪</b></div>
+          <div class="fp-row"><span>&#x634;&#x62f;&#x62a; &#x62a;&#x645;&#x631;&#x6a9;&#x632;</span><b id="focusVal">&#x6f7;&#x6f2;&#x66a;</b></div>
           <div class="lslider" id="focusSlider"></div>
           <div class="fp-actions">
-            <button class="session-btn" id="sessionBtn"><span data-icon="timer"></span><span id="sessionLabel">شروع جلسه ۲۵ دقیقه‌ای</span></button>
-            <span class="fp-note" id="sessionNote">۳ جلسه امروز</span>
+            <button class="session-btn" id="sessionBtn"><span data-icon="timer"></span><span id="sessionLabel">&#x634;&#x631;&#x648;&#x639; &#x62c;&#x644;&#x633;&#x647; &#x6f2;&#x6f5; &#x62f;&#x642;&#x6cc;&#x642;&#x647;‌&#x627;&#x6cc;</span></button>
+            <span class="fp-note" id="sessionNote">&#x6f3; &#x62c;&#x644;&#x633;&#x647; &#x627;&#x645;&#x631;&#x648;&#x632;</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Tasks -->
-    <section class="glass card tasks" data-card id="tasksCard" aria-label="مدیریت کارهای روزانه">
+    <section class="glass card tasks" data-card id="tasksCard" aria-label="&#x645;&#x62f;&#x6cc;&#x631;&#x6cc;&#x62a; &#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x631;&#x648;&#x632;&#x627;&#x646;&#x647;">
       <div class="blobs"><div class="blobs-goo">
         <i class="blob" style="width:190px;height:190px;left:-50px;bottom:-80px;background:oklch(0.8 0.11 270)"></i>
         <i class="blob" style="width:130px;height:130px;left:110px;bottom:-60px;background:oklch(0.85 0.1 20)"></i>
@@ -508,36 +508,36 @@ svg{display:block}
       <div class="sheen"></div>
       <div class="content">
         <div class="card-head">
-          <div><p class="eyebrow">مدیریت کارهای روزانه</p><h2>کارهای امروز</h2></div>
-          <span class="pill" id="leftPill">۵ کار مانده</span>
+          <div><p class="eyebrow">&#x645;&#x62f;&#x6cc;&#x631;&#x6cc;&#x62a; &#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x631;&#x648;&#x632;&#x627;&#x646;&#x647;</p><h2>&#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x627;&#x645;&#x631;&#x648;&#x632;</h2></div>
+          <span class="pill" id="leftPill">&#x6f5; &#x6a9;&#x627;&#x631; &#x645;&#x627;&#x646;&#x62f;&#x647;</span>
         </div>
         <form class="add-task" id="addForm" autocomplete="off">
-          <label class="sr" for="newTask">کار تازه</label>
-          <input id="newTask" maxlength="60" placeholder="کار تازه‌ای بنویس…">
-          <button class="add-btn" type="submit" aria-label="افزودن کار"><span data-icon="plus"></span></button>
+          <label class="sr" for="newTask">&#x6a9;&#x627;&#x631; &#x62a;&#x627;&#x632;&#x647;</label>
+          <input id="newTask" maxlength="60" placeholder="&#x6a9;&#x627;&#x631; &#x62a;&#x627;&#x632;&#x647;‌&#x627;&#x6cc; &#x628;&#x646;&#x648;&#x6cc;&#x633;…">
+          <button class="add-btn" type="submit" aria-label="&#x627;&#x641;&#x632;&#x648;&#x62f;&#x646; &#x6a9;&#x627;&#x631;"><span data-icon="plus"></span></button>
         </form>
-        <ul class="task-list" id="pendingList" data-zone="pending" aria-label="کارهای در انتظار"></ul>
+        <ul class="task-list" id="pendingList" data-zone="pending" aria-label="&#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x62f;&#x631; &#x627;&#x646;&#x62a;&#x638;&#x627;&#x631;"></ul>
         <div class="basin" id="doneZone" data-zone="done">
           <canvas id="basinCv"></canvas>
-          <div class="basin-head"><span>انجام‌شده</span><span id="doneCount">۱ از ۶</span></div>
-          <ul class="task-list" id="doneList" aria-label="کارهای انجام‌شده"></ul>
+          <div class="basin-head"><span>&#x627;&#x646;&#x62c;&#x627;&#x645;‌&#x634;&#x62f;&#x647;</span><span id="doneCount">&#x6f1; &#x627;&#x632; &#x6f6;</span></div>
+          <ul class="task-list" id="doneList" aria-label="&#x6a9;&#x627;&#x631;&#x647;&#x627;&#x6cc; &#x627;&#x646;&#x62c;&#x627;&#x645;‌&#x634;&#x62f;&#x647;"></ul>
         </div>
       </div>
     </section>
   </main>
 </div>
 
-<nav class="dock" id="dock" aria-label="داک">
+<nav class="dock" id="dock" aria-label="&#x62f;&#x627;&#x6a9;">
   <div class="dock-bg"></div>
   <div class="dock-items">
-    <button class="dock-item" data-action="home" aria-label="خانه"><span class="dock-icon" style="--h:280" data-icon="home"></span><span class="dock-tip">خانه</span></button>
-    <button class="dock-item" data-action="music" aria-label="موسیقی"><span class="dock-icon" style="--h:22" data-icon="music"></span><span class="dock-tip">موسیقی</span></button>
-    <button class="dock-item" data-action="tasks" aria-label="کارها"><span class="dock-icon" style="--h:175" data-icon="tasks"></span><span class="dock-tip">کارها</span></button>
-    <button class="dock-item" data-action="orb" aria-label="تمرکز"><span class="dock-icon" style="--h:305" data-icon="orb"></span><span class="dock-tip">تمرکز</span></button>
-    <button class="dock-item" data-action="habits" aria-label="عادت‌ها"><span class="dock-icon" style="--h:62" data-icon="habit"></span><span class="dock-tip">عادت‌ها</span></button>
-    <button class="dock-item" data-action="chat" data-badge="2" aria-label="پیام‌ها"><span class="dock-icon" style="--h:205" data-icon="chat"></span><span class="dock-tip">پیام‌ها</span></button>
-    <button class="dock-item" data-action="calendar" data-badge="1" aria-label="تقویم"><span class="dock-icon" style="--h:350" data-icon="calendar"></span><span class="dock-tip">تقویم</span></button>
-    <button class="dock-item" data-action="notif" data-badge="4" aria-label="اعلان‌ها" aria-expanded="false" aria-controls="notif"><span class="dock-icon" style="--h:262" data-icon="bell"></span><span class="dock-tip">اعلان‌ها</span></button>
+    <button class="dock-item" data-action="home" aria-label="&#x62e;&#x627;&#x646;&#x647;"><span class="dock-icon" style="--h:280" data-icon="home"></span><span class="dock-tip">&#x62e;&#x627;&#x646;&#x647;</span></button>
+    <button class="dock-item" data-action="music" aria-label="&#x645;&#x648;&#x633;&#x6cc;&#x642;&#x6cc;"><span class="dock-icon" style="--h:22" data-icon="music"></span><span class="dock-tip">&#x645;&#x648;&#x633;&#x6cc;&#x642;&#x6cc;</span></button>
+    <button class="dock-item" data-action="tasks" aria-label="&#x6a9;&#x627;&#x631;&#x647;&#x627;"><span class="dock-icon" style="--h:175" data-icon="tasks"></span><span class="dock-tip">&#x6a9;&#x627;&#x631;&#x647;&#x627;</span></button>
+    <button class="dock-item" data-action="orb" aria-label="&#x62a;&#x645;&#x631;&#x6a9;&#x632;"><span class="dock-icon" style="--h:305" data-icon="orb"></span><span class="dock-tip">&#x62a;&#x645;&#x631;&#x6a9;&#x632;</span></button>
+    <button class="dock-item" data-action="habits" aria-label="&#x639;&#x627;&#x62f;&#x62a;‌&#x647;&#x627;"><span class="dock-icon" style="--h:62" data-icon="habit"></span><span class="dock-tip">&#x639;&#x627;&#x62f;&#x62a;‌&#x647;&#x627;</span></button>
+    <button class="dock-item" data-action="chat" data-badge="2" aria-label="&#x67e;&#x6cc;&#x627;&#x645;‌&#x647;&#x627;"><span class="dock-icon" style="--h:205" data-icon="chat"></span><span class="dock-tip">&#x67e;&#x6cc;&#x627;&#x645;‌&#x647;&#x627;</span></button>
+    <button class="dock-item" data-action="calendar" data-badge="1" aria-label="&#x62a;&#x642;&#x648;&#x6cc;&#x645;"><span class="dock-icon" style="--h:350" data-icon="calendar"></span><span class="dock-tip">&#x62a;&#x642;&#x648;&#x6cc;&#x645;</span></button>
+    <button class="dock-item" data-action="notif" data-badge="4" aria-label="&#x627;&#x639;&#x644;&#x627;&#x646;‌&#x647;&#x627;" aria-expanded="false" aria-controls="notif"><span class="dock-icon" style="--h:262" data-icon="bell"></span><span class="dock-tip">&#x627;&#x639;&#x644;&#x627;&#x646;‌&#x647;&#x627;</span></button>
   </div>
   <div class="dock-ind"><i></i><i></i></div>
 </nav>
@@ -546,11 +546,11 @@ svg{display:block}
   <div class="sheen"></div>
   <div class="content">
     <div class="card-head">
-      <div><p class="eyebrow">مرکز اعلان‌ها</p><h2 id="notifTitle">اعلان‌ها</h2></div>
-      <button class="text-btn" id="clearAll">پاک کردن همه</button>
+      <div><p class="eyebrow">&#x645;&#x631;&#x6a9;&#x632; &#x627;&#x639;&#x644;&#x627;&#x646;‌&#x647;&#x627;</p><h2 id="notifTitle">&#x627;&#x639;&#x644;&#x627;&#x646;‌&#x647;&#x627;</h2></div>
+      <button class="text-btn" id="clearAll">&#x67e;&#x627;&#x6a9; &#x6a9;&#x631;&#x62f;&#x646; &#x647;&#x645;&#x647;</button>
     </div>
     <ul class="notif-list" id="notifList"></ul>
-    <p class="empty" id="notifEmpty" hidden>هیچ اعلانی نمانده. آرامش محض.</p>
+    <p class="empty" id="notifEmpty" hidden>&#x647;&#x6cc;&#x686; &#x627;&#x639;&#x644;&#x627;&#x646;&#x6cc; &#x646;&#x645;&#x627;&#x646;&#x62f;&#x647;. &#x622;&#x631;&#x627;&#x645;&#x634; &#x645;&#x62d;&#x636;.</p>
   </div>
 </aside>
 
@@ -565,7 +565,7 @@ svg{display:block}
 /* ================= utilities ================= */
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const FA='۰۱۲۳۴۵۶۷۸۹';
+const FA='\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9';
 const fa=v=>String(v).replace(/\d/g,d=>FA[d]);
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -688,9 +688,9 @@ const Sound=(()=>{
 
   /* ---- generative music engine (Persian modal scales with quarter tones) ---- */
   const TRACKS=[
-    {title:'باران در شیراز',artist:'ارکستر مصنوعی · آلبوم شیشه',bpm:82,dur:204,root:220,scale:[0,1.5,3,5,7,8,10],prog:[0,5,3,4]},
-    {title:'مه روی دماوند',artist:'نوای سپید · جلسه‌های کوهستان',bpm:70,dur:186,root:196,scale:[0,2,3.5,5,7,8.5,10],prog:[0,3,4,0]},
-    {title:'شب‌های کویر',artist:'گروه سراب · تک‌آهنگ',bpm:94,dur:228,root:233.08,scale:[0,1,4,5,7,8,10],prog:[0,1,0,6]}
+    {title:'\u0628\u0627\u0631\u0627\u0646 \u062f\u0631 \u0634\u06cc\u0631\u0627\u0632',artist:'\u0627\u0631\u06a9\u0633\u062a\u0631 \u0645\u0635\u0646\u0648\u0639\u06cc · \u0622\u0644\u0628\u0648\u0645 \u0634\u06cc\u0634\u0647',bpm:82,dur:204,root:220,scale:[0,1.5,3,5,7,8,10],prog:[0,5,3,4]},
+    {title:'\u0645\u0647 \u0631\u0648\u06cc \u062f\u0645\u0627\u0648\u0646\u062f',artist:'\u0646\u0648\u0627\u06cc \u0633\u067e\u06cc\u062f · \u062c\u0644\u0633\u0647‌\u0647\u0627\u06cc \u06a9\u0648\u0647\u0633\u062a\u0627\u0646',bpm:70,dur:186,root:196,scale:[0,2,3.5,5,7,8.5,10],prog:[0,3,4,0]},
+    {title:'\u0634\u0628‌\u0647\u0627\u06cc \u06a9\u0648\u06cc\u0631',artist:'\u06af\u0631\u0648\u0647 \u0633\u0631\u0627\u0628 · \u062a\u06a9‌\u0622\u0647\u0646\u06af',bpm:94,dur:228,root:233.08,scale:[0,1,4,5,7,8,10],prog:[0,1,0,6]}
   ];
   const M={track:0,pos:0,playing:false,vol:.7,nextT:0,step:0,anchorT:0,anchorPos:0,timer:null,tracks:TRACKS,
     get tr(){return TRACKS[this.track];},
@@ -825,7 +825,7 @@ const Toast=(()=>{
 /* ================= liquid slider ================= */
 const sliders=[];
 class LiquidSlider{
-  constructor(el,{value=0,label='',onInput=()=>{},onRelease=()=>{},format=v=>fa(Math.round(v*100))+'٪'}={}){
+  constructor(el,{value=0,label='',onInput=()=>{},onRelease=()=>{},format=v=>fa(Math.round(v*100))+'\u066a'}={}){
     this.el=el;this.v=value;this.onInput=onInput;this.onRelease=onRelease;this.format=format;
     el.innerHTML='<div class="ls-track"></div><div class="ls-goo"><div class="ls-fill"></div><div class="ls-thumb"></div></div><div class="ls-knob"></div>';
     this.fill=$('.ls-fill',el);this.thumb=$('.ls-thumb',el);this.knob=$('.ls-knob',el);
@@ -962,24 +962,24 @@ const Orb=(()=>{
 (()=>{
   const en=$('#energy'),hr=$('#hrChip'),br=$('#breathChip'),chips=$$('.orb-chip');
   const es=new Spring(0,14,7.5);es.t=92;let shown=-1,hrV=68,hrT=0,phase='';
-  onTick(dt=>{es.step(dt);const v=Math.round(clamp(es.x,0,99));if(v!==shown){shown=v;en.textContent=fa(v)+'٪';}
-    hrT+=dt;if(hrT>2.6){hrT=0;hrV=clamp(hrV+Math.round(Math.random()*4-2),64,74);hr.textContent=fa(hrV)+' ضربه';}
-    const ph=Math.sin(T*1.25)>=0?'دم':'بازدم';if(ph!==phase){phase=ph;br.textContent=ph;}
+  onTick(dt=>{es.step(dt);const v=Math.round(clamp(es.x,0,99));if(v!==shown){shown=v;en.textContent=fa(v)+'\u066a';}
+    hrT+=dt;if(hrT>2.6){hrT=0;hrV=clamp(hrV+Math.round(Math.random()*4-2),64,74);hr.textContent=fa(hrV)+' \u0636\u0631\u0628\u0647';}
+    const ph=Math.sin(T*1.25)>=0?'\u062f\u0645':'\u0628\u0627\u0632\u062f\u0645';if(ph!==phase){phase=ph;br.textContent=ph;}
     chips.forEach((c,i)=>{const x=Math.sin(T*.6+i*2)*6,y=Math.cos(T*.5+i*1.3)*8;c.style.transform=`translate(${x.toFixed(2)}px,${y.toFixed(2)}px)`;});});
 })();
 
 /* ================= focus panel ================= */
 (()=>{
   const val=$('#focusVal'),chip=$('#focusChip');
-  const word=v=>v>=.7?'عمیق':v>=.4?'متعادل':'پراکنده';
-  const upd=v=>{const p=fa(Math.round(v*100))+'٪';val.textContent=p;chip.textContent=word(v)+' · '+p;Orb.focus(v);};
-  new LiquidSlider($('#focusSlider'),{value:.72,label:'شدت تمرکز',onInput:upd,onRelease:v=>{if(v>=.7)Sound.chime(784);}});upd(.72);
+  const word=v=>v>=.7?'\u0639\u0645\u06cc\u0642':v>=.4?'\u0645\u062a\u0639\u0627\u062f\u0644':'\u067e\u0631\u0627\u06a9\u0646\u062f\u0647';
+  const upd=v=>{const p=fa(Math.round(v*100))+'\u066a';val.textContent=p;chip.textContent=word(v)+' · '+p;Orb.focus(v);};
+  new LiquidSlider($('#focusSlider'),{value:.72,label:'\u0634\u062f\u062a \u062a\u0645\u0631\u06a9\u0632',onInput:upd,onRelease:v=>{if(v>=.7)Sound.chime(784);}});upd(.72);
   const btn=$('#sessionBtn'),lab=$('#sessionLabel'),note=$('#sessionNote');let left=0,timer=null,count=3;
-  function stop(done){clearInterval(timer);timer=null;btn.classList.remove('running');lab.textContent='شروع جلسه ۲۵ دقیقه‌ای';
-    if(done){count++;note.textContent=fa(count)+' جلسه امروز';Sound.arp([523.25,659.25,783.99,1046.5]);Toast.show('جلسه تمرکز تمام شد. کمی قدم بزن.','orb',300);FX.burst(innerWidth/2,innerHeight/2,40);}}
+  function stop(done){clearInterval(timer);timer=null;btn.classList.remove('running');lab.textContent='\u0634\u0631\u0648\u0639 \u062c\u0644\u0633\u0647 \u06f2\u06f5 \u062f\u0642\u06cc\u0642\u0647‌\u0627\u06cc';
+    if(done){count++;note.textContent=fa(count)+' \u062c\u0644\u0633\u0647 \u0627\u0645\u0631\u0648\u0632';Sound.arp([523.25,659.25,783.99,1046.5]);Toast.show('\u062c\u0644\u0633\u0647 \u062a\u0645\u0631\u06a9\u0632 \u062a\u0645\u0627\u0645 \u0634\u062f. \u06a9\u0645\u06cc \u0642\u062f\u0645 \u0628\u0632\u0646.','orb',300);FX.burst(innerWidth/2,innerHeight/2,40);}}
   btn.addEventListener('click',()=>{wobble(btn,10);
-    if(timer){stop(false);Sound.drop(.8);Toast.show('جلسه متوقف شد','timer',260);return;}
-    left=25*60;btn.classList.add('running');lab.textContent=fmtTime(left);Sound.chime(659.25);Orb.excite(.8);Toast.show('جلسه تمرکز شروع شد. نفس عمیق.','orb',300);
+    if(timer){stop(false);Sound.drop(.8);Toast.show('\u062c\u0644\u0633\u0647 \u0645\u062a\u0648\u0642\u0641 \u0634\u062f','timer',260);return;}
+    left=25*60;btn.classList.add('running');lab.textContent=fmtTime(left);Sound.chime(659.25);Orb.excite(.8);Toast.show('\u062c\u0644\u0633\u0647 \u062a\u0645\u0631\u06a9\u0632 \u0634\u0631\u0648\u0639 \u0634\u062f. \u0646\u0641\u0633 \u0639\u0645\u06cc\u0642.','orb',300);
     timer=setInterval(()=>{left--;lab.textContent=fmtTime(left);if(left<=0)stop(true);},1000);});
 })();
 
@@ -987,9 +987,9 @@ const Orb=(()=>{
 (()=>{
   const playBtn=$('#playBtn'),disc=$('#disc'),label=$('#discLabel'),tCur=$('#tCur'),tDur=$('#tDur'),tw=$('#titleWrap'),title=$('#trackTitle'),artist=$('#trackArtist');
   const wave=$('#wave'),wc=wave.getContext('2d');let WW=0,WH=0;
-  const setPlayIcon=()=>{playBtn.innerHTML=icon(Music.playing?'pause':'play');playBtn.setAttribute('aria-label',Music.playing?'توقف':'پخش');};setPlayIcon();
-  const scrub=new LiquidSlider($('#scrub'),{value:0,label:'موقعیت پخش',format:v=>fmtTime(v*Music.tr.dur),onInput:v=>{Music.seek(v*Music.tr.dur);}});
-  new LiquidSlider($('#volSlider'),{value:.7,label:'بلندی صدا',onInput:v=>Music.setVol(v)});
+  const setPlayIcon=()=>{playBtn.innerHTML=icon(Music.playing?'pause':'play');playBtn.setAttribute('aria-label',Music.playing?'\u062a\u0648\u0642\u0641':'\u067e\u062e\u0634');};setPlayIcon();
+  const scrub=new LiquidSlider($('#scrub'),{value:0,label:'\u0645\u0648\u0642\u0639\u06cc\u062a \u067e\u062e\u0634',format:v=>fmtTime(v*Music.tr.dur),onInput:v=>{Music.seek(v*Music.tr.dur);}});
+  new LiquidSlider($('#volSlider'),{value:.7,label:'\u0628\u0644\u0646\u062f\u06cc \u0635\u062f\u0627',onInput:v=>Music.setVol(v)});
   function toggle(){Sound.init();if(Music.playing){Music.pause();Sound.drop(.9);}else{Music.play();Sound.bubble(1);}setPlayIcon();wobble(playBtn,12);BG.addDrop(ptr.x,ptr.y,.5);}
   playBtn.addEventListener('click',toggle);
   const ds=$('#discStage');ds.addEventListener('click',toggle);ds.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
@@ -1024,37 +1024,37 @@ const Orb=(()=>{
 
 /* ================= habits ================= */
 (()=>{
-  const DAYS=['ش','ی','د','س','چ','پ','ج'],ti=(new Date().getDay()+1)%7;
-  const H=[{name:'نوشیدن ۸ لیوان آب',h:220,d:[1,1,1,0,1,1,0]},{name:'پیاده‌روی عصرگاهی',h:160,d:[1,0,1,1,0,1,1]},{name:'کتاب‌خوانی',h:295,d:[1,1,0,1,1,1,0]},{name:'خواب پیش از نیمه‌شب',h:30,d:[0,1,1,0,1,0,1]}];
+  const DAYS=['\u0634','\u06cc','\u062f','\u0633','\u0686','\u067e','\u062c'],ti=(new Date().getDay()+1)%7;
+  const H=[{name:'\u0646\u0648\u0634\u06cc\u062f\u0646 \u06f8 \u0644\u06cc\u0648\u0627\u0646 \u0622\u0628',h:220,d:[1,1,1,0,1,1,0]},{name:'\u067e\u06cc\u0627\u062f\u0647‌\u0631\u0648\u06cc \u0639\u0635\u0631\u06af\u0627\u0647\u06cc',h:160,d:[1,0,1,1,0,1,1]},{name:'\u06a9\u062a\u0627\u0628‌\u062e\u0648\u0627\u0646\u06cc',h:295,d:[1,1,0,1,1,1,0]},{name:'\u062e\u0648\u0627\u0628 \u067e\u06cc\u0634 \u0627\u0632 \u0646\u06cc\u0645\u0647‌\u0634\u0628',h:30,d:[0,1,1,0,1,0,1]}];
   H.forEach(x=>x.d=x.d.map((v,i)=>i<ti?v:0));
   const g=$('#hgrid'),pill=$('#habitPill'),foot=$('#habitFoot');
   let html='<span></span>'+DAYS.map((d,i)=>`<span class="hday${i===ti?' today':''}">${d}</span>`).join('');
   H.forEach((x,r)=>{html+=`<span class="hname" title="${esc(x.name)}">${esc(x.name)}</span>`;
-    x.d.forEach((v,i)=>{html+=`<button class="hcell${v?' on':''}${i===ti?' today':''}" style="--h:${x.h}" data-r="${r}" data-i="${i}" ${i>ti?'disabled':''} aria-pressed="${!!v}" aria-label="${esc(x.name)}، ${DAYS[i]}"><span class="f"></span></button>`;});});
+    x.d.forEach((v,i)=>{html+=`<button class="hcell${v?' on':''}${i===ti?' today':''}" style="--h:${x.h}" data-r="${r}" data-i="${i}" ${i>ti?'disabled':''} aria-pressed="${!!v}" aria-label="${esc(x.name)}\u060c ${DAYS[i]}"><span class="f"></span></button>`;});});
   g.innerHTML=html;
-  function stats(){let done=0;H.forEach(x=>x.d.forEach((v,i)=>{if(i<=ti&&v)done++;}));const poss=H.length*(ti+1);foot.textContent=fa(done)+' از '+fa(poss);pill.textContent=fa(Math.round(done/poss*100))+'٪';}
+  function stats(){let done=0;H.forEach(x=>x.d.forEach((v,i)=>{if(i<=ti&&v)done++;}));const poss=H.length*(ti+1);foot.textContent=fa(done)+' \u0627\u0632 '+fa(poss);pill.textContent=fa(Math.round(done/poss*100))+'\u066a';}
   stats();
   g.addEventListener('click',e=>{const b=e.target.closest('.hcell');if(!b||b.disabled)return;const r=+b.dataset.r,i=+b.dataset.i,x=H[r];x.d[i]=x.d[i]?0:1;
     b.classList.toggle('on',!!x.d[i]);b.setAttribute('aria-pressed',!!x.d[i]);
     if(x.d[i]){const rc=b.getBoundingClientRect();FX.burst(rc.left+rc.width/2,rc.top+rc.height/2,8,PAL,.45);Sound.bubble(.8+r*.15);
-      if(i===ti&&H.every(h=>h.d[ti])){Sound.arp([587.33,739.99,880]);Toast.show('همه عادت‌های امروز تکمیل شد','habit',62);}}
+      if(i===ti&&H.every(h=>h.d[ti])){Sound.arp([587.33,739.99,880]);Toast.show('\u0647\u0645\u0647 \u0639\u0627\u062f\u062a‌\u0647\u0627\u06cc \u0627\u0645\u0631\u0648\u0632 \u062a\u06a9\u0645\u06cc\u0644 \u0634\u062f','habit',62);}}
     else Sound.drop(.85);stats();});
 })();
 
 /* ================= tasks: data + render ================= */
-const TAGS={'طراحی':'oklch(0.58 0.17 285)','جلسه':'oklch(0.64 0.19 22)','نوشتن':'oklch(0.74 0.13 55)','سلامتی':'oklch(0.62 0.1 180)','یادگیری':'oklch(0.66 0.12 250)','شخصی':'oklch(0.6 0.13 330)'};
+const TAGS={'\u0637\u0631\u0627\u062d\u06cc':'oklch(0.58 0.17 285)','\u062c\u0644\u0633\u0647':'oklch(0.64 0.19 22)','\u0646\u0648\u0634\u062a\u0646':'oklch(0.74 0.13 55)','\u0633\u0644\u0627\u0645\u062a\u06cc':'oklch(0.62 0.1 180)','\u06cc\u0627\u062f\u06af\u06cc\u0631\u06cc':'oklch(0.66 0.12 250)','\u0634\u062e\u0635\u06cc':'oklch(0.6 0.13 330)'};
 let uid=0;const mk=(title,tag,time)=>({id:'t'+(++uid),title,tag,time});
-const tstate={pending:[mk('بازبینی طراحی داشبورد','طراحی','10:30'),mk('تماس با تیم محصول','جلسه','12:00'),mk('نوشتن گزارش هفتگی','نوشتن','14:00'),mk('ورزش عصرگاهی، ۳۰ دقیقه','سلامتی','18:00'),mk('مطالعه فصل پنجم کتاب','یادگیری','21:00')],
-  done:[mk('مدیتیشن صبحگاهی','سلامتی','07:00')]};
+const tstate={pending:[mk('\u0628\u0627\u0632\u0628\u06cc\u0646\u06cc \u0637\u0631\u0627\u062d\u06cc \u062f\u0627\u0634\u0628\u0648\u0631\u062f','\u0637\u0631\u0627\u062d\u06cc','10:30'),mk('\u062a\u0645\u0627\u0633 \u0628\u0627 \u062a\u06cc\u0645 \u0645\u062d\u0635\u0648\u0644','\u062c\u0644\u0633\u0647','12:00'),mk('\u0646\u0648\u0634\u062a\u0646 \u06af\u0632\u0627\u0631\u0634 \u0647\u0641\u062a\u06af\u06cc','\u0646\u0648\u0634\u062a\u0646','14:00'),mk('\u0648\u0631\u0632\u0634 \u0639\u0635\u0631\u06af\u0627\u0647\u06cc\u060c \u06f3\u06f0 \u062f\u0642\u06cc\u0642\u0647','\u0633\u0644\u0627\u0645\u062a\u06cc','18:00'),mk('\u0645\u0637\u0627\u0644\u0639\u0647 \u0641\u0635\u0644 \u067e\u0646\u062c\u0645 \u06a9\u062a\u0627\u0628','\u06cc\u0627\u062f\u06af\u06cc\u0631\u06cc','21:00')],
+  done:[mk('\u0645\u062f\u06cc\u062a\u06cc\u0634\u0646 \u0635\u0628\u062d\u06af\u0627\u0647\u06cc','\u0633\u0644\u0627\u0645\u062a\u06cc','07:00')]};
 const pendingList=$('#pendingList'),doneList=$('#doneList'),doneZone=$('#doneZone');
 const findTask=id=>{for(const k of ['pending','done']){const i=tstate[k].findIndex(t=>t.id===id);if(i>=0)return {k,i,t:tstate[k][i]};}return null;};
-const taskHTML=(t,done)=>`<li class="task${done?' is-done':''}" data-id="${t.id}"><button class="check" aria-label="${done?'بازگرداندن به کارها':'علامت انجام شد'}">${icon('check')}</button><div class="t-body"><span class="t-title">${esc(t.title)}</span><span class="t-meta"><i class="tag-dot" style="--tc:${TAGS[t.tag]||TAGS['شخصی']}"></i>${esc(t.tag)}${t.time?' · '+fa(t.time):''}</span></div><span class="grip" aria-hidden="true"></span></li>`;
+const taskHTML=(t,done)=>`<li class="task${done?' is-done':''}" data-id="${t.id}"><button class="check" aria-label="${done?'\u0628\u0627\u0632\u06af\u0631\u062f\u0627\u0646\u062f\u0646 \u0628\u0647 \u06a9\u0627\u0631\u0647\u0627':'\u0639\u0644\u0627\u0645\u062a \u0627\u0646\u062c\u0627\u0645 \u0634\u062f'}">${icon('check')}</button><div class="t-body"><span class="t-title">${esc(t.title)}</span><span class="t-meta"><i class="tag-dot" style="--tc:${TAGS[t.tag]||TAGS['\u0634\u062e\u0635\u06cc']}"></i>${esc(t.tag)}${t.time?' · '+fa(t.time):''}</span></div><span class="grip" aria-hidden="true"></span></li>`;
 function renderTasks(){
-  pendingList.innerHTML=tstate.pending.length?tstate.pending.map(t=>taskHTML(t,false)).join(''):'<li class="empty">همه کارها انجام شد. یک فنجان چای بنوش.</li>';
-  doneList.innerHTML=tstate.done.length?tstate.done.map(t=>taskHTML(t,true)).join(''):'<li class="empty">کارها را اینجا رها کن تا در مایع حل شوند</li>';
+  pendingList.innerHTML=tstate.pending.length?tstate.pending.map(t=>taskHTML(t,false)).join(''):'<li class="empty">\u0647\u0645\u0647 \u06a9\u0627\u0631\u0647\u0627 \u0627\u0646\u062c\u0627\u0645 \u0634\u062f. \u06cc\u06a9 \u0641\u0646\u062c\u0627\u0646 \u0686\u0627\u06cc \u0628\u0646\u0648\u0634.</li>';
+  doneList.innerHTML=tstate.done.length?tstate.done.map(t=>taskHTML(t,true)).join(''):'<li class="empty">\u06a9\u0627\u0631\u0647\u0627 \u0631\u0627 \u0627\u06cc\u0646\u062c\u0627 \u0631\u0647\u0627 \u06a9\u0646 \u062a\u0627 \u062f\u0631 \u0645\u0627\u06cc\u0639 \u062d\u0644 \u0634\u0648\u0646\u062f</li>';
   const total=tstate.pending.length+tstate.done.length;
-  $('#leftPill').textContent=tstate.pending.length?fa(tstate.pending.length)+' کار مانده':'همه انجام شد';
-  $('#doneCount').textContent=fa(tstate.done.length)+' از '+fa(total);
+  $('#leftPill').textContent=tstate.pending.length?fa(tstate.pending.length)+' \u06a9\u0627\u0631 \u0645\u0627\u0646\u062f\u0647':'\u0647\u0645\u0647 \u0627\u0646\u062c\u0627\u0645 \u0634\u062f';
+  $('#doneCount').textContent=fa(tstate.done.length)+' \u0627\u0632 '+fa(total);
   Basin.target(total?tstate.done.length/total:0);needMeasure=true;
 }
 
@@ -1095,7 +1095,7 @@ function finishDrag(s){
   if(s.target===s.li){s.li.classList.remove('residue');}
   else{s.target.classList.remove('arriving');s.target.classList.add('settle');const t=s.target;setTimeout(()=>t.classList.remove('settle'),800);}
   if(s.completed){const f=findTask(s.id);FX.burst(s.tx,s.ty,30);Sound.burst(7);Sound.chime(783.99,.05);Orb.excite(.7);BG.addDrop(s.tx,s.ty,.9);Basin.kick(1);
-    Toast.show('«'+(f?f.t.title:'')+'» انجام شد. آفرین!','check',180);
+    Toast.show('«'+(f?f.t.title:'')+'» \u0627\u0646\u062c\u0627\u0645 \u0634\u062f. \u0622\u0641\u0631\u06cc\u0646!','check',180);
     if(!tstate.pending.length)setTimeout(()=>{Sound.arp([523.25,659.25,783.99,1046.5]);FX.burst(innerWidth/2,innerHeight*.4,50,PAL,1.3);},450);}
   else if(s.restored){Sound.drop(1.1);Basin.kick(.4);}
   else Sound.drop(.9);
@@ -1142,19 +1142,19 @@ onTick(dt=>{
 /* ---- add task ---- */
 $('#addForm').addEventListener('submit',e=>{e.preventDefault();const inp=$('#newTask'),v=inp.value.trim();
   if(!v){wobble(inp,16);Sound.error();inp.focus();return;}
-  const t=mk(v,'شخصی','');tstate.pending.unshift(t);renderTasks();inp.value='';
+  const t=mk(v,'\u0634\u062e\u0635\u06cc','');tstate.pending.unshift(t);renderTasks();inp.value='';
   const el=$(`.task[data-id="${t.id}"]`);el.classList.add('settle');setTimeout(()=>el.classList.remove('settle'),800);
   const r=inp.getBoundingClientRect();FX.burst(r.left+30,r.top+r.height/2,12,PAL,.5);Sound.drop(1.2);Sound.bubble(1.4);});
 
 /* ================= notification center ================= */
 const Notif=(()=>{
   const el=$('#notif'),list=$('#notifList'),empty=$('#notifEmpty'),clearBtn=$('#clearAll');
-  const data=[{ico:'calendar',h:350,title:'یادآور جلسه',body:'جلسه با تیم محصول تا ۱۵ دقیقه دیگر شروع می‌شود.',time:'۲ دقیقه پیش'},
-    {ico:'chat',h:205,title:'پیام تازه از سارا',body:'فایل‌های طراحی را بررسی کردی؟ منتظر نظرت هستم.',time:'۱۲ دقیقه پیش'},
-    {ico:'orb',h:305,title:'گزارش تمرکز',body:'امروز ۲ ساعت و ۴۰ دقیقه تمرکز عمیق داشتی؛ بهترین روز این هفته.',time:'۱ ساعت پیش'},
-    {ico:'tasks',h:175,title:'هدف روزانه',body:'فقط چند کار دیگر تا تکمیل برنامه امروز مانده.',time:'۲ ساعت پیش'}];
+  const data=[{ico:'calendar',h:350,title:'\u06cc\u0627\u062f\u0622\u0648\u0631 \u062c\u0644\u0633\u0647',body:'\u062c\u0644\u0633\u0647 \u0628\u0627 \u062a\u06cc\u0645 \u0645\u062d\u0635\u0648\u0644 \u062a\u0627 \u06f1\u06f5 \u062f\u0642\u06cc\u0642\u0647 \u062f\u06cc\u06af\u0631 \u0634\u0631\u0648\u0639 \u0645\u06cc‌\u0634\u0648\u062f.',time:'\u06f2 \u062f\u0642\u06cc\u0642\u0647 \u067e\u06cc\u0634'},
+    {ico:'chat',h:205,title:'\u067e\u06cc\u0627\u0645 \u062a\u0627\u0632\u0647 \u0627\u0632 \u0633\u0627\u0631\u0627',body:'\u0641\u0627\u06cc\u0644‌\u0647\u0627\u06cc \u0637\u0631\u0627\u062d\u06cc \u0631\u0627 \u0628\u0631\u0631\u0633\u06cc \u06a9\u0631\u062f\u06cc\u061f \u0645\u0646\u062a\u0638\u0631 \u0646\u0638\u0631\u062a \u0647\u0633\u062a\u0645.',time:'\u06f1\u06f2 \u062f\u0642\u06cc\u0642\u0647 \u067e\u06cc\u0634'},
+    {ico:'orb',h:305,title:'\u06af\u0632\u0627\u0631\u0634 \u062a\u0645\u0631\u06a9\u0632',body:'\u0627\u0645\u0631\u0648\u0632 \u06f2 \u0633\u0627\u0639\u062a \u0648 \u06f4\u06f0 \u062f\u0642\u06cc\u0642\u0647 \u062a\u0645\u0631\u06a9\u0632 \u0639\u0645\u06cc\u0642 \u062f\u0627\u0634\u062a\u06cc\u061b \u0628\u0647\u062a\u0631\u06cc\u0646 \u0631\u0648\u0632 \u0627\u06cc\u0646 \u0647\u0641\u062a\u0647.',time:'\u06f1 \u0633\u0627\u0639\u062a \u067e\u06cc\u0634'},
+    {ico:'tasks',h:175,title:'\u0647\u062f\u0641 \u0631\u0648\u0632\u0627\u0646\u0647',body:'\u0641\u0642\u0637 \u0686\u0646\u062f \u06a9\u0627\u0631 \u062f\u06cc\u06af\u0631 \u062a\u0627 \u062a\u06a9\u0645\u06cc\u0644 \u0628\u0631\u0646\u0627\u0645\u0647 \u0627\u0645\u0631\u0648\u0632 \u0645\u0627\u0646\u062f\u0647.',time:'\u06f2 \u0633\u0627\u0639\u062a \u067e\u06cc\u0634'}];
   let open=false;const s=new Spring(0,250,16),sy=new Spring(0,190,12.5);
-  list.innerHTML=data.map((n,i)=>`<li class="n-item" data-i="${i}"><div><div class="n-card"><span class="n-ico" style="--h:${n.h}">${icon(n.ico)}</span><div class="n-text"><b>${n.title}</b><p>${n.body}</p><span class="n-time">${n.time}</span></div><button class="n-x" aria-label="بستن اعلان">${icon('close')}</button></div></div></li>`).join('');
+  list.innerHTML=data.map((n,i)=>`<li class="n-item" data-i="${i}"><div><div class="n-card"><span class="n-ico" style="--h:${n.h}">${icon(n.ico)}</span><div class="n-text"><b>${n.title}</b><p>${n.body}</p><span class="n-time">${n.time}</span></div><button class="n-x" aria-label="\u0628\u0633\u062a\u0646 \u0627\u0639\u0644\u0627\u0646">${icon('close')}</button></div></div></li>`).join('');
   const bell=()=>$('.dock-item[data-action="notif"]');
   function setOrigin(){const b=bell().getBoundingClientRect(),r=el.getBoundingClientRect();el.style.transformOrigin=`${(b.left+b.width/2-r.left).toFixed(1)}px ${(b.top-r.top).toFixed(1)}px`;}
   function show(){if(open)return;open=true;el.style.visibility='visible';setOrigin();s.t=1;sy.t=1;Sound.chime(880);Sound.bubble(1.2);wobble(list,14);bell().setAttribute('aria-expanded','true');}
@@ -1181,7 +1181,7 @@ const Dock=(()=>{
     constructor(host,count){this.goo=document.createElement('span');this.goo.className='badge-goo';this.el=document.createElement('span');this.el.className='badge';this.el.setAttribute('role','button');
       this.goo.appendChild(this.el);host.appendChild(this.goo);this.count=count;this.s=new Spring(count?1:0,380,13);this.drips=[];this.render();
       this.el.addEventListener('pointerdown',e=>e.stopPropagation());this.el.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();this.split();});}
-    render(){this.el.textContent=this.count>9?'۹+':fa(this.count);this.el.setAttribute('aria-label',fa(this.count)+' مورد خوانده‌نشده، برای خواندن بزنید');}
+    render(){this.el.textContent=this.count>9?'\u06f9+':fa(this.count);this.el.setAttribute('aria-label',fa(this.count)+' \u0645\u0648\u0631\u062f \u062e\u0648\u0627\u0646\u062f\u0647‌\u0646\u0634\u062f\u0647\u060c \u0628\u0631\u0627\u06cc \u062e\u0648\u0627\u0646\u062f\u0646 \u0628\u0632\u0646\u06cc\u062f');}
     set(n){const prev=this.count;this.count=n;if(n>0){this.render();this.s.t=1;if(prev===0)this.s.v=10;}else this.s.t=0;}
     split(){if(this.count<=0)return;this.spawn(-1);this.spawn(1);this.count--;Sound.pop();setTimeout(()=>Sound.bubble(1.5),40);this.s.v-=9;if(this.count===0)this.s.t=0;else this.render();}
     spawn(dir){const d=document.createElement('i');d.className='drip';this.goo.appendChild(d);this.drips.push({d,x:60,y:60,vx:dir*(70+Math.random()*60),vy:-50-Math.random()*70,life:1});}
@@ -1200,8 +1200,8 @@ const Dock=(()=>{
     tasks:()=>{go('#tasksCard');setTimeout(()=>$('#newTask').focus({preventScroll:true}),500);},
     orb:()=>{go('#orbZone');Orb.excite(1);Sound.chime(659.25);},
     habits:()=>go('#habitsCard'),
-    chat:()=>{Toast.show('سارا: «فایل‌های طراحی آماده‌اند، نگاهی بینداز»','chat',205);},
-    calendar:()=>{Toast.show(new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long'}).format(new Date())+' · ۳ رویداد','calendar',350);},
+    chat:()=>{Toast.show('\u0633\u0627\u0631\u0627: «\u0641\u0627\u06cc\u0644‌\u0647\u0627\u06cc \u0637\u0631\u0627\u062d\u06cc \u0622\u0645\u0627\u062f\u0647‌\u0627\u0646\u062f\u060c \u0646\u06af\u0627\u0647\u06cc \u0628\u06cc\u0646\u062f\u0627\u0632»','chat',205);},
+    calendar:()=>{Toast.show(new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long'}).format(new Date())+' · \u06f3 \u0631\u0648\u06cc\u062f\u0627\u062f','calendar',350);},
     notif:()=>Notif.toggle()
   };
   items.forEach((it,i)=>it.b.addEventListener('click',()=>{if(it.b.dataset.action!=='notif'&&it.b.dataset.action!=='chat'&&it.b.dataset.action!=='calendar')active=i;
@@ -1220,12 +1220,12 @@ const Dock=(()=>{
 /* ================= top bar ================= */
 (()=>{
   const now=new Date(),h=now.getHours();
-  $('#greet').textContent=(h>=5&&h<11?'صبح بخیر':h<15&&h>=11?'ظهر بخیر':h>=15&&h<19?'عصر بخیر':'شب بخیر')+'، رامین';
-  try{$('#today').textContent=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(now);}catch(e){$('#today').textContent='امروز';}
+  $('#greet').textContent=(h>=5&&h<11?'\u0635\u0628\u062d \u0628\u062e\u06cc\u0631':h<15&&h>=11?'\u0638\u0647\u0631 \u0628\u062e\u06cc\u0631':h>=15&&h<19?'\u0639\u0635\u0631 \u0628\u062e\u06cc\u0631':'\u0634\u0628 \u0628\u062e\u06cc\u0631')+'\u060c \u0631\u0627\u0645\u06cc\u0646';
+  try{$('#today').textContent=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(now);}catch(e){$('#today').textContent='\u0627\u0645\u0631\u0648\u0632';}
   const clock=$('#clock');const tf=new Intl.DateTimeFormat('fa-IR',{hour:'2-digit',minute:'2-digit',hour12:false});
   const tickClock=()=>clock.textContent=tf.format(new Date());tickClock();setInterval(tickClock,1000);
   const mb=$('#muteBtn');mb.addEventListener('click',()=>{const m=!Sound.muted;if(!m){Sound.setMuted(false);Sound.bubble(1);}else{Sound.drop(.7);setTimeout(()=>Sound.setMuted(true),120);}
-    mb.innerHTML=icon(m?'mute':'volume');mb.setAttribute('aria-pressed',m);mb.setAttribute('aria-label',m?'وصل صدا':'قطع صدا');});
+    mb.innerHTML=icon(m?'mute':'volume');mb.setAttribute('aria-pressed',m);mb.setAttribute('aria-label',m?'\u0648\u0635\u0644 \u0635\u062f\u0627':'\u0642\u0637\u0639 \u0635\u062f\u0627');});
 })();
 
 /* ================= global click ripple + main loop ================= */

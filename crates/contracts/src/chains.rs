@@ -1,133 +1,133 @@
-//! قراردادهای وایر کیف پول چهارزنجیره M5 — متادیتا زنجیره، آدرس واریز کاربر و
-//! واریز USDT (اثبات کاربر → تأیید ادمین → ضرب مادهٔ ۳ با نرخ USDT).
+//! M5 four-chain wallet wire contracts — chain metadata, the user deposit address, and
+//! USDT deposits (user proof → admin approval → the Article 3 mint at the USDT rate).
 //!
-//! همان قراردادهای M3 برای واریز TON — این‌بار روی چهار زنجیره؛ اعتبارسنجی
-//! آدرس با چک‌سام‌های رسمی در `kian-wallet` (سرور؛ کلاینت هرگز اعتماد نمی‌شود).
+//! The same M3 contracts as for TON deposits — this time across four chains; address
+//! validation uses official checksums in `kian-wallet` (server-side; the client is never trusted).
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// نمای یک زنجیره — `chainView` (متادیتای عمومی؛ بدون هیچ secret).
+/// One chain's view — `chainView` (public metadata; no secrets).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ChainView {
-    /// برچسب زنجیره: TRX / SOL / TON / BSC
+    /// Chain label: TRX / SOL / TON / BSC
     pub chain: String,
-    /// نام فارسی
+    /// Persian name
     pub fa_name: String,
-    /// قرارداد کانونیک USDT روی این زنجیره
+    /// The canonical USDT contract on this chain
     pub usdt_contract: String,
-    /// واحد on-chain USDT (۶ روی TRX/SOL/TON؛ ۱۸ روی BSC)
+    /// On-chain USDT unit (6 on TRX/SOL/TON; 18 on BSC)
     pub usdt_onchain_decimals: u32,
 }
 
-/// پاسخ فهرست زنجیره‌ها — `chainsResponse`.
+/// Chain list response — `chainsResponse`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ChainsResponse {
-    /// هر چهار زنجیره به ترتیب ثابت
+    /// All four chains in fixed order
     pub items: Vec<ChainView>,
 }
 
-/// درخواست ثبت/به‌روزرسانی آدرس واریز کاربر برای یک زنجیره.
+/// Register/update a user's deposit address for one chain.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SetDepositAddressRequest {
-    /// زنجیره: TRX / SOL / TON / BSC
+    /// Chain: TRX / SOL / TON / BSC
     #[schema(max_length = 4)]
     pub chain: String,
-    /// آدرس — سمت سرور با چک‌سام رسمی زنجیره اعتبارسنجی می‌شود
+    /// Address — validated server-side with the chain's official checksum
     #[schema(max_length = 96)]
     pub address: String,
 }
 
-/// نمای آدرس ثبت‌شده کاربر — `depositAddressView`.
+/// The user's registered address view — `depositAddressView`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DepositAddressView {
-    /// زنجیره
+    /// Chain
     pub chain: String,
-    /// آدرس
+    /// Address
     pub address: String,
-    /// زمان ثبت ISO
+    /// ISO registered-at time
     pub created_at: String,
 }
 
-/// پاسخ فهرست آدرس‌های من — `myAddressesResponse`.
+/// My-addresses list response — `myAddressesResponse`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MyAddressesResponse {
-    /// آدرس‌های ثبت‌شده کاربر (حداکثر چهار زنجیره)
+    /// The user’s registered addresses (up to four chains)
     pub items: Vec<DepositAddressView>,
 }
 
-/// درخواست ثبت واریز USDT — اثبات کاربر تا راستی‌آزمایی ادمین.
+/// Register a USDT deposit — user proof until admin verification.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UsdtDepositCreateRequest {
-    /// زنجیره: TRX / SOL / TON / BSC
+    /// Chain: TRX / SOL / TON / BSC
     #[schema(max_length = 4)]
     pub chain: String,
-    /// هش تراکنش زنجیره — UNIQUE روی (chain, txHash)
+    /// On-chain transaction hash — UNIQUE on (chain, txHash)
     #[schema(min_length = 8, max_length = 128)]
     pub tx_hash: String,
-    /// آدرس فرستنده — با قواعد همان زنجیره اعتبارسنجی می‌شود
+    /// Sender address — validated by the rules of its chain
     #[schema(max_length = 96)]
     pub from_address: String,
-    /// مبلغ USDT رشتهٔ دهدهی با ≤۶ رقم اعشار (مقیاس سیم: micro-USDT)
+    /// USDT amount as a decimal string with ≤6 decimals (wire scale: micro-USDT)
     #[schema(max_length = 24)]
     pub amount_usdt: String,
 }
 
-/// نمای واریز USDT روی سیم — `usdtDepositView`.
+/// The USDT deposit wire view — `usdtDepositView`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UsdtDepositView {
-    /// شناسه (`udep:…`)
+    /// ID (`udep:…`)
     pub id: String,
-    /// زنجیره
+    /// Chain
     pub chain: String,
-    /// هش تراکنش
+    /// Transaction hash
     pub tx_hash: String,
-    /// آدرس فرستنده
+    /// Sender address
     pub from_address: String,
-    /// مبلغ رشتهٔ دهدهی USDT
+    /// USDT amount as a decimal string
     pub amount_usdt: String,
     /// PENDING / CONFIRMED / REJECTED
     pub status: String,
-    /// زمان ثبت ISO
+    /// ISO registered-at time
     pub created_at: String,
-    /// زمان تصمیم — تا قبل از تکلیف null صریح
+    /// Decision time — explicit null until adjudicated
     pub confirmed_at: Option<String>,
 }
 
-/// پاسخ فهرست واریزهای USDT — `usdtDepositListResponse`.
+/// USDT deposit list response — `usdtDepositListResponse`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UsdtDepositListResponse {
-    /// واریزهای من (۵۰ آخر)
+    /// My deposits (the last 50)
     pub items: Vec<UsdtDepositView>,
 }
 
-/// نمای خزانه یک زنجیره — فقط آدرس تنظیم‌شده از env؛ خالی یعنی تنظیم‌نشده.
+/// One chain's treasury view — only the env-configured address; empty means unset.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TreasuryChainView {
-    /// زنجیره
+    /// Chain
     pub chain: String,
-    /// آدرس خزانه — رشتهٔ خالی یعنی تنظیم‌نشده (شفاف، نه مخفی)
+    /// Treasury address — an empty string means unset (transparent, not hidden)
     pub address: String,
-    /// آیا آدرس با قواعد زنجیره معتبر است؟
+    /// Is the address valid under the chain's rules?
     pub configured: bool,
 }
 
-/// پاسخ شفافیت خزانه — `treasuryResponse` (مادهٔ ۶؛ عمومی).
+/// Treasury transparency response — `treasuryResponse` (Article 6; public).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TreasuryResponse {
-    /// وضعیت خزانه هر چهار زنجیره
+    /// Treasury status of all four chains
     pub items: Vec<TreasuryChainView>,
-    /// سیاست حراست — متن قراردادی ثابت
+    /// Custody policy — fixed contractual text
     pub movement_policy: String,
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""TM Neural HUD Video Studio — portable CLI (Wave 9, Commit #29).
+"""MAIRON Neural HUD Video Studio — portable CLI.
 
 Mirror of the deterministic kernel in ``crates/hermes/src/neural_hud_studio_engine.rs``:
 180-node dual-shell Fibonacci mesh (SPHERE_RADIUS=160, FOV=340, camera_z=420,
@@ -62,14 +62,14 @@ PHASE_TITLES = [
     "PHASE 03 // 5-MODEL GENOME & ARDA HUB",
     "PHASE 04 // MAIRON 100/100 SEALED",
 ]
-SIGNATURE = "KIA-NEURAL-HUD-W9"
+SIGNATURE = "MAIRON-NEURAL-HUD"
 
 PRESETS = [
     ("mwie", "MWIE Neural Cortex", "Deterministic brain telemetry over a dual-shell mesh", "#7C4DFF", "MWIE", "upstream"),
     ("sage-audit", "SAGE Audit Mesh", "Forensic audit telemetry with sealed gates", "#00E5A0", "SAGE", "upstream"),
     ("geo-scope", "GEO Scope Planetary", "Planetary scope sweep across the mesh", "#38BDF8", "GEO", "upstream"),
     ("tm-second-brain", "TM Second Brain", "Second-brain memory layers on a rotating sphere", "#F471B5", "TM", "upstream"),
-    ("kia-monopoly-core", "KIA Monopoly Core", "Sovereign monopoly core — 5,870,020 KIAN genesis supply", "#FACC15", "0xKIA SOVEREIGN", "kia_sovereign"),
+    ("kia-monopoly-core", "MAIRON Monopoly Core", "Sovereign monopoly core — 5,870,020 KIAN genesis supply", "#FACC15", "MAIRON SOVEREIGN", "kia_sovereign"),
     ("mairon-10gate-shield", "Mairon 10-Gate Shield", "Ten forensic gates between your code and the ledger", "#EF4444", "MAIRON", "kia_sovereign"),
     ("quant-vibe-terminal", "Quant Vibe Terminal", "Causal Vibe-Trading backtests across 8 CCXT venues", "#22D3EE", "QUANT", "kia_sovereign"),
     ("trinity-5model-genome", "Trinity 5-Model Genome", "Penta-model genome routing across the Trinity pipeline", "#A78BFA", "TRINITY", "kia_sovereign"),
@@ -619,7 +619,7 @@ def render_frames(preset: dict, resolution: str, aspect: str, fps: int,
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="TM Neural HUD Video Studio (KIA Wave 9)")
+    parser = argparse.ArgumentParser(description="MAIRON Neural HUD Video Studio")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("presets")

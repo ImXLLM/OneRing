@@ -1,14 +1,14 @@
-# KIAN — compose برای «شبِ تستِ محلی» و استقرار کوچک
+# KIAN — compose for the local test night and small-scale deployment
 #
 #   docker compose up --build
 #
-# پورت‌ها:
-#   8088  → کرنل Rust (kian-server)
-#   3000  → وب (apps/web — لندینگ)
-#   3001  → مینی‌اپ (apps/miniapp — حالت dev، سورس mount‌شده)
-#   3002  → پنل ادمین (apps/admin — حالت dev، سورس mount‌شده)
+# Ports:
+#   8088  → Rust kernel (kian-server)
+#   3000  → web (apps/web — landing)
+#   3001  → miniapp (apps/miniapp — dev mode, mounted source)
+#   3002  → admin panel (apps/admin — dev mode, mounted source)
 #
-# ادمین: http://localhost:3002 با کلید dev-admin-key (متغیر زیر را در تولید عوض کنید!)
+# Admin: http://localhost:3002 with key dev-admin-key (change the variable below in production!)
 
 services:
   kian-server:
@@ -20,8 +20,8 @@ services:
     environment:
       KIAN_HOST: 0.0.0.0
       KIAN_PORT: "8088"
-      KIAN_DEV_MODE: "true"            # در تولید false/حذف کنید
-      KIAN_ADMIN_KEY: dev-admin-key    # در تولید کلید ≥۱۶ کاراکتری بگذارید
+      KIAN_DEV_MODE: "true"            # set to false / remove in production
+      KIAN_ADMIN_KEY: dev-admin-key    # use a ≥16-character key in production
       KIAN_DATABASE_URL: /data/kian.sqlite
     volumes:
       - kian-data:/data

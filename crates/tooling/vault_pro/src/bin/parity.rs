@@ -1,15 +1,15 @@
-//! `parity` — دروازهٔ گیت parity فاز ۸ (ADR-009 §۷ فاز ۸ / §۱۲).
+//! `parity` — the phase 8 parity gate entry point (ADR-009 §7 phase 8 / §12).
 //!
-//! سه حالت:
-//! * `--verify` (پیش‌فرض) — بازپخش همهٔ سناریوها روی Rust و مقایسهٔ
-//!   بایت‌به‌بایت با گلدن‌های `tests/golden/` + خوانش وضعیت دیتابیس.
-//! * `--record` — بازتولید گلدن‌ها از رفتار فعلی Rust (پس از هر تغییر
-//!   عمدیِ قرارداد).
-//! * `--ts-url <base>` — مقایسهٔ زندهٔ TS↔Rust: همان سناریوها به هر دو موتور
-//!   زده می‌شود؛ TS باید روی دیتابیس تازه باشد (هر دو سمت setup یکسان
-//!   می‌گیرند) — این همان گیت خروجِ هر پلهٔ dual-run است.
+//! Three modes:
+//! * `--verify` (default) — replay all scenarios on Rust and compare
+//!   byte-for-byte with the `tests/golden/` goldens + read the database state.
+//! * `--record` — regenerate the goldens from current Rust behavior (after every intentional
+//!   contract change).
+//! * `--ts-url <base>` — live TS↔Rust comparison: the same scenarios are fired at both engines;
+//!   TS must run on a fresh database (both sides get identical
+//!   setup) — this is the exit gate of every dual-run step.
 //!
-//! خروجی: گزارش کامل + `--report out.json` (ورودی گیت dual-run) + exit ۰/۱.
+//! Output: full report + `--report out.json` (the dual-run gate input) + exit 0/1.
 
 use std::path::PathBuf;
 
@@ -19,7 +19,7 @@ use dropagentx_tooling::parity::{
 };
 use dropagentx_tooling::parity::{compare, Golden};
 
-/// خواندن آرگومان `--flag value`.
+/// Read a `--flag value` argument.
 fn arg_of(args: &[String], flag: &str) -> Option<String> {
     args.iter().position(|a| a == flag).and_then(|i| args.get(i + 1)).cloned()
 }
@@ -76,16 +76,16 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-/// مقایسهٔ زندهٔ TS↔Rust — همان سناریوها به هر دو موتور؛ TS باید دیتابیس تازه
-/// داشته باشد (setup یکسان به هر دو سمت اعمال می‌شود).
+/// Live TS↔Rust comparison — the same scenarios at both engines; TS must run on a fresh
+/// database (identical setup is applied to both sides).
 async fn verify_against_ts(base: &str) -> anyhow::Result<parity::ParityReport> {
     let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(30)).build()?;
     let base = base.trim_end_matches('/').to_owned();
     let mut checks = Vec::new();
     for scenario in scenario_registry() {
-        // سمت Rust — درون‌حافظه‌ای، مستقل از محیط
+        // Rust side — in-memory, environment-independent
         let rust: ScenarioResult = run_scenario(&scenario, "sqlite::memory:").await?;
-        // سمت TS — روی HTTP با setup یکسان
+        // TS side — over HTTP with identical setup
         let ts = send_to_ts(&client, &base, &scenario).await;
         let check = match ts {
             Ok(ts) => compare_cross(&rust, &ts),
@@ -100,7 +100,7 @@ async fn verify_against_ts(base: &str) -> anyhow::Result<parity::ParityReport> {
     Ok(parity::ParityReport { checks })
 }
 
-/// ارسال setup + درخواستِ سناریو به سرور TS — نتیجهٔ نرمال‌شده.
+/// Send the setup + scenario request to the TS server — the normalized result.
 async fn send_to_ts(
     client: &reqwest::Client,
     base: &str,
@@ -119,7 +119,7 @@ async fn send_to_ts(
     })
 }
 
-/// یک گام HTTP به TS — با هدرهای parity.
+/// One HTTP step to TS — with parity headers.
 async fn send_step_ts(
     client: &reqwest::Client,
     base: &str,
@@ -149,7 +149,7 @@ async fn send_step_ts(
     Ok((status, ctype, bytes))
 }
 
-/// مقایسهٔ متقاطع Rust↔TS — بدون گلدن؛ مرجع، خودِ قرارداد است.
+/// Rust↔TS cross-comparison — no goldens; the contract itself is the reference.
 fn compare_cross(rust: &ScenarioResult, ts: &ScenarioResult) -> ScenarioCheck {
     let mut diffs = Vec::new();
     if rust.status != ts.status {
@@ -174,7 +174,7 @@ fn compare_cross(rust: &ScenarioResult, ts: &ScenarioResult) -> ScenarioCheck {
     ScenarioCheck { name: rust.name.clone(), ok: diffs.is_empty(), diffs }
 }
 
-/// چک استفاده — `compare` (گلدن‌محور) در مسیر verify کتابخانه‌ای به کار می‌رود.
+/// Usage check — `compare` (golden-based) is used in the library verify path.
 #[allow(dead_code)]
 fn _uses_compare() {
     let _ = compare as fn(&ScenarioResult, &Golden) -> ScenarioCheck;

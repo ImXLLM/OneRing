@@ -1,10 +1,10 @@
-//! هندلرهای هویت M3 — احراز `initData` تلگرام، «من کی‌ام» و خروج.
+//! M3 identity handlers — Telegram `initData` authentication, "who am I", and logout.
 //!
-//! جریان: `Telegram.WebApp.initData` خام → تأیید HMAC رسمی (`contracts::security`)
-//! → `ensure_telegram_user` (هویت idempotent + حساب دفتر `citizen:{tg}`) →
-//! توکن نشست اپاک با TTL. هویت **هرگز** از فیلدهای بدنه نمی‌آید؛ بدنه فقط
-//! رشتهٔ خام initData را حمل می‌کند. ولت بدون initData فایده‌ای ندارد —
-//! fail-closed مادهٔ ۱ منشور.
+//! Flow: raw `Telegram.WebApp.initData` → official HMAC verification (`contracts::security`)
+//! → `ensure_telegram_user` (idempotent identity + the `citizen:{tg}` ledger account) →
+//! an opaque session token with a TTL. Identity **never** comes from body fields; the body
+//! only carries the raw initData string. Without initData the wallet is useless —
+//! charter Article 1 fail-closed.
 
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
@@ -21,7 +21,7 @@ use crate::middleware::{bearer_token, require_session};
 use crate::state::AppState;
 use crate::views::wire_din;
 
-/// نمای کاربر وایر از ردیف db — نقطهٔ واحد ساخت `UserView` (هندلرها JSON مستقیم نمی‌سازند).
+/// The wire user view from a db row — the single construction point of `UserView` (handlers never build JSON directly).
 #[must_use]
 pub fn user_view(u: &UserRow) -> UserView {
     UserView {
@@ -34,24 +34,24 @@ pub fn user_view(u: &UserRow) -> UserView {
     }
 }
 
-/// توکن نشست اپاک — دو `UUIDv4` رمزنگاری‌شده (CSPRNG سیستم‌عامل) پشت هم = ۶۴ hex.
+/// Opaque session token — two OS-CSPRNG `UUIDv4`s back to back = 64 hex.
 pub(crate) fn new_session_token() -> String {
     let a = uuid::Uuid::new_v4().simple().to_string();
     let b = uuid::Uuid::new_v4().simple().to_string();
     format!("{a}{b}")
 }
 
-/// انقضای نشست — TTL ساعت از پیکربندی، RFC3339 UTC با millis.
+/// Session expiry — TTL hours from config, RFC3339 UTC with millis.
 pub(crate) fn session_expires_at(ttl_hours: i64) -> String {
     (chrono::Utc::now() + chrono::Duration::hours(ttl_hours))
         .to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
 }
 
-/// `POST /auth/telegram` — احراز مینی‌اپ و باز کردن نشست. ۲۰۱.
+/// `POST /auth/telegram` — mini-app authentication and session open. 201.
 ///
 /// # Errors
-/// 503 `IDENTITY_DISABLED` (بدون `KIAN_BOT_TOKEN` — fail-closed)؛
-/// 401 `INVALID_INIT_DATA` (امضای HMAC معتبر نیست)؛ 400 بدنهٔ نامعتبر.
+/// 503 `IDENTITY_DISABLED` (no `KIAN_BOT_TOKEN` — fail-closed);
+/// 401 `INVALID_INIT_DATA` (the HMAC signature is invalid); 400 invalid body.
 pub async fn auth_telegram(
     State(state): State<Arc<AppState>>,
     body: axum::body::Bytes,
@@ -77,8 +77,8 @@ pub async fn auth_telegram(
     Ok((StatusCode::CREATED, Json(AuthResponse { token, expires_at, user: user_view(&user) })))
 }
 
-/// گارد حالت توسعه — اندپوینت‌های دمو فقط وقتی `KIAN_DEV_MODE`/غیابِ توکن
-/// بات حالت dev را فعال کرده باشد — وگرنه ۴۰۳ صادقانه.
+/// Dev-mode guard — demo endpoints only when `KIAN_DEV_MODE`/a missing bot token
+/// has enabled dev mode — otherwise an honest 403.
 fn require_dev_mode(state: &AppState) -> Result<(), ApiFailure> {
     if state.config.dev_mode {
         Ok(())
@@ -87,20 +87,20 @@ fn require_dev_mode(state: &AppState) -> Result<(), ApiFailure> {
     }
 }
 
-/// اعتبارسنجی شناسهٔ عددی تلگرام آزمایشی — فقط ارقام، ۱..=۲۰ رقم.
+/// Validate an experimental numeric Telegram ID — digits only, 1..=20 digits.
 fn valid_demo_tg_id(raw: &str) -> bool {
     (1..=20).contains(&raw.len()) && raw.chars().all(|c| c.is_ascii_digit())
 }
 
-/// `POST /auth/dev-login` — ورود دمو/توسعه‌دهنده برای تستِ محلیِ کامل — ۲۰۱.
+/// `POST /auth/dev-login` — demo/developer login for full local testing — 201.
 ///
-/// فقط در حالت dev فعال است (`KIAN_DEV_MODE=1` یا غیابِ توکن بات)؛ در غیر این
-/// صورت ۴۰۳ `DEV_MODE_DISABLED`. همان مسیر رسمیِ upsert کاربر، حساب دفتر
-/// `citizen:{tg}` و نشست bearer را طی می‌کند — فقط منشأ هویت بدنهٔ دمو است،
-/// نه HMAC تلگرام؛ برای همین کل اندپوینت پشت گارد dev قفل شده است.
+/// Active only in dev mode (`KIAN_DEV_MODE=1` or a missing bot token); otherwise
+/// 403 `DEV_MODE_DISABLED`. It follows the same official user-upsert, ledger-account,
+/// `citizen:{tg}`, and bearer-session path — only the identity source is the demo body,
+/// not Telegram HMAC; hence the whole endpoint is locked behind the dev guard.
 ///
 /// # Errors
-/// 403 `DEV_MODE_DISABLED` خارج از حالت dev؛ ۴۰۰ `tgUserId` بدشکل؛ 500 خطای SQL.
+/// 403 `DEV_MODE_DISABLED` outside dev mode; 400 malformed `tgUserId`; 500 SQL error.
 pub async fn auth_dev_login(
     State(state): State<Arc<AppState>>,
     body: axum::body::Bytes,
@@ -124,10 +124,10 @@ pub async fn auth_dev_login(
     Ok((StatusCode::CREATED, Json(AuthResponse { token, expires_at, user: user_view(&user) })))
 }
 
-/// `GET /me` — هویت + تراز مشتق‌شده + قفل اسکرو + ۱۰ ردیف آخر دفتر.
+/// `GET /me` — identity + derived balance + escrow locks + the last 10 ledger rows.
 ///
 /// # Errors
-/// 401 نشست غایب/منقضی؛ 500 خطای SQL.
+/// 401 missing/expired session; 500 SQL error.
 pub async fn me(State(state): State<Arc<AppState>>, headers: HeaderMap) -> ApiResult<Json<MeResponse>> {
     let user = require_session(&state, &headers).await?;
     let balance = state
@@ -162,10 +162,10 @@ pub async fn me(State(state): State<Arc<AppState>>, headers: HeaderMap) -> ApiRe
     }))
 }
 
-/// `POST /auth/logout` — حذف نشست جاری. ۲۰۴ — دوباره صدا زدن بی‌اثر.
+/// `POST /auth/logout` — delete the current session. 204 — repeat calls are no-ops.
 ///
 /// # Errors
-/// 401 `SESSION_REQUIRED` بدون هدر؛ 500 خطای SQL.
+/// 401 `SESSION_REQUIRED` without a header; 500 SQL error.
 pub async fn logout(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -177,12 +177,12 @@ pub async fn logout(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// `POST /me/ton-address` — ثبت/به‌روزرسانی آدرس ولت TON Connect روی هویت.
+/// `POST /me/ton-address` — register/update the TON Connect wallet address on the identity.
 ///
-/// فقط مالک نشست — آدرس اعتبارسنجی سبک (شکل UQ/EQ پایهٔ ۴۸ کاراکتری یا فرندلی).
+/// Session owner only — light address validation (the 48-character UQ/EQ form or friendly).
 ///
 /// # Errors
-/// 401 نشست غایب/منقضی؛ 400 بدنهٔ نامعتبر؛ 422 آدرس بدشکل؛ 500 خطای SQL.
+/// 401 missing/expired session; 400 invalid body; 422 malformed address; 500 SQL error.
 pub async fn set_ton_address(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -241,7 +241,7 @@ mod tests {
         serde_json::from_slice(&bytes).unwrap()
     }
 
-    /// احراز سریع برای تست‌های نشست‌دار — توکن از پاسخ ۲۰۱.
+    /// Quick authentication for session tests — the token from the 201 response.
     async fn auth_token(app: &axum::Router, init_data: &str) -> String {
         let res = app
             .clone()
@@ -269,7 +269,7 @@ mod tests {
         assert!(t1.bytes().all(|b| b.is_ascii_hexdigit()));
         assert!(t2.bytes().all(|b| b.is_ascii_hexdigit()));
         assert_ne!(t1, t2);
-        // در UUIDv7 پیشوند ۸ کاراکتر اول timestamp مشترک داشت؛ در UUIDv4 تصادفی است
+        // In UUIDv7 the first 8 characters shared the timestamp prefix; in UUIDv4 they are random
         assert_ne!(&t1[..8], &t2[..8]);
     }
 
@@ -278,7 +278,7 @@ mod tests {
         let app = app(Some(BOT.into())).await;
         let init_data = make_test_init_data(BOT, "12345", Some("ali"));
 
-        // احراز — ۲۰۱ با توکن
+        // Auth — 201 with the token
         let res = app
             .clone()
             .oneshot(
@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(body["user"]["username"], "ali");
         assert_eq!(body["user"]["accountId"], "citizen:12345");
 
-        // /me — تراز صفر، حساب شهروند
+        // /me — zero balance, citizen account
         let res = app
             .clone()
             .oneshot(
@@ -315,7 +315,7 @@ mod tests {
         assert_eq!(me["user"]["telegramId"], "12345");
         assert_eq!(me["escrowLocked"], 0);
 
-        // خروج — ۲۰۴ و نشست می‌میرد
+        // Logout — 204 and the session dies
         let res = app
             .clone()
             .oneshot(
@@ -346,7 +346,7 @@ mod tests {
     #[tokio::test]
     async fn tampered_init_data_is_rejected() {
         let app = app(Some(BOT.into())).await;
-        let init_data = make_test_init_data("OTHER-BOT-TOKEN", "12345", None); // امضای بات دیگر
+        let init_data = make_test_init_data("OTHER-BOT-TOKEN", "12345", None); // A different bot signature
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -395,7 +395,7 @@ mod tests {
         assert_eq!(body["error"]["code"], "SESSION_REQUIRED");
     }
 
-    /// ثبت آدرس TON روی هویت — فقط مالک نشست؛ آدرس بدشکل ۴۲۲.
+    /// Register a TON address on the identity — session owner only; malformed address 422.
     #[tokio::test]
     async fn set_ton_address_roundtrip_and_validation() {
         let app = app(Some(BOT.into())).await;
@@ -420,7 +420,7 @@ mod tests {
         let body = json_body(res).await;
         assert_eq!(body["tonAddress"], good);
 
-        // آدرس بدشکل — ۴۲۲
+        // Malformed address — 422
         let res = app
             .clone()
             .oneshot(
@@ -436,7 +436,7 @@ mod tests {
             .unwrap();
         assert_eq!(res.status(), 422);
 
-        // بدون نشست — ۴۰۱
+        // Without a session — 401
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -451,11 +451,11 @@ mod tests {
         assert_eq!(res.status(), 401);
     }
 
-    /// هویت از بدنه نمی‌آید — فیلد userId در بدنه نادیده گرفته می‌شود.
+    /// Identity never comes from the body — the userId body field is ignored.
     #[tokio::test]
     async fn identity_is_never_taken_from_body() {
         let app = app(Some(BOT.into())).await;
-        // initData امضاشده برای کاربر ۹۹، اما بدنه سعی دارد کاربر ۱ شود
+        // initData signed for user 99, but the body tries to become user 1
         let init_data = make_test_init_data(BOT, "99", None);
         let res = app
             .oneshot(
@@ -473,9 +473,9 @@ mod tests {
         assert_eq!(body["user"]["accountId"], "citizen:99");
     }
 
-    // ── ورود دمو/توسعه (فقط حالت dev) ─────────────────────────────────────────
+    // ── Demo/developer login (dev mode only) ─────────────────────────────────────────
 
-    /// اپ با پیکربندی dev صریح — برای ماتریس باز/بستهٔ اندپوینت‌های دمو.
+    /// App with explicit dev config — for the open/closed matrix of demo endpoints.
     async fn app_dev(dev_mode: bool) -> axum::Router {
         let store = V3Store::connect_in_memory().await.unwrap();
         store.migrate().await.unwrap();
@@ -499,13 +499,13 @@ mod tests {
             .unwrap()
     }
 
-    /// ورود دمو همان مسیر رسمی upsert + نشست را طی می‌کند — و /me کار می‌کند.
+    /// Demo login follows the same official upsert + session path — and /me works.
     #[tokio::test]
     async fn dev_login_creates_session_and_me_works() {
         let app = app_dev(true).await;
         let res = dev_login(
             &app,
-            r#"{"tgUserId":"1001","username":"creator_demo","firstName":"سازنده (Creator)"}"#,
+            r#"{"tgUserId":"1001","username":"creator_demo","firstName":"Builder (Creator)"}"#,
         )
         .await;
         assert_eq!(res.status(), 201, "dev login must succeed in dev mode");
@@ -515,7 +515,7 @@ mod tests {
         assert_eq!(body["user"]["username"], "creator_demo");
         let token = body["token"].as_str().unwrap().to_owned();
 
-        // /me با توکن دمو — تراز صفر (بدون فاست)
+        // /me with the demo token — zero balance (no faucet)
         let res = app
             .oneshot(
                 axum::http::Request::builder()
@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(json_body(res).await["balance"], 0);
     }
 
-    /// بدنهٔ خالی JSON ({}) → پرسونای پیش‌فرض سازندهٔ ۱۰۰۱.
+    /// Empty JSON body ({}) → the default builder-1001 persona.
     #[tokio::test]
     async fn dev_login_defaults_to_creator_persona() {
         let app = app_dev(true).await;
@@ -539,7 +539,7 @@ mod tests {
         assert_eq!(json_body(res).await["user"]["telegramId"], "1001");
     }
 
-    /// خارج از حالت dev — ۴۰۳ `DEV_MODE_DISABLED` (fail-closed).
+    /// Outside dev mode — 403 `DEV_MODE_DISABLED` (fail-closed).
     #[tokio::test]
     async fn dev_login_is_forbidden_when_dev_mode_off() {
         let app = app_dev(false).await;
@@ -548,7 +548,7 @@ mod tests {
         assert_eq!(json_body(res).await["error"]["code"], "DEV_MODE_DISABLED");
     }
 
-    /// شناسهٔ بدشکل (غیر عددی/خیلی بلند) — ۴۰۰.
+    /// Malformed ID (non-numeric/too long) — 400.
     #[tokio::test]
     async fn dev_login_rejects_malformed_tg_id() {
         let app = app_dev(true).await;

@@ -1,43 +1,43 @@
-//! کارت کشف A2A — نمای عمومی ایجنت کیان برای ایجنت‌های بیرونی.
+//! A2A discovery card — Kian's agent public face for external agents.
 //!
-//! قرارداد: هیچ کلید، توکن یا نشستی در کارت نیست — فقط نام، توضیح، url،
-//! نسخه‌ها و فهرست مهارت‌ها. نسخهٔ پروتکل صادقانه `a2a/1.0-kian` است (پیاده‌سازی
-//! خودِ کیان از مفهوم A2A، نه ادعای سازگاری رسمی).
+//! Contract: no keys, tokens, or sessions in the card — only name, description, url,
+//! versions and the skill list. The protocol version is honestly `a2a/1.0-kian` (Kian's own
+//! implementation of the A2A concept, not a claim of official compatibility).
 
-/// یک مهارت در کارت.
+/// One skill in the card.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CardSkill {
-    /// شناسه مهارت
+    /// Skill ID
     pub id: String,
-    /// نام نمایشی
+    /// Display name
     pub name: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// برچسب‌ها
+    /// Tags
     pub tags: Vec<String>,
 }
 
-/// کارت ایجنت — JSON عمومی.
+/// Agent card — public JSON.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentCard {
-    /// نام ایجنت
+    /// Agent name
     pub name: String,
-    /// توضیح
+    /// Description
     pub description: String,
-    /// نشانی سرویس (پایهٔ API کرنل)
+    /// Service address (the kernel API base)
     pub url: String,
-    /// نسخهٔ کیان
+    /// Kian version
     pub version: String,
-    /// نسخهٔ پروتکل
+    /// Protocol version
     pub protocol_version: &'static str,
-    /// سازمان
+    /// Organization
     pub organization: String,
-    /// مهارت‌ها
+    /// Skills
     pub skills: Vec<CardSkill>,
 }
 
 impl AgentCard {
-    /// JSON قابل انتشار — ترتیب کلیدها با `BTreeMap` قطعی می‌ماند.
+    /// Publishable JSON — key order stays deterministic via `BTreeMap`.
     #[must_use]
     pub fn to_json(&self) -> serde_json::Value {
         serde_json::json!({
@@ -54,10 +54,10 @@ impl AgentCard {
     }
 }
 
-/// نسخهٔ پروتکل — پیاده‌سازی کیان.
+/// Protocol version — the Kian implementation.
 pub const PROTOCOL_VERSION: &str = "a2a/1.0-kian";
 
-/// ساخت کارت از پارامترهای بوت — مهارت‌ها از هرمس می‌آیند.
+/// Build the card from boot parameters — skills come from Hermes.
 #[must_use]
 pub fn build_agent_card(
     name: &str,
@@ -81,7 +81,7 @@ pub fn build_agent_card(
 mod tests {
     use super::*;
 
-    /// کارت — شکل درست، بدون هر نشانهٔ اعتبارنامه.
+    /// The card — correct shape, no credential of any kind.
     #[test]
     fn card_is_honest_and_secret_free() {
         let card = build_agent_card(
@@ -91,8 +91,8 @@ mod tests {
             "0.1.0",
             vec![CardSkill {
                 id: "wallet.balance".into(),
-                name: "تراز من".into(),
-                description: "خوانش قطعی دفتر".into(),
+                name: "\u{62a}\u{631}\u{627}\u{632} \u{645}\u{646}".into(),
+                description: "\u{62e}\u{648}\u{627}\u{646}\u{634} \u{642}\u{637}\u{639}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}".into(),
                 tags: vec!["kernel".into()],
             }],
         );
