@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@kian/config": "workspace:*",
     "@kian/ui": "workspace:*",
     "next": "16.4.6",
     "react": "19.3.1",

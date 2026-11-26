@@ -1,5 +1,16 @@
 {
   "name": "@kian/config",
   "version": "0.1.0",
-  "private": true
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./src": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "true"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
 }

@@ -1,12 +1,28 @@
 import { z } from "zod";
 
 /**
- * KIAN wire contracts — a TypeScript mirror of the crates/domain and crates/contracts computations.
+ * MAIRON wire contracts — a TypeScript mirror of the kernel's crates/contracts
+ * computations, plus the MAIRON domain modules under `./mairon/`.
  *
- * Source of truth: Rust (the crates/contracts crate with utoipa + golden tests) → here only
- * a Zod mirror for web/mini-app clients. Wire rules: camelCase, explicit null for
- * nullable fields, integers up to 2^53−1 (Din) — same as legacy so dual-run works without conversion.
+ * Source of truth: Rust (the crates/contracts crate with utoipa + golden tests)
+ * -> here only a Zod mirror for web/mini-app/admin clients. Wire rules:
+ * camelCase, explicit null for nullable fields, integers up to 2^53-1 (Din) —
+ * same as legacy so dual-run works without conversion.
  */
+
+// ── MAIRON domain modules (ledger, trinity, arda, super-studio, supremacy,
+//    quant, treasury, neural-hud, war-room, world state) ──────────────────────
+export * from "./mairon/ledger";
+export * from "./mairon/trinity";
+export * from "./mairon/arda";
+export * from "./mairon/superstudio";
+export * from "./mairon/quant";
+export * from "./mairon/treasury";
+export * from "./mairon/neuralHud";
+export * from "./mairon/warRoom";
+export * from "./mairon/worldState";
+
+// ── Legacy-compatible core schemas (marketplace, escrow, wallet, builder) ─────
 
 /** Din — the integer money unit; cap 2^53−1 (the Number.MAX_SAFE_INTEGER boundary deliberately preserved) */
 export const DinAmount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -410,11 +426,11 @@ export const devLoginRequestSchema = z.object({
 });
 export type DevLoginRequestT = z.infer<typeof devLoginRequestSchema>;
 
-/** Personas ready for tonight's testing — aligned with loginAsDemoPersona in the mini-app. */
+/** Personas ready for local testing — aligned with loginAsDemoPersona in the mini-app. */
 export const DEMO_PERSONAS = {
-  creator: { tgUserId: "1001", username: "creator_demo", firstName: "\u0633\u0627\u0632\u0646\u062f\u0647 (Creator)" },
-  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "\u062e\u0631\u06cc\u062f\u0627\u0631 (Buyer)" },
-  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "\u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628 (Affiliate)" },
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "Creator (demo persona)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "Buyer (demo persona)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "Affiliate (demo persona)" },
 } as const;
 export type DemoPersona = keyof typeof DEMO_PERSONAS;
 

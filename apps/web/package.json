@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@kian/config": "workspace:*",
     "@kian/contracts": "workspace:*",
+    "@kian/sdk": "workspace:*",
     "@kian/ui": "workspace:*",
     "@tonconnect/ui-react": "^5.0.3",
     "lucide-react": "1.77.0",

@@ -1,12 +1,28 @@
 /**
- * KIAN SDK — framework-free kernel client, shared between the mini-app and any TS client.
+ * MAIRON SDK — framework-free kernel client, shared between the Web OS, the
+ * admin console, the mini-app, and any TS client.
  *
  * Contracts mirror crates/contracts exactly:
  * - every session-bound request sends `Authorization: Bearer`.
  * - the error envelope is always `{ error: { code, message, meta? } }` → `ApiError`.
  * - identity is never constructed here: only the raw Telegram initData string goes to the kernel
  *   where the official HMAC is verified (fail-closed).
+ *
+ * The sovereign `MaironSdkClient` (domain namespaces + `syncWorldState`) lives
+ * in `./mairon-client`; its legacy aliases `KianSdkClient` / `createKianSdk`
+ * are re-exported so existing imports never break.
  */
+
+import { typedRequest } from "./core";
+
+export { ApiError, resolveDefaultApiBase, qs } from "./core";
+export {
+  MaironSdkClient,
+  createMaironSdk,
+  createKianSdk,
+  KianSdkClient,
+} from "./mairon-client";
+export type { MaironSdkOptions } from "./mairon-client";
 
 // ── Wire types ────────────────────────────────────────────────────────────
 
@@ -82,9 +98,9 @@ export type DevLoginInput = {
 
 /** Personas ready for tonight’s test — aligned with DEMO_PERSONAS in @kian/contracts. */
 export const DEMO_PERSONAS = {
-  creator: { tgUserId: "1001", username: "creator_demo", firstName: "\u0633\u0627\u0632\u0646\u062f\u0647 (Creator)" },
-  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "\u062e\u0631\u06cc\u062f\u0627\u0631 (Buyer)" },
-  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "\u0628\u0627\u0632\u0627\u0631\u06cc\u0627\u0628 (Affiliate)" },
+  creator: { tgUserId: "1001", username: "creator_demo", firstName: "Creator (demo persona)" },
+  buyer: { tgUserId: "2002", username: "buyer_demo", firstName: "Buyer (demo persona)" },
+  affiliate: { tgUserId: "3003", username: "affiliate_demo", firstName: "Affiliate (demo persona)" },
 } as const;
 
 export type DemoPersona = keyof typeof DEMO_PERSONAS;
@@ -262,46 +278,29 @@ export type EconomySummary = {
 
 // ── Errors ──────────────────────────────────────────────────────────────────────
 
-export class ApiError extends Error {
-  readonly status: number;
-  readonly code: string;
-  constructor(status: number, code: string, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.code = code;
-  }
-}
+// `ApiError` is defined once in `./core` and re-exported above.
 
 // ── Request engine ────────────────────────────────────────────────────────────
 
-const DEFAULT_BASE =
-  typeof process !== "undefined" && process.env?.NEXT_PUBLIC_KIAN_API
-    ? process.env.NEXT_PUBLIC_KIAN_API
-    : "http://127.0.0.1:8088/api/v1";
+const DEFAULT_BASE = resolveDefaultBase();
+
+/** Legacy-compatible base resolution (kept for the flat client below). */
+function resolveDefaultBase(): string {
+  if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_KIAN_API) {
+    return process.env.NEXT_PUBLIC_KIAN_API;
+  }
+  if (typeof window !== "undefined" && typeof window.location !== "undefined") {
+    return `${window.location.origin}/api/v1`;
+  }
+  return "http://127.0.0.1:8088/api/v1";
+}
 
 async function request<T>(
   base: string,
   path: string,
   init: RequestInit & { token?: string | null } = {},
 ): Promise<T> {
-  const { token, ...rest } = init;
-  const headers = new Headers(rest.headers);
-  if (rest.body) headers.set("content-type", "application/json");
-  if (token) headers.set("authorization", `Bearer ${token}`);
-  const res = await fetch(`${base}${path}`, { ...rest, headers });
-  if (res.status === 204) return undefined as T;
-  const body: unknown = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const envelope = (body as { error?: { code?: string; message?: string } })
-      .error;
-    throw new ApiError(
-      res.status,
-      envelope?.code ?? "UNKNOWN",
-      envelope?.message ?? "\u067e\u0627\u0633\u062e \u0646\u0627\u0634\u0646\u0627\u062e\u062a\u0647 \u0627\u0632 \u06a9\u0631\u0646\u0644",
-    );
-  }
-  return body as T;
+  return typedRequest<T>(base, path, init);
 }
 
 // ── Client ───────────────────────────────────────────────────────────────────
@@ -540,6 +539,9 @@ export function createKianClient(options: KianClientOptions = {}) {
 
 /** Default client — the same env path the web app uses. */
 export const api = createKianClient();
+
+/** Default MAIRON SDK client — the canonical entry point for new code. */
+export const mairon = createMaironSdk();
 
 // ── Telegram — extracting initData (two official paths) ────────────────────────────────
 
