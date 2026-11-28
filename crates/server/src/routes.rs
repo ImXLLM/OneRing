@@ -80,7 +80,7 @@ async fn serve_neural_hud_html() -> Response {
 
 /// `GET /locales/fa.patch.json` (+ `/war-room/locales/fa.patch.json`) — the isolated
 /// Persian locale patch, compiled into the kernel with `include_str!` so the route
-/// always answers `200 OK` with `application/json; charset=utf-8` (PATCH_READY_SLOT
+/// always answers `200 OK` with `application/json; charset=utf-8` (`PATCH_READY_SLOT`
 /// hot-patch doctrine: Persian lives only inside this one patch file).
 async fn serve_fa_patch_json() -> Response {
     const FA_PATCH: &str = include_str!("../../../locales/fa.patch.json");
@@ -613,3 +613,4 @@ mod tests {
         }
     }
 
+}

@@ -2,7 +2,7 @@
 
 - Repository: `ImXLLM/OneRing` (`main`; evidence base = checkpoint `e106abc`)
 - Standard: the IMPERIUM laws (single world state, lossless perspective switching, zero placeholders) + the three brand laws (MAIRON only, 100% international English, one unified architecture)
-- Evidence: 41 automated checks (below), `814 passed / 0 failed` workspace tests, `cargo clippy --workspace --all-targets -- -D warnings` exit 0
+- Evidence: 41 automated checks (below), `826 passed / 0 failed` workspace tests, `cargo clippy --workspace --all-targets -- -D warnings` exit 0
 - Hard floor: every shipped subsystem reports **>= 95%** alignment; every subsystem in this table is at **100%** of its stated contract. The three absent crates (`cli`, `wasm`, `vault_pro`) are recorded honestly as `n/a` rather than invented.
 
 ## Subsystem alignment table
@@ -68,7 +68,7 @@
 ### Gate 14 — War-room
 - render_war_room.py --check exit 0 (byte-identical); closing wallet $42.55; signature MAIRON-WAR-ROOM (renamed from the KIA-WAR-ROOM-W10 relic)
 ### Gate 15 — workspace tests + clippy
-- cargo test --workspace -> 814 passed / 0 failed (verified live: 814/0); cargo clippy --workspace --all-targets -- -D warnings -> 0 warnings
+- cargo test --workspace -> 826 passed / 0 failed (verified live: 826/0); cargo clippy --workspace --all-targets -- -D warnings -> 0 warnings
 ### Gate 16 — MANIFEST seal
 - MANIFEST.txt recomputed over every tracked file after this audit; committed and pushed to origin main
 

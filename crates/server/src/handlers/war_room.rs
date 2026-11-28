@@ -677,3 +677,4 @@ mod tests {
         assert_eq!(json["wallet"]["earnedRevenueMicros"], 0);
     }
 
+}

@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 /// Founder war room signature — present on every wire payload.
 pub const WAR_ROOM_SIGNATURE: &str = "MAIRON-WAR-ROOM";
 
-/// Commercialization target repository — the same 11-crate repo with 814 tests.
+/// Commercialization target repository — the same 11-crate repo with 826 tests.
 pub const GITHUB_REPO: &str = "ImXLLM/OneRing";
 
 /// Short hash of the headline metric on the UI setter — the third-quarter status bar.
@@ -732,8 +732,8 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 0,
         speaker: FounderPersona::JeffBezos,
-        fa: "[FA-PATCH-SLOT] Day 1! The three of us partnered 24/7 remotely under 0xKIA's chairmanship. We start from the ImXLLM/OneRing repo: 11 Rust crates, 814 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. Always Day 1.",
-        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the ImXLLM/OneRing repo: 11 Rust crates, 814 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
+        fa: "[FA-PATCH-SLOT] Day 1! The three of us partnered 24/7 remotely under 0xKIA's chairmanship. We start from the ImXLLM/OneRing repo: 11 Rust crates, 826 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. Always Day 1.",
+        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the ImXLLM/OneRing repo: 11 Rust crates, 826 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
         cmd: None,
         social: None,
         stage: PipelineStage::Ignition,
@@ -749,8 +749,8 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 3600,
         speaker: FounderPersona::ElonMusk,
-        fa: "[FA-PATCH-SLOT] First we prove the repo is healthy. I run the full workspace test suite — 783 passed, zero failures, zero clippy. This is our credibility furnace; without it no virality means anything.",
-        en: "First we prove the repo is healthy. Running the full workspace test suite — 814 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
+        fa: "[FA-PATCH-SLOT] First we prove the repo is healthy. I run the full workspace test suite — 826 passed, zero failures, zero clippy. This is our credibility furnace; without it no virality means anything.",
+        en: "First we prove the repo is healthy. Running the full workspace test suite — 826 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
         cmd: Some("cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings"),
         social: None,
         stage: PipelineStage::Ignition,
@@ -820,7 +820,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         fa: "[FA-PATCH-SLOT] The first X thread is live — HUD video plus how to understand this system in 5 seconds. The view curve starts from zero; let the data speak.",
         en: "First X thread is live — the HUD video plus 'how to understand this system in 5 seconds'. View curve starts at zero; let the data speak.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built OneRing: 11 Rust crates, 814 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"We built the OneRing system: 11 Rust crates, 814 tests, a 3D neural HUD, and a wallet that auto-splits every sale 80/20. A 9-year-old gets it in 5 seconds. Day zero starts this instant.","views":0,"likes":0}"#),
+        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built OneRing: 11 Rust crates, 826 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"We built the OneRing system: 11 Rust crates, 826 tests, a 3D neural HUD, and a wallet that auto-splits every sale 80/20. A 9-year-old gets it in 5 seconds. Day zero starts this instant.","views":0,"likes":0}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1106,10 +1106,10 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 79200,
         speaker: FounderPersona::ElonMusk,
-        fa: "[FA-PATCH-SLOT] The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 783 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
-        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 814 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
+        fa: "[FA-PATCH-SLOT] The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 826 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
+        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 826 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 814 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"Day 0 → Day 1 recap with the full team: 814 tests green, 5 real sales, $9.55 treasury revenue from zero, 1,527 users. Every number auditable. Keep building.","views":96400,"likes":8210}"#),
+        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 826 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"Day 0 → Day 1 recap with the full team: 826 tests green, 5 real sales, $9.55 treasury revenue from zero, 1,527 users. Every number auditable. Keep building.","views":96400,"likes":8210}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1604,8 +1604,8 @@ impl ChairmanChatEngine {
                     None,
                 ),
                 ChairmanIntent::StatusReport => (
-                    "[FA-PATCH-SLOT] From my side: 783 tests green, the HUD rendered, and the next render queue. The speed bottleneck is the terminal; I add one more CI command so every tick proves itself.",
-                    "From my side: 814 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
+                    "[FA-PATCH-SLOT] From my side: 826 tests green, the HUD rendered, and the next render queue. The speed bottleneck is the terminal; I add one more CI command so every tick proves itself.",
+                    "From my side: 826 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
                     Some("cargo test --workspace --quiet 2>&1 | tail -4"),
                     None,
                 ),
@@ -1622,8 +1622,8 @@ impl ChairmanChatEngine {
                     None,
                 ),
                 ChairmanIntent::ShipNextStep => (
-                    "[FA-PATCH-SLOT] My next step: the third HUD with the genome preset and the technical thread 783 tests, zero unsafe — engineering is its own marketing. I run it and measure the result.",
-                    "My next step: HUD #3 with the genome preset and the technical thread '814 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
+                    "[FA-PATCH-SLOT] My next step: the third HUD with the genome preset and the technical thread 826 tests, zero unsafe — engineering is its own marketing. I run it and measure the result.",
+                    "My next step: HUD #3 with the genome preset and the technical thread '826 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset trinity-5model-genome --aspect 9:16 --out hud_genome.html"),
                     None,
                 ),

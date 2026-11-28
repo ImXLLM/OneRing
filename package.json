@@ -18,6 +18,7 @@
     "rea:gate": "node tools/rea/release-exposure.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "turbo": "2.11.13"
   }
 }

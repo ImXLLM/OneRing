@@ -512,7 +512,7 @@ mod tests {
             revenue_stream: "marketplace_tax".to_owned(),
             wallet_delta_usdc_micros: 600_000,
             wallet_total_usdc_micros: 33_600_000,
-            message_en: "full workspace suite: 814 passed, zero failures, zero clippy".to_owned(),
+            message_en: "full workspace suite: 826 passed, zero failures, zero clippy".to_owned(),
             created_at: "2026-11-28T08:00:00.000Z".to_owned(),
         };
         store.record_war_room_tick_event(&event).await.expect("record");
@@ -556,3 +556,4 @@ mod tests {
         assert!(events.is_empty(), "reset must delete the WarRoomTickEvent ledger");
     }
 
+}
