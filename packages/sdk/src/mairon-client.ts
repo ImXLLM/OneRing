@@ -50,11 +50,178 @@ import type {
   WarRoomExplainResponseT,
   WarRoomResetResponseT,
   WarRoomStateResponseT,
+  SkillMdExportT,
+  StudioGenerateRequestT,
+  StudioGenerateResponseT,
+  StudioUxProfilesResponseT,
+  PublishBuilderResponseT,
   WarRoomStepRequestT,
   WarRoomStepResponseT,
 } from "@kian/contracts";
 
-import { qs, resolveDefaultApiBase, typedRequest } from "./core";
+import { qs, resolveDefaultApiBase, textRequest, typedRequest, type JsonValue } from "./core";
+
+/** The strictly-typed JSON wire value (defined once in the request engine). */
+export type { JsonValue };
+
+/** One locale slot of the ecosystem i18n matrix (`I18nLocaleView`). */
+export type I18nLocaleSlotView = {
+  code: string;
+  name: string;
+  nativeName: string;
+  direction: string;
+  fontFamily: string;
+  flagSvg: string;
+  glyphSample: string;
+  state: "ACTIVE_DAY1" | "PATCH_READY_SLOT";
+  completionBps: number;
+  fallback: string;
+};
+
+/** `GET /api/v1/i18n/ecosystem-matrix` — 20 locales, 1 day-one active + 19 patch-ready. */
+export type I18nEcosystemMatrixView = {
+  locales: I18nLocaleSlotView[];
+  activeDay1: number;
+  patchReady: number;
+  signature: string;
+};
+
+/** `POST /api/v1/i18n/apply-patch` — one applied locale patch outcome. */
+export type I18nPatchOutcomeView = {
+  localeCode: string;
+  state: "ACTIVE_DAY1" | "PATCH_READY_SLOT";
+  completionBps: number;
+  appliedCount: number;
+  patchVersion: string;
+  appliedEntries: Record<string, string>;
+};
+
+/** `GET /api/v1/studio/portfolio-catalog` — the storefront portfolio catalog. */
+export type StudioPortfolioCatalogView = {
+  signature: string;
+  projects: Array<Record<string, JsonValue>>;
+};
+
+/** `POST /api/v1/supremacy/workflow/execute` — one dynamic DAG run outcome. */
+export type SupremacyWorkflowRunView = {
+  signature: string;
+  runId: string;
+  status: string;
+  nodes: Array<Record<string, JsonValue>>;
+  startedAtIso: string | null;
+  finishedAtIso: string | null;
+};
+
+/** `POST /api/v1/hud/synthesize` — one deterministic HUD render. */
+export type HudSynthesizeView = {
+  signature: string;
+  jobId: string;
+  presetSlug: string;
+  aspectRatio: string;
+  resolution: string;
+  fps: number;
+  durationSec: number;
+  status: string;
+  renderUrl: string | null;
+};
+
+/** `GET /api/v1/builder/sessions/{id}` — one Trinity builder session. */
+export type TrinitySessionView = {
+  signature: string;
+  session: {
+    id: string;
+    status: string;
+    headline: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+};
+
+/** `POST /api/v1/builder/sessions/{id}/publish` — the two-key publish ticket. */
+export type TrinityPublishView = {
+  signature: string;
+  ticket: {
+    ticketId: string;
+    sessionId: string;
+    maironSealSha256: string;
+    creatorConfirmRequired: boolean;
+    expiresAtIso: string;
+  } | null;
+};
+
+/** `GET /api/v1/admin/overview` — institutional control-plane counters. */
+export type AdminOverviewView = {
+  users: number;
+  accounts: number;
+  escrows: number;
+  hitlPending: number;
+  mintedAllTime: string;
+  burnedAllTime: string;
+  aiCalls: number;
+  revenueSeries: Array<{ dayIso: string; din: number }>;
+  salesBySeller: Array<Record<string, JsonValue>>;
+};
+
+/** `GET /api/v1/admin/audit` — the audit-log tail. */
+export type AdminAuditTailView = {
+  entries: Array<{
+    id: string;
+    actor: string;
+    action: string;
+    createdAt: string;
+    meta: Record<string, JsonValue> | null;
+  }>;
+};
+
+/** `GET /api/v1/admin/lab-telemetry` — the 10-DNA lab observatory table. */
+export type AdminLabTelemetryView = {
+  signature: string;
+  totalEntries: number;
+  usableForTraining: number;
+  rows: Array<Record<string, JsonValue>>;
+};
+
+/** `GET /api/v1/admin/hitl` — pending human-in-the-loop requests. */
+export type AdminHitlListView = {
+  pending: Array<{
+    id: string;
+    kind: string;
+    subject: string;
+    amountDin: number | null;
+    createdAt: string;
+  }>;
+};
+
+/** `POST /api/v1/admin/hitl/{id}/approve|reject` — the decision echo. */
+export type AdminHitlDecisionView = {
+  signature: string;
+  decisionId: string;
+  request: string;
+  decision: "approved" | "rejected";
+  decidedAtIso: string;
+};
+
+/** `GET /api/v1/admin/deposits` — TonDeposit observatory rows. */
+export type AdminDepositsView = {
+  deposits: Array<Record<string, JsonValue>>;
+};
+
+/** `GET /api/v1/admin/withdrawals` — withdrawal request rows. */
+export type AdminWithdrawalsView = {
+  withdrawals: Array<Record<string, JsonValue>>;
+};
+
+/** `GET /api/v1/admin/products` — marketplace product rows. */
+export type AdminProductsView = {
+  products: Array<Record<string, JsonValue>>;
+};
+
+/** `DELETE /api/v1/admin/products/{id}` — the delete echo. */
+export type AdminProductDeleteView = {
+  signature: string;
+  deletedProductId: string;
+  deletedAtIso: string;
+};
 
 /** Options for constructing a Mairon SDK client. */
 export type MaironSdkOptions = {
@@ -107,6 +274,15 @@ export class MaironSdkClient {
     });
   }
 
+  /** Raw-text request — for `text/plain` kernel responses (e.g. the JSONL export). */
+  private reqText(path: string, init: RequestInit & { adminKey?: boolean } = {}): Promise<string> {
+    return textRequest(this.baseUrl, path, {
+      ...init,
+      token: this.token,
+      adminKey: init.adminKey ? this.adminKey : null,
+    });
+  }
+
   // ── Mairon Trinity Engine ────────────────────────────────────────────────────
 
   /** The Trinity engine domain — Alpha discovery, CommandCenter forging, publication. */
@@ -130,14 +306,14 @@ export class MaironSdkClient {
 
     /** Fetch the Trinity session under review (`GET /api/v1/builder/sessions/{id}`). */
     status: (sessionId: string) =>
-      this.req<unknown>(`/builder/sessions/${encodeURIComponent(sessionId)}`),
+      this.req<TrinitySessionView>(`/builder/sessions/${encodeURIComponent(sessionId)}`),
 
     /** Mint the two-key publish ticket by publishing the session (`POST /api/v1/builder/sessions/{id}/publish`). */
     publishTwoKey: (
       sessionId: string,
-      overrides: Record<string, unknown> = {},
+      overrides: Record<string, JsonValue> = {},
     ) =>
-      this.req<unknown>(`/builder/sessions/${encodeURIComponent(sessionId)}/publish`, {
+      this.req<PublishBuilderResponseT>(`/builder/sessions/${encodeURIComponent(sessionId)}/publish`, {
         method: "POST",
         body: JSON.stringify(overrides),
       }),
@@ -154,11 +330,11 @@ export class MaironSdkClient {
     listLocales: () => this.req<ArdaFlagsCatalogResponseT>("/arda/flags"),
 
     /** The ecosystem matrix with parity scores (`GET /api/v1/i18n/ecosystem-matrix`). */
-    ecosystemMatrix: () => this.req<unknown>("/i18n/ecosystem-matrix"),
+    ecosystemMatrix: () => this.req<I18nEcosystemMatrixView>("/i18n/ecosystem-matrix"),
 
     /** Apply a locale patch (`POST /api/v1/i18n/apply-patch`) — the PATCH_READY_SLOT switch. */
-    switchLocale: (payload: Record<string, unknown>) =>
-      this.req<unknown>("/i18n/apply-patch", {
+    switchLocale: (payload: Record<string, JsonValue>) =>
+      this.req<I18nPatchOutcomeView>("/i18n/apply-patch", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -172,7 +348,7 @@ export class MaironSdkClient {
 
     /** The forged SKILL.md package of a product (`GET /api/v1/market/products/{id}/skill`). */
     exportSkillMd: (productId: string) =>
-      this.req<unknown>(`/market/products/${encodeURIComponent(productId)}/skill`),
+      this.req<SkillMdExportT>(`/market/products/${encodeURIComponent(productId)}/skill`),
   };
 
   // ── Mairon Super-Studio ──────────────────────────────────────────────────────
@@ -180,17 +356,17 @@ export class MaironSdkClient {
   /** The Super-Studio domain — morph modes, nine modalities, portfolio. */
   readonly superStudio = {
     /** Cognitive tiers + modalities + the 6-remedy safety report (`GET /api/v1/studio/ux-profiles`). */
-    morphMode: () => this.req<unknown>("/studio/ux-profiles"),
+    morphMode: () => this.req<StudioUxProfilesResponseT>("/studio/ux-profiles"),
 
     /** Run one studio modality (`POST /api/v1/studio/generate`). */
-    executeModality: (input: Record<string, unknown>) =>
-      this.req<unknown>("/studio/generate", {
+    executeModality: (input: StudioGenerateRequestT) =>
+      this.req<StudioGenerateResponseT>("/studio/generate", {
         method: "POST",
         body: JSON.stringify(input),
       }),
 
     /** The storefront portfolio catalog (`GET /api/v1/studio/portfolio-catalog`). */
-    portfolio: () => this.req<unknown>("/studio/portfolio-catalog"),
+    portfolio: () => this.req<StudioPortfolioCatalogView>("/studio/portfolio-catalog"),
   };
 
   // ── Competitive Supremacy Sandbox ────────────────────────────────────────────
@@ -235,14 +411,14 @@ export class MaironSdkClient {
     },
 
     /** Execute a dynamic DAG workflow (`POST /api/v1/supremacy/workflow/execute`). */
-    executeWorkflow: (input: Record<string, unknown>) =>
-      this.req<unknown>("/supremacy/workflow/execute", {
+    executeWorkflow: (input: Record<string, JsonValue>) =>
+      this.req<SupremacyWorkflowRunView>("/supremacy/workflow/execute", {
         method: "POST",
         body: JSON.stringify(input),
       }),
 
     /** JSON-RPC 2.0 tool invocation (`POST /api/v1/supremacy/mcp`). */
-    invokeMcpTool: (payload: Record<string, unknown>) =>
+    invokeMcpTool: (payload: Record<string, JsonValue>) =>
       this.req<SupremacyMcpResponseT>("/supremacy/mcp", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -349,8 +525,8 @@ export class MaironSdkClient {
     getGraphState: () => this.req<HudPresetsResponseT>("/hud/presets"),
 
     /** Synthesize a deterministic HUD render (`POST /api/v1/hud/synthesize`). */
-    renderPreset: (input: Record<string, unknown>) =>
-      this.req<unknown>("/hud/synthesize", {
+    renderPreset: (input: Record<string, JsonValue>) =>
+      this.req<HudSynthesizeView>("/hud/synthesize", {
         method: "POST",
         body: JSON.stringify(input),
       }),
@@ -378,8 +554,9 @@ export class MaironSdkClient {
         body: JSON.stringify(input),
       }),
 
-    /** The lab telemetry table (admin) — the export source (`GET /api/v1/admin/lab-telemetry`). */
-    exportSftDpo: () => this.req<unknown>("/admin/lab-telemetry", { adminKey: true }),
+    /** The combined SFT+DPO JSONL training-dataset export (`GET /api/v1/grok-lab/export-sft-dpo`, admin-gated). */
+    exportSftDpo: (): Promise<string> =>
+      this.reqText("/grok-lab/export-sft-dpo", { adminKey: true }),
   };
 
   // ── Founder War-Room ─────────────────────────────────────────────────────────
@@ -425,27 +602,27 @@ export class MaironSdkClient {
 
   /** The admin control-plane namespace (requires an admin key). */
   readonly admin = {
-    overview: () => this.req<unknown>("/admin/overview", { adminKey: true }),
-    auditTail: () => this.req<unknown>("/admin/audit", { adminKey: true }),
-    labTelemetry: () => this.req<unknown>("/admin/lab-telemetry", { adminKey: true }),
-    hitlList: () => this.req<unknown>("/admin/hitl", { adminKey: true }),
+    overview: () => this.req<AdminOverviewView>("/admin/overview", { adminKey: true }),
+    auditTail: () => this.req<AdminAuditTailView>("/admin/audit", { adminKey: true }),
+    labTelemetry: () => this.req<AdminLabTelemetryView>("/admin/lab-telemetry", { adminKey: true }),
+    hitlList: () => this.req<AdminHitlListView>("/admin/hitl", { adminKey: true }),
     hitlApprove: (id: string) =>
-      this.req<unknown>(`/admin/hitl/${encodeURIComponent(id)}/approve`, {
+      this.req<AdminHitlDecisionView>(`/admin/hitl/${encodeURIComponent(id)}/approve`, {
         method: "POST",
         body: JSON.stringify({}),
         adminKey: true,
       }),
     hitlReject: (id: string) =>
-      this.req<unknown>(`/admin/hitl/${encodeURIComponent(id)}/reject`, {
+      this.req<AdminHitlDecisionView>(`/admin/hitl/${encodeURIComponent(id)}/reject`, {
         method: "POST",
         body: JSON.stringify({}),
         adminKey: true,
       }),
-    deposits: () => this.req<unknown>("/admin/deposits", { adminKey: true }),
-    withdrawals: () => this.req<unknown>("/admin/withdrawals", { adminKey: true }),
-    products: () => this.req<unknown>("/admin/products", { adminKey: true }),
+    deposits: () => this.req<AdminDepositsView>("/admin/deposits", { adminKey: true }),
+    withdrawals: () => this.req<AdminWithdrawalsView>("/admin/withdrawals", { adminKey: true }),
+    products: () => this.req<AdminProductsView>("/admin/products", { adminKey: true }),
     productDelete: (id: string) =>
-      this.req<unknown>(`/admin/products/${encodeURIComponent(id)}`, {
+      this.req<AdminProductDeleteView>(`/admin/products/${encodeURIComponent(id)}`, {
         method: "DELETE",
         adminKey: true,
       }),
@@ -471,7 +648,7 @@ export class MaironSdkClient {
     ];
     const settled = await Promise.allSettled(probes.map((p) => p.run()));
     const postures: SubsystemSyncPostureT[] = [];
-    const payloads: Record<string, unknown | null> = {};
+    const payloads: Record<string, JsonValue | null> = {};
     let revision = 0;
     settled.forEach((outcome, index) => {
       const subsystem = probes[index].subsystem;

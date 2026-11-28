@@ -164,7 +164,7 @@ pub fn format_treasury() -> String {
          4-Stream Revenue Split:\n\
          - Unreferred sale:  20% platform / 80% creator\n\
          - Referred sale:    10% referrer / 80% creator / 10% platform\n\
-         - Instant Boosts:   100% to the boosted creator\n\
+         - Instant Boosts:   100% MAIRON Sovereign Treasury / 0% Creator\n\
          - Swap spread:      1.5% treasury fee\n\
          \n\
          Capital Reserve Partition:\n\
@@ -364,7 +364,7 @@ mod tests {
         assert!(t.contains("XTR"));
         assert!(t.contains("20% platform / 80% creator"));
         assert!(t.contains("10% referrer / 80% creator / 10% platform"));
-        assert!(t.contains("100% to the boosted creator"));
+        assert!(t.contains("100% MAIRON Sovereign Treasury / 0% Creator"));
         assert!(t.contains("1.5% treasury fee"));
         assert!(t.contains("33.00"));
         assert!(t.contains("15.00"));

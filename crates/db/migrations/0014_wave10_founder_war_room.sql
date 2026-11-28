@@ -44,3 +44,42 @@ CREATE TABLE IF NOT EXISTS "ChairmanDirectiveLog" (
 
 CREATE INDEX IF NOT EXISTS "idx_chairman_directive_time"
     ON "ChairmanDirectiveLog"("created_at");
+
+-- ── named war-room state + tick-event ledger (Gate 5 remediation) ─────────────
+-- `WarRoomState`: the singleton live state of the Day 0 → Day 1 simulation.
+-- `WarRoomTickEvent`: the append-only causal ledger of executed ticks — every row
+-- carries the wallet total after the tick so the ledger is replayable.
+-- Both tables keep the same schema-level guards as `FounderWarRoomTick`.
+
+CREATE TABLE IF NOT EXISTS "WarRoomState" (
+    "id" TEXT PRIMARY KEY,
+    -- schema-level guard: the canonical scenario is exactly 24 ticks
+    "tick_index" INTEGER NOT NULL DEFAULT 0 CHECK (tick_index BETWEEN 0 AND 23),
+    "elapsed_seconds" INTEGER NOT NULL DEFAULT 0,
+    "tick_cursor" INTEGER NOT NULL DEFAULT 0 CHECK (tick_cursor BETWEEN 0 AND 23),
+    -- schema-level guard: the sovereign wallet never goes negative
+    "wallet_total_usdc_micros" INTEGER NOT NULL DEFAULT 0 CHECK (wallet_total_usdc_micros >= 0),
+    "earned_revenue_micros" INTEGER NOT NULL DEFAULT 0,
+    "creator_payouts_micros" INTEGER NOT NULL DEFAULT 0,
+    "affiliate_payouts_micros" INTEGER NOT NULL DEFAULT 0,
+    "active_users" INTEGER NOT NULL DEFAULT 0,
+    "locale" TEXT NOT NULL DEFAULT 'en',
+    "updated_at" TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "WarRoomTickEvent" (
+    "id" TEXT PRIMARY KEY,
+    -- schema-level guard: the canonical scenario is exactly 24 ticks
+    "tick_index" INTEGER NOT NULL CHECK (tick_index BETWEEN 0 AND 23),
+    "simulation_second" INTEGER NOT NULL,
+    "speaker_id" TEXT NOT NULL,
+    "revenue_stream" TEXT NOT NULL DEFAULT 'None',
+    "wallet_delta_usdc_micros" INTEGER NOT NULL DEFAULT 0,
+    -- schema-level guard: the sovereign wallet never goes negative
+    "wallet_total_usdc_micros" INTEGER NOT NULL DEFAULT 0 CHECK (wallet_total_usdc_micros >= 0),
+    "message_en" TEXT NOT NULL,
+    "created_at" TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "idx_war_room_tick_event_order"
+    ON "WarRoomTickEvent"("tick_index");

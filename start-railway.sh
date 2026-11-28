@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 # ═══════════════════════════════════════════════════════════════════════════
-#  start-railway.sh — boot KIAN v2 on Railway with a persistent SQLite volume
+#  start-railway.sh — boot MAIRON — Sovereign Intelligence, Quantitative Execution
+#  & Autonomous Capital OS on Railway with a persistent SQLite volume
 #
 #  Seed logic (once and for all):
 #    1) The database path is read from KIAN_DATABASE_URL (default /data/kian.db).

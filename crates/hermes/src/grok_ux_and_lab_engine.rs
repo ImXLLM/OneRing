@@ -16,7 +16,7 @@
 //! **B — the day-one 20-locale `Arda` ecosystem architecture** —
 //! [`build_day1_ecosystem_i18n_matrix`]: Persian (`fa` — RTL, `Vazirmatn`,
 //! `--track: 0em`) and English (`en` — LTR) are active from day one at
-//! [`LocaleActivationState::ActiveDay1`] with `completion_bps = 10000` and
+//! [`LocaleActivationState::PatchReadySlot`] with `completion_bps = 0` and
 //! the full 9-panel-module dictionary, while the 18 other `Arda/Fishkal` locales sit as
 //! [`LocaleActivationState::PatchReadySlot`] with a native glyph, an SVG flag
 //! (`viewBox="0 0 20 14"`), RTL/LTR directionality, fallback to `en`, and support for
@@ -826,7 +826,8 @@ pub fn en_dictionary() -> BTreeMap<String, String> {
         .collect()
 }
 
-/// The ecosystem i18n matrix — 20 locales: 2 day-one active + 18 patch-ready.
+/// The ecosystem i18n matrix — 20 locales: 1 day-one active (`en`) + 19 patch-ready
+/// (`fa` demoted to a `PATCH_READY_SLOT` — Persian ships only via `locales/fa.patch.json`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EcosystemI18nMatrix {
     /// Locales in fixed order (`fa` and `en` first).
@@ -839,9 +840,9 @@ pub struct EcosystemI18nMatrix {
     pub signature: String,
 }
 
-/// Builds the day-one ecosystem localization matrix — `fa` (RTL, Vazirmatn,
-/// `--track: 0em`) and `en` (LTR) fully active at 10000 bps, plus 18
-/// patch-ready locales with SVG flags and fallback to `en`.
+/// Builds the day-one ecosystem localization matrix — `en` (LTR) fully active at
+/// 10000 bps; `fa` (RTL, Vazirmatn) is a `PATCH_READY_SLOT` with English fallback
+/// until `locales/fa.patch.json` lands, plus the 18 other patch-ready locales.
 #[must_use]
 pub fn build_day1_ecosystem_i18n_matrix() -> EcosystemI18nMatrix {
     let mut locales = vec![
@@ -853,8 +854,8 @@ pub fn build_day1_ecosystem_i18n_matrix() -> EcosystemI18nMatrix {
             font_family: "Vazirmatn".to_owned(),
             flag_svg: locale_flag_svg(["#239f40", "#ffffff", "#da0000"]),
             glyph_sample: "\u{633}\u{644}\u{627}\u{645}".to_owned(),
-            state: LocaleActivationState::ActiveDay1,
-            completion_bps: 10_000,
+            state: LocaleActivationState::PatchReadySlot,
+            completion_bps: 0,
             fallback: "en".to_owned(),
         },
         EcosystemLocale {
@@ -884,9 +885,13 @@ pub fn build_day1_ecosystem_i18n_matrix() -> EcosystemI18nMatrix {
             fallback: "en".to_owned(),
         });
     }
+    let active_day1 = locales
+        .iter()
+        .filter(|l| l.state == LocaleActivationState::ActiveDay1)
+        .count();
     EcosystemI18nMatrix {
-        active_day1: 2,
-        patch_ready: PATCH_READY_LOCALES.len(),
+        active_day1,
+        patch_ready: locales.len() - active_day1,
         locales,
         signature: GROK_LAB_SIGNATURE.to_owned(),
     }
@@ -1845,15 +1850,15 @@ mod tests {
     }
 
     #[test]
-    fn fa_and_en_are_active_day1_with_full_nine_module_dictionaries() {
+    fn fa_is_patch_ready_en_active_day1_with_full_nine_module_dictionaries() {
         let matrix = build_day1_ecosystem_i18n_matrix();
         assert_eq!(matrix.locales.len(), 20);
-        assert_eq!(matrix.active_day1, 2);
-        assert_eq!(matrix.patch_ready, 18);
+        assert_eq!(matrix.active_day1, 1);
+        assert_eq!(matrix.patch_ready, 19);
         let fa = matrix.locales.iter().find(|l| l.code == "fa").expect("fa");
         let en = matrix.locales.iter().find(|l| l.code == "en").expect("en");
-        assert_eq!(fa.state, LocaleActivationState::ActiveDay1);
-        assert_eq!(fa.completion_bps, 10_000);
+        assert_eq!(fa.state, LocaleActivationState::PatchReadySlot);
+        assert_eq!(fa.completion_bps, 0);
         assert_eq!(fa.direction, "rtl");
         assert_eq!(fa.font_family, "Vazirmatn");
         assert_eq!(en.state, LocaleActivationState::ActiveDay1);
@@ -1872,22 +1877,26 @@ mod tests {
     }
 
     #[test]
-    fn eighteen_patch_ready_locales_carry_flags_direction_and_fallback() {
+    fn nineteen_patch_ready_locales_carry_flags_direction_and_fallback() {
         let matrix = build_day1_ecosystem_i18n_matrix();
         let patch: Vec<_> = matrix
             .locales
             .iter()
             .filter(|l| l.state == LocaleActivationState::PatchReadySlot)
             .collect();
-        assert_eq!(patch.len(), 18);
+        assert_eq!(patch.len(), 19);
         for locale in &patch {
-            assert!(PATCH_READY_LOCALES.contains(&locale.code.as_str()));
+            assert!(
+                PATCH_READY_LOCALES.contains(&locale.code.as_str()) || locale.code == "fa",
+                "patch-ready locale {} must be a known slot",
+                locale.code
+            );
             assert!(locale.flag_svg.contains("viewBox=\"0 0 20 14\""), "flag viewBox");
             assert!(locale.flag_svg.starts_with("<svg"));
             assert_eq!(locale.fallback, "en");
             assert!(locale.native_name.starts_with(char::is_alphanumeric), "native name");
             assert!(locale.glyph_sample.starts_with(char::is_alphanumeric), "glyph sample");
-            let want_direction = matches!(locale.code.as_str(), "ar" | "ur" | "he");
+            let want_direction = matches!(locale.code.as_str(), "fa" | "ar" | "ur" | "he");
             let got_rtl = locale.direction == "rtl";
             assert_eq!(got_rtl, want_direction, "direction for {}", locale.code);
         }
@@ -1910,10 +1919,13 @@ mod tests {
         assert_eq!(a.completion_bps, 2 * 10_000 / u32::try_from(FULL_DICTIONARY_KEYS).unwrap_or(1));
         assert_eq!(a.patch_version, "wave9.2");
         assert!(a.applied_entries.contains_key("nav.brand"));
-        // fa/en always stay at 100%
+        // en stays at 100%; fa rides the patch-ready slot like every other locale
         let fa_patch = apply_locale_translation_patch("fa", &entries).expect("patch fa");
-        assert_eq!(fa_patch.completion_bps, 10_000);
-        assert_eq!(fa_patch.activation_state, "ACTIVE_DAY1");
+        assert_eq!(
+            fa_patch.completion_bps,
+            2 * 10_000 / u32::try_from(FULL_DICTIONARY_KEYS).unwrap_or(1)
+        );
+        assert_eq!(fa_patch.activation_state, "PATCH_READY_SLOT");
         let ar_state = apply_locale_translation_patch("ar", &entries)
             .expect("patch")
             .activation_state;

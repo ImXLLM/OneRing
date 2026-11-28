@@ -170,8 +170,8 @@ pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     },
     FishkalLocale {
         code: "fa",
-        native_name: "\u{641}\u{627}\u{631}\u{633}\u{6cc}",
-        str_code: "\u{641}\u{627}",
+        native_name: "Farsi",
+        str_code: "FA",
         dir: TextDirection::Rtl,
         intl_locale: "fa-IR",
         svg: SVG_FA,
@@ -290,8 +290,8 @@ pub const FISHKAL_VECTOR_FLAGS: [FishkalLocale; 20] = [
     },
     FishkalLocale {
         code: "ur",
-        native_name: "\u{627}\u{631}\u{62f}\u{648}",
-        str_code: "\u{627}\u{631}\u{62f}\u{648}",
+        native_name: "Urdu",
+        str_code: "UR",
         dir: TextDirection::Rtl,
         intl_locale: "ur-PK",
         svg: SVG_UR,
@@ -1437,9 +1437,9 @@ mod tests {
     #[test]
     fn native_script_glyphs_and_directions_are_locked() {
         let cases = [
-            ("fa", "\u{641}\u{627}", "\u{641}\u{627}\u{631}\u{633}\u{6cc}", TextDirection::Rtl, "fa-IR"),
+            ("fa", "FA", "Farsi", TextDirection::Rtl, "fa-IR"),
             ("ar", "\u{639}", "\u{627}\u{644}\u{639}\u{631}\u{628}\u{64a}\u{629}", TextDirection::Rtl, "ar-AE"),
-            ("ur", "\u{627}\u{631}\u{62f}\u{648}", "\u{627}\u{631}\u{62f}\u{648}", TextDirection::Rtl, "ur-PK"),
+            ("ur", "UR", "Urdu", TextDirection::Rtl, "ur-PK"),
             ("he", "עב", "עברית", TextDirection::Rtl, "he-IL"),
             ("en", "EN", "English", TextDirection::Ltr, "en-US"),
             ("tr", "TR", "Türkçe", TextDirection::Ltr, "tr-TR"),
@@ -1466,7 +1466,7 @@ mod tests {
         assert!(badge.contains("box-shadow:0 0 0 1px rgba(239,230,214,.28)"));
         // The defensive counter-rotation quirk — the same Fishkal rule L353–358.
         assert!(badge.contains("transform:none !important;transition:none;stroke:none"));
-        assert!(badge.contains("aria-label=\"\u{641}\u{627}\u{631}\u{633}\u{6cc} (fa)\""));
+        assert!(badge.contains("aria-label=\"Farsi (fa)\""));
         assert!(badge.contains("preserveAspectRatio=\"xMidYMid slice\""));
         assert!(render_circular_flag_badge("xx").is_none());
 

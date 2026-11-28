@@ -500,6 +500,10 @@ pub struct TimeTravelLedger {
     checkpoints: Vec<AgentStateCheckpoint>,
 }
 
+/// Alias — both names exist and resolve cleanly:
+/// `TimeTravelCheckpointer` and `TimeTravelLedger` denote the same type.
+pub type TimeTravelCheckpointer = TimeTravelLedger;
+
 impl TimeTravelLedger {
     /// A new ledger.
     #[must_use]

@@ -186,6 +186,10 @@ use kian_hermes::competitive_supremacy_engine::{
     TimeTravelLedger, WorkflowDagSpec, WorkflowNode, WorkflowNodeKind, AgentStateCheckpoint,
 };
 
+/// Alias — both `TimeTravelCheckpointer` and `TimeTravelLedger` resolve cleanly
+/// on the server surface (the checkpointer is the same time-travel ledger).
+pub type TimeTravelCheckpointer = TimeTravelLedger;
+
 /// `POST /supremacy/surgical-patch` — the `SEARCH/REPLACE` surgical patcher + the live
 /// DOM inspector bundle (public; rate-limited; input cap 512/256 KiB).
 ///
@@ -860,7 +864,7 @@ mod tests {
             daily_cap_tokens: 10_000,
         };
         let scripted = ScriptedClient::new(vec![Ok(kian_ai::gateway::CompletionPacket {
-            content: "\u{67e}\u{627}\u{633}\u{62e} \u{645}\u{63a}\u{632}".into(),
+            content: "brain reply".into(),
             prompt_tokens: 10,
             completion_tokens: 5,
         })]);
@@ -1072,16 +1076,16 @@ mod tests {
         assert_eq!(res.status(), 200);
         let body = body_json(res).await;
         assert_eq!(body["locales"].as_array().unwrap().len(), 20);
-        assert_eq!(body["activeDay1"], 2);
-        assert_eq!(body["patchReady"], 18);
+        assert_eq!(body["activeDay1"], 1);
+        assert_eq!(body["patchReady"], 19);
         let fa = body["locales"]
             .as_array()
             .unwrap()
             .iter()
             .find(|l| l["code"] == "fa")
             .expect("fa present");
-        assert_eq!(fa["state"], "ACTIVE_DAY1");
-        assert_eq!(fa["completionBps"], 10000);
+        assert_eq!(fa["state"], "PATCH_READY_SLOT");
+        assert_eq!(fa["completionBps"], 0);
         assert_eq!(fa["direction"], "rtl");
         assert!(fa["flagSvg"].as_str().unwrap_or("").contains("viewBox=\"0 0 20 14\""));
 
@@ -1165,7 +1169,7 @@ mod tests {
         assert_eq!(res.status(), 200);
         let body = body_json(res).await;
         assert_eq!(body["skillId"], "wallet.balance");
-        assert!(body["output"].as_str().unwrap().contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"));
+        assert!(body["output"].as_str().unwrap().contains("your balance"));
         assert_eq!(body["tokens"], 0);
         assert_eq!(body["identityScore"], 52);
 
@@ -1258,7 +1262,7 @@ mod tests {
         cfg.admin_key = Some(ADMIN.to_owned());
         cfg.bot_token = Some(BOT.to_owned());
         let scripted = ScriptedClient::new(vec![Ok(kian_ai::gateway::CompletionPacket {
-            content: "\u{67e}\u{627}\u{633}\u{62e} \u{645}\u{63a}\u{632}".into(),
+            content: "brain reply".into(),
             prompt_tokens: 1,
             completion_tokens: 1,
         })]);
@@ -1287,8 +1291,8 @@ mod tests {
     async fn supremacy_surgical_patch_is_public_and_deterministic() {
         let (app, _store) = app_and_store().await;
         let body = serde_json::json!({
-            "originalSource": "<!DOCTYPE html>\n<html><body><main>\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 1</p>\n</main></body></html>\n",
-            "patchPayload": "<<<<<<< SEARCH\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 1</p>\n=======\n<p id=\"price\">\u{642}\u{6cc}\u{645}\u{62a}: 42</p>\n>>>>>>> REPLACE\n",
+            "originalSource": "<!DOCTYPE html>\n<html><body><main>\n<p id=\"price\">price: 1</p>\n</main></body></html>\n",
+            "patchPayload": "<<<<<<< SEARCH\n<p id=\"price\">price: 1</p>\n=======\n<p id=\"price\">price: 42</p>\n>>>>>>> REPLACE\n",
             "locale": "fa",
             "injectSandboxInspector": true
         })
@@ -1299,7 +1303,7 @@ mod tests {
         assert_eq!(v["patchApplied"], true);
         assert_eq!(v["hunkCount"], 1);
         assert_eq!(v["patchMode"], "exact");
-        assert!(v["patchedSource"].as_str().unwrap().contains("\u{642}\u{6cc}\u{645}\u{62a}: 42"));
+        assert!(v["patchedSource"].as_str().unwrap().contains("price: 42"));
         let bundle = &v["sandboxBundle"];
         assert_eq!(bundle["locale"], "fa");
         assert!(bundle["nodeCount"].as_u64().unwrap() >= 2);

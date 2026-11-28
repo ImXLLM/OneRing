@@ -5,7 +5,7 @@ import { Toaster } from "@kian/ui";
 export const metadata: Metadata = {
   title: "MAIRON — Institutional Governance & Audit Console",
   description:
-    "The MAIRON institutional control plane: double-entry ledger auditor, two-key publish vault, 45-model genome override matrix, 69-key environment readiness, 10-DNA lab telemetry with SFT/DPO export, and the War-Room chairman console. Admin identity: X-KIAN-Key.",
+    "The MAIRON institutional control plane: double-entry ledger auditor, two-key publish vault, 45-model genome override matrix, 69-key environment readiness, 10-DNA lab telemetry with SFT/DPO export (/api/v1/grok-lab/export-sft-dpo), and the War-Room chairman console. Admin identity: X-KIAN-Key.",
   robots: { index: false, follow: false },
   icons: {
     icon: [

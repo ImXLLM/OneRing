@@ -590,8 +590,8 @@ mod tests {
                     .header("authorization", format!("Bearer {t1}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{631}\u{627} \u{622}\u{632}\u{645}\u{627}\u{6cc}\u{634} \u{6a9}\u{646}",
-                            "description": "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{686}\u{631}\u{62e}\u{647}\u{654} \u{62e}\u{632}\u{627}\u{646}\u{647}",
+                            "title": "test the parliament",
+                            "description": "treasury-cycle product",
                             "priceDin": 1000
                         })
                         .to_string(),
@@ -659,7 +659,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:10",
                             "amountDin": 100,
-                            "title": "\u{67e}\u{627}\u{62f}\u{627}\u{634} \u{645}\u{634}\u{627}\u{631}\u{6a9}\u{62a}"
+                            "title": "participation reward"
                         })
                         .to_string(),
                     ))
@@ -782,7 +782,7 @@ mod tests {
         let me = json_body(res).await;
         assert_eq!(
             me["balance"], 1000,
-            "\u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{6f9}\u{6f0}\u{66a} \u{641}\u{631}\u{648}\u{634} (\u{6f9}\u{6f0}\u{6f0}) + \u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} \u{644}\u{627}\u{6cc}\u{62d}\u{647}‌\u{634}\u{62f}\u{647} (\u{6f1}\u{6f0}\u{6f0}) — \u{67e}\u{648}\u{644} \u{648}\u{627}\u{642}\u{639}\u{6cc}"
+            "90% sale settlement (900) + routed locked-treasury (100) — real money"
         );
 
         // re-execute — an EXECUTED bill is no longer PASSED → 422
@@ -822,7 +822,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:21",
                             "amountDin": 60_000,
-                            "title": "\u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{628}\u{632}\u{631}\u{6af}"
+                            "title": "big treasury move"
                         })
                         .to_string(),
                     ))
@@ -908,7 +908,7 @@ mod tests {
                             "kind": "treasuryMove",
                             "subject": "citizen:30",
                             "amountDin": 100,
-                            "title": "\u{628}\u{62f}\u{648}\u{646} \u{646}\u{634}\u{633}\u{62a}"
+                            "title": "no session"
                         })
                         .to_string(),
                     ))

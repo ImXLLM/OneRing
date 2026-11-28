@@ -37,6 +37,23 @@ export type TrinityAvatarStageT = z.infer<typeof TrinityAvatarStage>;
 
 /** The single publication quality gate — a listing ships only at `score >= 85`. */
 export const REA_GATE_MIN_SCORE = 85 as const;
+export const TrinitySlotsState = z.object({
+  coreObjective: z.string().optional(),
+  targetAudienceAndUx: z.string().optional(),
+  interactiveFeatures: z.string().optional(),
+  dataAndZeroAuthApis: z.string().optional(),
+  monetizationAndViralLoop: z.string().optional(),
+});
+export type TrinitySlotsStateT = z.infer<typeof TrinitySlotsState>;
+
+export const TrinityPillars = z.object({
+  architecture: z.number().int().min(0).max(25),
+  securityHardening: z.number().int().min(0).max(25),
+  uxAndAntiSlop: z.number().int().min(0).max(25),
+  verificationProof: z.number().int().min(0).max(25),
+});
+export type TrinityPillarsT = z.infer<typeof TrinityPillars>;
+
 
 /** Request to run the full Trinity build (mirror of `TrinityOrchestrateRequest`). */
 export const TrinityBuildRequest = z.object({
@@ -94,15 +111,6 @@ export type BayesianReviewSummaryT = z.infer<typeof BayesianReviewSummary>;
 // ── Direct mirrors of crates/contracts/src/trinity.rs ──────────────────────────
 
 /** Mirror of `TrinitySlotsState` — the five Alpha discovery slots. */
-export const TrinitySlotsState = z.object({
-  coreObjective: z.string().optional(),
-  targetAudienceAndUx: z.string().optional(),
-  interactiveFeatures: z.string().optional(),
-  dataAndZeroAuthApis: z.string().optional(),
-  monetizationAndViralLoop: z.string().optional(),
-});
-export type TrinitySlotsStateT = z.infer<typeof TrinitySlotsState>;
-
 /** Mirror of `TrinityAlphaRequest`. */
 export const TrinityAlphaRequest = z.object({
   sessionId: z.string().optional(),
@@ -191,14 +199,6 @@ export const TrinitySubAgentDnaView = z.object({
 export type TrinitySubAgentDnaViewT = z.infer<typeof TrinitySubAgentDnaView>;
 
 /** Mirror of `TrinityPillarsView` — four REA pillars, `0..=25` each. */
-export const TrinityPillars = z.object({
-  architecture: z.number().int().min(0).max(25),
-  securityHardening: z.number().int().min(0).max(25),
-  uxAndAntiSlop: z.number().int().min(0).max(25),
-  verificationProof: z.number().int().min(0).max(25),
-});
-export type TrinityPillarsT = z.infer<typeof TrinityPillars>;
-
 /** Mirror of `TrinityRepairDirectiveView`. */
 export const TrinityRepairDirectiveView = z.object({
   attempt: z.number().int().min(1).max(3),

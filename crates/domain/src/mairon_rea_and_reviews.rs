@@ -404,8 +404,7 @@ pub fn summarize_product_ratings(
         .collect();
     let mairon_rea_score = mairon_verdict.total_score;
     let five_star_display = format!(
-        "{bar} {bayesian_stars:.1} / 5.0 ({verified_reviews} \u{646}\u{638}\u{631} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f}\u{634}\u{62f}\u{647}) | \
-         ⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA: {mairon_rea_score}/100"
+        "{bar} {bayesian_stars:.1} / 5.0 ({verified_reviews} verified reviews) | ⚒️ MAIRON REA score: {mairon_rea_score}/100"
     );
     let combined_rank_score =
         RANK_STAR_WEIGHT * (bayesian_stars * 20.0) + RANK_REA_WEIGHT * f64::from(mairon_rea_score);
@@ -668,8 +667,8 @@ mod tests {
         // (5*4.2 + 5 + 4) / 7 = 30/7 ≈ 4.2857 → rounds to 4 full stars.
         assert!(sum.five_star_display.starts_with("★★★★☆"));
         assert!(sum.five_star_display.contains("4.3 / 5.0"));
-        assert!(sum.five_star_display.contains("(2 \u{646}\u{638}\u{631} \u{62a}\u{627}\u{6cc}\u{6cc}\u{62f}\u{634}\u{62f}\u{647})"));
-        assert!(sum.five_star_display.contains("⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA: 96/100"));
+        assert!(sum.five_star_display.contains("(2 verified reviews)"));
+        assert!(sum.five_star_display.contains("⚒️ MAIRON REA score: 96/100"));
     }
 
     /// Composite rank score — exact formula `0.60 * (bayes*20) + 0.40 * REA`.

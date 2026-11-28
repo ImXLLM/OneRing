@@ -618,9 +618,51 @@ def render_frames(preset: dict, resolution: str, aspect: str, fps: int,
         print(f"frames -> {out}/ (ffmpeg not found — PNG stills only)")
 
 
+def run_dry_run_verification() -> None:
+    """Full plan verification — 180-node + 308-edge + dual-shell + audio limiter.
+
+    Builds the deterministic HUD mesh exactly like the HTML template does,
+    asserts every architectural constant and prints the verified plan. Exit 0.
+    """
+    nodes = hud_mesh_nodes()
+    edges = hud_mesh_edges(nodes)
+    shells = sorted({n["s"] for n in nodes})
+    callouts = [n for n in nodes if n["l"]]
+    audio = " ".join(audio_command(DEFAULT_DURATION_SEC))
+    video = " ".join(video_command("1080p", "9:16", 24, True))
+    checks = [
+        ("dual-shell mesh", len(shells) == 2),
+        ("outer shell 90 nodes", sum(1 for n in nodes if n["s"] == 0) == SHELL_NODE_COUNT),
+        ("inner shell 90 nodes", sum(1 for n in nodes if n["s"] == 1) == SHELL_NODE_COUNT),
+        ("180 nodes total", len(nodes) == 2 * SHELL_NODE_COUNT),
+        ("4 HUD callouts bound", len(callouts) == len(HUD_CALLOUTS)),
+        ("308 mesh edges", len(edges) == 308),
+        ("edges reference valid nodes", all(0 <= a < len(nodes) and 0 <= b < len(nodes) for a, b in edges)),
+        ("fibonacci sphere radius", all(abs(math.sqrt(n["x"] ** 2 + n["y"] ** 2 + n["z"] ** 2) - (SPHERE_RADIUS if n["s"] == 0 else SPHERE_RADIUS * INNER_SHELL_RADIUS_SCALE)) < 1e-6 for n in nodes)),
+        ("audio pipeline present", len(audio) > 0),
+        ("master limiter in audio chain", "alimiter=limit=0.95:attack=5:release=50" in audio),
+        ("video pipeline faststart", "-movflags" in video and "+faststart" in video),
+        ("duration cap 180s", MAX_DURATION_SEC == 180 and DEFAULT_DURATION_SEC <= MAX_DURATION_SEC),
+    ]
+    print(f"{SIGNATURE} — dry-run plan verification")
+    failed = 0
+    for name, ok in checks:
+        print(f"  [{'OK' if ok else 'FAIL'}] {name}")
+        failed += 0 if ok else 1
+    print(f"  plan: {len(nodes)} nodes · {len(edges)} edges · {len(shells)} shells · "
+          f"{len(callouts)} callouts · master limiter armed")
+    if failed:
+        raise SystemExit(f"dry-run verification failed: {failed} check(s)")
+    print("  dry-run verification passed (exit 0)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="MAIRON Neural HUD Video Studio")
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    parser.add_argument(
+        "--dry-run", action="store_true", dest="dry_run",
+        help="verify the full 180-node + 308-edge + dual-shell + audio-limiter plan and exit 0",
+    )
+    sub = parser.add_subparsers(dest="cmd", required=False)
 
     sub.add_parser("presets")
 
@@ -658,6 +700,13 @@ def main() -> None:
     p_render.add_argument("--out", default="hud_frames")
 
     args = parser.parse_args()
+
+    if args.dry_run:
+        run_dry_run_verification()
+        return
+
+    if args.cmd is None:
+        parser.error("the following arguments are required: cmd (or --dry-run)")
 
     if args.cmd == "presets":
         print(f"{SIGNATURE} — 8 telemetry presets (4 upstream + 4 kia_sovereign)")

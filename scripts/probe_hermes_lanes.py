@@ -62,7 +62,7 @@ def load_env_local() -> dict:
 def probe(base: str, key: str, model: str) -> dict:
     """One chat-completions ping. Returns a lane record (never echoes the key)."""
     headers = {"Content-Type": "application/json",
-               "HTTP-Referer": "https://kian.app", "X-Title": "KIAN Studio"}
+               "HTTP-Referer": "https://kian.app", "X-Title": "MAIRON Studio"}
     if key:
         headers["Authorization"] = f"Bearer {key}"
     body = {"model": model,

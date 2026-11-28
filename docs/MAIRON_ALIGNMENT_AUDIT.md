@@ -68,7 +68,7 @@
 ### Gate 14 — War-room
 - render_war_room.py --check exit 0 (byte-identical); closing wallet $42.55; signature MAIRON-WAR-ROOM (renamed from the KIA-WAR-ROOM-W10 relic)
 ### Gate 15 — workspace tests + clippy
-- cargo test --workspace -> 814 passed / 0 failed (baseline 784; +30 new tests); cargo clippy --workspace --all-targets -- -D warnings -> 0 warnings
+- cargo test --workspace -> 814 passed / 0 failed (verified live: 814/0); cargo clippy --workspace --all-targets -- -D warnings -> 0 warnings
 ### Gate 16 — MANIFEST seal
 - MANIFEST.txt recomputed over every tracked file after this audit; committed and pushed to origin main
 

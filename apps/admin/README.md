@@ -17,7 +17,7 @@ Sections:
    (`GET /api/v1/monopoly/genome-matrix`, `POST /api/v1/monopoly/route-model`)
    and the 69-key `P0 -> P5` environment readiness monitor from `@kian/config`.
 5. **10-DNA Lab Telemetry** — the seeded benchmark logs with a 1-click
-   SFT/DPO JSONL dataset export (`GET /api/v1/admin/lab-telemetry`).
+   SFT/DPO JSONL dataset export (`GET /api/v1/grok-lab/export-sft-dpo`, admin-gated).
 6. **War-Room Chairman** — directive broadcast and simulation reset through
    `POST /api/v1/war-room/{directive,reset}` with an operator session
    (`POST /api/v1/auth/dev-login`, dev mode only; production fails honestly).

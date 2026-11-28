@@ -89,10 +89,35 @@ function TabPanels() {
         </p>
       ) : null}
 
-      {state.activeTab === "forge" ? <TabForge /> : null}
-      {state.activeTab === "desk" ? <TabQuantDesk /> : null}
-      {state.activeTab === "wallet" ? <TabWallet /> : null}
-      {state.activeTab === "war-room" ? <TabWarRoom /> : null}
+      {/*
+       * Lossless perspective switching — every tab stays mounted in the DOM and
+       * only its visibility toggles, so zero component-local state is ever lost
+       * when the perspective pointer moves (in addition to the shared store).
+       */}
+      <div
+        hidden={state.activeTab !== "forge"}
+        style={{ display: state.activeTab === "forge" ? "block" : "none" }}
+      >
+        <TabForge />
+      </div>
+      <div
+        hidden={state.activeTab !== "desk"}
+        style={{ display: state.activeTab === "desk" ? "block" : "none" }}
+      >
+        <TabQuantDesk />
+      </div>
+      <div
+        hidden={state.activeTab !== "wallet"}
+        style={{ display: state.activeTab === "wallet" ? "block" : "none" }}
+      >
+        <TabWallet />
+      </div>
+      <div
+        hidden={state.activeTab !== "war-room"}
+        style={{ display: state.activeTab === "war-room" ? "block" : "none" }}
+      >
+        <TabWarRoom />
+      </div>
 
       <p className="pb-2 text-center text-[10px] text-zinc-600">
         MAIRON OS · one world state · switching never resets your work

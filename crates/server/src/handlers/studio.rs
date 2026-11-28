@@ -239,7 +239,7 @@ pub async fn generate(
         let card = StorefrontProjectCard {
             slug: slug.clone(),
             name: art.title.clone(),
-            tagline: format!("\u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634} {} \u{631}\u{648}\u{6cc} \u{645}\u{62f}\u{627}\u{644}\u{6cc}\u{62a}\u{6cc}\u{650} {}", tier.fa_label(), modality.fa_label()),
+            tagline: format!("creation {} on modality {}", tier.fa_label(), modality.fa_label()),
             category: format!("studio-{}", modality.as_str()),
             stack: vec![
                 "html5".to_owned(),
@@ -525,7 +525,7 @@ mod tests {
                 axum::http::Request::builder()
                     .method("POST")
                     .uri("/api/v1/studio/generate")
-                    .body(Body::from(json!({ "prompt": "\u{633}\u{644}\u{627}\u{645}", "modality": "copy" }).to_string()))
+                    .body(Body::from(json!({ "prompt": "Hello", "modality": "copy" }).to_string()))
                     .unwrap(),
             )
             .await
@@ -540,7 +540,7 @@ mod tests {
         let authz = format!("Bearer {token}");
         for payload in [
             json!({ "prompt": "", "modality": "copy" }),
-            json!({ "prompt": "\u{633}\u{644}\u{627}\u{645}", "modality": "hologram" }),
+            json!({ "prompt": "Hello", "modality": "hologram" }),
         ] {
             let res = app
                 .clone()
@@ -571,8 +571,9 @@ mod tests {
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
                         json!({
-                            "prompt": "\u{6cc}\u{647} \u{62f}\u{627}\u{6cc}\u{646}\u{627}\u{633}\u{648}\u{631} \u{622}\u{628}\u{6cc} \u{6a9}\u{647} \u{62a}\u{648}\u{6cc} \u{641}\u{636}\u{627} \u{628}\u{633}\u{62a}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{647}",
-                            "modality": "workspace"
+                            "prompt": "a blue dinosaur selling ice cream in space",
+                            "modality": "workspace",
+                            "originLocale": "fa"
                         })
                         .to_string(),
                     ))
@@ -622,7 +623,7 @@ mod tests {
                     .uri("/api/v1/studio/generate")
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
-                        json!({ "prompt": "\u{62f}\u{648}\u{645}\u{6cc}\u{646} \u{622}\u{641}\u{631}\u{6cc}\u{646}\u{634}", "modality": "sfx" }).to_string(),
+                        json!({ "prompt": "second creation", "modality": "sfx" }).to_string(),
                     ))
                     .unwrap(),
             )

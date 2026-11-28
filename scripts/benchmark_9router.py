@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""9router live benchmark for KIAN v2 Studio model selection.
+"""9router live benchmark for MAIRON Studio model selection.
 
 Probe A: Persian reasoning speed/stability (3 rounds per candidate, concurrent).
-Probe B: real KIAN Product Studio contract — self-contained <!DOCTYPE html> app
+Probe B: real MAIRON Product Studio contract — self-contained <!DOCTYPE html> app
          + ```json CAST metadata block, pass bar < 15 s.
 
 Secrets come from .env.local (gitignored). No key is ever printed.

@@ -2,7 +2,7 @@
 //!
 //! The heart of the "massive UI update": a real-time "day 0 → day 1" simulator for
 //! the three legendary co-founders who work remotely 24/7 under the leadership of `0xKIA` to commercialize the
-//! `KiaAgentX/xA` repository:
+//! `ImXLLM/OneRing` repository:
 //!
 //! - **Elon Musk** ([`FounderPersona::ElonMusk`]) — product velocity, first-principles
 //!   engineering and virality on X;
@@ -30,11 +30,11 @@ use serde::{Deserialize, Serialize};
 /// Founder war room signature — present on every wire payload.
 pub const WAR_ROOM_SIGNATURE: &str = "MAIRON-WAR-ROOM";
 
-/// Commercialization target repository — the same 11-crate repo with 783 tests.
-pub const GITHUB_REPO: &str = "KiaAgentX/xA";
+/// Commercialization target repository — the same 11-crate repo with 814 tests.
+pub const GITHUB_REPO: &str = "ImXLLM/OneRing";
 
 /// Short hash of the headline metric on the UI setter — the third-quarter status bar.
-pub const GITHUB_COMMIT_SHORT: &str = "97b18bd";
+pub const GITHUB_COMMIT_SHORT: &str = "c05ac1c";
 
 /// Base Mainnet chain ID — the day-one charter.
 pub const BASE_CHAIN_ID: u64 = 8453;
@@ -684,7 +684,7 @@ pub struct SimulationTickEvent {
     pub message_fa: String,
     /// English message — full parity with the Persian.
     pub message_en: String,
-    /// The exact terminal command on `KiaAgentX/xA` — when executed.
+    /// The exact terminal command on `ImXLLM/OneRing` — when executed.
     pub terminal_cmd: Option<String>,
     /// The live social post (X/Telegram) as JSON — when published.
     pub social_post_json: Option<String>,
@@ -732,8 +732,8 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 0,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}! \u{633}\u{647} \u{646}\u{641}\u{631} \u{627}\u{632} \u{645}\u{627} \u{632}\u{6cc}\u{631}\u{650} \u{631}\u{6cc}\u{627}\u{633}\u{62a}\u{650} 0xKIA \u{62f}\u{648}\u{631}\u{6a9}\u{627}\u{631} \u{6f2}\u{6f4}/\u{6f7} \u{634}\u{631}\u{6cc}\u{6a9} \u{634}\u{62f}\u{6cc}\u{645}. \u{627}\u{632} \u{645}\u{62e}\u{632}\u{646} KiaAgentX/xA \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}: \u{6f1}\u{6f1} \u{6a9}\u{631}\u{650}\u{6cc}\u{62a}\u{650} Rust\u{60c} \u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a}\u{650} \u{67e}\u{627}\u{633}‌\u{634}\u{62f}\u{647}\u{60c} \u{6f9} \u{645}\u{648}\u{62c}\u{650} \u{62a}\u{62d}\u{648}\u{6cc}\u{644}‌\u{634}\u{62f}\u{647}. \u{633}\u{631}\u{645}\u{627}\u{6cc}\u{647} \u{648}\u{627}\u{642}\u{639}\u{6cc}\u{61f} \u{6f3}\u{6f3} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}\u{60c} \u{6f1}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{646}\u{642}\u{62f}\u{60c} \u{6f3}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{627}\u{63a}\u{630}\u{6cc}\u{650} \u{642}\u{641}\u{644}. \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645} \u{62f}\u{642}\u{6cc}\u{642}\u{627}\u{64b} \u{635}\u{641}\u{631} \u{627}\u{633}\u{62a} — \u{648} \u{628}\u{627}\u{6cc}\u{62f} \u{627}\u{632} \u{62f}\u{644}\u{650} \u{6a9}\u{627}\u{631}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{628}\u{6cc}\u{631}\u{648}\u{646} \u{628}\u{6cc}\u{627}\u{6cc}\u{62f}. \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}.",
-        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the KiaAgentX/xA repo: 11 Rust crates, 784 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
+        fa: "\u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}! \u{633}\u{647} \u{646}\u{641}\u{631} \u{627}\u{632} \u{645}\u{627} \u{632}\u{6cc}\u{631}\u{650} \u{631}\u{6cc}\u{627}\u{633}\u{62a}\u{650} 0xKIA \u{62f}\u{648}\u{631}\u{6a9}\u{627}\u{631} \u{6f2}\u{6f4}/\u{6f7} \u{634}\u{631}\u{6cc}\u{6a9} \u{634}\u{62f}\u{6cc}\u{645}. \u{627}\u{632} \u{645}\u{62e}\u{632}\u{646} ImXLLM/OneRing \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}: \u{6f1}\u{6f1} \u{6a9}\u{631}\u{650}\u{6cc}\u{62a}\u{650} Rust\u{60c} \u{6f8}\u{6f1}\u{6f4} \u{62a}\u{633}\u{62a}\u{650} \u{67e}\u{627}\u{633}‌\u{634}\u{62f}\u{647}\u{60c} \u{6f9} \u{645}\u{648}\u{62c}\u{650} \u{62a}\u{62d}\u{648}\u{6cc}\u{644}‌\u{634}\u{62f}\u{647}. \u{633}\u{631}\u{645}\u{627}\u{6cc}\u{647} \u{648}\u{627}\u{642}\u{639}\u{6cc}\u{61f} \u{6f3}\u{6f3} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}\u{60c} \u{6f1}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{646}\u{642}\u{62f}\u{60c} \u{6f3}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{627}\u{63a}\u{630}\u{6cc}\u{650} \u{642}\u{641}\u{644}. \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645} \u{62f}\u{642}\u{6cc}\u{642}\u{627}\u{64b} \u{635}\u{641}\u{631} \u{627}\u{633}\u{62a} — \u{648} \u{628}\u{627}\u{6cc}\u{62f} \u{627}\u{632} \u{62f}\u{644}\u{650} \u{6a9}\u{627}\u{631}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{628}\u{6cc}\u{631}\u{648}\u{646} \u{628}\u{6cc}\u{627}\u{6cc}\u{62f}. \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}.",
+        en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the ImXLLM/OneRing repo: 11 Rust crates, 814 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
         cmd: None,
         social: None,
         stage: PipelineStage::Ignition,
@@ -750,7 +750,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         second: 3600,
         speaker: FounderPersona::ElonMusk,
         fa: "\u{627}\u{648}\u{644} \u{633}\u{644}\u{627}\u{645}\u{62a}\u{650} \u{645}\u{62e}\u{632}\u{646} \u{631}\u{627} \u{62b}\u{627}\u{628}\u{62a} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}. \u{62a}\u{633}\u{62a}\u{650} \u{6a9}\u{627}\u{631}\u{6cc}\u{650} \u{6a9}\u{627}\u{645}\u{644}\u{650} workspace \u{631}\u{627} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} — \u{6f7}\u{6f8}\u{6f3} \u{67e}\u{627}\u{633}\u{60c} \u{635}\u{641}\u{631} \u{634}\u{6a9}\u{633}\u{62a}\u{60c} \u{635}\u{641}\u{631} clippy. \u{627}\u{6cc}\u{646} \u{6a9}\u{648}\u{631}\u{647}\u{654} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{650} \u{645}\u{627}\u{633}\u{62a}\u{61b} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{622}\u{646} \u{647}\u{6cc}\u{686} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}‌\u{634}\u{62f}\u{646}\u{6cc} \u{645}\u{639}\u{646}\u{627} \u{646}\u{62f}\u{627}\u{631}\u{62f}.",
-        en: "First we prove the repo is healthy. Running the full workspace test suite — 784 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
+        en: "First we prove the repo is healthy. Running the full workspace test suite — 814 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
         cmd: Some("cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings"),
         social: None,
         stage: PipelineStage::Ignition,
@@ -820,7 +820,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         fa: "\u{646}\u{62e}\u{633}\u{62a}\u{6cc}\u{646} \u{631}\u{634}\u{62a}\u{647}\u{654} X \u{645}\u{646}\u{62a}\u{634}\u{631} \u{634}\u{62f} — \u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} HUD + «\u{686}\u{637}\u{648}\u{631} \u{62f}\u{631} \u{6f5} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{628}\u{641}\u{647}\u{645}\u{6cc}\u{62f} \u{627}\u{6cc}\u{646} \u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{686}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}». \u{645}\u{646}\u{62d}\u{646}\u{6cc}\u{650} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f} \u{627}\u{632} \u{635}\u{641}\u{631} \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{628}\u{6af}\u{630}\u{627}\u{631}\u{6cc}\u{645} \u{62f}\u{627}\u{62f}\u{647} \u{62d}\u{631}\u{641} \u{628}\u{632}\u{646}\u{62f}.",
         en: "First X thread is live — the HUD video plus 'how to understand this system in 5 seconds'. View curve starts at zero; let the data speak.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built xA: 11 Rust crates, 784 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"We built the xA system: 11 Rust crates, 783 tests, a 3D neural HUD, and a wallet that auto-splits every sale 80/20. A 9-year-old gets it in 5 seconds. Day zero starts this instant.","views":0,"likes":0}"#),
+        social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built OneRing: 11 Rust crates, 814 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"We built the OneRing system: 11 Rust crates, 814 tests, a 3D neural HUD, and a wallet that auto-splits every sale 80/20. A 9-year-old gets it in 5 seconds. Day zero starts this instant.","views":0,"likes":0}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1058,7 +1058,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         fa: "\u{644}\u{62d}\u{638}\u{647}\u{654} \u{642}\u{647}\u{631}\u{645}\u{627}\u{646}\u{6cc}\u{650} \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647}: \u{6cc}\u{6a9} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{6f9}\u{633}\u{627}\u{644}\u{647} \u{628}\u{627} \u{62f}\u{6a9}\u{645}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} ToySpark \u{6a9}\u{62a}\u{627}\u{628}\u{634} \u{631}\u{627} \u{633}\u{627}\u{62e}\u{62a} \u{648} \u{62f}\u{631} \u{647}\u{645}\u{627}\u{646} \u{67e}\u{646}\u{644} \u{645}\u{646}\u{62a}\u{634}\u{631} \u{6a9}\u{631}\u{62f} — \u{628}\u{62f}\u{648}\u{646}\u{650} \u{62d}\u{62a}\u{6cc} \u{6cc}\u{6a9} \u{62e}\u{637} \u{6a9}\u{62f}. \u{67e}\u{62f}\u{631}\u{634} \u{62f}\u{631} X \u{646}\u{648}\u{634}\u{62a}: «\u{627}\u{6cc}\u{646} \u{627}\u{648}\u{644}\u{6cc}\u{646} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{6cc}\u{650} \u{627}\u{633}\u{62a} \u{6a9}\u{647} \u{628}\u{686}\u{647}‌\u{627}\u{645} \u{627}\u{632} \u{635}\u{641}\u{631} \u{641}\u{631}\u{648}\u{62e}\u{62a}.» \u{627}\u{6cc}\u{646} \u{67e}\u{6cc}\u{627}\u{645}\u{650} \u{628}\u{631}\u{646}\u{62f}\u{650} \u{645}\u{627}\u{633}\u{62a}\u{60c} \u{646}\u{647} \u{62a}\u{628}\u{644}\u{6cc}\u{63a}\u{650} \u{645}\u{627}.",
         en: "The flywheel's hero moment: a 9-year-old built a storybook with the ToySpark buttons and published it in the same panel — without a single line of code. Her dad posted on X: 'this is the first product my kid sold from zero.' That is our brand message, not our ad.",
         cmd: None,
-        social: Some(r#"{"platform":"telegram","handle":"@KiaAgentX","kind":"toy_spark_hero","text_en":"A 9-year-old published her first storybook today — built with ToySpark buttons, sold in the marketplace, 80% went to her wallet instantly. Always Day 1.","text_fa":"A 9-year-old published her first book today — built it with ToySpark buttons, sold it in the marketplace, and 80% went straight to her wallet. Always Day 1.","views":12700,"likes":2140}"#),
+        social: Some(r#"{"platform":"telegram","handle":"@ImXLLM","kind":"toy_spark_hero","text_en":"A 9-year-old published her first storybook today — built with ToySpark buttons, sold in the marketplace, 80% went to her wallet instantly. Always Day 1.","text_fa":"A 9-year-old published her first book today — built it with ToySpark buttons, sold it in the marketplace, and 80% went straight to her wallet. Always Day 1.","views":12700,"likes":2140}"#),
         stage: PipelineStage::CreatorOnboarding,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1107,9 +1107,9 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
         second: 79200,
         speaker: FounderPersona::ElonMusk,
         fa: "\u{631}\u{634}\u{62a}\u{647}\u{654} \u{62c}\u{645}\u{639}‌\u{628}\u{646}\u{62f}\u{6cc}\u{650} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{628}\u{627} @ImXforevr \u{645}\u{646}\u{62a}\u{634}\u{631} \u{634}\u{62f}: \u{6cc}\u{6a9} \u{62f}\u{642}\u{6cc}\u{642}\u{647} HUD\u{60c} \u{67e}\u{646}\u{62c} \u{639}\u{62f}\u{62f}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc} — \u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a}\u{60c} \u{6f5} \u{641}\u{631}\u{648}\u{634}\u{60c} \u{6f9}\u{66b}\u{6f5}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{6f1}\u{66c}\u{6f5}\u{6f2}\u{6f7} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{60c} \u{635}\u{641}\u{631} KYC. \u{628}\u{62f}\u{648}\u{646}\u{650} \u{647}\u{6cc}\u{686} \u{639}\u{62f}\u{62f}\u{650} \u{62c}\u{639}\u{644}\u{6cc}\u{61b} \u{647}\u{645}\u{647}‌\u{686}\u{6cc}\u{632} \u{642}\u{627}\u{628}\u{644}\u{650} \u{628}\u{627}\u{632}\u{628}\u{6cc}\u{646}\u{6cc} \u{631}\u{648}\u{6cc} \u{645}\u{62e}\u{632}\u{646} \u{648} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}.",
-        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 784 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
+        en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 814 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
         cmd: None,
-        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 784 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"Day 0 → Day 1 recap with the full team: 783 tests green, 5 real sales, $9.55 treasury revenue from zero, 1,527 users. Every number auditable. Keep building.","views":96400,"likes":8210}"#),
+        social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 814 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"Day 0 → Day 1 recap with the full team: 814 tests green, 5 real sales, $9.55 treasury revenue from zero, 1,527 users. Every number auditable. Keep building.","views":96400,"likes":8210}"#),
         stage: PipelineStage::ViralLaunch,
         stream: RevenueStream::None,
         volume_micros: 0,
@@ -1605,7 +1605,7 @@ impl ChairmanChatEngine {
                 ),
                 ChairmanIntent::StatusReport => (
                     "\u{627}\u{632} \u{633}\u{645}\u{62a}\u{650} \u{645}\u{646}: \u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a} \u{633}\u{628}\u{632}\u{60c} HUD\u{650} \u{631}\u{646}\u{62f}\u{631}\u{634}\u{62f}\u{647}\u{60c} \u{648} \u{635}\u{641}\u{650} \u{631}\u{646}\u{62f}\u{631}\u{650} \u{628}\u{639}\u{62f}\u{6cc}. \u{6af}\u{644}\u{648}\u{6af}\u{627}\u{647}\u{650} \u{633}\u{631}\u{639}\u{62a}\u{60c} \u{62a}\u{631}\u{645}\u{6cc}\u{646}\u{627}\u{644} \u{627}\u{633}\u{62a}\u{61b} \u{6cc}\u{6a9} \u{62f}\u{633}\u{62a}\u{648}\u{631}\u{650} CI \u{62f}\u{6cc}\u{6af}\u{631} \u{627}\u{636}\u{627}\u{641}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{62a}\u{627} \u{647}\u{631} \u{62a}\u{6cc}\u{6a9} \u{62e}\u{648}\u{62f}\u{634} \u{631}\u{627} \u{627}\u{62b}\u{628}\u{627}\u{62a} \u{6a9}\u{646}\u{62f}.",
-                    "From my side: 784 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
+                    "From my side: 814 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
                     Some("cargo test --workspace --quiet 2>&1 | tail -4"),
                     None,
                 ),
@@ -1623,7 +1623,7 @@ impl ChairmanChatEngine {
                 ),
                 ChairmanIntent::ShipNextStep => (
                     "\u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}\u{650} \u{645}\u{646}: HUD\u{650} \u{633}\u{648}\u{645} \u{628}\u{627} \u{67e}\u{6cc}\u{634}‌\u{62a}\u{646}\u{650} genome \u{648} \u{631}\u{634}\u{62a}\u{647}\u{654} \u{641}\u{646}\u{6cc}\u{650} «\u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a}\u{60c} \u{635}\u{641}\u{631} unsafe» — \u{645}\u{647}\u{646}\u{62f}\u{633}\u{6cc}\u{650} \u{62e}\u{648}\u{62f}\u{634} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6cc}\u{627}\u{628}\u{6cc} \u{627}\u{633}\u{62a}. \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{648} \u{646}\u{62a}\u{6cc}\u{62c}\u{647} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{646}\u{62c}\u{645}.",
-                    "My next step: HUD #3 with the genome preset and the technical thread '784 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
+                    "My next step: HUD #3 with the genome preset and the technical thread '814 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset trinity-5model-genome --aspect 9:16 --out hud_genome.html"),
                     None,
                 ),
@@ -2303,8 +2303,8 @@ mod tests {
         assert!(FounderPersona::JeffBezos.is_co_founder());
         assert!(!FounderPersona::Chairman.is_co_founder());
         // The constants' charter — the spec's exact values.
-        assert_eq!(GITHUB_REPO, "KiaAgentX/xA");
-        assert_eq!(GITHUB_COMMIT_SHORT, "97b18bd");
+        assert_eq!(GITHUB_REPO, "ImXLLM/OneRing");
+        assert_eq!(GITHUB_COMMIT_SHORT, "c05ac1c");
         assert_eq!(BASE_CHAIN_ID, 8453);
         assert_eq!(TELEGRAM_STARS_CURRENCY, "XTR");
         assert_eq!(Locale::Fa.direction(), "rtl");

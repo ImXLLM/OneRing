@@ -19,6 +19,9 @@ export class ApiError extends Error {
   }
 }
 
+/** A strictly-typed JSON value — the honest wire type for dynamic payloads. */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 /** Resolve the default kernel API base at runtime (browser or server). */
 export function resolveDefaultApiBase(): string {
   if (typeof process !== "undefined" && process.env) {
@@ -46,7 +49,7 @@ export async function typedRequest<T>(
   if (adminKey) headers.set("x-kian-key", adminKey);
   const res = await fetch(`${base}${path}`, { ...rest, headers });
   if (res.status === 204) return undefined as T;
-  const body: unknown = await res.json().catch(() => ({}));
+  const body = (await res.json().catch(() => ({}))) as JsonValue;
   if (!res.ok) {
     const envelope = (body as { error?: { code?: string; message?: string } }).error;
     throw new ApiError(
@@ -66,4 +69,29 @@ export function qs(params: Record<string, string | number | boolean | undefined>
     parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
   }
   return parts.length === 0 ? "" : `?${parts.join("&")}`;
+}
+
+/** Raw-text kernel request — same auth/error contract as `typedRequest`, but the
+ * success body is returned as plain text (JSONL exports, SKILL.md, …). */
+export async function textRequest(
+  base: string,
+  path: string,
+  init: RequestInit & { token?: string | null; adminKey?: string | null } = {},
+): Promise<string> {
+  const { token, adminKey, ...rest } = init;
+  const headers = new Headers(rest.headers);
+  if (rest.body) headers.set("content-type", "application/json");
+  if (token) headers.set("authorization", `Bearer ${token}`);
+  if (adminKey) headers.set("x-kian-key", adminKey);
+  const res = await fetch(`${base}${path}`, { ...rest, headers });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as JsonValue;
+    const envelope = (body as { error?: { code?: string; message?: string } }).error;
+    throw new ApiError(
+      res.status,
+      envelope?.code ?? "UNKNOWN",
+      envelope?.message ?? `Kernel request failed with HTTP ${res.status}`,
+    );
+  }
+  return res.text();
 }

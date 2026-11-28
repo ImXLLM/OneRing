@@ -9,7 +9,7 @@ an AI HTML product studio, a double-entry micro-ledger with CAS-locked escrow, a
 
 [![Rust Toolchain](https://img.shields.io/badge/rustc-1.100.0--pinned-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![Clippy](https://img.shields.io/badge/clippy_-D_warnings-0_lint_warnings-brightgreen.svg)](#quickstart--verification)
-[![Workspace Tests](https://img.shields.io/badge/tests-784_passed_%7C_0_failed-success.svg)](#quickstart--verification)
+[![Workspace Tests](https://img.shields.io/badge/tests-814_passed_%7C_0_failed-success.svg)](#quickstart--verification)
 [![Mairon REA Audit](https://img.shields.io/badge/Mairon_REA_v6.10.1-92%2F100_PASS-blue.svg)](#mairon-rea-quality-scorecard)
 [![Knowledge Vault](https://img.shields.io/badge/KbEntry_skills-334_active-purple.svg)](#knowledge-vault--production-ledger-invariants)
 [![Safety Contract](https://img.shields.io/badge/unsafe_code-forbidden-critical.svg)](#security--binary-hardening)
@@ -164,7 +164,7 @@ totals from `cargo test --workspace` (**704 passed / 0 failed**).
 | `crates/nation` | Rust Crate | Citizen onboarding, `ReferralLineage` attribution, parliament bills & HITL governance rules | **14** |
 | `crates/tooling` | Rust Crate | Workspace diagnostics, schema inspectors, deterministic verification utilities | **13** |
 | `crates/wallet` | Rust Crate | Non-custodial address validators (TON CRC16, TRON Base58Check, Solana Ed25519/Base58, BSC EIP-55), micro-KIAN double-entry accounting, withdrawal lock/refund guards, **pure-Rust `ccxt` core** (`Precise` i128 fixed-point, float-free `TICK_SIZE`, dual throttler, L2 `OrderBook` with sequence-gap guard, 8-venue keyless matrix) + **Day-1 4-Stream Base treasury** (`base_treasury`: charter tax / affiliate split / boosts / withdrawal spread with `Precise` zero-sum proof + EIP-681 URIs) | **40** |
-| **Workspace Total** | — | 11 crates, `#![forbid(unsafe_code)]`, 0 `todo!()` markers | **784** |
+| **Workspace Total** | — | 11 crates, `#![forbid(unsafe_code)]`, 0 `todo!()` markers | **814** |
 | `apps/web` | Next.js 16 | Public landing & dashboard PWA (installable, service worker, OG images) | — |
 | `apps/miniapp` | Next.js 16 | Telegram Mini-App: `/builder` AI studio, `/market`, `/wallet`, 390px RTL contract | — |
 | `apps/admin` | Next.js 16 | Founder Command Center (withdrawals, arbitration, direct mint) | — |
@@ -459,7 +459,7 @@ Condensed from `crates/server/src/routes.rs` — the authoritative list lives in
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-### 3. Full Workspace Test Suite (784 tests across 11 crates)
+### 3. Full Workspace Test Suite (814 tests across 11 crates)
 
 ```bash
 cargo test --workspace

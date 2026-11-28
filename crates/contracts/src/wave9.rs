@@ -252,9 +252,9 @@ pub struct I18nLocaleView {
 pub struct I18nMatrixResponse {
     /// 20 locales in fixed order.
     pub locales: Vec<I18nLocaleView>,
-    /// Day-one active count — 2 (`fa`, `en`).
+    /// Day-one active count — 1 (`en`; `fa` is a patch-ready slot).
     pub active_day1: usize,
-    /// Patch-ready slot count — 18.
+    /// Patch-ready slot count — 19 (`fa` + the 18 wave9 slots).
     pub patch_ready: usize,
     /// Signature.
     pub signature: String,

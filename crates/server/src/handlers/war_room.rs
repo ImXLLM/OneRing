@@ -314,7 +314,7 @@ pub async fn war_room_reset(
         deleted_directives: i64::try_from(deleted_directives).unwrap_or(i64::MAX),
         tick_cursor: 0,
         progress_percent: 0,
-        message_fa: "\u{627}\u{62a}\u{627}\u{642}\u{650} \u{62c}\u{646}\u{6af} \u{628}\u{647} \u{631}\u{648}\u{632}\u{650} \u{635}\u{641}\u{631} \u{628}\u{627}\u{632}\u{646}\u{634}\u{627}\u{646}\u{6cc} \u{634}\u{62f} — \u{633}\u{646}\u{627}\u{631}\u{6cc}\u{648}\u{6cc}\u{650} \u{6f2}\u{6f4}\u{62a}\u{627}\u{6cc}\u{6cc} \u{627}\u{632} \u{646}\u{648} \u{642}\u{627}\u{628}\u{644}\u{650} \u{631}\u{627}\u{646}\u{634} \u{627}\u{633}\u{62a}".to_owned(),
+        message_fa: "war-room reset to Day 0 — the 24-tick scenario can be re-driven".to_owned(),
         message_en: "war-room reset to Day 0 — the 24-tick scenario can be re-driven".to_owned(),
     }))
 }

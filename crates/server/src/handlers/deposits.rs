@@ -298,9 +298,9 @@ mod tests {
         assert_eq!(parse_micro_ton("0.5").unwrap(), 500_000);
         assert_eq!(parse_micro_ton("2").unwrap(), 2_000_000);
         assert_eq!(parse_micro_ton("1.234567").unwrap(), 1_234_567);
-        assert!(parse_micro_ton("0.1234567").is_err(), "\u{628}\u{6cc}\u{634} \u{627}\u{632} \u{6f6} \u{631}\u{642}\u{645} \u{627}\u{639}\u{634}\u{627}\u{631}");
-        assert!(parse_micro_ton("0").is_err(), "\u{635}\u{641}\u{631} \u{628}\u{6cc}‌\u{645}\u{639}\u{646}\u{627}\u{633}\u{62a}");
-        assert!(parse_micro_ton("-1").is_err(), "\u{645}\u{646}\u{641}\u{6cc} \u{647}\u{631}\u{6af}\u{632}");
+        assert!(parse_micro_ton("0.1234567").is_err(), "more than 6 decimal places");
+        assert!(parse_micro_ton("0").is_err(), "zero is meaningless");
+        assert!(parse_micro_ton("-1").is_err(), "negative never");
         assert!(parse_micro_ton("1e3").is_err());
         assert!(parse_micro_ton("").is_err());
     }

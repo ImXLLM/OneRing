@@ -223,7 +223,7 @@ fn escrow_audit_view() -> MonopolyContractAuditView {
 pub async fn charter_and_base() -> Json<MonopolyCharterAndBaseResponse> {
     Json(MonopolyCharterAndBaseResponse {
         signature: BASE_TREASURY_SIGNATURE.to_owned(),
-        charter_motto: "\u{62c}\u{646}\u{6af} \u{627}\u{648}\u{644} \u{628}\u{647} \u{627}\u{632} \u{635}\u{644}\u{62d} \u{622}\u{62e}\u{631}".to_owned(),
+        charter_motto: "first war for the final peace".to_owned(),
         streams: vec![
             MonopolyCharterStreamView {
                 stream: 1,

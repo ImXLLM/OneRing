@@ -313,7 +313,7 @@ impl HermesEngine {
             "wallet.balance" => {
                 let balance = store.balance_of(account_id).await?.unwrap_or(0);
                 let locked = store.locked_for_buyer(account_id).await?;
-                format!("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}: {balance} Đ — \u{642}\u{641}\u{644} \u{62f}\u{631} \u{627}\u{645}\u{627}\u{646}\u{62a}: {locked} Đ")
+                format!("your balance: {balance} Đ — escrow locked: {locked} Đ")
             }
             "wallet.txs" => {
                 let rows = store.recent_postings_for(account_id, 10).await?;

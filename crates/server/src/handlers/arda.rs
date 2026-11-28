@@ -287,8 +287,8 @@ mod tests {
         let locales = body["locales"].as_array().unwrap();
         assert_eq!(locales.len(), 20);
         let fa = locales.iter().find(|l| l["code"] == "fa").unwrap();
-        assert_eq!(fa["strCode"], "\u{641}\u{627}");
-        assert_eq!(fa["nativeName"], "\u{641}\u{627}\u{631}\u{633}\u{6cc}");
+        assert_eq!(fa["strCode"], "FA");
+        assert_eq!(fa["nativeName"], "Farsi");
         assert_eq!(fa["dir"], "rtl");
         assert_eq!(fa["intlLocale"], "fa-IR");
         // Fishkal verbatim SVG — the Iran flag with green `#239f40`.
@@ -296,7 +296,7 @@ mod tests {
         assert!(fa["svg"].as_str().unwrap().contains("#239f40"));
         assert!(fa["circularBadgeHtml"].as_str().unwrap().contains("border-radius:50%"));
         let ur = locales.iter().find(|l| l["code"] == "ur").unwrap();
-        assert_eq!(ur["strCode"], "\u{627}\u{631}\u{62f}\u{648}");
+        assert_eq!(ur["strCode"], "UR");
         let en = locales.iter().find(|l| l["code"] == "en").unwrap();
         assert_eq!(en["dir"], "ltr");
     }
@@ -341,7 +341,7 @@ mod tests {
     async fn localize_now_injects_fishkal_runtime_into_raw_html() {
         let app = app().await;
         let token = auth(&app, "777002", "arda_raw").await;
-        let html = "<!DOCTYPE html><html><head><title>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{628}\u{627}\u{646}\u{6a9}\u{6cc}</title></head><body><p>\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</p></body></html>";
+        let html = "<!DOCTYPE html><html lang=\"fa\"><head><title>Bank interest calculator</title></head><body><p>Monthly report</p></body></html>";
         let res = app
             .clone()
             .oneshot(
@@ -407,10 +407,10 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
-                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}",
+                            "title": "Accounted — crypto profit calculator",
+                            "description": "Persian single-page interactive tool",
                             "priceDin": 2_000,
-                            "previewHtml": "<html lang=\"fa\" dir=\"rtl\"><body><h1>\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f}</h1><p>\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{644}\u{6cc} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</p></body></html>"
+                            "previewHtml": "<html lang=\"fa\" dir=\"rtl\"><body><h1>Profit calculator</h1><p>Monthly financial report</p></body></html>"
                         })
                         .to_string(),
                     ))

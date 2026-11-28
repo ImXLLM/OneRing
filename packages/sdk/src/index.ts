@@ -15,6 +15,8 @@
 
 import { typedRequest } from "./core";
 
+import { createMaironSdk } from "./mairon-client";
+
 export { ApiError, resolveDefaultApiBase, qs } from "./core";
 export {
   MaironSdkClient,
@@ -23,6 +25,7 @@ export {
   KianSdkClient,
 } from "./mairon-client";
 export type { MaironSdkOptions } from "./mairon-client";
+export type { MaironWorldStateT, SubsystemSyncPostureT, MaironPerspectiveT } from "@kian/contracts";
 
 // ── Wire types ────────────────────────────────────────────────────────────
 

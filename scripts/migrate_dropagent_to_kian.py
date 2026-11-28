@@ -157,7 +157,7 @@ def artifact_html(title: str, seller: str, category: str | None, description: st
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{esc_title} — KIAN v2</title>
+<title>{esc_title} — MAIRON</title>
 <style>
   :root {{ --bg:#0b0f1a; --card:#121829; --ink:#e8ecf8; --sub:#93a0bd; --gold:#f5b942; --line:#232c45; }}
   * {{ box-sizing:border-box; margin:0; padding:0; }}
@@ -181,7 +181,7 @@ def artifact_html(title: str, seller: str, category: str | None, description: st
 </head>
 <body>
 <div class="wrap">
-  <span class="badge">📦 {cat} · KIAN v2 Marketplace</span>
+  <span class="badge">📦 {cat} · MAIRON Marketplace</span>
   <h1>{esc_title}</h1>
   <div class="seller">Seller: @{esc_seller}</div>
   <div class="price"><span>Price</span><b>{price_kian} KIAN</b></div>
@@ -217,7 +217,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
     con.execute("PRAGMA journal_mode=DELETE")
     con.execute("PRAGMA foreign_keys=OFF")
 
-    # 1) KIAN v2 schema — all migrations + checksum registration for sqlx::migrate!()
+    # 1) MAIRON schema — all migrations + checksum registration for sqlx::migrate!()
     con.execute(
         'CREATE TABLE IF NOT EXISTS _sqlx_migrations ('
         'version INTEGER PRIMARY KEY, description TEXT NOT NULL, '
@@ -474,7 +474,7 @@ def migrate(legacy_path: str, target_path: str, repo_root: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Deterministic dropagent → KIAN v2 migration")
+    ap = argparse.ArgumentParser(description="Deterministic dropagent → MAIRON migration")
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ap.add_argument("--legacy", default="/home/z/my-project/upload/marketplace-20260924-0400.db")
     ap.add_argument("--target", default=os.path.join(repo, "seed", "kian-production.db"))

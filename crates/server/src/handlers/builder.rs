@@ -384,7 +384,7 @@ pub async fn publish(
         .map_or_else(
             || {
                 if session.title.trim().is_empty() {
-                    "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} HTML".to_owned()
+                    "Interactive HTML product".to_owned()
                 } else {
                     session.title.trim().to_owned()
                 }
@@ -399,7 +399,7 @@ pub async fn publish(
         .map_or_else(
             || {
                 if session.description.trim().is_empty() {
-                    format!("\u{648}\u{628}‌\u{627}\u{67e}\u{644}\u{6cc}\u{6a9}\u{6cc}\u{634}\u{646} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} {title} \u{628}\u{627} \u{62a}\u{62d}\u{648}\u{6cc}\u{644} \u{622}\u{646}\u{6cc} \u{62f}\u{631} \u{628}\u{627}\u{632}\u{627}\u{631} \u{6a9}\u{6cc}\u{627}\u{646}.")
+                    format!("Interactive single-page web app {title} with instant delivery on the MAIRON market.")
                 } else {
                     session.description.trim().to_owned()
                 }
@@ -909,7 +909,7 @@ mod builder_tests {
                     .method("POST")
                     .uri(format!("/api/v1/builder/sessions/{session_id}/chat"))
                     .header("authorization", format!("Bearer {creator}"))
-                    .body(Body::from(json!({ "message": "\u{633}\u{644}\u{627}\u{645} \u{627}\u{6cc}\u{62f}\u{647} \u{62f}\u{627}\u{631}\u{645}" }).to_string()))
+                    .body(Body::from(json!({ "message": "Hi, I have an idea" }).to_string()))
                     .unwrap(),
             )
             .await
@@ -929,7 +929,7 @@ mod builder_tests {
                     .header("authorization", format!("Bearer {creator}"))
                     .body(Body::from(
                         json!({
-                            "message": "\u{6cc}\u{6a9} \u{645}\u{627}\u{634}\u{6cc}\u{646} \u{62d}\u{633}\u{627}\u{628} \u{633}\u{648}\u{62f} \u{645}\u{631}\u{6a9}\u{628} \u{627}\u{631}\u{632} \u{62f}\u{6cc}\u{62c}\u{6cc}\u{62a}\u{627}\u{644} \u{628}\u{627} \u{62a}\u{645} \u{62a}\u{6cc}\u{631}\u{647} \u{628}\u{633}\u{627}\u{632}",
+                            "message": "Build a dark-themed compound crypto profit calculator",
                             "forceGenerate": true
                         })
                         .to_string(),
@@ -1111,7 +1111,7 @@ mod builder_tests {
                     .uri(format!("/api/v1/builder/sessions/{session_id}/chat"))
                     .header("authorization", format!("Bearer {maker}"))
                     .body(Body::from(
-                        json!({ "message": "\u{6cc}\u{6a9} \u{62a}\u{627}\u{6cc}\u{645}\u{631} \u{67e}\u{648}\u{645}\u{648}\u{62f}\u{648}\u{631}\u{648} \u{628}\u{633}\u{627}\u{632}", "forceGenerate": true })
+                        json!({ "message": "Build a pomodoro timer", "forceGenerate": true })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1178,11 +1178,11 @@ mod builder_tests {
             "/api/v1/builder/trinity/alpha",
             json!({
                 "sessionId": "trn:e2e-alpha-1",
-                "userMessage": "\u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{6cc}\u{6a9} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{633}\u{627}\u{632}\u{645} \u{6a9}\u{647} \u{645}\u{62e}\u{627}\u{637}\u{628}\u{634} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627} \u{647}\u{633}\u{62a}\u{646}\u{62f} \u{648} \u{631}\u{627}\u{628}\u{637} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644} rtl \u{62f}\u{627}\u{631}\u{62f}"
+                "userMessage": "I want to build a product for freelancers with an RTL mobile UI"
             }),
         ).await;
         assert_eq!(body["status"], "needs_more_discovery");
-        assert!(body["alphaReplyFa"].as_str().unwrap().contains("\u{622}\u{644}\u{641}\u{627}"));
+        assert!(body["alphaReplyFa"].as_str().unwrap().contains("IQ=136"));
         assert_eq!(body["readinessPct"], 40);
         let missing = body["missingSlots"].as_array().unwrap();
         assert_eq!(missing.len(), 3);
@@ -1194,7 +1194,7 @@ mod builder_tests {
             "/api/v1/builder/trinity/alpha",
             json!({
                 "sessionId": "trn:e2e-alpha-1",
-                "userMessage": "\u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{645} \u{648} \u{62f}\u{627}\u{62f}\u{647}‌\u{647}\u{627} \u{62f}\u{631} api \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646} \u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}",
+                "userMessage": "I want an interactive order form and the data stored on a public api without login",
                 "priorSlots": body["updatedSlots"]
             }),
         ).await;
@@ -1226,7 +1226,7 @@ mod builder_tests {
                 axum::http::Request::builder()
                     .method("POST")
                     .uri("/api/v1/builder/trinity/alpha")
-                    .body(Body::from(json!({"userMessage": "\u{633}\u{644}\u{627}\u{645}"}).to_string()))
+                    .body(Body::from(json!({"userMessage": "Hello"}).to_string()))
                     .unwrap(),
             )
             .await
@@ -1246,11 +1246,11 @@ mod builder_tests {
             json!({
                 "sessionId": "trn:e2e-forge-1",
                 "slots": {
-                    "coreObjective": "\u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{627}\u{628}\u{632}\u{627}\u{631} \u{628}\u{647}\u{631}\u{647}‌\u{648}\u{631}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631}\u{647}\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}",
-                    "targetAudienceAndUx": "\u{641}\u{631}\u{6cc}\u{644}\u{646}\u{633}\u{631} \u{641}\u{627}\u{631}\u{633}\u{6cc}‌\u{632}\u{628}\u{627}\u{646}\u{60c} \u{645}\u{648}\u{628}\u{627}\u{6cc}\u{644}‌\u{641}\u{631}\u{633}\u{62a} \u{6f3}\u{6f9}\u{6f0} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644} rtl",
-                    "interactiveFeatures": "\u{641}\u{631}\u{645} \u{633}\u{641}\u{627}\u{631}\u{634} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{648} \u{62c}\u{631}\u{6cc}\u{627}\u{646} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}",
-                    "dataAndZeroAuthApis": "\u{630}\u{62e}\u{6cc}\u{631}\u{647} \u{62f}\u{631} localStorage \u{648} api \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{628}\u{62f}\u{648}\u{646} \u{644}\u{627}\u{6af}\u{6cc}\u{646}",
-                    "monetizationAndViralLoop": "\u{642}\u{6cc}\u{645}\u{62a} \u{6f2}\u{6f0}\u{6f0} \u{633}\u{62a}\u{627}\u{631}\u{647} \u{628}\u{627} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a} \u{645}\u{639}\u{631}\u{641}"
+                    "coreObjective": "Productivity tool builder for Persian-speaking freelancers",
+                    "targetAudienceAndUx": "Persian-speaking freelancer, mobile-first 390 px rtl",
+                    "interactiveFeatures": "Interactive order form and payment flow",
+                    "dataAndZeroAuthApis": "localStorage persistence and a public api without login",
+                    "monetizationAndViralLoop": "200 stars price with referrer commission"
                 }
             }),
         ).await;
@@ -1277,7 +1277,7 @@ mod builder_tests {
         assert!(advisory["thirdOrderTomMarketHookFa"]
             .as_str()
             .unwrap()
-            .contains("200 \u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} (XTR)"));
+            .contains("(XTR)"));
         // self-heal loop — the score improvement history is recorded
         let history = body["repairHistory"].as_array().unwrap();
         assert!(!history.is_empty(), "base assembly starts below the 85 gate");

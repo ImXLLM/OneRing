@@ -275,12 +275,47 @@ export default function AdminPage() {
       ) : null}
 
       <div className="mx-auto max-w-7xl px-4 py-5 md:px-6">
-        {tab === "overview" ? <OverviewTab safe={safe} /> : null}
-        {tab === "ledger" ? <LedgerTab safe={safe} /> : null}
-        {tab === "vault" ? <VaultTab safe={safe} /> : null}
-        {tab === "genome" ? <GenomeTab safe={safe} /> : null}
-        {tab === "telemetry" ? <TelemetryTab safe={safe} /> : null}
-        {tab === "warroom" ? <WarRoomTab safe={safe} /> : null}
+        {/*
+         * Lossless tab switching — every tab stays mounted in the DOM and only
+         * its visibility toggles, so zero component-local state (loaded data,
+         * form inputs, selections) is ever lost when switching tabs.
+         */}
+        <div
+          hidden={tab !== "overview"}
+          style={{ display: tab === "overview" ? "block" : "none" }}
+        >
+          <OverviewTab safe={safe} />
+        </div>
+        <div
+          hidden={tab !== "ledger"}
+          style={{ display: tab === "ledger" ? "block" : "none" }}
+        >
+          <LedgerTab safe={safe} />
+        </div>
+        <div
+          hidden={tab !== "vault"}
+          style={{ display: tab === "vault" ? "block" : "none" }}
+        >
+          <VaultTab safe={safe} />
+        </div>
+        <div
+          hidden={tab !== "genome"}
+          style={{ display: tab === "genome" ? "block" : "none" }}
+        >
+          <GenomeTab safe={safe} />
+        </div>
+        <div
+          hidden={tab !== "telemetry"}
+          style={{ display: tab === "telemetry" ? "block" : "none" }}
+        >
+          <TelemetryTab safe={safe} />
+        </div>
+        <div
+          hidden={tab !== "warroom"}
+          style={{ display: tab === "warroom" ? "block" : "none" }}
+        >
+          <WarRoomTab safe={safe} />
+        </div>
       </div>
     </main>
   );

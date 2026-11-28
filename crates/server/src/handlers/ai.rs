@@ -159,12 +159,12 @@ mod tests {
         cfg.ai = AiConfig { slots, daily_cap_tokens: 1_000 };
         let scripted = ScriptedClient::new(vec![
             Ok(kian_ai::gateway::CompletionPacket {
-                content: "\u{67e}\u{627}\u{633}\u{62e} \u{6f1}".into(),
+                content: "Reply 1".into(),
                 prompt_tokens: 30,
                 completion_tokens: 20,
             }),
             Ok(kian_ai::gateway::CompletionPacket {
-                content: "\u{67e}\u{627}\u{633}\u{62e} \u{6f2}".into(),
+                content: "Reply 2".into(),
                 prompt_tokens: 10,
                 completion_tokens: 5,
             }),

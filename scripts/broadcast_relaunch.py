@@ -118,7 +118,7 @@ def send_live(users: list[dict], miniapp_url: str, token: str, state_path: str, 
 
 def main() -> int:
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    ap = argparse.ArgumentParser(description="KIAN v2 relaunch broadcast (safe: dry-run default)")
+    ap = argparse.ArgumentParser(description="MAIRON relaunch broadcast (safe: dry-run default)")
     ap.add_argument("--db", default=os.path.join(repo, "seed", "kian-production.db"))
     ap.add_argument("--miniapp-url", default=os.environ.get("KIAN_MINIAPP_URL", "https://t.me/KianV2Bot/app"))
     ap.add_argument("--live", action="store_true", help="real sending — without this flag it is a dry-run only")

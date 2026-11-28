@@ -22,11 +22,14 @@ const TOYSPARK_IDEAS: { emoji: string; label: string; idea: string }[] = [
   { emoji: "⭐", label: "Star collector", idea: "A star collector where a mini spaceship grabs falling stars" },
 ];
 
-interface ArdaLocale {
-  localeCode: string;
-  direction: string;
-  activationState: string;
-  completionBps: number;
+interface ArdaLocaleFlag {
+  code: string;
+  nativeName: string;
+  strCode: string;
+  dir: string;
+  intlLocale: string;
+  svg: string;
+  circularBadgeHtml: string;
 }
 
 export function TabForge() {
@@ -35,15 +38,17 @@ export function TabForge() {
   const [running, setRunning] = useState(false);
   const [reaScore, setReaScore] = useState<number | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
-  const [locales, setLocales] = useState<ArdaLocale[]>([]);
+  const [locales, setLocales] = useState<ArdaLocaleFlag[]>([]);
   const [localesNote, setLocalesNote] = useState<string | null>(null);
 
   const loadLocales = useCallback(async () => {
     try {
       const catalog = await sdk.arda.listLocales();
-      const rows = (catalog as { locales?: ArdaLocale[] }).locales ?? [];
+      const rows = catalog.locales ?? [];
       setLocales(rows);
-      const patchReady = rows.filter((l) => l.activationState === "PATCH_READY_SLOT").length;
+      // the PATCH_READY_SLOT count lives on the ecosystem matrix, not the flag catalog
+      const matrix = await sdk.arda.ecosystemMatrix().catch(() => null);
+      const patchReady = matrix ? matrix.patchReady : 0;
       setLocalesNote(`${rows.length} locales · ${patchReady} PATCH_READY_SLOT`);
     } catch (err) {
       setLocalesNote(null);
@@ -181,18 +186,17 @@ export function TabForge() {
           <div className="mt-2 flex flex-wrap gap-1">
             {locales.map((l) => (
               <button
-                key={l.localeCode}
+                key={l.code}
                 type="button"
-                onClick={() => patchDraft({ forgeLocale: l.localeCode })}
-                aria-label={`Switch draft locale to ${l.localeCode}`}
+                onClick={() => patchDraft({ forgeLocale: l.code })}
+                aria-label={`Switch draft locale to ${l.code}`}
                 className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${
-                  drafts.forgeLocale === l.localeCode
+                  drafts.forgeLocale === l.code
                     ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
                     : "border-zinc-700 text-zinc-400"
                 }`}
               >
-                {l.localeCode}
-                {l.activationState === "PATCH_READY_SLOT" ? " ·slot" : ""}
+                {l.code}
               </button>
             ))}
           </div>

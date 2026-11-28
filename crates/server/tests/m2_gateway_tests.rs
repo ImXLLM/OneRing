@@ -112,7 +112,7 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
         "POST",
         "/api/v1/accounts",
         Some(KEY),
-        json!({"id": "user:kia", "label": "\u{6a9}\u{6cc}\u{627}"}),
+        json!({"id": "user:kia", "label": "Kia"}),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
@@ -121,7 +121,7 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
         "POST",
         "/api/v1/accounts",
         Some(KEY),
-        json!({"id": "user:ada", "label": "\u{622}\u{62f}\u{627}"}),
+        json!({"id": "user:ada", "label": "Ada"}),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
@@ -154,7 +154,7 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
     assert_eq!(status, StatusCode::OK, "fund body: {funded}");
     assert_eq!(funded["escrow"]["status"], "FUNDED");
     let buyer_locked = call_empty(router.clone(), "GET", "/api/v1/accounts/user:kia/balance", Some(KEY)).await;
-    assert_eq!(buyer_locked.1["balance"], 600, "\u{641}\u{627}\u{646}\u{62f}: \u{6f1}\u{6f0}\u{6f0}\u{6f0} − \u{6f4}\u{6f0}\u{6f0} \u{628}\u{647} \u{627}\u{633}\u{6a9}\u{631}\u{648} \u{642}\u{641}\u{644} \u{634}\u{62f}");
+    assert_eq!(buyer_locked.1["balance"], 600, "funding: 1000 − 400 locked in escrow");
 
     let (status, delivered) = call_empty(router.clone(), "POST", "/api/v1/escrows/e1/deliver", Some(KEY)).await;
     assert_eq!(status, StatusCode::OK);
@@ -173,7 +173,7 @@ async fn full_escrow_lifecycle_with_charter_tax_split() {
 
     // economy transparency — the trial balance must remain inviolate
     let (status, economy) = call_empty(router.clone(), "GET", "/api/v1/economy", None).await;
-    assert_eq!(status, StatusCode::OK, "economy \u{639}\u{645}\u{648}\u{645}\u{6cc} \u{648} \u{628}\u{62f}\u{648}\u{646} \u{6a9}\u{644}\u{6cc}\u{62f} \u{627}\u{633}\u{62a} (\u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6})");
+    assert_eq!(status, StatusCode::OK, "economy is public and keyless (article 6)");
     assert_eq!(economy["balanced"], true);
     assert_eq!(economy["circulatingSupply"], 1000);
 }
@@ -254,7 +254,7 @@ async fn idempotent_fund_replays_without_double_money() {
     assert_eq!(r1["txId"], r2["txId"]);
     assert_eq!(r2["replayed"], true);
     let (_, buyer) = call_empty(router.clone(), "GET", "/api/v1/accounts/user:kia/balance", Some(KEY)).await;
-    assert_eq!(buyer["balance"], 40, "\u{62f}\u{648} \u{628}\u{627}\u{631} fund = \u{6cc}\u{6a9} \u{628}\u{627}\u{631} \u{6a9}\u{645}‌\u{634}\u{62f}\u{646} \u{6f6}\u{6f0}");
+    assert_eq!(buyer["balance"], 40, "fund twice = one 60 deduction");
 }
 
 // ── SQL injection on the status filter — the sqlsafe guard rejects the contract ────────────

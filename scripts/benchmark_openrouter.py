@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenRouter live benchmark for KIAN v2 Studio 3-slot wiring.
+"""OpenRouter live benchmark for MAIRON Studio 3-slot wiring.
 
 Discovers every live :free text model on https://openrouter.ai/api/v1
 (id endswith ':free' or pricing.prompt=='0' and pricing.completion=='0',
@@ -7,7 +7,7 @@ modality output = text), then:
 
   Probe A — Persian reasoning speed/stability (2 rounds per model, concurrent):
             status codes + Time-to-Response (ms).
-  Probe B — real KIAN Product Studio contract on every Probe-A passer:
+  Probe B — real MAIRON Product Studio contract on every Probe-A passer:
             self-contained <!DOCTYPE html> app + ```json CAST metadata block,
             pass bar < 15 s (mirrors kian_hermes::extract_html_and_metadata).
 
@@ -35,7 +35,7 @@ REPO = Path("/home/z/my-project/kian-launch/kian")
 OUT = Path("/tmp/openrouter_bench.json")
 
 BASE = "https://openrouter.ai/api/v1"
-ATTR_HEADERS = {"HTTP-Referer": "https://kian.app", "X-Title": "KIAN Studio"}
+ATTR_HEADERS = {"HTTP-Referer": "https://kian.app", "X-Title": "MAIRON Studio"}
 CONCURRENCY = 4
 PROBE_A_ROUNDS = 2
 PROBE_A_TIMEOUT = 30.0          # = HttpModelClient timeout in the kernel

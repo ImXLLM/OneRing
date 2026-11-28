@@ -364,9 +364,9 @@ mod tests {
         let merchant = agents.iter().find(|a| a["role"] == "merchant").expect("merchant");
         assert_eq!(merchant["status"], "active");
         let guardian = agents.iter().find(|a| a["role"] == "guardian").expect("guardian");
-        assert_eq!(guardian["status"], "active", "\u{646}\u{6af}\u{647}\u{628}\u{627}\u{646} \u{628}\u{627} \u{647}\u{646}\u{62f}\u{644}\u{631} \u{627}\u{645}\u{646}\u{6cc}\u{62a} \u{641}\u{639}\u{627}\u{644} \u{627}\u{633}\u{62a}");
+        assert_eq!(guardian["status"], "active", "guardian active with the security handler");
         let active_count = agents.iter().filter(|a| a["status"] == "active").count();
-        assert_eq!(active_count, 7, "\u{646}\u{627}\u{648}\u{6af}\u{627}\u{646} \u{6f7}/\u{6f7} \u{641}\u{639}\u{627}\u{644}");
+        assert_eq!(active_count, 7, "fleet 7/7 active");
         let wire = body.to_string().to_lowercase();
         assert!(!wire.contains("test-admin-key"), "fleet must never leak the admin key");
     }

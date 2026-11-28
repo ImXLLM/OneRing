@@ -181,6 +181,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@kian/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@kian/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -215,15 +218,15 @@ importers:
 
   apps/miniapp:
     dependencies:
+      '@kian/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@kian/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
       '@kian/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@tonconnect/ui-react':
-        specifier: 5.0.3
-        version: 5.0.3(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       lucide-react:
         specifier: 1.77.0
         version: 1.77.0(@types/react@19.3.0)(react@19.3.1)
@@ -261,9 +264,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@kian/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@kian/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@kian/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@kian/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -308,7 +317,27 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
-  packages/config: {}
+  packages/analytics:
+    dependencies:
+      '@kian/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@kian/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+    devDependencies:
+      '@types/node':
+        specifier: ^24
+        version: 24.19.2
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/config:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
 
   packages/contracts:
     dependencies:

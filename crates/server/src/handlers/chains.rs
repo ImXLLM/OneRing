@@ -103,9 +103,9 @@ pub async fn treasury(State(state): State<Arc<AppState>>) -> ApiResult<Json<Trea
         .collect();
     Ok(Json(TreasuryResponse {
         items,
-        movement_policy: "\u{647}\u{631} \u{62c}\u{627}\u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{6cc} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{646}\u{6cc}\u{627}\u{632}\u{645}\u{646}\u{62f} \u{644}\u{627}\u{6cc}\u{62d}\u{647}\u{654} \u{62a}\u{635}\u{648}\u{6cc}\u{628}‌\u{634}\u{62f}\u{647}\u{654} \u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646} \u{627}\u{633}\u{62a} \
-                         (bill:PASSED)\u{61b} \u{645}\u{628}\u{627}\u{644}\u{63a} \u{628}\u{627}\u{644}\u{627}\u{6cc} \u{622}\u{633}\u{62a}\u{627}\u{646}\u{647}\u{654} \u{645}\u{646}\u{634}\u{648}\u{631} \u{631}\u{623}\u{6cc} \u{627}\u{646}\u{633}\u{627}\u{646}\u{6cc} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{646}\u{62f} \
-                         — \u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f6} \u{634}\u{641}\u{627}\u{641}\u{6cc}\u{62a} \u{648} \u{645}\u{627}\u{62f}\u{647}\u{654} \u{6f7} HITL."
+        movement_policy: "every treasury movement requires a Parliament-approved passed bill \
+                         (bill:PASSED); amounts above the charter threshold need a human vote \
+                         — article 6 transparency and article 7 HITL."
             .to_owned(),
     }))
 }
@@ -489,7 +489,7 @@ mod tests {
             .find(|c| c["chain"] == "BSC")
             .unwrap();
         assert_eq!(bsc["configured"], true);
-        assert!(body["movementPolicy"].as_str().unwrap().contains("\u{67e}\u{627}\u{631}\u{644}\u{645}\u{627}\u{646}"));
+        assert!(body["movementPolicy"].as_str().unwrap().contains("Parliament"));
     }
 
     #[tokio::test]

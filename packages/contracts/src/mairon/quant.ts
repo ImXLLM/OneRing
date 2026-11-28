@@ -52,7 +52,15 @@ export type StrategyAstNodeKindT = (typeof STRATEGY_AST_NODE_KINDS)[number];
  * parses from the natural vibe prompt. Every causal read is bounded to
  * `&candles[0..=t]` by construction.
  */
-export const StrategyAst = z.object({
+/** The recursive strategy-tree shape (declared ahead of the schema). */
+export type StrategyAstShape = {
+  kind: StrategyAstNodeKindT;
+  label: string;
+  params: Record<string, string | number | boolean>;
+  children: StrategyAstShape[];
+};
+
+export const StrategyAst: z.ZodType<StrategyAstShape> = z.object({
   kind: z.enum([
     "program", "signal", "candles_slice", "indicator", "comparison",
     "logic", "action", "risk",

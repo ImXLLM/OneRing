@@ -72,7 +72,8 @@ pub use competitive_supremacy_engine::{
     DynamicWorkflowDagEngine, DagError, DagNodeResult, DagRunOutcome, LiveSandboxBundle,
     MaironVerifiedSeal, McpJsonRpcRequest, McpJsonRpcResponse, McpRpcError, McpToolDescriptor,
     PatchMatchMode, SweLanguage, SweVerifyCheck, SweVerifyOutcome, TimeTravelError,
-    TimeTravelLedger, AgentStateCheckpoint, SurgicalPatchOutcome, WorkflowDagSpec, WorkflowNode,
+    TimeTravelCheckpointer, TimeTravelLedger, AgentStateCheckpoint, SurgicalPatchOutcome,
+    WorkflowDagSpec, WorkflowNode,
     WorkflowNodeKind, COMPETITIVE_SUPREMACY_SIGNATURE, DOM_INSPECT_MESSAGE_TYPE, DOM_NODE_ATTR,
     MAIRON_SEAL_MIN_REA,
 };
@@ -241,7 +242,7 @@ mod tests {
         .expect("kernel run");
         assert_eq!(out.skill_id, "wallet.balance");
         assert_eq!(out.shield_verdict, ShieldVerdict::Allow);
-        assert!(out.output.contains("\u{62a}\u{631}\u{627}\u{632} \u{634}\u{645}\u{627}"), "output: {}", out.output);
+        assert!(out.output.contains("your balance"), "output: {}", out.output);
         assert_eq!(out.total_tokens, 0, "kernel skill costs zero tokens");
         assert_eq!(out.identity_score, 52, "one ok run: 50 + 2");
         let runs = s.list_hermes_runs("user:tg:900", 5).await.expect("runs");

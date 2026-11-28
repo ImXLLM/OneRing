@@ -1146,7 +1146,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {token}"))
                     .body(Body::from(
-                        json!({ "title": "\u{62f}\u{633}\u{62a}\u{648}\u{631} \u{67e}\u{62e}\u{62a} \u{646}\u{627}\u{646}", "description": "\u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6a9}\u{627}\u{645}\u{644}", "priceDin": 250 })
+                        json!({ "title": "bread recipe", "description": "full explanation", "priceDin": 250 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1203,7 +1203,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({ "title": "\u{6a9}\u{644}\u{627}\u{633} \u{632}\u{628}\u{627}\u{646}", "description": "\u{6cc}\u{6a9} \u{62c}\u{644}\u{633}\u{647}", "priceDin": 500 })
+                        json!({ "title": "language class", "description": "one session", "priceDin": 500 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1354,7 +1354,7 @@ mod tests {
                     .uri("/api/v1/market/products")
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({ "title": "\u{6af}\u{646}\u{62c}", "description": "\u{628}\u{633}\u{6cc}\u{627}\u{631} \u{6af}\u{631}\u{627}\u{646}", "priceDin": 900 })
+                        json!({ "title": "treasure", "description": "very expensive", "priceDin": 900 })
                             .to_string(),
                     ))
                     .unwrap(),
@@ -1390,8 +1390,8 @@ mod tests {
         let stranger = auth(&app, "604", "stranger").await;
         mint(&app, "citizen:602", 2_000).await;
 
-        let full_html = "<!doctype html><html><body><h1>\u{645}\u{62d}\u{635}\u{648}\u{644} \u{6a9}\u{627}\u{645}\u{644} \u{67e}\u{648}\u{644}\u{6cc}</h1></body></html>";
-        let preview_html = "<div><h1>\u{62f}\u{645}\u{648}\u{6cc} \u{631}\u{627}\u{6cc}\u{6af}\u{627}\u{646}</h1></div>";
+        let full_html = "<!doctype html><html><body><h1>Paid full product</h1></body></html>";
+        let preview_html = "<div><h1>Free demo</h1></div>";
 
         // create a product with a preview, full HTML code, and a 20% referrer commission
         let res = app
@@ -1403,8 +1403,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
-                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc}",
+                            "title": "crypto profit calculator",
+                            "description": "single-page interactive tool",
                             "priceDin": 1_000,
                             "previewHtml": preview_html,
                             "affiliateBps": 2_000,
@@ -1568,8 +1568,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{642}\u{627}\u{644}\u{628} \u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}",
-                            "description": "HTML \u{6a9}\u{627}\u{645}\u{644}",
+                            "title": "dashboard template",
+                            "description": "full HTML",
                             "priceDin": 300,
                             "deliveryPayload": "<html>broken</html>"
                         })
@@ -1607,7 +1607,7 @@ mod tests {
                     .method("POST")
                     .uri(format!("/api/v1/market/escrows/{escrow_id}/dispute"))
                     .header("authorization", format!("Bearer {seller}"))
-                    .body(Body::from(json!({ "reason": "\u{62a}\u{644}\u{627}\u{634} \u{63a}\u{6cc}\u{631}\u{645}\u{62c}\u{627}\u{632}" }).to_string()))
+                    .body(Body::from(json!({ "reason": "forbidden attempt" }).to_string()))
                     .unwrap(),
             )
             .await
@@ -1623,7 +1623,7 @@ mod tests {
                     .uri(format!("/api/v1/market/escrows/{escrow_id}/dispute"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({ "reason": "\u{641}\u{627}\u{6cc}\u{644} HTML \u{627}\u{62c}\u{631}\u{627} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}" }).to_string(),
+                        json!({ "reason": "the HTML file does not run" }).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1632,7 +1632,7 @@ mod tests {
         assert_eq!(res.status(), 200);
         let disputed = json_body(res).await;
         assert_eq!(disputed["escrow"]["status"], "DISPUTED");
-        assert_eq!(disputed["escrow"]["disputeReason"], "\u{641}\u{627}\u{6cc}\u{644} HTML \u{627}\u{62c}\u{631}\u{627} \u{646}\u{645}\u{6cc}‌\u{634}\u{648}\u{62f}");
+        assert_eq!(disputed["escrow"]["disputeReason"], "the HTML file does not run");
 
         // in DISPUTED state, the delivery fetch is rejected → 422
         let res = app
@@ -1650,13 +1650,7 @@ mod tests {
     // ── Mairon seal + citizens' 5-star vote — live HTTP routes (Wave 3) ──
 
     /// The forged artifact — passes Mairon's gate (RTL + 390 + 3 sections + script).
-    const FORGED_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
-<style>body{font-family:'Vazirmatn',sans-serif;max-width: 390px;}</style>\
-</head><body>\
-<section aria-label=\"\u{627}\u{644}\u{641}\">\u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}</section><section>\u{6af}\u{632}\u{627}\u{631}\u{634}</section><section>\u{62a}\u{646}\u{638}\u{6cc}\u{645}\u{627}\u{62a}</section>\
-<script>/* assert: 390px zero-overflow */</script>\
-</body></html>";
+    const FORGED_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{font-family:'Vazirmatn',sans-serif;max-width: 390px;}</style></head><body><section aria-label=\"A\">dashboard</section><section>report</section><section>settings</section><script>/* assert: 390px zero-overflow */</script></body></html>";
 
     async fn create_forged_product(app: &axum::Router, token: &str, title: &str) -> String {
         let res = app
@@ -1669,7 +1663,7 @@ mod tests {
                     .body(Body::from(
                         json!({
                             "title": title,
-                            "description": "\u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc}‌\u{634}\u{62f}\u{647} \u{628}\u{631}\u{627}\u{6cc} \u{6af}\u{6cc}\u{62a} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}",
+                            "description": "single-page artifact forged for the MAIRON gate",
                             "priceDin": 500,
                             "previewHtml": FORGED_PREVIEW
                         })
@@ -1691,7 +1685,7 @@ mod tests {
         let app = app().await;
         let seller = auth(&app, "321", "forge-seller").await;
         let buyer = auth(&app, "322", "star-buyer").await;
-        let product_id = create_forged_product(&app, &seller, "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc}‌\u{634}\u{62f}\u{647}").await;
+        let product_id = create_forged_product(&app, &seller, "forged product").await;
 
         // the unsealed product — the vote summary shows Mairon's fresh arbitration
         let res = app
@@ -1769,7 +1763,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 5, "comment": "\u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{648}\u{627}\u{642}\u{639}\u{627}\u{64b} \u{62a}\u{645}\u{6cc}\u{632} \u{627}\u{633}\u{62a} — \u{628}\u{62f}\u{648}\u{646} \u{627}\u{633}\u{644}\u{648}\u{67e}"}).to_string(),
+                        json!({"stars": 5, "comment": "the forge is really clean — no slop"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1791,7 +1785,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 1, "comment": "\u{631}\u{623}\u{6cc} \u{62f}\u{648}\u{645} \u{633}\u{648}\u{631}\u{6cc}\u{644} \u{627}\u{633}\u{62a}"}).to_string(),
+                        json!({"stars": 1, "comment": "the second vote is surreal"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1808,7 +1802,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
-                        json!({"stars": 0, "comment": "\u{633}\u{62a}\u{627}\u{631}\u{647}\u{654} \u{646}\u{627}\u{645}\u{639}\u{62a}\u{628}\u{631}"}).to_string(),
+                        json!({"stars": 0, "comment": "invalid star"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1837,7 +1831,7 @@ mod tests {
         let combined = body["combinedRankScore"].as_f64().unwrap();
         let expected = 0.60 * (bayes * 20.0) + 0.40 * f64::from(u32::try_from(score).unwrap());
         assert!((combined - expected).abs() < 1e-9, "combined: {combined} vs {expected}");
-        assert!(body["fiveStarDisplay"].as_str().unwrap().contains("⚒️ \u{646}\u{645}\u{631}\u{647} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} REA"));
+        assert!(body["fiveStarDisplay"].as_str().unwrap().contains("⚒️ MAIRON REA score"));
     }
 
     /// The raw product — Mairon's gate honestly rejects it (422) and no seal lands.
@@ -1855,8 +1849,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{62e}\u{627}\u{645}",
-                            "description": "\u{628}\u{62f}\u{648}\u{646} \u{622}\u{631}\u{62a}\u{6cc}\u{641}\u{6a9}\u{62a} \u{648}\u{627}\u{642}\u{639}\u{6cc}",
+                            "title": "raw product",
+                            "description": "no real artifact",
                             "priceDin": 100
                         })
                         .to_string(),
@@ -1895,7 +1889,7 @@ mod tests {
                     .uri(format!("/api/v1/market/products/{product_id}/reviews"))
                     .header("authorization", format!("Bearer {buyer}"))
                     .body(Body::from(
-                        json!({"stars": 2, "comment": "\u{647}\u{646}\u{648}\u{632} \u{622}\u{647}\u{646}\u{6af}\u{631}\u{6cc} \u{646}\u{634}\u{62f}\u{647}"}).to_string(),
+                        json!({"stars": 2, "comment": "not forged yet"}).to_string(),
                     ))
                     .unwrap(),
             )
@@ -1910,20 +1904,7 @@ mod tests {
     /// The rich Persian preview — passes Mairon's REA gate (`>= 85`):
     /// 5 sections (architecture), `dir="rtl"` + `max-width:390px` + Vazirmatn + viewport
     /// (UX), 4 scripts + 2 probes + aria (verification).
-    const RICH_FA_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head>\
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
-<style>body{font-family:'Vazirmatn';max-width:390px}</style></head><body>\
-<section id=\"sod\">\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}\u{654} \u{633}\u{648}\u{62f} \u{645}\u{631}\u{6a9}\u{628}</section>\
-<section id=\"asset\">\u{62f}\u{627}\u{631}\u{627}\u{6cc}\u{6cc} \u{648} \u{628}\u{62f}\u{647}\u{6cc}</section>\
-<section id=\"market\">\u{628}\u{627}\u{632}\u{627}\u{631} \u{644}\u{62d}\u{638}\u{647}‌\u{627}\u{6cc}</section>\
-<section id=\"risk\">\u{645}\u{62f}\u{6cc}\u{631}\u{6cc}\u{62a} \u{631}\u{6cc}\u{633}\u{6a9}</section>\
-<section id=\"report\">\u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}</section>\
-<div role=\"main\" aria-label=\"\u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{645}\u{627}\u{644}\u{6cc}\"></div>\
-<div data-probe=\"p1\">\u{67e}\u{631}\u{648}\u{628}\u{650} \u{62f}\u{627}\u{62f}\u{647}</div>\
-<div data-probe=\"p2\">\u{67e}\u{631}\u{648}\u{628}\u{650} \u{628}\u{627}\u{632}\u{628}\u{6cc}\u{646}\u{6cc}</div>\
-<script>/* \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647} */</script><script>/* \u{646}\u{645}\u{648}\u{62f}\u{627}\u{631} */</script>\
-<script>/* \u{631}\u{6cc}\u{633}\u{6a9} */</script><script>/* \u{6af}\u{632}\u{627}\u{631}\u{634} */</script>\
-</body></html>";
+    const RICH_FA_PREVIEW: &str = "<!doctype html><html lang=\"fa\" dir=\"rtl\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{font-family:'Vazirmatn';max-width:390px}</style></head><body><section id=\"sod\">compound profit calculation</section><section id=\"asset\">assets and liabilities</section><section id=\"market\">live market</section><section id=\"risk\">risk management</section><section id=\"report\">monthly report</section><div role=\"main\" aria-label=\"financial calculator\"></div><div data-probe=\"p1\">data probe</div><div data-probe=\"p2\">review probe</div><script>/* calculation */</script><script>/* chart */</script><script>/* risk */</script><script>/* report */</script></body></html>";
 
     async fn create_rich_product(app: &axum::Router, seller: &str) -> String {
         let res = app
@@ -1935,8 +1916,8 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{62d}\u{633}\u{627}\u{628}\u{62f}\u{627}\u{631} — \u{645}\u{62d}\u{627}\u{633}\u{628}\u{647}‌\u{6af}\u{631} \u{633}\u{648}\u{62f} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}",
-                            "description": "\u{627}\u{628}\u{632}\u{627}\u{631} \u{62a}\u{639}\u{627}\u{645}\u{644}\u{6cc} \u{62a}\u{6a9}‌\u{635}\u{641}\u{62d}\u{647}‌\u{627}\u{6cc} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{628}\u{627} \u{6af}\u{632}\u{627}\u{631}\u{634} \u{645}\u{627}\u{647}\u{627}\u{646}\u{647}",
+                            "title": "Accounted — crypto profit calculator",
+                            "description": "Persian single-page interactive tool with a monthly report",
                             "priceDin": 2_000,
                             "previewHtml": RICH_FA_PREVIEW
                         })
@@ -2022,10 +2003,10 @@ mod tests {
                     .header("authorization", format!("Bearer {seller}"))
                     .body(Body::from(
                         json!({
-                            "title": "\u{62f}\u{645}\u{648}\u{6cc} \u{633}\u{627}\u{62f}\u{647}",
-                            "description": "\u{67e}\u{6cc}\u{634}‌\u{646}\u{645}\u{627}\u{6cc}\u{634}\u{650} \u{632}\u{6cc}\u{631}\u{650} \u{6af}\u{6cc}\u{62a}\u{650} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646}",
+                            "title": "simple demo",
+                            "description": "preview below the MAIRON gate",
                             "priceDin": 500,
-                            "previewHtml": "<div><h1>\u{62f}\u{645}\u{648}\u{6cc} \u{631}\u{627}\u{6cc}\u{6af}\u{627}\u{646}</h1></div>"
+                            "previewHtml": "<div><h1>Free demo</h1></div>"
                         })
                         .to_string(),
                     ))

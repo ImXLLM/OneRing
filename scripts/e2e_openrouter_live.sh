@@ -42,7 +42,7 @@ model = env['KIAN_AI_PRIMARY_MODEL'].split(',')[0].strip()
 with httpx.Client(timeout=45) as c:
     r = c.post(f"{env['KIAN_AI_PRIMARY_URL'].rstrip('/')}/chat/completions",
         headers={"Authorization": f"Bearer {env['KIAN_AI_PRIMARY_KEY']}",
-                 "HTTP-Referer": "https://kian.app", "X-Title": "KIAN Studio"},
+                 "HTTP-Referer": "https://kian.app", "X-Title": "MAIRON Studio"},
         json={"model": model,
               "messages": [{"role": "user", "content": "Write only the word «Hello»."}]})
     print(json.dumps({"status": r.status_code, "model": model,
