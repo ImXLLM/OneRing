@@ -34,7 +34,7 @@ pub const WAR_ROOM_SIGNATURE: &str = "MAIRON-WAR-ROOM";
 pub const GITHUB_REPO: &str = "ImXLLM/OneRing";
 
 /// Short hash of the headline metric on the UI setter — the third-quarter status bar.
-pub const GITHUB_COMMIT_SHORT: &str = "c05ac1c";
+pub const GITHUB_COMMIT_SHORT: &str = "282eb68";
 
 /// Base Mainnet chain ID — the day-one charter.
 pub const BASE_CHAIN_ID: u64 = 8453;
@@ -2304,7 +2304,7 @@ mod tests {
         assert!(!FounderPersona::Chairman.is_co_founder());
         // The constants' charter — the spec's exact values.
         assert_eq!(GITHUB_REPO, "ImXLLM/OneRing");
-        assert_eq!(GITHUB_COMMIT_SHORT, "c05ac1c");
+        assert_eq!(GITHUB_COMMIT_SHORT, "282eb68");
         assert_eq!(BASE_CHAIN_ID, 8453);
         assert_eq!(TELEGRAM_STARS_CURRENCY, "XTR");
         assert_eq!(Locale::Fa.direction(), "rtl");
