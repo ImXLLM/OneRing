@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 /**
  * Base8453AddressPill — a Base Mainnet (chain id 8453) address pill.

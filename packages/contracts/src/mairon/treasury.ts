@@ -37,8 +37,11 @@ export const CREATOR_PAYOUT_BPS = 8_000 as const;
 /** Affiliate share on a referred sale — `1000 bps` = 10%. */
 export const AFFILIATE_BPS_REFERRED = 1_000 as const;
 
-/** Instant boosts pass 100% to the creator. */
-export const INSTANT_BOOST_CREATOR_BPS = 10_000 as const;
+/** Instant boosts route 0% to the creator — Stream 3 is a 100%-margin treasury purchase. */
+export const INSTANT_BOOST_CREATOR_BPS = 0 as const;
+
+/** Instant boosts route 100% (10000 bps) to the MAIRON Sovereign Treasury. */
+export const INSTANT_BOOST_TREASURY_BPS = 10_000 as const;
 
 /** Instant-settlement spread on Base USDC and Telegram Stars — `150 bps` = 1.5%. */
 export const SETTLEMENT_SPREAD_BPS = 150 as const;

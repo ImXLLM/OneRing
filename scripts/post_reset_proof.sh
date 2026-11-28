@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-reset live proof for the OpenRouter 3-slot KIAN gateway.
+# Post-reset live proof for the OpenRouter 3-slot MAIRON Sovereign Gateway.
 #
 # 1. Polls GET /auth/key (costs zero model requests) until the free-model
 #    daily counter resets (resets at 00:00 UTC — used 56/50 today).
@@ -96,7 +96,7 @@ section = f"""Live run at {now} — script `scripts/e2e_openrouter_live.sh` on a
 | HTML artifact | {c['html_bytes']:,} bytes — doctype: {fa_bool(c['html_doctype'])}, Persian RTL: {fa_bool(c['html_rtl'])}, fully closed: {fa_bool(c['html_close'])} |
 | Marketplace publication | product `{res['published']['productId']}` — «{res['published']['title']}» at price {res['published']['price']} dinar, active: {fa_bool(res['published']['active'])} |
 
-**Result: Slot 1 (`openrouter/free`) responded with HTTP 200, `usedFallback: false`, and a real-LLM-generated RTL Persian HTML document was produced and published on the KIAN market.** Model response head: «{c['replyHead']}…»
+**Result: Slot 1 (`openrouter/free`) responded with HTTP 200, `usedFallback: false`, and a real-LLM-generated RTL Persian HTML document was produced and published on the MAIRON market.** Model response head: «{c['replyHead']}…»
 
 Final artifact copy for offline review: `/tmp/kian-e2e-or/generated.html` (after publication it also exists as product #{res['published']['productId']} inside the live database)."""
 p = pathlib.Path("/home/z/my-project/download/OPENROUTER_BENCHMARK_REPORT_FA.md")

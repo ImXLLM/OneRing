@@ -78,6 +78,19 @@ async fn serve_neural_hud_html() -> Response {
     serve_tool_html("tools/neural-hud/neural_hud.html").await
 }
 
+/// `GET /locales/fa.patch.json` (+ `/war-room/locales/fa.patch.json`) — the isolated
+/// Persian locale patch, compiled into the kernel with `include_str!` so the route
+/// always answers `200 OK` with `application/json; charset=utf-8` (PATCH_READY_SLOT
+/// hot-patch doctrine: Persian lives only inside this one patch file).
+async fn serve_fa_patch_json() -> Response {
+    const FA_PATCH: &str = include_str!("../../../locales/fa.patch.json");
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+        .body(axum::body::Body::from(FA_PATCH))
+        .unwrap()
+}
+
 /// Mini-app CORS layer — exact allowlist from configuration; unknown origins never
 /// receive a preflight response (fail-closed). No cookies — auth is via the Bearer header.
 ///
@@ -332,6 +345,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
     let dashboards = Router::new()
         .route("/war-room", get(serve_war_room_html))
         .route("/neural-hud", get(serve_neural_hud_html))
+        .route("/locales/fa.patch.json", get(serve_fa_patch_json))
+        .route("/war-room/locales/fa.patch.json", get(serve_fa_patch_json))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             rate_limit_middleware,
@@ -548,4 +563,53 @@ mod tests {
             assert_eq!(status, 401, "{path} must be session-guarded");
         }
     }
-}
+
+    /// Gate 2 — `GET /locales/fa.patch.json` (and `/war-room/locales/fa.patch.json`)
+    /// is compiled into the kernel and always answers `200 OK` with
+    /// `application/json; charset=utf-8`; the body is valid JSON whose `fa`
+    /// patch is `PATCH_READY_SLOT` (Persian stays isolated inside the patch).
+    #[tokio::test]
+    async fn fa_patch_json_route_serves_the_isolated_patch() {
+        let app = hardened_app(10_000).await;
+        for path in ["/locales/fa.patch.json", "/war-room/locales/fa.patch.json"] {
+            let req = axum::http::Request::builder()
+                .method("GET")
+                .uri(path)
+                .body(Body::empty())
+                .unwrap();
+            let res = app.clone().oneshot(req).await.unwrap();
+            let status = res.status().as_u16();
+            assert_eq!(status, 200, "{path} must always answer 200 OK");
+            let ctype = res
+                .headers()
+                .get("content-type")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or_default()
+                .to_owned();
+            assert!(
+                ctype.starts_with("application/json") && ctype.contains("charset=utf-8"),
+                "{path} must be application/json; charset=utf-8, got {ctype}"
+            );
+            let bytes = axum::body::to_bytes(res.into_body(), 1024 * 1024)
+                .await
+                .unwrap();
+            let json: serde_json::Value = serde_json::from_slice(&bytes)
+                .expect("{path} body must be valid JSON");
+            assert_eq!(
+                json.get("locale").and_then(|v| v.as_str()),
+                Some("fa"),
+                "{path} must be the fa patch"
+            );
+            assert_eq!(
+                json.get("status").and_then(|v| v.as_str()),
+                Some("PATCH_READY_SLOT"),
+                "{path} must declare the PATCH_READY_SLOT status"
+            );
+            assert_eq!(
+                json.get("dir").and_then(|v| v.as_str()),
+                Some("rtl"),
+                "{path} must declare the RTL direction"
+            );
+        }
+    }
+

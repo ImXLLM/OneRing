@@ -94,7 +94,9 @@ pub use supremacy::{AgentCheckpointRow, SweSandboxAuditRow, WorkflowDagRunRow};
 pub use wave9::{LocalePatchRegistryRow, NeuralHudRenderJobRow, UserLabTelemetryLogRow};
 
 // Founder war room (Wave 10) — day-zero steps + boss directives
-pub use wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow};
+pub use wave10::{
+    ChairmanDirectiveLogRow, FounderWarRoomTickRow, WarRoomStateRow, WarRoomTickEventRow,
+};
 
 // Causal quant (Wave 6) — Vibe-Trading strategies
 pub use quant::QuantStrategyRow;

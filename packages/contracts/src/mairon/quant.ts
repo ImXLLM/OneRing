@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { JsonObject } from "./worldState";
+
 /**
  * MAIRON — Mairon Quant & CCXT execution wire contracts.
  *
@@ -203,7 +205,7 @@ export type QuantGateViewT = z.infer<typeof QuantGateView>;
 /** Mirror of `QuantVibeBacktestResponse`. */
 export const QuantVibeBacktestResponse = z.object({
   strategyId: z.string(),
-  strategyAstJson: z.unknown(),
+  strategyAstJson: JsonObject,
   metrics: QuantMetricsView,
   nodes: z.array(QuantSwarmNodeView),
   gate: QuantGateView,

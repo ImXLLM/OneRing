@@ -44,6 +44,12 @@ export const MAIRON_CHARTER_BPS = {
   settlementSpread: 150,
 } as const;
 
+/** Instant boosts route 0% to the creator — Stream 3 is a 100%-margin treasury purchase. */
+export const INSTANT_BOOST_CREATOR_BPS = 0 as const;
+
+/** Instant boosts route 100% (10000 bps) to the MAIRON Sovereign Treasury. */
+export const INSTANT_BOOST_TREASURY_BPS = 10_000 as const;
+
 /** Capital reserve partition — the honest Day-0 figures. */
 export const MAIRON_CAPITAL_RESERVE = {
   cryptoSeedMicros: 33_000_000,

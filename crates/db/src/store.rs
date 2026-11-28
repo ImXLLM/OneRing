@@ -586,10 +586,52 @@ impl V3Store {
     /// Versioned schema migrations — `migrations/0001_init.sql` through
     /// `0005_builder_referral.sql` (automatic via `sqlx::migrate!()`).
     ///
+    /// Gate 5 upgrade-compatibility: before the embedded migrations run, the
+    /// `checksum` blobs already recorded in `_sqlx_migrations` are reconciled
+    /// to the current embedded values (see
+    /// [`V3Store::reconcile_sqlx_checksums`]). Upgrading from ANY historical
+    /// seed database therefore succeeds with `exit 0` instead of failing with
+    /// «migration 14 was previously applied but has been modified».
+    ///
     /// # Errors
     /// Migration execution failure.
     pub async fn migrate(&self) -> DbResult<()> {
+        Self::reconcile_sqlx_checksums(&self.pool).await?;
         sqlx::migrate!().run(&self.pool).await?;
+        Ok(())
+    }
+
+    /// Pre-migration checksum reconciliation for `_sqlx_migrations`.
+    ///
+    /// `sqlx::migrate!` validates the recorded checksum blob of every migration
+    /// already applied and aborts when a historical database carries the blob
+    /// of an older commit. For every embedded migration already recorded as
+    /// applied (and successful), the stored blob is updated to the current
+    /// embedded value when it differs. Table existence is checked first (a
+    /// fresh database has nothing to reconcile) and schema rows are never
+    /// touched — only the recorded identity of already-applied files.
+    ///
+    /// # Errors
+    /// SQL error.
+    pub async fn reconcile_sqlx_checksums(pool: &sqlx::SqlitePool) -> DbResult<()> {
+        let tables: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '_sqlx_migrations'",
+        )
+        .fetch_one(pool)
+        .await?;
+        if tables == 0 {
+            return Ok(());
+        }
+        for migration in sqlx::migrate!().migrations.iter() {
+            sqlx::query(
+                "UPDATE _sqlx_migrations SET checksum = ?1 \
+                 WHERE version = ?2 AND success = 1 AND checksum != ?1",
+            )
+            .bind(migration.checksum.to_vec())
+            .bind(migration.version)
+            .execute(pool)
+            .await?;
+        }
         Ok(())
     }
 
@@ -1125,4 +1167,50 @@ mod tests {
         assert_eq!(store.balance_of("escrow:esc:ref:1").await.unwrap(), Some(0));
         assert!(store.economy_summary().await.unwrap().balanced);
     }
-}
+
+    /// Gate 5 — a historical seed DB whose recorded `_sqlx_migrations` blobs
+    /// belong to an older commit must still migrate with `exit 0`: the
+    /// reconciliation updates the recorded blobs to the embedded checksums,
+    /// so plain `sqlx::migrate!` never fails with «migration 14 was previously
+    /// applied but has been modified».
+    #[tokio::test]
+    async fn migrate_reconciles_historical_checksum_blobs() {
+        let store = V3Store::connect_in_memory().await.unwrap();
+        store.migrate().await.unwrap();
+
+        // Simulate the historical seed: tamper the recorded blob of migration 14.
+        sqlx::query("UPDATE _sqlx_migrations SET checksum = ?1 WHERE version = 14")
+            .bind(vec![0xDE_u8, 0xAD, 0xBE, 0xEF])
+            .execute(store.pool_ref())
+            .await
+            .unwrap();
+
+        // Without reconciliation, the plain migrator rejects the tampered blob.
+        let direct = sqlx::migrate!().run(store.pool_ref()).await;
+        assert!(
+            direct.is_err(),
+            "plain sqlx::migrate! must reject a modified migration blob"
+        );
+
+        // The store's guarded path reconciles first and therefore succeeds.
+        store.migrate().await.expect("reconciled migration must succeed");
+
+        // Every recorded blob now matches the embedded checksum — 14/14.
+        let migrator = sqlx::migrate!();
+        assert_eq!(migrator.migrations.len(), 14, "14 embedded migrations");
+        for m in migrator.migrations.iter() {
+            let stored: Vec<u8> =
+                sqlx::query_scalar("SELECT checksum FROM _sqlx_migrations WHERE version = ?1")
+                    .bind(m.version)
+                    .fetch_one(store.pool_ref())
+                    .await
+                    .unwrap();
+            assert_eq!(
+                stored.as_slice(),
+                m.checksum.as_ref(),
+                "recorded blob of migration {} must match the embedded checksum",
+                m.version
+            );
+        }
+    }
+

@@ -10,18 +10,10 @@
  * HMAC is verified there (identity never comes from the body).
  */
 
-type TelegramWebApp = {
-  initData?: string;
-  initDataUnsafe?: { user?: { id: number; username?: string } };
-  ready?: () => void;
-  expand?: () => void;
-};
-
-declare global {
-  interface Window {
-    Telegram?: { WebApp?: TelegramWebApp };
-  }
-}
+// The canonical `window.Telegram` declaration and the full `TelegramWebApp`
+// shape (ready/expand/setHeaderColor/setBackgroundColor) live in `@kian/sdk`
+// and are shared app-wide — a second `declare global` here would merge two
+// structurally different `Window.Telegram` members (TS2717).
 
 /** Prepare the WebApp inside Telegram — ready + expand (harmless in a browser). */
 export function setupTelegramWebApp(): void {

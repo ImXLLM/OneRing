@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { JsonValue, JsonObject } from "./worldState";
+
 /**
  * MAIRON — Mairon Super-Studio and Competitive Supremacy Sandbox wire contracts.
  *
@@ -224,7 +226,7 @@ export const McpToolInvocation = z.object({
   jsonrpc: z.literal("2.0"),
   id: z.union([z.string(), z.number(), z.null()]),
   method: z.enum(["initialize", "tools/list", "tools/call"]),
-  params: z.unknown().optional(),
+  params: JsonObject.optional(),
 });
 export type McpToolInvocationT = z.infer<typeof McpToolInvocation>;
 
@@ -232,7 +234,7 @@ export type McpToolInvocationT = z.infer<typeof McpToolInvocation>;
 export const SupremacyMcpResponse = z.object({
   jsonrpc: z.literal("2.0"),
   id: z.union([z.string(), z.number(), z.null()]),
-  result: z.unknown().nullable(),
+  result: JsonValue.nullable(),
   error: z.object({ code: z.number().int(), message: z.string() }).nullable(),
 });
 export type SupremacyMcpResponseT = z.infer<typeof SupremacyMcpResponse>;

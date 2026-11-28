@@ -13,3 +13,7 @@ __pycache__/
 .DS_Store
 *.tsbuildinfo
 data/
+playwright-report/
+test-results/
+blob-report/
+proptest-regressions/

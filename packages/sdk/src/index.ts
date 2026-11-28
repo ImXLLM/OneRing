@@ -19,6 +19,10 @@ import { createMaironSdk } from "./mairon-client";
 
 export { ApiError, resolveDefaultApiBase, qs } from "./core";
 export {
+  INSTANT_BOOST_CREATOR_BPS,
+  INSTANT_BOOST_TREASURY_BPS,
+} from "@kian/contracts";
+export {
   MaironSdkClient,
   createMaironSdk,
   createKianSdk,
@@ -548,7 +552,7 @@ export const mairon = createMaironSdk();
 
 // ── Telegram — extracting initData (two official paths) ────────────────────────────────
 
-type TelegramWebApp = {
+export type TelegramWebApp = {
   initData?: string;
   initDataUnsafe?: {
     user?: { id: number; username?: string };

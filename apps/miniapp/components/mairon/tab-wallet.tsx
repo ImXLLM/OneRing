@@ -82,7 +82,7 @@ export function TabWallet() {
         creatorUserId: "miniapp-creator",
         referrerUserId: drafts.walletReferred ? "miniapp-referrer" : null,
         affiliateBps: drafts.walletReferred ? 1_000 : 2_500,
-        boostTier: drafts.walletScenario === "instant_boost" ? "boost-1" : null,
+        boostTier: drafts.walletScenario === "instant_boost" ? "featured-slot-24h" : null,
         recipientAddress: null,
       });
       setSplit((res as { split?: SplitResult }).split ?? (res as unknown as SplitResult));
@@ -125,7 +125,7 @@ export function TabWallet() {
         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">4-Stream Revenue Split</p>
         <p>Unreferred sale: {bpsDiv(bps.platformTakeBpsUnreferred, 2000)} platform / {bpsDiv(bps.creatorBps, 8000)} creator</p>
         <p>Referred sale: 10% referrer / 80% creator / 10% platform</p>
-        <p>Instant Boosts: 100% to the boosted creator</p>
+        <p>Instant Boosts: 100% routes to the MAIRON Sovereign Treasury (0% to the creator)</p>
         <p>Swap spread: 1.5% treasury fee</p>
       </div>
 

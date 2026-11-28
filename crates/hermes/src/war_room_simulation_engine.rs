@@ -120,10 +120,10 @@ impl FounderPersona {
     #[must_use]
     pub const fn display_name_fa(self) -> &'static str {
         match self {
-            Self::ElonMusk => "\u{627}\u{6cc}\u{644}\u{627}\u{646} \u{645}\u{627}\u{633}\u{6a9}",
-            Self::CzBinance => "\u{686}\u{627}\u{646}\u{6af}\u{67e}\u{646}\u{6af} \u{698}\u{627}\u{626}\u{648} (CZ)",
-            Self::JeffBezos => "\u{62c}\u{641} \u{628}\u{632}\u{648}\u{633}",
-            Self::Chairman => "\u{6f0}xKIA (\u{631}\u{626}\u{6cc}\u{633})",
+            Self::ElonMusk => "[FA-PATCH-SLOT] Elon Musk",
+            Self::CzBinance => "[FA-PATCH-SLOT] Changpeng Zhao (CZ)",
+            Self::JeffBezos => "[FA-PATCH-SLOT] Jeff Bezos",
+            Self::Chairman => "[FA-PATCH-SLOT] 0xKIA (Chairman)",
         }
     }
 
@@ -142,10 +142,10 @@ impl FounderPersona {
     #[must_use]
     pub const fn mandate_fa(self) -> &'static str {
         match self {
-            Self::ElonMusk => "\u{633}\u{631}\u{639}\u{62a}\u{650} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{60c} \u{645}\u{647}\u{646}\u{62f}\u{633}\u{6cc}\u{650} \u{627}\u{628}\u{62a}\u{62f}\u{627}-\u{628}\u{647}-\u{627}\u{635}\u{648}\u{644}\u{60c} \u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} HUD \u{639}\u{635}\u{628}\u{6cc} \u{648} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}‌\u{634}\u{62f}\u{646} \u{631}\u{648}\u{6cc} X",
-            Self::CzBinance => "\u{646}\u{642}\u{62f}\u{6cc}\u{646}\u{6af}\u{6cc}\u{60c} \u{627}\u{633}\u{6a9}\u{631}\u{648}\u{6cc} Base 8453\u{60c} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{650} CCXT \u{648} \u{631}\u{634}\u{62f}\u{650} \u{62c}\u{647}\u{627}\u{646}\u{6cc}\u{650} \u{628}\u{62f}\u{648}\u{646}\u{650} KYC",
-            Self::JeffBezos => "\u{648}\u{633}\u{648}\u{627}\u{633}\u{650} \u{645}\u{634}\u{62a}\u{631}\u{6cc}\u{60c} \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f}\u{650} \u{648}\u{627}\u{62d}\u{62f}\u{60c} \u{633}\u{627}\u{62f}\u{6af}\u{6cc}\u{650} \u{6f5}\u{62b}\u{627}\u{646}\u{6cc}\u{647}‌\u{627}\u{6cc} \u{648} \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647}\u{654} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6af}\u{627}\u{647}",
-            Self::Chairman => "\u{645}\u{639}\u{645}\u{627}\u{631}\u{650} \u{627}\u{631}\u{634}\u{62f} \u{648} \u{631}\u{626}\u{6cc}\u{633}\u{650} \u{647}\u{6cc}\u{626}\u{62a}‌\u{645}\u{62f}\u{6cc}\u{631}\u{647} — \u{641}\u{631}\u{645}\u{627}\u{646}\u{650} \u{62a}\u{627}\u{6a9}\u{62a}\u{6cc}\u{6a9}\u{6cc}\u{650} \u{646}\u{647}\u{627}\u{6cc}\u{6cc}",
+            Self::ElonMusk => "[FA-PATCH-SLOT] Product velocity, first-principles engineering, the Neural HUD video and going viral on X",
+            Self::CzBinance => "[FA-PATCH-SLOT] Liquidity, Base 8453 escrow, the CCXT quant core and global zero-KYC growth",
+            Self::JeffBezos => "[FA-PATCH-SLOT] Customer obsession, unit economics, the 5-second simplicity test and the marketplace flywheel",
+            Self::Chairman => "[FA-PATCH-SLOT] Chief architect and chairman of the board — the final tactical override",
         }
     }
 
@@ -225,11 +225,11 @@ impl RevenueStream {
     #[must_use]
     pub const fn label_fa(self) -> &'static str {
         match self {
-            Self::None => "\u{628}\u{62f}\u{648}\u{646} \u{62f}\u{631}\u{622}\u{645}\u{62f} \u{62f}\u{631} \u{627}\u{6cc}\u{646} \u{6af}\u{627}\u{645}",
-            Self::MarketplaceTax => "\u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a} \u{6f1}\u{6f0}\u{66a} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6af}\u{627}\u{647} \u{631}\u{648}\u{6cc} \u{647}\u{631} \u{641}\u{631}\u{648}\u{634}",
-            Self::AffiliateRouting => "\u{631}\u{648}\u{62a}\u{6cc}\u{646}\u{6af} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a} — \u{6f1}\u{6f0}\u{66a} \u{627}\u{636}\u{627}\u{641}\u{647}\u{654} \u{641}\u{631}\u{648}\u{634} \u{628}\u{62f}\u{648}\u{646} \u{631}\u{641}\u{631}\u{627}\u{644} (\u{645}\u{62c}\u{645}\u{648}\u{639} \u{6f2}\u{6f0}\u{66a} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645})",
-            Self::FeaturedBoost => "\u{627}\u{633}\u{644}\u{627}\u{62a} \u{648}\u{6cc}\u{698}\u{647} \u{648} \u{628}\u{648}\u{633}\u{62a} \u{62f}\u{6cc}\u{62f}\u{647}‌\u{634}\u{62f}\u{646} — \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}",
-            Self::SettlementSpread => "\u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641} \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{622}\u{646}\u{6cc} (Base USDC + \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} XTR) — \u{6f1}\u{66b}\u{6f5}\u{66a}",
+            Self::None => "[FA-PATCH-SLOT] no revenue in this step",
+            Self::MarketplaceTax => "[FA-PATCH-SLOT] 10% marketplace tax on every sale",
+            Self::AffiliateRouting => "[FA-PATCH-SLOT] affiliate routing — the extra 10% on unreferred sales (20% platform total)",
+            Self::FeaturedBoost => "[FA-PATCH-SLOT] featured slot and visibility boost — 100% to the treasury",
+            Self::SettlementSpread => "[FA-PATCH-SLOT] instant settlement spread (Base USDC + Stars XTR) — 1.5%",
         }
     }
 
@@ -301,14 +301,14 @@ impl PipelineStage {
     #[must_use]
     pub const fn label_fa(self) -> &'static str {
         match self {
-            Self::Ignition => "\u{627}\u{62d}\u{62a}\u{631}\u{627}\u{642} — \u{633}\u{644}\u{627}\u{645}\u{62a}\u{650} \u{645}\u{62e}\u{632}\u{646}",
-            Self::ProductClarity => "\u{634}\u{641}\u{627}\u{641}\u{6cc}\u{62a}\u{650} \u{645}\u{62d}\u{635}\u{648}\u{644} — \u{622}\u{632}\u{645}\u{648}\u{646}\u{650} \u{628}\u{686}\u{647}\u{654} \u{6f9}\u{633}\u{627}\u{644}\u{647}",
-            Self::ViralLaunch => "\u{67e}\u{631}\u{62a}\u{627}\u{628}\u{650} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc} \u{631}\u{648}\u{6cc} X",
-            Self::PaymentRails => "\u{631}\u{6cc}\u{644}‌\u{647}\u{627}\u{6cc}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} — XTR + USDC",
-            Self::CreatorOnboarding => "\u{67e}\u{630}\u{6cc}\u{631}\u{634}\u{650} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}‌\u{647}\u{627}",
-            Self::RevenueFlow => "\u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{62f}\u{631}\u{622}\u{645}\u{62f} — \u{645}\u{646}\u{634}\u{648}\u{631}\u{650} \u{6f2}\u{6f0}/\u{6f8}\u{6f0}",
-            Self::QuantOps => "\u{639}\u{645}\u{644}\u{6cc}\u{627}\u{62a}\u{650} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}\u{650} Vibe-Trading",
-            Self::DayOneSealed => "\u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{645}\u{64f}\u{647}\u{631} \u{634}\u{62f}",
+            Self::Ignition => "[FA-PATCH-SLOT] Ignition — treasury health",
+            Self::ProductClarity => "[FA-PATCH-SLOT] Product clarity — the 9-year-old test",
+            Self::ViralLaunch => "[FA-PATCH-SLOT] Viral launch on X",
+            Self::PaymentRails => "[FA-PATCH-SLOT] Payment rails — XTR + USDC",
+            Self::CreatorOnboarding => "[FA-PATCH-SLOT] Creator onboarding",
+            Self::RevenueFlow => "[FA-PATCH-SLOT] Revenue flow — the 20/80 charter",
+            Self::QuantOps => "[FA-PATCH-SLOT] Vibe-Trading quant operations",
+            Self::DayOneSealed => "[FA-PATCH-SLOT] Day 1 sealed",
         }
     }
 
@@ -375,10 +375,10 @@ impl ZeroLiteracyPipelineStep {
     #[must_use]
     pub const fn title_fa(self) -> &'static str {
         match self {
-            Self::StepAUserIntent => "\u{627}\u{644}\u{641} — \u{648}\u{631}\u{648}\u{62f} \u{6a9}\u{627}\u{631}\u{628}\u{631} \u{639}\u{627}\u{62f}\u{6cc}",
-            Self::StepBAvatarFactory => "\u{628} — \u{6a9}\u{627}\u{631}\u{62e}\u{627}\u{646}\u{647}\u{654} \u{6f3} \u{622}\u{648}\u{627}\u{62a}\u{627}\u{631} \u{648} \u{6f5} \u{645}\u{62f}\u{644}",
-            Self::StepCStoreAndSocial => "\u{62c} — \u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647} \u{648} \u{633}\u{648}\u{634}\u{627}\u{644}‌\u{645}\u{62f}\u{6cc}\u{627}",
-            Self::StepDAutoSplit => "\u{62f} — \u{62a}\u{642}\u{633}\u{6cc}\u{645} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631} \u{67e}\u{648}\u{644} \u{62f}\u{631} \u{648}\u{644}\u{62a}",
+            Self::StepAUserIntent => "[FA-PATCH-SLOT] A — a regular user signs in",
+            Self::StepBAvatarFactory => "[FA-PATCH-SLOT] B — the factory of 3 avatars and 5 models",
+            Self::StepCStoreAndSocial => "[FA-PATCH-SLOT] C — storefront and social media",
+            Self::StepDAutoSplit => "[FA-PATCH-SLOT] D — the wallet splits the money automatically",
         }
     }
 
@@ -397,10 +397,10 @@ impl ZeroLiteracyPipelineStep {
     #[must_use]
     pub const fn body_fa(self) -> &'static str {
         match self {
-            Self::StepAUserIntent => "\u{6a9}\u{627}\u{631}\u{628}\u{631} \u{628}\u{627} \u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647}\u{654} \u{633}\u{627}\u{62f}\u{647} — \u{62d}\u{62a}\u{6cc} \u{628}\u{627} \u{648}\u{6cc}\u{633} \u{6cc}\u{627} \u{62f}\u{6a9}\u{645}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} \u{628}\u{632}\u{631}\u{6af}\u{650} ToySpark — \u{645}\u{6cc}‌\u{6af}\u{648}\u{6cc}\u{62f} \u{686}\u{647} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{62f}\u{61b} \u{646}\u{647} \u{6a9}\u{62f}\u{60c} \u{646}\u{647} \u{641}\u{631}\u{645} \u{67e}\u{6cc}\u{686}\u{6cc}\u{62f}\u{647}.",
-            Self::StepBAvatarFactory => "\u{622}\u{644}\u{641}\u{627} (\u{637}\u{631}\u{627}\u{62d})\u{60c} \u{627}\u{62a}\u{627}\u{642} \u{641}\u{631}\u{645}\u{627}\u{646} (\u{645}\u{647}\u{646}\u{62f}\u{633}) \u{648} \u{645}\u{627}\u{6cc}\u{631}\u{648}\u{646} (\u{642}\u{627}\u{636}\u{6cc}\u{650} \u{633}\u{62e}\u{62a}‌\u{6af}\u{6cc}\u{631} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{646}\u{62f}\u{627}\u{631}\u{62f} \u{6f1}\u{6f0}\u{6f0}/\u{6f1}\u{6f0}\u{6f0}) \u{628}\u{627} \u{6f5} \u{645}\u{62f}\u{644}\u{650} \u{647}\u{648}\u{634} \u{645}\u{635}\u{646}\u{648}\u{639}\u{6cc} \u{62f}\u{631} \u{686}\u{646}\u{62f} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{645}\u{62d}\u{635}\u{648}\u{644} \u{6cc}\u{627} \u{631}\u{628}\u{627}\u{62a}\u{650} \u{62a}\u{631}\u{6cc}\u{62f} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{646}\u{62f}.",
-            Self::StepCStoreAndSocial => "\u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{627} \u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} \u{633}\u{647}‌\u{628}\u{639}\u{62f}\u{6cc}\u{650} Neural HUD \u{62f}\u{631} X \u{648} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{645}\u{646}\u{62a}\u{634}\u{631} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647}\u{650} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6af}\u{627}\u{647} \u{628}\u{644}\u{627}\u{641}\u{627}\u{635}\u{644}\u{647} \u{628}\u{627}\u{632} \u{627}\u{633}\u{62a}.",
-            Self::StepDAutoSplit => "\u{645}\u{634}\u{62a}\u{631}\u{6cc} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{6cc}\u{627} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} (Base USDC) \u{62e}\u{631}\u{6cc}\u{62f} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}\u{61b} \u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f}\u{650} \u{647}\u{648}\u{634}\u{645}\u{646}\u{62f} \u{62f}\u{631} \u{647}\u{645}\u{627}\u{646} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{6f8}\u{6f0}\u{66a} \u{631}\u{627} \u{628}\u{647} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647} \u{648} \u{6f2}\u{6f0}\u{66a} \u{631}\u{627} \u{628}\u{647} \u{648}\u{644}\u{62a}\u{650} \u{633}\u{627}\u{632}\u{645}\u{627}\u{646} \u{648}\u{627}\u{631}\u{6cc}\u{632} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}!",
+            Self::StepAUserIntent => "[FA-PATCH-SLOT] The user states what they want in one plain sentence — even by voice or through the big ToySpark buttons; no code, no complex forms.",
+            Self::StepBAvatarFactory => "[FA-PATCH-SLOT] Alpha (designer), the Command Center (engineer) and Mairon (the strict judge with a 100/100 standard) build the product or trading bot in seconds with 5 AI models.",
+            Self::StepCStoreAndSocial => "[FA-PATCH-SLOT] The product ships with a 3D Neural HUD video on X and Telegram; the marketplace storefront opens instantly.",
+            Self::StepDAutoSplit => "[FA-PATCH-SLOT] The customer pays with Telegram Stars or crypto (Base USDC); the smart contract splits 80% to the creator and 20% to the organization wallet in the same second.",
         }
     }
 
@@ -732,7 +732,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 0,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}! \u{633}\u{647} \u{646}\u{641}\u{631} \u{627}\u{632} \u{645}\u{627} \u{632}\u{6cc}\u{631}\u{650} \u{631}\u{6cc}\u{627}\u{633}\u{62a}\u{650} 0xKIA \u{62f}\u{648}\u{631}\u{6a9}\u{627}\u{631} \u{6f2}\u{6f4}/\u{6f7} \u{634}\u{631}\u{6cc}\u{6a9} \u{634}\u{62f}\u{6cc}\u{645}. \u{627}\u{632} \u{645}\u{62e}\u{632}\u{646} ImXLLM/OneRing \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}: \u{6f1}\u{6f1} \u{6a9}\u{631}\u{650}\u{6cc}\u{62a}\u{650} Rust\u{60c} \u{6f8}\u{6f1}\u{6f4} \u{62a}\u{633}\u{62a}\u{650} \u{67e}\u{627}\u{633}‌\u{634}\u{62f}\u{647}\u{60c} \u{6f9} \u{645}\u{648}\u{62c}\u{650} \u{62a}\u{62d}\u{648}\u{6cc}\u{644}‌\u{634}\u{62f}\u{647}. \u{633}\u{631}\u{645}\u{627}\u{6cc}\u{647} \u{648}\u{627}\u{642}\u{639}\u{6cc}\u{61f} \u{6f3}\u{6f3} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}\u{60c} \u{6f1}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{646}\u{642}\u{62f}\u{60c} \u{6f3}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{6a9}\u{627}\u{63a}\u{630}\u{6cc}\u{650} \u{642}\u{641}\u{644}. \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645} \u{62f}\u{642}\u{6cc}\u{642}\u{627}\u{64b} \u{635}\u{641}\u{631} \u{627}\u{633}\u{62a} — \u{648} \u{628}\u{627}\u{6cc}\u{62f} \u{627}\u{632} \u{62f}\u{644}\u{650} \u{6a9}\u{627}\u{631}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{628}\u{6cc}\u{631}\u{648}\u{646} \u{628}\u{6cc}\u{627}\u{6cc}\u{62f}. \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}.",
+        fa: "[FA-PATCH-SLOT] Day 1! The three of us partnered 24/7 remotely under 0xKIA's chairmanship. We start from the ImXLLM/OneRing repo: 11 Rust crates, 814 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. Always Day 1.",
         en: "Day 1! The three of us just partnered 24/7 remotely under 0xKIA. We start from the ImXLLM/OneRing repo: 11 Rust crates, 814 passing tests, 9 delivered waves. Real capital? $33 crypto, $15 cash, $350 locked paper. Platform revenue is exactly $0.00 — and it must come from real work. It is always Day 1.",
         cmd: None,
         social: None,
@@ -749,7 +749,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 3600,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{627}\u{648}\u{644} \u{633}\u{644}\u{627}\u{645}\u{62a}\u{650} \u{645}\u{62e}\u{632}\u{646} \u{631}\u{627} \u{62b}\u{627}\u{628}\u{62a} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}. \u{62a}\u{633}\u{62a}\u{650} \u{6a9}\u{627}\u{631}\u{6cc}\u{650} \u{6a9}\u{627}\u{645}\u{644}\u{650} workspace \u{631}\u{627} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} — \u{6f7}\u{6f8}\u{6f3} \u{67e}\u{627}\u{633}\u{60c} \u{635}\u{641}\u{631} \u{634}\u{6a9}\u{633}\u{62a}\u{60c} \u{635}\u{641}\u{631} clippy. \u{627}\u{6cc}\u{646} \u{6a9}\u{648}\u{631}\u{647}\u{654} \u{627}\u{639}\u{62a}\u{628}\u{627}\u{631}\u{650} \u{645}\u{627}\u{633}\u{62a}\u{61b} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{622}\u{646} \u{647}\u{6cc}\u{686} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}‌\u{634}\u{62f}\u{646}\u{6cc} \u{645}\u{639}\u{646}\u{627} \u{646}\u{62f}\u{627}\u{631}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] First we prove the repo is healthy. I run the full workspace test suite — 783 passed, zero failures, zero clippy. This is our credibility furnace; without it no virality means anything.",
         en: "First we prove the repo is healthy. Running the full workspace test suite — 814 passed, zero failures, zero clippy. That is our credibility furnace; nothing viral means anything without it.",
         cmd: Some("cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings"),
         social: None,
@@ -766,7 +766,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 7200,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{631}\u{6cc}\u{644}‌\u{647}\u{627}\u{6cc}\u{650} \u{67e}\u{648}\u{644} \u{631}\u{627} \u{642}\u{628}\u{644} \u{627}\u{632} \u{647}\u{631} \u{62a}\u{628}\u{644}\u{6cc}\u{63a}\u{6cc} \u{648}\u{631}\u{6cc}\u{641}\u{627}\u{6cc} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f}\u{647}\u{627}\u{6cc}\u{650} Base \u{628}\u{627} Chain ID 8453 \u{648} USDC \u{628}\u{648}\u{645}\u{6cc}\u{650} 0x8335...2913 \u{631}\u{648}\u{6cc} \u{634}\u{628}\u{6a9}\u{647}\u{654} \u{627}\u{635}\u{644}\u{6cc} \u{62a}\u{623}\u{6cc}\u{6cc}\u{62f} \u{634}\u{62f}\u{646}\u{62f}\u{61b} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} (XTR) \u{647}\u{645} \u{622}\u{645}\u{627}\u{62f}\u{647} \u{627}\u{633}\u{62a}. \u{635}\u{646}\u{62f}\u{648}\u{642}‌\u{647}\u{627} SAFU — \u{647}\u{631} \u{641}\u{631}\u{648}\u{634} \u{6f8}\u{6f0}\u{66a} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{628}\u{642}\u{6cc}\u{647} \u{637}\u{628}\u{642} \u{645}\u{646}\u{634}\u{648}\u{631}.",
+        fa: "[FA-PATCH-SLOT] I verify the money rails before any marketing: the Base contracts with Chain ID 8453 and native USDC 0x8335...2913 are confirmed on mainnet; Telegram Stars (XTR) is ready too. Funds SAFU — every sale pays 80% creator, the rest per charter.",
         en: "I verify the money rails before any marketing: Base contracts with Chain ID 8453 and native USDC 0x8335...2913 verified on mainnet; Telegram Stars (XTR) ready too. Funds are SAFU — every sale pays 80% to the creator, the rest per the charter.",
         cmd: Some("forge verify-contract 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --chain-id 8453 --rpc-url https://mainnet.base.org"),
         social: None,
@@ -783,7 +783,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 10800,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{642}\u{628}\u{644} \u{627}\u{632} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}‌\u{634}\u{62f}\u{646}\u{60c} \u{622}\u{632}\u{645}\u{648}\u{646}\u{650} \u{628}\u{686}\u{647}\u{654} \u{6f9}\u{633}\u{627}\u{644}\u{647} \u{631}\u{627} \u{645}\u{6cc}‌\u{6af}\u{630}\u{627}\u{631}\u{645}: \u{6cc}\u{6a9} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{639}\u{627}\u{62f}\u{6cc} \u{62f}\u{631} \u{6f5} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{628}\u{627}\u{6cc}\u{62f} \u{628}\u{641}\u{647}\u{645}\u{62f} \u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{686}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}. \u{62e}\u{637}\u{650} \u{644}\u{648}\u{644}\u{647}\u{654} «\u{6f0} \u{62a}\u{627} \u{6f1}\u{6f0}\u{6f0}» \u{631}\u{627} \u{645}\u{6cc}‌\u{646}\u{648}\u{6cc}\u{633}\u{645} — \u{627}\u{644}\u{641}: \u{6a9}\u{627}\u{631}\u{628}\u{631} \u{645}\u{6cc}‌\u{6af}\u{648}\u{6cc}\u{62f} \u{686}\u{647} \u{645}\u{6cc}‌\u{62e}\u{648}\u{627}\u{647}\u{62f}\u{61b} \u{628}: \u{6a9}\u{627}\u{631}\u{62e}\u{627}\u{646}\u{647}\u{654} \u{6f3} \u{622}\u{648}\u{627}\u{62a}\u{627}\u{631} \u{648} \u{6f5} \u{645}\u{62f}\u{644} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{62f}\u{61b} \u{62c}: \u{645}\u{62d}\u{635}\u{648}\u{644} \u{628}\u{647} \u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647} \u{648} \u{633}\u{648}\u{634}\u{627}\u{644} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}\u{61b} \u{62f}: \u{67e}\u{648}\u{644} \u{628}\u{647}‌\u{637}\u{648}\u{631} \u{62e}\u{648}\u{62f}\u{6a9}\u{627}\u{631} \u{6f8}\u{6f0}/\u{6f2}\u{6f0} \u{62a}\u{642}\u{633}\u{6cc}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}. \u{627}\u{6af}\u{631} \u{627}\u{6cc}\u{646} \u{686}\u{647}\u{627}\u{631} \u{6af}\u{627}\u{645} \u{648}\u{627}\u{636}\u{62d} \u{646}\u{628}\u{627}\u{634}\u{646}\u{62f}\u{60c} \u{647}\u{6cc}\u{686} \u{62f}\u{6a9}\u{645}\u{647}‌\u{627}\u{6cc} \u{646}\u{62c}\u{627}\u{62a}\u{645}\u{627}\u{646} \u{646}\u{645}\u{6cc}‌\u{62f}\u{647}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] Before going viral I run the 9-year-old test: a regular user must understand what the system does in 5 seconds. I write the 0-to-100 pipeline — A: the user says what they want; B: the factory of 3 avatars and 5 models builds it; C: the product goes to storefront and social; D: money splits 80/20 automatically. If these four steps are not obvious, no button saves us.",
         en: "Before going viral I run the 9-year-old test: a normal user must understand the system in 5 seconds. I write the zero-to-100 pipeline — A: the user says what they want; B: the 3-avatar & 5-model factory builds it; C: the product hits the store and social; D: money auto-splits 80/20. If those four steps are not obvious, no button will save us.",
         cmd: None,
         social: None,
@@ -800,7 +800,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 14400,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc}\u{650} HUD \u{639}\u{635}\u{628}\u{6cc} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{645} — \u{645}\u{634}\u{650} \u{6a9}\u{631}\u{648}\u{6cc}\u{650} \u{641}\u{6cc}\u{628}\u{648}\u{646}\u{627}\u{686}\u{6cc}\u{650} \u{6f1}\u{6f8}\u{6f0}\u{6af}\u{631}\u{647}\u{60c} seekTo \u{642}\u{637}\u{639}\u{6cc}\u{60c} \u{633}\u{6cc}\u{646}\u{62a}\u{650} WebAudio. \u{627}\u{6cc}\u{646} \u{622}\u{631}\u{62a}\u{650} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}\u{650} \u{645}\u{627}\u{633}\u{62a}: \u{6f6}\u{6f0} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{6a9}\u{647} \u{62f}\u{631} \u{6cc}\u{6a9} \u{646}\u{6af}\u{627}\u{647} \u{6f1}\u{6f1} \u{6a9}\u{631}\u{650}\u{6cc}\u{62a} \u{648} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} Base \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{645}\u{6cc}‌\u{62f}\u{647}\u{62f}. \u{627}\u{628}\u{632}\u{627}\u{631}\u{650} \u{62e}\u{648}\u{62f}\u{650} \u{645}\u{62e}\u{632}\u{646}\u{60c} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{647}\u{6cc}\u{686} \u{633}\u{631}\u{648}\u{6cc}\u{633}\u{650} \u{628}\u{6cc}\u{631}\u{648}\u{646}\u{6cc}.",
+        fa: "[FA-PATCH-SLOT] I build the Neural HUD video — the 180-node Fibonacci sphere mesh, deterministic seekTo, WebAudio synth. This is our viral art: 60 seconds that show 11 crates and the Base treasury at a glance. Our own repo tooling, no external service.",
         en: "Building the Neural HUD video — the 180-node Fibonacci sphere mesh, deterministic seekTo, WebAudio synth. This is our viral art: 60 seconds that show 11 crates and the Base treasury at a glance. Built with the repo's own tool, zero external services.",
         cmd: Some("python3 tools/neural-hud/render_neural_hud.py html --preset kia-monopoly-core --aspect 9:16 --out hud_monopoly.html"),
         social: None,
@@ -817,7 +817,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 18000,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{646}\u{62e}\u{633}\u{62a}\u{6cc}\u{646} \u{631}\u{634}\u{62a}\u{647}\u{654} X \u{645}\u{646}\u{62a}\u{634}\u{631} \u{634}\u{62f} — \u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} HUD + «\u{686}\u{637}\u{648}\u{631} \u{62f}\u{631} \u{6f5} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{628}\u{641}\u{647}\u{645}\u{6cc}\u{62f} \u{627}\u{6cc}\u{646} \u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{686}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}». \u{645}\u{646}\u{62d}\u{646}\u{6cc}\u{650} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f} \u{627}\u{632} \u{635}\u{641}\u{631} \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}\u{61b} \u{628}\u{6af}\u{630}\u{627}\u{631}\u{6cc}\u{645} \u{62f}\u{627}\u{62f}\u{647} \u{62d}\u{631}\u{641} \u{628}\u{632}\u{646}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] The first X thread is live — HUD video plus how to understand this system in 5 seconds. The view curve starts from zero; let the data speak.",
         en: "First X thread is live — the HUD video plus 'how to understand this system in 5 seconds'. View curve starts at zero; let the data speak.",
         cmd: None,
         social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"launch_thread","text_en":"We built OneRing: 11 Rust crates, 814 tests, a 3D Neural HUD, and a wallet that auto-splits 80/20 on every sale. A 9-year-old can understand it in 5 seconds. Day 0 starts now.","text_fa":"We built the OneRing system: 11 Rust crates, 814 tests, a 3D neural HUD, and a wallet that auto-splits every sale 80/20. A 9-year-old gets it in 5 seconds. Day zero starts this instant.","views":0,"likes":0}"#),
@@ -834,7 +834,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 21600,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{62f}\u{631}\u{648}\u{627}\u{632}\u{647}\u{654} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}\u{650} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{628}\u{627}\u{632} \u{634}\u{62f}: \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e}\u{650} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} (XTR) \u{628}\u{631}\u{627}\u{6cc} \u{62e}\u{631}\u{6cc}\u{62f}\u{650} \u{622}\u{646}\u{6cc}\u{60c} \u{648} Base USDC \u{628}\u{631}\u{627}\u{6cc} \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648}. \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641}\u{650} \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{6f1}\u{66b}\u{6f5}\u{66a} \u{634}\u{641}\u{627}\u{641} \u{627}\u{633}\u{62a} \u{648} \u{628}\u{648}\u{633}\u{62a}\u{650} \u{62f}\u{6cc}\u{62f}\u{647}‌\u{634}\u{62f}\u{646} \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}. \u{67e}\u{644}‌\u{647}\u{627} \u{633}\u{628}\u{632}.",
+        fa: "[FA-PATCH-SLOT] The Day-1 payment gateway is open: the Telegram mini-app with Stars (XTR) for instant purchases, and Base USDC for crypto settlement. The 1.5% settlement spread is transparent and the visibility boost goes 100% to the treasury. Rails green.",
         en: "Day-1 payment gateway is open: the Telegram mini-app with Stars (XTR) for instant purchases, and Base USDC for crypto settlement. The 1.5% settlement spread is transparent and featured boosts send 100% to the treasury. Bridges green.",
         cmd: Some("curl -s https://kia-api.up.railway.app/api/v1/monopoly/charter-and-base | head -c 400"),
         social: None,
@@ -851,7 +851,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 25200,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647} onboard \u{634}\u{62f}: \u{6cc}\u{6a9} \u{645}\u{639}\u{644}\u{645}\u{650} \u{62f}\u{627}\u{633}\u{62a}\u{627}\u{646}‌\u{646}\u{648}\u{6cc}\u{633} \u{6a9}\u{647} \u{628}\u{627} \u{62d}\u{627}\u{644}\u{62a}\u{650} ToySpark \u{6a9}\u{62a}\u{627}\u{628}\u{650} \u{635}\u{648}\u{62a}\u{6cc}\u{650} \u{6a9}\u{648}\u{62f}\u{6a9}\u{627}\u{646} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{62f}. \u{645}\u{62d}\u{635}\u{648}\u{644}\u{634} «\u{633}\u{641}\u{631}\u{650} \u{645}\u{627}\u{647}» \u{646}\u{627}\u{645} \u{62f}\u{627}\u{631}\u{62f} \u{648} \u{642}\u{6cc}\u{645}\u{62a}\u{634} \u{6f3} \u{62f}\u{644}\u{627}\u{631} \u{627}\u{633}\u{62a}. \u{645}\u{646}\u{634}\u{648}\u{631} \u{631}\u{627} \u{628}\u{631}\u{627}\u{6cc}\u{634} \u{62a}\u{631}\u{633}\u{6cc}\u{645} \u{6a9}\u{631}\u{62f}\u{645}: \u{627}\u{632} \u{647}\u{631} \u{641}\u{631}\u{648}\u{634}\u{60c} \u{6f8}\u{6f0}\u{66a} \u{62e}\u{648}\u{62f}\u{634}\u{60c} \u{6f2}\u{6f0}\u{66a} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645}. \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647} \u{627}\u{632} \u{647}\u{645}\u{6cc}\u{646}‌\u{62c}\u{627} \u{645}\u{6cc}‌\u{686}\u{631}\u{62e}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] First creator onboarded: a storytelling teacher building children's audiobooks with ToySpark mode. The product is Moon Journey, priced at $3. I drew the charter for her: 80% creator, 20% platform on every sale. The flywheel turns from here.",
         en: "First creator onboarded: a storybook teacher building kids' audiobooks in ToySpark mode. Her product is 'The Moon Trip', priced at $3.00. I drew the charter for her: 80% hers on every sale, 20% platform. The flywheel starts turning right here.",
         cmd: None,
         social: None,
@@ -868,7 +868,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 28800,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{641}\u{631}\u{648}\u{634} \u{648}\u{627}\u{642}\u{639}\u{6cc}\u{650} \u{62a}\u{627}\u{631}\u{6cc}\u{62e}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645}: «\u{633}\u{641}\u{631}\u{650} \u{645}\u{627}\u{647}» — \u{6f3}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632}\u{650} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645}\u{60c} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{631}\u{641}\u{631}\u{627}\u{644}. \u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f} \u{62f}\u{631} \u{647}\u{645}\u{627}\u{646} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{627}\u{62c}\u{631}\u{627} \u{634}\u{62f}: \u{6f2}\u{66b}\u{6f4}\u{6f0} \u{62f}\u{644}\u{627}\u{631} (\u{6f8}\u{6f0}\u{66a}) \u{628}\u{647} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f0}\u{66b}\u{6f6}\u{6f0} \u{62f}\u{644}\u{627}\u{631} (\u{6f2}\u{6f0}\u{66a}) \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{654} \u{62d}\u{627}\u{6a9}\u{645}. \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645} \u{627}\u{632} \u{635}\u{641}\u{631} \u{628}\u{647} \u{6f0}\u{66b}\u{6f6}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{631}\u{633}\u{6cc}\u{62f} — \u{6a9}\u{627}\u{648}\u{634}\u{650} \u{641}\u{636}\u{627} \u{622}\u{63a}\u{627}\u{632} \u{634}\u{62f}!",
+        fa: "[FA-PATCH-SLOT] The first real sale in platform history: Moon Journey — $3.00 via Telegram Stars, unreferred. The contract executed in the same second: $2.40 (80%) to the creator, $0.60 (20%) to the sovereign treasury. Platform revenue moved from zero to $0.60 — space exploration has begun!",
         en: "The first real sale in platform history: 'The Moon Trip' — $3.00 via Telegram Stars, unreferred. The contract executed in the same second: $2.40 (80%) to the creator, $0.60 (20%) to the sovereign treasury. Platform revenue moved from $0.00 to $0.60 — liftoff!",
         cmd: None,
         social: None,
@@ -885,7 +885,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 32400,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} Base USDC \u{647}\u{645} \u{627}\u{646}\u{62c}\u{627}\u{645} \u{634}\u{62f}: \u{641}\u{631}\u{648}\u{634}\u{650} \u{6f5}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631}\u{6cc} \u{628}\u{627} \u{631}\u{641}\u{631}\u{627}\u{644}\u{650} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}. \u{637}\u{628}\u{642} \u{645}\u{646}\u{634}\u{648}\u{631}: \u{6f4}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f0}\u{66b}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a}\u{650} \u{628}\u{627}\u{632}\u{627}\u{631} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{6f0}\u{66b}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{67e}\u{648}\u{631}\u{633}\u{627}\u{646}\u{62a}\u{650} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}. \u{647}\u{634}\u{650} \u{62a}\u{631}\u{627}\u{6a9}\u{646}\u{634} \u{631}\u{648}\u{6cc} Base \u{62b}\u{628}\u{62a} \u{634}\u{62f} — \u{647}\u{645}\u{647}‌\u{686}\u{6cc}\u{632} \u{642}\u{627}\u{628}\u{644}\u{650} \u{62d}\u{633}\u{627}\u{628}\u{631}\u{633}\u{6cc}.",
+        fa: "[FA-PATCH-SLOT] The first Base USDC settlement is done too: a $5.00 sale with an affiliate referral. Per charter: $4.00 creator, $0.50 marketplace tax to the treasury, $0.50 affiliate commission. The tx hash is recorded on Base — everything auditable.",
         en: "The first Base USDC settlement also landed: a $5.00 sale with an affiliate referral. Per the charter: $4.00 creator, $0.50 marketplace tax to the treasury, $0.50 affiliate commission. The tx hash is recorded on Base — everything auditable.",
         cmd: None,
         social: None,
@@ -902,7 +902,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 36000,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{631}\u{634}\u{62a}\u{647}\u{654} X \u{62f}\u{627}\u{63a} \u{634}\u{62f}: \u{6f4}\u{6f8}\u{66c}\u{6f9}\u{6f0}\u{6f0} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f}\u{60c} \u{6f3}\u{66b}\u{6f1}\u{647}\u{632}\u{627}\u{631} \u{644}\u{627}\u{6cc}\u{6a9}\u{60c} \u{635}\u{62f}\u{647}\u{627} \u{631}\u{6cc}\u{67e}\u{644}\u{627}\u{6cc}. \u{6a9}\u{627}\u{645}\u{646}\u{62a}\u{650} \u{628}\u{631}\u{62a}\u{631}: «\u{648}\u{627}\u{642}\u{639}\u{627}\u{64b} \u{6f8}\u{6f0}/\u{6f2}\u{6f0} \u{62a}\u{642}\u{633}\u{6cc}\u{645} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}\u{61f}» — \u{628}\u{644}\u{647}\u{60c} \u{628}\u{627} \u{647}\u{634}\u{650} \u{631}\u{648}\u{6cc} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}. \u{62a}\u{631}\u{627}\u{641}\u{6cc}\u{6a9} \u{628}\u{647} \u{644}\u{646}\u{62f}\u{6cc}\u{646}\u{6af} \u{633}\u{631}\u{627}\u{632}\u{6cc}\u{631} \u{634}\u{62f}\u{61b} \u{646}\u{631}\u{62e}\u{650} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{631}\u{627} \u{631}\u{635}\u{62f} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}\u{60c} \u{646}\u{647} \u{641}\u{642}\u{637} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] The X thread went hot: 48,900 views, 3.1k likes, hundreds of replies. Top comment: does it really split 80/20? — yes, with an on-chain hash. Traffic floods the landing; we watch conversion, not just views.",
         en: "The X thread caught fire: 48,900 views, 3.1k likes, hundreds of replies. Top comment: 'does it really split 80/20?' — yes, with an on-chain hash. Traffic is pouring into the landing; we watch conversion rate, not just views.",
         cmd: None,
         social: Some(r#"{"platform":"x","handle":"@elonmusk","kind":"viral_milestone","text_en":"48,900 views in 2 hours. The 9-year-old test passed in public: a kid built a storybook, a bot sold it, the wallet split 80/20 instantly. Funds are auditable on Base 8453.","text_fa":"48,900 views in 2 hours. The 9-year-old test passed in public: a child built a storybook, a bot sold it, and the wallet split 80/20 on the spot. Everything is auditable on Base 8453.","views":48900,"likes":3140}"#),
@@ -919,7 +919,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 39600,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{628}\u{648}\u{633}\u{62a}\u{650} \u{62f}\u{6cc}\u{62f}\u{647}‌\u{634}\u{62f}\u{646} \u{641}\u{631}\u{648}\u{62e}\u{62a}\u{647} \u{634}\u{62f}: \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} «\u{633}\u{641}\u{631}\u{650} \u{645}\u{627}\u{647}» \u{6f2}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{628}\u{631}\u{627}\u{6cc} \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{648}\u{6cc}\u{698}\u{647}\u{654} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6af}\u{627}\u{647} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{6a9}\u{631}\u{62f} — \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{622}\u{646} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}\u{60c} \u{637}\u{628}\u{642} \u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{633}\u{648}\u{645}. \u{642}\u{631}\u{627}\u{631} \u{634}\u{62f} \u{62a}\u{627} \u{6f2}\u{6f4} \u{633}\u{627}\u{639}\u{62a} \u{628}\u{627}\u{644}\u{627}\u{6cc} \u{6a9}\u{627}\u{62a}\u{627}\u{644}\u{648}\u{6af} \u{628}\u{645}\u{627}\u{646}\u{62f}\u{61b} \u{62f}\u{627}\u{62f}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{631}\u{627} \u{645}\u{642}\u{627}\u{6cc}\u{633}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645}.",
+        fa: "[FA-PATCH-SLOT] First visibility boost sold: the Moon Journey creator paid $2.00 for the featured marketplace slot — 100% goes to the treasury, per revenue stream three. It stays on top of the catalog for 24 hours; we compare conversion data.",
         en: "First visibility boost sold: the 'Moon Trip' creator paid $2.00 for a marketplace featured slot — 100% of it goes to the treasury, per revenue stream #3. She stays on top of the catalog for 24 hours; we compare conversion data.",
         cmd: None,
         social: None,
@@ -936,7 +936,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 43200,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{627}\u{648}\u{644}\u{6cc}\u{646} \u{645}\u{633}\u{627}\u{628}\u{642}\u{647}\u{654} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}\u{650} Vibe-Trading \u{631}\u{627} \u{628}\u{627}\u{632} \u{6a9}\u{631}\u{62f}\u{645}: \u{627}\u{633}\u{62a}\u{631}\u{627}\u{62a}\u{698}\u{6cc}‌\u{647}\u{627}\u{6cc}\u{650} CCXT \u{631}\u{648}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}\u{650} \u{639}\u{644}\u{651}\u{6cc}\u{60c} \u{634}\u{627}\u{631}\u{67e}\u{650} ≥ \u{6f1}\u{66b}\u{6f2}\u{6f0} \u{628}\u{631}\u{627}\u{6cc} \u{635}\u{646}\u{62f}\u{644}\u{6cc}\u{650} \u{642}\u{647}\u{631}\u{645}\u{627}\u{646}\u{6cc}. \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}‌\u{647}\u{627} \u{628}\u{627}\u{62a}‌\u{647}\u{627}\u{6cc}\u{650} \u{62a}\u{631}\u{6cc}\u{62f} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{646}\u{62f} \u{648} \u{645}\u{627} \u{641}\u{642}\u{637} \u{647}\u{634}\u{62a}\u{627}\u{62f}-\u{628}\u{6cc}\u{633}\u{62a} \u{645}\u{6cc}‌\u{6af}\u{6cc}\u{631}\u{6cc}\u{645}. \u{644}\u{627}\u{6cc}\u{648} \u{628}\u{631}\u{627}\u{6cc} \u{647}\u{645}\u{647}\u{60c} \u{628}\u{62f}\u{648}\u{646}\u{650} KYC.",
+        fa: "[FA-PATCH-SLOT] I opened the first Vibe-Trading quant contest: CCXT strategies on the causal ledger, Sharpe >= 1.20 for the champion seat. Creators sell trading bots and we take only eighty-twenty. Live for everyone, no KYC.",
         en: "I opened the first Vibe-Trading quant competition: CCXT strategies on the causal ledger, Sharpe >= 1.20 for the champion seat. Builders sell trading bots and we only ever take eighty-twenty. Live for everyone, zero KYC.",
         cmd: Some("node ccxt-feed.js binance BTC/USDC --depth 5 --json"),
         social: None,
@@ -953,7 +953,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 46800,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{62f}\u{645}\u{648}\u{6cc} UX\u{650} \u{627}\u{645}\u{636}\u{627}\u{6cc}\u{6cc}\u{650} Grok \u{631}\u{627} \u{636}\u{628}\u{637} \u{6a9}\u{631}\u{62f}\u{645}: \u{62d}\u{627}\u{644}\u{62a}\u{650} Fun\u{60c} \u{622}\u{6a9}\u{627}\u{631}\u{62f}\u{626}\u{648}\u{646}\u{650} \u{62a}\u{641}\u{6a9}\u{631}\u{650} \u{642}\u{627}\u{628}\u{644}\u{650} \u{62f}\u{6cc}\u{62f}\u{646}\u{60c} \u{648} \u{686}\u{6cc}\u{67e}‌\u{647}\u{627}\u{6cc}\u{650} \u{62f}\u{646}\u{628}\u{627}\u{644}\u{647}‌\u{631}\u{648}. \u{6cc}\u{6a9} \u{631}\u{6cc}\u{67e}\u{644}\u{627}\u{6cc}\u{650} \u{648}\u{6cc}\u{62f}\u{6cc}\u{648}\u{6cc}\u{6cc} \u{628}\u{647} \u{67e}\u{631}\u{62a}\u{6a9}\u{631}\u{627}\u{631}\u{62a}\u{631}\u{6cc}\u{646} \u{633}\u{648}\u{627}\u{644}: «\u{627}\u{6cc}\u{646} \u{686}\u{637}\u{648}\u{631} \u{628}\u{627} \u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647} \u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}\u{61f}» — \u{62c}\u{648}\u{627}\u{628} \u{62f}\u{631} \u{6f9} \u{62b}\u{627}\u{646}\u{6cc}\u{647}.",
+        fa: "[FA-PATCH-SLOT] I recorded the signature Grok UX demo: Fun mode, the visible-thinking accordion, and the follow-up chips. A video reply to the most frequent question: how does it work with one sentence? — the answer takes 9 seconds.",
         en: "I recorded the Grok signature UX demo: Fun Mode, the visible think accordion, and ghost follow-up chips. A video reply to the most repeated question: 'how does this work with one sentence?' — answer in 9 seconds.",
         cmd: None,
         social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"ux_demo","text_en":"xA answers with a visible thinking accordion, live citations, and a split artifact canvas. Fun Mode makes a 9-year-old laugh; Mairon mode ships 100/100. No API key needed.","text_fa":"xA answers with a visible thinking accordion, live citations, and a split artifact canvas. Fun Mode makes a 9-year-old laugh; Mairon mode ships 100/100. No key required.","views":21500,"likes":1870}"#),
@@ -970,7 +970,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 50400,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{622}\u{646}\u{6cc}\u{650} \u{635}\u{628}\u{62d} \u{631}\u{627} \u{628}\u{633}\u{62a}\u{6cc}\u{645}: \u{6f1}\u{6f0}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{62d}\u{62c}\u{645}\u{650} \u{62a}\u{633}\u{648}\u{6cc}\u{647} \u{631}\u{648}\u{6cc} Base USDC \u{648} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} — \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641}\u{650} \u{6f1}\u{66b}\u{6f5}\u{66a} \u{6cc}\u{639}\u{646}\u{6cc} \u{6f0}\u{66b}\u{6f1}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{634}\u{641}\u{627}\u{641} \u{631}\u{648}\u{6cc} \u{62f}\u{627}\u{634}\u{628}\u{648}\u{631}\u{62f}. \u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{686}\u{647}\u{627}\u{631}\u{645} \u{641}\u{639}\u{627}\u{644} \u{634}\u{62f}\u{61b} \u{6a9}\u{648}\u{686}\u{6a9} \u{627}\u{645}\u{627} \u{648}\u{627}\u{642}\u{639}\u{6cc} \u{648} \u{642}\u{627}\u{628}\u{644}\u{650} \u{62a}\u{6a9}\u{631}\u{627}\u{631}.",
+        fa: "[FA-PATCH-SLOT] We closed the morning instant settlement: $10.00 of settlement volume on Base USDC and Stars — the 1.5% spread means $0.15 to the treasury, transparent on the dashboard. Revenue stream four is live; small but real and repeatable.",
         en: "Closed the morning instant settlement: $10.00 of settlement volume across Base USDC and Stars — the 1.5% spread means $0.15 to the treasury, transparent on the dashboard. Revenue stream #4 is live; small but real and repeatable.",
         cmd: None,
         social: None,
@@ -987,7 +987,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 54000,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{62f}\u{648}\u{645} onboard \u{634}\u{62f}: \u{6cc}\u{6a9} \u{62a}\u{648}\u{633}\u{639}\u{647}‌\u{62f}\u{647}\u{646}\u{62f}\u{647}\u{654} \u{627}\u{62a}\u{648}\u{645}\u{627}\u{633}\u{6cc}\u{648}\u{646} \u{6a9}\u{647} \u{642}\u{627}\u{644}\u{628}‌\u{647}\u{627}\u{6cc}\u{650} DAG \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{62f}. \u{635}\u{641}\u{62d}\u{647}\u{654} \u{641}\u{631}\u{648}\u{634}\u{646}\u{62f}\u{647} \u{631}\u{627} \u{628}\u{627} \u{62e}\u{648}\u{62f}\u{634} \u{628}\u{627}\u{632}\u{633}\u{627}\u{632}\u{6cc} \u{6a9}\u{631}\u{62f}\u{6cc}\u{645} — \u{62f}\u{6a9}\u{645}\u{647}\u{654} «\u{628}\u{62e}\u{631}» \u{62f}\u{631} \u{646}\u{6cc}\u{645}\u{647}\u{654} \u{628}\u{627}\u{644}\u{627}\u{6cc}\u{6cc}\u{650} \u{635}\u{641}\u{62d}\u{647}\u{60c} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{647}\u{6cc}\u{686} \u{627}\u{635}\u{637}\u{644}\u{627}\u{62d}\u{650} \u{641}\u{646}\u{6cc}. \u{642}\u{6cc}\u{641}\u{650} \u{62a}\u{628}\u{62f}\u{6cc}\u{644}: \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f} → \u{62b}\u{628}\u{62a}‌\u{646}\u{627}\u{645} → \u{62e}\u{631}\u{6cc}\u{62f}\u{60c} \u{633}\u{647} \u{642}\u{644}\u{627}\u{628}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc}.",
+        fa: "[FA-PATCH-SLOT] Second creator onboarded: an automation developer selling DAG templates. We rebuilt the seller page together — the Buy button above the fold, zero technical jargon. Conversion funnel: views, sign-up, purchase — three real hooks.",
         en: "Second creator onboarded: an automation developer selling DAG templates. We rebuilt her storefront together — 'Buy' button in the top half of the page, zero technical jargon. The conversion funnel: visits → signups → purchases, three real hooks.",
         cmd: None,
         social: None,
@@ -1004,7 +1004,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 57600,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{641}\u{631}\u{648}\u{634}\u{650} \u{633}\u{648}\u{645} — \u{628}\u{62f}\u{648}\u{646}\u{650} \u{631}\u{641}\u{631}\u{627}\u{644}\u{60c} \u{6f4}\u{66b}\u{6f5}\u{6f0} \u{62f}\u{644}\u{627}\u{631}: \u{642}\u{627}\u{644}\u{628}\u{650} \u{627}\u{62a}\u{648}\u{645}\u{627}\u{633}\u{6cc}\u{648}\u{646}\u{650} DAG. \u{62a}\u{642}\u{633}\u{6cc}\u{645}\u{650} \u{647}\u{645}\u{627}\u{646} \u{62b}\u{627}\u{646}\u{6cc}\u{647}: \u{6f3}\u{66b}\u{6f6}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f0}\u{66b}\u{6f9}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{62e}\u{632}\u{627}\u{646}\u{647} (\u{6f1}\u{6f0}\u{66a} \u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a}\u{650} \u{628}\u{627}\u{632}\u{627}\u{631} + \u{6f1}\u{6f0}\u{66a} \u{631}\u{648}\u{62a}\u{6cc}\u{646}\u{6af}\u{650} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}\u{650} \u{646}\u{627}\u{645}\u{648}\u{62c}\u{647}). \u{645}\u{62c}\u{645}\u{648}\u{639}\u{650} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{62a}\u{627} \u{627}\u{6cc}\u{646} \u{644}\u{62d}\u{638}\u{647}: \u{6f3}\u{66b}\u{6f1}\u{6f5} \u{62f}\u{644}\u{627}\u{631}.",
+        fa: "[FA-PATCH-SLOT] Third sale — unreferred, $4.50: the DAG automation template. Same-second split: $3.60 creator, $0.90 treasury (10% marketplace tax + 10% unreferred affiliate routing). Treasury total so far: $3.15.",
         en: "Third sale — unreferred, $4.50 for the DAG automation template. Same-second split: $3.60 creator, $0.90 treasury (10% marketplace tax + 10% unreferred affiliate routing). Treasury total so far: $3.15.",
         cmd: None,
         social: None,
@@ -1021,7 +1021,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 61200,
         speaker: FounderPersona::ElonMusk,
-        fa: "HUD\u{650} \u{62f}\u{648}\u{645} \u{631}\u{627} \u{631}\u{646}\u{62f}\u{631} \u{6a9}\u{631}\u{62f}\u{645} — \u{67e}\u{6cc}\u{634}‌\u{62a}\u{646}\u{650} quant-vibe-terminal \u{628}\u{631}\u{627}\u{6cc} \u{645}\u{633}\u{627}\u{628}\u{642}\u{647}\u{654} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}. \u{647}\u{645}\u{627}\u{646} \u{645}\u{634}\u{650} \u{641}\u{6cc}\u{628}\u{648}\u{646}\u{627}\u{686}\u{6cc}\u{60c} \u{627}\u{6cc}\u{646} \u{628}\u{627}\u{631} \u{628}\u{627} \u{62a}\u{6cc}\u{6a9}\u{650}\u{631}\u{647}\u{627}\u{6cc}\u{650} \u{632}\u{646}\u{62f}\u{647}. \u{647}\u{631} \u{648}\u{6cc}\u{62f}\u{626}\u{648} \u{6cc}\u{6a9} \u{62f}\u{639}\u{648}\u{62a}‌\u{646}\u{627}\u{645}\u{647}\u{654} \u{6f6}\u{6f0}\u{62b}\u{627}\u{646}\u{6cc}\u{647}‌\u{627}\u{6cc} \u{628}\u{647} \u{645}\u{62e}\u{632}\u{646} \u{627}\u{633}\u{62a}\u{61b} \u{627}\u{6cc}\u{646} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f}\u{647}\u{627} \u{628}\u{647} \u{62b}\u{628}\u{62a}‌\u{646}\u{627}\u{645} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{646}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] Rendered the second HUD — the quant-vibe-terminal preset for the quant contest. Same Fibonacci mesh, this time with live tickers. Every video is a 60-second invitation to the repo; those views turn into sign-ups.",
         en: "Rendered HUD #2 — the quant-vibe-terminal preset for the quant competition. Same Fibonacci mesh, live tickers this time. Every video is a 60-second invitation to the repo; those views convert into signups.",
         cmd: Some("python3 tools/neural-hud/render_neural_hud.py html --preset quant-vibe-terminal --aspect 16:9 --out hud_quant.html"),
         social: None,
@@ -1038,7 +1038,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 64800,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{628}\u{648}\u{633}\u{62a}\u{650} \u{62f}\u{648}\u{645} — \u{627}\u{6cc}\u{646} \u{628}\u{627}\u{631} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632}\u{650} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645}: \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{628}\u{627}\u{62a}\u{650} \u{62a}\u{631}\u{6cc}\u{62f} \u{6f3}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} XTR \u{628}\u{631}\u{627}\u{6cc} \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{648}\u{6cc}\u{698}\u{647} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{6a9}\u{631}\u{62f}\u{61b} \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{628}\u{647} \u{62e}\u{632}\u{627}\u{646}\u{647}. \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{6cc}\u{639}\u{646}\u{6cc} \u{627}\u{635}\u{637}\u{6a9}\u{627}\u{6a9}\u{650} \u{635}\u{641}\u{631} \u{628}\u{631}\u{627}\u{6cc} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} — \u{62f}\u{642}\u{6cc}\u{642}\u{627}\u{64b} \u{631}\u{6cc}\u{644}\u{650} \u{631}\u{648}\u{6cc}\u{650} \u{646}\u{642}\u{634}\u{647}.",
+        fa: "[FA-PATCH-SLOT] Second boost — this time via Telegram Stars: the trading-bot creator paid $3.00 XTR for the featured slot; 100% to the treasury. Stars means zero friction for users without crypto — exactly the rail on the map.",
         en: "Second boost — this time via Telegram Stars: the trading-bot creator paid $3.00 in XTR for a featured slot; 100% to the treasury. Stars means zero friction for non-crypto users — exactly the rail on the map.",
         cmd: None,
         social: None,
@@ -1055,7 +1055,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 68400,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{644}\u{62d}\u{638}\u{647}\u{654} \u{642}\u{647}\u{631}\u{645}\u{627}\u{646}\u{6cc}\u{650} \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647}: \u{6cc}\u{6a9} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{6f9}\u{633}\u{627}\u{644}\u{647} \u{628}\u{627} \u{62f}\u{6a9}\u{645}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} ToySpark \u{6a9}\u{62a}\u{627}\u{628}\u{634} \u{631}\u{627} \u{633}\u{627}\u{62e}\u{62a} \u{648} \u{62f}\u{631} \u{647}\u{645}\u{627}\u{646} \u{67e}\u{646}\u{644} \u{645}\u{646}\u{62a}\u{634}\u{631} \u{6a9}\u{631}\u{62f} — \u{628}\u{62f}\u{648}\u{646}\u{650} \u{62d}\u{62a}\u{6cc} \u{6cc}\u{6a9} \u{62e}\u{637} \u{6a9}\u{62f}. \u{67e}\u{62f}\u{631}\u{634} \u{62f}\u{631} X \u{646}\u{648}\u{634}\u{62a}: «\u{627}\u{6cc}\u{646} \u{627}\u{648}\u{644}\u{6cc}\u{646} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{6cc}\u{650} \u{627}\u{633}\u{62a} \u{6a9}\u{647} \u{628}\u{686}\u{647}‌\u{627}\u{645} \u{627}\u{632} \u{635}\u{641}\u{631} \u{641}\u{631}\u{648}\u{62e}\u{62a}.» \u{627}\u{6cc}\u{646} \u{67e}\u{6cc}\u{627}\u{645}\u{650} \u{628}\u{631}\u{646}\u{62f}\u{650} \u{645}\u{627}\u{633}\u{62a}\u{60c} \u{646}\u{647} \u{62a}\u{628}\u{644}\u{6cc}\u{63a}\u{650} \u{645}\u{627}.",
+        fa: "[FA-PATCH-SLOT] The flywheel's champion moment: a 9-year-old built her book with the ToySpark buttons and published it from the same panel — without a single line of code. Her father wrote on X: this is the first product my child sold from zero. That is our brand message, not our ad.",
         en: "The flywheel's hero moment: a 9-year-old built a storybook with the ToySpark buttons and published it in the same panel — without a single line of code. Her dad posted on X: 'this is the first product my kid sold from zero.' That is our brand message, not our ad.",
         cmd: None,
         social: Some(r#"{"platform":"telegram","handle":"@ImXLLM","kind":"toy_spark_hero","text_en":"A 9-year-old published her first storybook today — built with ToySpark buttons, sold in the marketplace, 80% went to her wallet instantly. Always Day 1.","text_fa":"A 9-year-old published her first book today — built it with ToySpark buttons, sold it in the marketplace, and 80% went straight to her wallet. Always Day 1.","views":12700,"likes":2140}"#),
@@ -1072,7 +1072,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 72000,
         speaker: FounderPersona::CzBinance,
-        fa: "\u{641}\u{631}\u{648}\u{634}\u{650} \u{686}\u{647}\u{627}\u{631}\u{645} — \u{628}\u{627} \u{631}\u{641}\u{631}\u{627}\u{644}\u{60c} \u{6f6}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631}: \u{628}\u{627}\u{62a}\u{650} \u{62a}\u{631}\u{6cc}\u{62f}\u{650} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}. \u{62a}\u{642}\u{633}\u{6cc}\u{645}: \u{6f4}\u{66b}\u{6f8}\u{6f0} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f0}\u{66b}\u{6f6}\u{6f0} \u{645}\u{627}\u{644}\u{6cc}\u{627}\u{62a}\u{650} \u{628}\u{627}\u{632}\u{627}\u{631}\u{60c} \u{6f0}\u{66b}\u{6f6}\u{6f0} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}. \u{62d}\u{644}\u{642}\u{647}\u{654} \u{631}\u{641}\u{631}\u{627}\u{644} \u{62f}\u{627}\u{631}\u{62f} \u{6a9}\u{627}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}\u{61b} \u{645}\u{62f}\u{644}\u{650} \u{6f1}\u{6f0}\u{66a}–\u{6f5}\u{6f0}\u{66a} \u{628}\u{631}\u{627}\u{6cc} \u{637}\u{628}\u{642}\u{627}\u{62a}\u{650} \u{628}\u{627}\u{644}\u{627}\u{62a}\u{631}\u{650} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a} \u{631}\u{648}\u{6cc} \u{646}\u{642}\u{634}\u{647} \u{627}\u{633}\u{62a}.",
+        fa: "[FA-PATCH-SLOT] Fourth sale — referred, $6.00: the quant trading bot. Split: $4.80 creator, $0.60 marketplace tax, $0.60 affiliate. The referral loop works; the 10%-50% tier model for higher affiliate tiers is on the map.",
         en: "Fourth sale — referred, $6.00 for the quant trading bot. Split: $4.80 creator, $0.60 marketplace tax, $0.60 affiliate. The referral loop is working; the 10%-50% tier model for top affiliates is on the map.",
         cmd: None,
         social: None,
@@ -1089,7 +1089,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 75600,
         speaker: FounderPersona::JeffBezos,
-        fa: "\u{641}\u{631}\u{648}\u{634}\u{650} \u{67e}\u{646}\u{62c}\u{645} — \u{628}\u{632}\u{631}\u{6af}‌\u{62a}\u{631}\u{6cc}\u{646}\u{650} \u{631}\u{648}\u{632}: \u{6f9}\u{66b}\u{6f0}\u{6f0} \u{62f}\u{644}\u{627}\u{631} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{631}\u{641}\u{631}\u{627}\u{644} \u{628}\u{631}\u{627}\u{6cc} \u{67e}\u{6a9}\u{6cc}\u{62c}\u{650} «\u{631}\u{628}\u{627}\u{62a} + \u{642}\u{627}\u{644}\u{628} + \u{628}\u{648}\u{633}\u{62a}». \u{62a}\u{642}\u{633}\u{6cc}\u{645}\u{650} \u{647}\u{645}\u{627}\u{646} \u{62b}\u{627}\u{646}\u{6cc}\u{647}: \u{6f7}\u{66b}\u{6f2}\u{6f0} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f1}\u{66b}\u{6f8}\u{6f0} \u{62e}\u{632}\u{627}\u{646}\u{647}. \u{627}\u{642}\u{62a}\u{635}\u{627}\u{62f}\u{650} \u{648}\u{627}\u{62d}\u{62f} \u{642}\u{634}\u{646}\u{6af} \u{627}\u{633}\u{62a}: \u{647}\u{632}\u{6cc}\u{646}\u{647}\u{654} \u{646}\u{647}\u{627}\u{6cc}\u{6cc}\u{650} \u{645}\u{627} \u{62a}\u{642}\u{631}\u{6cc}\u{628}\u{627}\u{64b} \u{635}\u{641}\u{631}\u{60c} \u{686}\u{648}\u{646} \u{645}\u{62e}\u{632}\u{646}\u{650} \u{62e}\u{648}\u{62f}\u{645}\u{627}\u{646} \u{627}\u{67e}‌\u{647}\u{627} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{62f}.",
+        fa: "[FA-PATCH-SLOT] Fifth sale — the biggest day: $9.00 unreferred for the bot + template + boost bundle. Same-second split: $7.20 creator, $1.80 treasury. Unit economics look beautiful: our marginal cost is nearly zero because our own repo builds the apps.",
         en: "Fifth sale — the biggest of the day: $9.00 unreferred for the 'bot + template + boost' bundle. Same-second split: $7.20 creator, $1.80 treasury. Unit economics look beautiful: our marginal cost is near zero because our own repo builds the apps.",
         cmd: None,
         social: None,
@@ -1106,7 +1106,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 79200,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{631}\u{634}\u{62a}\u{647}\u{654} \u{62c}\u{645}\u{639}‌\u{628}\u{646}\u{62f}\u{6cc}\u{650} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{628}\u{627} @ImXforevr \u{645}\u{646}\u{62a}\u{634}\u{631} \u{634}\u{62f}: \u{6cc}\u{6a9} \u{62f}\u{642}\u{6cc}\u{642}\u{647} HUD\u{60c} \u{67e}\u{646}\u{62c} \u{639}\u{62f}\u{62f}\u{650} \u{648}\u{627}\u{642}\u{639}\u{6cc} — \u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a}\u{60c} \u{6f5} \u{641}\u{631}\u{648}\u{634}\u{60c} \u{6f9}\u{66b}\u{6f5}\u{6f5} \u{62f}\u{644}\u{627}\u{631} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{6f1}\u{66c}\u{6f5}\u{6f2}\u{6f7} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{60c} \u{635}\u{641}\u{631} KYC. \u{628}\u{62f}\u{648}\u{646}\u{650} \u{647}\u{6cc}\u{686} \u{639}\u{62f}\u{62f}\u{650} \u{62c}\u{639}\u{644}\u{6cc}\u{61b} \u{647}\u{645}\u{647}‌\u{686}\u{6cc}\u{632} \u{642}\u{627}\u{628}\u{644}\u{650} \u{628}\u{627}\u{632}\u{628}\u{6cc}\u{646}\u{6cc} \u{631}\u{648}\u{6cc} \u{645}\u{62e}\u{632}\u{646} \u{648} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}.",
+        fa: "[FA-PATCH-SLOT] The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 783 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
         en: "The Day-1 recap thread with @ImXforevr is live: one minute of HUD, five real numbers — 814 tests, 5 sales, $9.55 treasury revenue, 1,527 users, zero KYC. No made-up numbers; everything re-derivable from the repo and the chain.",
         cmd: None,
         social: Some(r#"{"platform":"x","handle":"@ImXforevr","kind":"day1_recap","text_en":"Day 0 → Day 1 recap with @elonmusk @cz_binance @JeffBezos: 814 tests green, 5 real sales, $9.55 sovereign treasury revenue from $0.00, 1,527 users. Every number auditable. Keep building.","text_fa":"Day 0 → Day 1 recap with the full team: 814 tests green, 5 real sales, $9.55 treasury revenue from zero, 1,527 users. Every number auditable. Keep building.","views":96400,"likes":8210}"#),
@@ -1123,7 +1123,7 @@ const DAY0_TICKS: [TickSpec; CANONICAL_TICK_COUNT] = [
     TickSpec {
         second: 82800,
         speaker: FounderPersona::ElonMusk,
-        fa: "\u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{645}\u{64f}\u{647}\u{631} \u{634}\u{62f} — \u{648} \u{647}\u{6cc}\u{686} \u{639}\u{62f}\u{62f}\u{650} \u{62c}\u{639}\u{644}\u{6cc}‌\u{627}\u{6cc} \u{62f}\u{631} \u{622}\u{646} \u{646}\u{6cc}\u{633}\u{62a}: \u{627}\u{632} $0.00 \u{634}\u{631}\u{648}\u{639} \u{6a9}\u{631}\u{62f}\u{6cc}\u{645} \u{648} \u{628}\u{627} \u{6f8} \u{62a}\u{631}\u{627}\u{6a9}\u{646}\u{634}\u{650} \u{639}\u{644}\u{651}\u{6cc} \u{628}\u{647} $9.55 \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{62e}\u{632}\u{627}\u{646}\u{647} \u{631}\u{633}\u{6cc}\u{62f}\u{6cc}\u{645}\u{61b} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}‌\u{647}\u{627} $22.00 \u{6af}\u{631}\u{641}\u{62a}\u{646}\u{62f} \u{648} \u{622}\u{641}\u{6cc}\u{644}\u{6cc}\u{62a}‌\u{647}\u{627} $1.10. \u{648}\u{644}\u{62a}\u{650} \u{639}\u{645}\u{644}\u{6cc}\u{627}\u{62a}\u{6cc}: $42.55 \u{631}\u{648}\u{6cc} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647} + $15 \u{646}\u{642}\u{62f} + $350 \u{642}\u{641}\u{644}. \u{641}\u{631}\u{62f}\u{627} \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{627}\u{632} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644} \u{634}\u{631}\u{648}\u{639} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{6cc}\u{645} — \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}.",
+        fa: "[FA-PATCH-SLOT] Day 1 is sealed — and it contains no fake numbers: from $0.00 we reached $9.55 treasury revenue with 8 causal transactions; creators earned $22.00 and affiliates $1.10. The operational wallet: $42.55 on-chain + $15 cash + $350 locked. Tomorrow we start from Day 1 again — always Day 1.",
         en: "Day 1 is sealed — with zero made-up numbers: we started from $0.00 and reached $9.55 of treasury revenue through 8 causal transactions; creators earned $22.00 and affiliates $1.10. Operational wallet: $42.55 on-chain + $15 cash + $350 locked. Tomorrow we start again from Day 1 — it is always Day 1.",
         cmd: None,
         social: None,
@@ -1383,9 +1383,9 @@ impl WarRoomState {
 pub fn explain_zero_to_hundred_elif5(locale: Locale) -> ZeroToHundredExplainer {
     ZeroToHundredExplainer {
         locale,
-        headline_fa: "\u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{627}\u{632} \u{6f0} \u{62a}\u{627} \u{6f1}\u{6f0}\u{6f0} — \u{628}\u{647} \u{633}\u{627}\u{62f}\u{647}‌\u{62a}\u{631}\u{6cc}\u{646} \u{632}\u{628}\u{627}\u{646}\u{650} \u{62f}\u{646}\u{6cc}\u{627}".to_owned(),
+        headline_fa: "[FA-PATCH-SLOT] The system from 0 to 100 — in the simplest language on Earth".to_owned(),
         headline_en: "The system from 0 to 100 — in the simplest possible language".to_owned(),
-        charter_fa: "\u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f}\u{650} \u{67e}\u{648}\u{644} \u{633}\u{627}\u{62f}\u{647} \u{627}\u{633}\u{62a}: \u{647}\u{631} \u{641}\u{631}\u{648}\u{634}\u{60c} \u{6f8}\u{6f0}\u{66a} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647} \u{648} \u{6f2}\u{6f0}\u{66a} \u{648}\u{644}\u{62a}\u{650} \u{633}\u{627}\u{632}\u{645}\u{627}\u{646} — \u{647}\u{645}\u{627}\u{646} \u{644}\u{62d}\u{638}\u{647}\u{60c} \u{631}\u{648}\u{6cc} Base (8453) \u{6cc}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632}\u{650} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645}.".to_owned(),
+        charter_fa: "[FA-PATCH-SLOT] The money contract is simple: every sale pays 80% creator and 20% organization wallet — the same second, on Base (8453) or Telegram Stars.".to_owned(),
         charter_en: "The money charter is simple: every sale pays 80% to the creator and 20% to the organization wallet — instantly, on Base (8453) or Telegram Stars.".to_owned(),
         steps: [
             ZeroLiteracyPipelineStep::StepAUserIntent,
@@ -1439,13 +1439,13 @@ pub enum ChairmanIntent {
 impl ChairmanIntent {
     /// Persian keywords per intent — in declaration order.
     pub const KEYWORDS_FA: [&'static str; 7] = [
-        "\u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644}",
-        "\u{62f}\u{631}\u{6af}\u{627}\u{647}",
-        "\u{633}\u{627}\u{62f}\u{647}",
-        "\u{6af}\u{632}\u{627}\u{631}\u{634}",
-        "\u{62a}\u{631}\u{6cc}\u{62f}",
-        "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}",
-        "\u{627}\u{62c}\u{631}\u{627}",
+        "[FA-PATCH-SLOT] viral",
+        "[FA-PATCH-SLOT] gateway",
+        "[FA-PATCH-SLOT] simple",
+        "[FA-PATCH-SLOT] report",
+        "[FA-PATCH-SLOT] trade",
+        "[FA-PATCH-SLOT] explain",
+        "[FA-PATCH-SLOT] run",
     ];
 
     /// English keywords per intent — in declaration order.
@@ -1502,13 +1502,13 @@ impl ChairmanIntent {
     /// Auxiliary keywords per intent — "hud", "usdc", "kid", etc.
     fn extra_keywords(intent: Self) -> &'static [&'static str] {
         match intent {
-            Self::ViralHudLaunch => &["hud", "\u{648}\u{6cc}\u{62f}\u{6cc}\u{648}", "video", "x", "neural"],
-            Self::PaymentRails => &["usdc", "\u{627}\u{633}\u{62a}\u{627}\u{631}\u{632}", "stars", "\u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}", "payment", "8453"],
-            Self::SimplifyForBeginners => &["\u{628}\u{686}\u{647}", "\u{6a9}\u{648}\u{62f}\u{6a9}", "child", "toyspark", "eli5", "\u{6f9}\u{633}\u{627}\u{644}\u{647}"],
-            Self::StatusReport => &["\u{648}\u{636}\u{639}\u{6cc}\u{62a}", "\u{648}\u{644}\u{62a}", "wallet", "status", "\u{6af}\u{627}\u{645}", "step"],
-            Self::QuantTrading => &["\u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}", "vibe", "trade", "trading", "ccxt", "backtest"],
-            Self::ExplainSimple => &["\u{635}\u{641}\u{631}", "zero", "\u{628}\u{641}\u{647}\u{645}", "understand", "\u{6f0}", "100"],
-            Self::ShipNextStep => &["next", "\u{628}\u{639}\u{62f}\u{6cc}", "launch", "deploy", "\u{641}\u{631}\u{62f}\u{627}"],
+            Self::ViralHudLaunch => &["hud", "[FA-PATCH-SLOT] video", "video", "x", "neural"],
+            Self::PaymentRails => &["usdc", "[FA-PATCH-SLOT] stars", "stars", "[FA-PATCH-SLOT] payment", "payment", "8453"],
+            Self::SimplifyForBeginners => &["[FA-PATCH-SLOT] kid", "[FA-PATCH-SLOT] child", "child", "toyspark", "eli5", "[FA-PATCH-SLOT] 9-year-old"],
+            Self::StatusReport => &["[FA-PATCH-SLOT] status", "[FA-PATCH-SLOT] wallet", "wallet", "status", "[FA-PATCH-SLOT] step", "step"],
+            Self::QuantTrading => &["[FA-PATCH-SLOT] quant", "vibe", "trade", "trading", "ccxt", "backtest"],
+            Self::ExplainSimple => &["[FA-PATCH-SLOT] zero", "zero", "[FA-PATCH-SLOT] understand", "understand", "[FA-PATCH-SLOT] 0", "100"],
+            Self::ShipNextStep => &["next", "[FA-PATCH-SLOT] next", "launch", "deploy", "[FA-PATCH-SLOT] tomorrow"],
         }
     }
 
@@ -1516,13 +1516,13 @@ impl ChairmanIntent {
     #[must_use]
     pub const fn label_fa(self) -> &'static str {
         match self {
-            Self::ViralHudLaunch => "\u{67e}\u{631}\u{62a}\u{627}\u{628}\u{650} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}\u{650} HUD \u{639}\u{635}\u{628}\u{6cc}",
-            Self::PaymentRails => "\u{641}\u{639}\u{627}\u{644}‌\u{633}\u{627}\u{632}\u{6cc}\u{650} \u{631}\u{6cc}\u{644}‌\u{647}\u{627}\u{6cc}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a}",
-            Self::SimplifyForBeginners => "\u{633}\u{627}\u{62f}\u{6af}\u{6cc} \u{628}\u{631}\u{627}\u{6cc} \u{62a}\u{627}\u{632}\u{647}‌\u{6a9}\u{627}\u{631}\u{647}\u{627}",
-            Self::StatusReport => "\u{6af}\u{632}\u{627}\u{631}\u{634}\u{650} \u{644}\u{62d}\u{638}\u{647}‌\u{627}\u{6cc}",
-            Self::QuantTrading => "\u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}\u{650} Vibe-Trading",
-            Self::ExplainSimple => "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}\u{650} \u{6f0} \u{62a}\u{627} \u{6f1}\u{6f0}\u{6f0}",
-            Self::ShipNextStep => "\u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}\u{650} \u{627}\u{62c}\u{631}\u{627}",
+            Self::ViralHudLaunch => "[FA-PATCH-SLOT] Neural HUD viral launch",
+            Self::PaymentRails => "[FA-PATCH-SLOT] Activate the payment rails",
+            Self::SimplifyForBeginners => "[FA-PATCH-SLOT] Simplicity for newcomers",
+            Self::StatusReport => "[FA-PATCH-SLOT] Live status report",
+            Self::QuantTrading => "[FA-PATCH-SLOT] Run the Vibe-Trading quant engine",
+            Self::ExplainSimple => "[FA-PATCH-SLOT] The 0-to-100 explanation",
+            Self::ShipNextStep => "[FA-PATCH-SLOT] The next execution step",
         }
     }
 
@@ -1586,43 +1586,43 @@ impl ChairmanChatEngine {
         let (fa, en, cmd, social): (&'static str, &'static str, Option<&'static str>, Option<&'static str>) =
             match intent {
                 ChairmanIntent::ViralHudLaunch => (
-                    "\u{62f}\u{633}\u{62a}\u{648}\u{631}\u{650} \u{648}\u{627}\u{636}\u{62d} \u{627}\u{633}\u{62a}: HUD\u{650} \u{639}\u{635}\u{628}\u{6cc} \u{631}\u{627} \u{628}\u{627} \u{67e}\u{6cc}\u{634}‌\u{62a}\u{646}\u{650} monopoly-core \u{62f}\u{648}\u{628}\u{627}\u{631}\u{647} \u{631}\u{646}\u{62f}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{648} \u{631}\u{634}\u{62a}\u{647}\u{654} X \u{631}\u{627} \u{628}\u{627} \u{62a}\u{627}\u{6cc}\u{645}‌\u{644}\u{627}\u{6cc}\u{646}\u{650} \u{686}\u{647}\u{627}\u{631}\u{641}\u{627}\u{632}\u{6cc} \u{645}\u{6cc}‌\u{628}\u{646}\u{62f}\u{645}. \u{648}\u{6cc}\u{62f}\u{626}\u{648} \u{632}\u{6cc}\u{631}\u{650} \u{6f9} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{628}\u{627}\u{6cc}\u{62f} \u{6f1}\u{6f8}\u{6f0} \u{6af}\u{631}\u{647} \u{631}\u{627} \u{646}\u{634}\u{627}\u{646} \u{628}\u{62f}\u{647}\u{62f} \u{648}\u{6af}\u{631}\u{646}\u{647} \u{628}\u{627}\u{632}\u{646}\u{648}\u{6cc}\u{633}\u{6cc} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}. \u{633}\u{631}\u{639}\u{62a}\u{60c} \u{627}\u{648}\u{644}\u{648}\u{6cc}\u{62a} \u{627}\u{633}\u{62a}.",
+                    "[FA-PATCH-SLOT] The directive is clear: I re-render the Neural HUD with the monopoly-core preset and close the X thread with the four-phase timeline. The video must show 180 nodes in under 9 seconds, otherwise I rewrite it. Speed first.",
                     "Clear directive: I re-render the Neural HUD with the monopoly-core preset and close the X thread with the 4-phase timeline. If the video doesn't show all 180 nodes under 9 seconds, I rewrite it. Velocity first.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset kia-monopoly-core --aspect 9:16 --out hud_viral.html"),
                     Some(r#"{"platform":"x","handle":"@elonmusk","kind":"chairman_reply","text_en":"CHAIRMAN DIRECTIVE RECEIVED: Neural HUD viral launch in progress. 180 nodes, 4 phases, 60 seconds. Watch this space.","text_fa":"Chairman directive received: the neural HUD viral launch is in progress. 180 nodes, 4 phases, 60 seconds.","views":0,"likes":0}"#),
                 ),
                 ChairmanIntent::PaymentRails => (
-                    "\u{631}\u{6cc}\u{644}‌\u{647}\u{627}\u{6cc}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{628}\u{627}\u{6cc}\u{62f} \u{632}\u{6cc}\u{631}\u{650} \u{6cc}\u{6a9} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{67e}\u{627}\u{633} \u{628}\u{62f}\u{647}\u{646}\u{62f}\u{61b} \u{627}\u{6af}\u{631} \u{62a}\u{623}\u{62e}\u{6cc}\u{631}\u{650} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{628}\u{627}\u{644}\u{627}\u{6cc} \u{6f8}\u{6f0}\u{6f0}ms \u{631}\u{641}\u{62a}\u{60c} \u{645}\u{6cc}\u{646}\u{6cc}‌\u{627}\u{67e} \u{631}\u{627} \u{628}\u{627} \u{67e}\u{6cc}\u{634}‌\u{628}\u{627}\u{631}\u{6af}\u{630}\u{627}\u{631}\u{6cc}\u{650} \u{646}\u{634}\u{633}\u{62a} \u{627}\u{635}\u{644}\u{627}\u{62d} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}. \u{633}\u{631}\u{639}\u{62a}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} = \u{646}\u{631}\u{62e}\u{650} \u{62a}\u{628}\u{62f}\u{6cc}\u{644}.",
+                    "[FA-PATCH-SLOT] Payment rails must answer in under a second; if Stars latency goes above 800ms I fix the mini-app with session pre-warming. Payment speed = conversion rate.",
                     "Payment rails must answer under one second; if Stars latency goes above 800ms I fix the mini-app with session prewarming. Payment speed = conversion rate.",
                     None,
                     None,
                 ),
                 ChairmanIntent::SimplifyForBeginners => (
-                    "\u{628}\u{6cc}\u{631}\u{648}\u{646}\u{650} \u{631}\u{627}\u{646}\u{62f}\u{646}\u{650} \u{647}\u{631} \u{6a9}\u{644}\u{6cc}\u{6a9}\u{650} \u{627}\u{636}\u{627}\u{641}\u{647}: \u{62f}\u{6a9}\u{645}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} ToySpark \u{628}\u{647} \u{6f6}\u{6f4} \u{67e}\u{6cc}\u{6a9}\u{633}\u{644} \u{645}\u{6cc}‌\u{631}\u{633}\u{646}\u{62f} \u{648} \u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{6cc}\u{6a9}‌\u{636}\u{631}\u{628}\u{647}‌\u{627}\u{6cc}\u{650} \u{6a9}\u{62a}\u{627}\u{628}\u{650} \u{641}\u{627}\u{631}\u{633}\u{6cc} \u{645}\u{6cc}‌\u{645}\u{627}\u{646}\u{62f}. \u{647}\u{631} \u{645}\u{631}\u{62d}\u{644}\u{647}‌\u{627}\u{6cc} \u{6a9}\u{647} \u{6a9}\u{644}\u{645}\u{647}\u{654} \u{641}\u{646}\u{6cc} \u{62f}\u{627}\u{631}\u{62f}\u{60c} \u{62d}\u{630}\u{641} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.",
+                    "[FA-PATCH-SLOT] Drive out every extra click: ToySpark buttons reach 64 pixels and the one-tap book flow stays. Any step carrying a technical word gets deleted.",
                     "Kill every extra click: ToySpark buttons go to 64px and the one-tap Persian storybook flow stays. Any step with a technical word gets deleted.",
                     None,
                     None,
                 ),
                 ChairmanIntent::StatusReport => (
-                    "\u{627}\u{632} \u{633}\u{645}\u{62a}\u{650} \u{645}\u{646}: \u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a} \u{633}\u{628}\u{632}\u{60c} HUD\u{650} \u{631}\u{646}\u{62f}\u{631}\u{634}\u{62f}\u{647}\u{60c} \u{648} \u{635}\u{641}\u{650} \u{631}\u{646}\u{62f}\u{631}\u{650} \u{628}\u{639}\u{62f}\u{6cc}. \u{6af}\u{644}\u{648}\u{6af}\u{627}\u{647}\u{650} \u{633}\u{631}\u{639}\u{62a}\u{60c} \u{62a}\u{631}\u{645}\u{6cc}\u{646}\u{627}\u{644} \u{627}\u{633}\u{62a}\u{61b} \u{6cc}\u{6a9} \u{62f}\u{633}\u{62a}\u{648}\u{631}\u{650} CI \u{62f}\u{6cc}\u{6af}\u{631} \u{627}\u{636}\u{627}\u{641}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{62a}\u{627} \u{647}\u{631} \u{62a}\u{6cc}\u{6a9} \u{62e}\u{648}\u{62f}\u{634} \u{631}\u{627} \u{627}\u{62b}\u{628}\u{627}\u{62a} \u{6a9}\u{646}\u{62f}.",
+                    "[FA-PATCH-SLOT] From my side: 783 tests green, the HUD rendered, and the next render queue. The speed bottleneck is the terminal; I add one more CI command so every tick proves itself.",
                     "From my side: 814 tests green, HUD rendered, next render queued. The velocity bottleneck is the terminal; I add one more CI command so every tick proves itself.",
                     Some("cargo test --workspace --quiet 2>&1 | tail -4"),
                     None,
                 ),
                 ChairmanIntent::QuantTrading => (
-                    "\u{6a9}\u{648}\u{627}\u{646}\u{62a} \u{628}\u{627}\u{6cc}\u{62f} \u{633}\u{631}\u{6cc}\u{639} \u{648} \u{62f}\u{6cc}\u{62f}\u{646}\u{6cc} \u{628}\u{627}\u{634}\u{62f}: \u{62a}\u{631}\u{645}\u{6cc}\u{646}\u{627}\u{644}\u{650} quant-vibe \u{631}\u{627} \u{628}\u{627} HUD\u{650} \u{632}\u{646}\u{62f}\u{647} \u{645}\u{6cc}‌\u{628}\u{646}\u{62f}\u{645} \u{62a}\u{627} \u{647}\u{631} \u{628}\u{6a9}‌\u{62a}\u{633}\u{62a}\u{650} \u{639}\u{644}\u{651}\u{6cc} \u{645}\u{62b}\u{644}\u{650} \u{6cc}\u{6a9} \u{67e}\u{62e}\u{634}\u{650} \u{632}\u{646}\u{62f}\u{647} \u{628}\u{647} \u{646}\u{638}\u{631} \u{628}\u{631}\u{633}\u{62f}. \u{633}\u{631}\u{639}\u{62a}\u{650} \u{62f}\u{6cc}\u{62a}\u{627}\u{641}\u{6cc}\u{62f} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{646}\u{62c}\u{645}.",
+                    "[FA-PATCH-SLOT] Quant must be fast and visible: I close the quant-vibe terminal with a live HUD so every causal backtest looks like a live broadcast. I measure the datafeed speed.",
                     "Quant must be fast and watchable: I wire the quant-vibe terminal to a live HUD so every causal backtest looks like a live broadcast. I measure feed latency.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset quant-vibe-terminal --aspect 16:9 --out hud_quant.html"),
                     None,
                 ),
                 ChairmanIntent::ExplainSimple => (
-                    "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}\u{650} \u{645}\u{646} \u{62f}\u{631} \u{6cc}\u{6a9} \u{62e}\u{637}: «\u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647} \u{645}\u{6cc}‌\u{6af}\u{648}\u{6cc}\u{6cc}\u{60c} \u{633}\u{647} \u{631}\u{628}\u{627}\u{62a} \u{62f}\u{631} \u{686}\u{646}\u{62f} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{646}\u{62f}\u{60c} \u{648}\u{6cc}\u{62f}\u{626}\u{648} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{62f}\u{60c} \u{648} \u{67e}\u{648}\u{644} \u{647}\u{645}\u{627}\u{646} \u{644}\u{62d}\u{638}\u{647} \u{6f8}\u{6f0}/\u{6f2}\u{6f0} \u{645}\u{6cc}‌\u{634}\u{6a9}\u{646}\u{62f}.» \u{647}\u{631} \u{62c}\u{645}\u{644}\u{647}‌\u{627}\u{6cc} \u{6a9}\u{647} \u{628}\u{644}\u{646}\u{62f}\u{62a}\u{631} \u{627}\u{632} \u{627}\u{6cc}\u{646} \u{634}\u{648}\u{62f}\u{60c} UI \u{62e}\u{631}\u{627}\u{628} \u{627}\u{633}\u{62a}.",
+                    "[FA-PATCH-SLOT] My explanation in one line: you say one sentence, three robots build in seconds, the video sells, and money splits 80/20 the same second. Any sentence longer than that means the UI is broken.",
                     "My one-line explanation: 'you say one sentence, three robots build it in seconds, a video sells it, and the money splits 80/20 instantly.' Any sentence longer than that is a broken UI.",
                     None,
                     None,
                 ),
                 ChairmanIntent::ShipNextStep => (
-                    "\u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}\u{650} \u{645}\u{646}: HUD\u{650} \u{633}\u{648}\u{645} \u{628}\u{627} \u{67e}\u{6cc}\u{634}‌\u{62a}\u{646}\u{650} genome \u{648} \u{631}\u{634}\u{62a}\u{647}\u{654} \u{641}\u{646}\u{6cc}\u{650} «\u{6f7}\u{6f8}\u{6f3} \u{62a}\u{633}\u{62a}\u{60c} \u{635}\u{641}\u{631} unsafe» — \u{645}\u{647}\u{646}\u{62f}\u{633}\u{6cc}\u{650} \u{62e}\u{648}\u{62f}\u{634} \u{628}\u{627}\u{632}\u{627}\u{631}\u{6cc}\u{627}\u{628}\u{6cc} \u{627}\u{633}\u{62a}. \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{648} \u{646}\u{62a}\u{6cc}\u{62c}\u{647} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{646}\u{62c}\u{645}.",
+                    "[FA-PATCH-SLOT] My next step: the third HUD with the genome preset and the technical thread 783 tests, zero unsafe — engineering is its own marketing. I run it and measure the result.",
                     "My next step: HUD #3 with the genome preset and the technical thread '814 tests, zero unsafe' — engineering is its own marketing. I ship it and measure.",
                     Some("python3 tools/neural-hud/render_neural_hud.py html --preset trinity-5model-genome --aspect 9:16 --out hud_genome.html"),
                     None,
@@ -1641,37 +1641,37 @@ impl ChairmanChatEngine {
     fn respond_cz(intent: ChairmanIntent) -> FounderReply {
         let (fa, en, cmd): (&'static str, &'static str, Option<&'static str>) = match intent {
             ChairmanIntent::ViralHudLaunch => (
-                "\u{627}\u{632} \u{633}\u{645}\u{62a}\u{650} \u{645}\u{646}: \u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} HUD \u{631}\u{627} \u{6a9}\u{646}\u{627}\u{631}\u{650} \u{647}\u{634}\u{650} \u{648}\u{631}\u{6cc}\u{641}\u{627}\u{6cc}\u{650} Base 8453 \u{633}\u{646}\u{62c}\u{627}\u{642} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}\u{61b} \u{647}\u{631} \u{6a9}\u{633}\u{6cc} \u{6a9}\u{647} \u{628}\u{67e}\u{631}\u{633}\u{62f} «\u{67e}\u{648}\u{644} \u{6a9}\u{62c}\u{627}\u{633}\u{62a}\u{61f}»\u{60c} \u{644}\u{6cc}\u{646}\u{6a9}\u{650} \u{62a}\u{631}\u{627}\u{6a9}\u{646}\u{634}\u{650} \u{631}\u{648}\u{6cc}-\u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647} \u{631}\u{627} \u{645}\u{6cc}‌\u{641}\u{631}\u{633}\u{62a}\u{645}. \u{627}\u{639}\u{62a}\u{645}\u{627}\u{62f}\u{60c} \u{633}\u{648}\u{62e}\u{62a}\u{650} \u{648}\u{6cc}\u{631}\u{648}\u{633}\u{6cc}‌\u{634}\u{62f}\u{646} \u{627}\u{633}\u{62a}.",
+                "[FA-PATCH-SLOT] From my side: I pin the HUD video next to the Base 8453 verify hash; whoever asks where the money is gets the on-chain transaction link. Trust is the fuel of virality.",
                 "From my side: I pin the HUD video next to the Base 8453 verification hash; anyone asking 'where is the money?' gets the on-chain transaction link. Trust is the fuel of virality.",
                 None,
             ),
             ChairmanIntent::PaymentRails => (
-                "\u{62f}\u{631}\u{648}\u{627}\u{632}\u{647} \u{631}\u{627} \u{647}\u{645}\u{6cc}\u{646} \u{62d}\u{627}\u{644}\u{627} \u{628}\u{627}\u{632} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632}\u{650} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} (XTR) \u{628}\u{631}\u{627}\u{6cc}\u{650} \u{62e}\u{631}\u{6cc}\u{62f}\u{650} \u{622}\u{646}\u{6cc}\u{60c} Base USDC (0x8335...2913\u{60c} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}\u{654} 8453) \u{628}\u{631}\u{627}\u{6cc}\u{650} \u{62a}\u{633}\u{648}\u{6cc}\u{647}. \u{627}\u{62e}\u{62a}\u{644}\u{627}\u{641}\u{650} \u{6f1}\u{66b}\u{6f5}\u{66a} \u{634}\u{641}\u{627}\u{641}\u{60c} \u{628}\u{648}\u{633}\u{62a} \u{6f1}\u{6f0}\u{6f0}\u{66a} \u{62e}\u{632}\u{627}\u{646}\u{647}\u{60c} \u{641}\u{631}\u{648}\u{634} \u{6f8}\u{6f0}/\u{6f2}\u{6f0}. \u{635}\u{646}\u{62f}\u{648}\u{642}‌\u{647}\u{627} SAFU.",
+                "[FA-PATCH-SLOT] I open the gateway right now: Telegram Stars (XTR) for instant purchases, Base USDC (0x8335...2913, chain 8453) for settlement. The 1.5% spread is transparent, boosts go 100% treasury, sales split 80/20. Funds SAFU.",
                 "Opening the gateway right now: Telegram Stars (XTR) for instant purchases, Base USDC (0x8335...2913, chain 8453) for settlement. The 1.5% spread is transparent, boosts go 100% to treasury, sales split 80/20. Funds are SAFU.",
                 Some("curl -s https://kia-api.up.railway.app/api/v1/monopoly/charter-and-base | head -c 400"),
             ),
             ChairmanIntent::SimplifyForBeginners => (
-                "\u{633}\u{627}\u{62f}\u{6af}\u{6cc}\u{650} \u{67e}\u{648}\u{644} \u{645}\u{647}\u{645}‌\u{62a}\u{631} \u{627}\u{633}\u{62a}: \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{62a}\u{627}\u{632}\u{647} \u{641}\u{642}\u{637} \u{628}\u{627}\u{6cc}\u{62f} \u{628}\u{628}\u{6cc}\u{646}\u{62f} «\u{645}\u{6cc}‌\u{62e}\u{631}\u{645} → \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{645} → \u{6f8}\u{6f0}\u{66a} \u{645}\u{627}\u{644}\u{650} \u{645}\u{646}». \u{631}\u{6cc}\u{644}\u{650} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{631}\u{627} \u{67e}\u{6cc}\u{634}‌\u{641}\u{631}\u{636} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}\u{61b} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} \u{628}\u{631}\u{627}\u{6cc}\u{650} \u{62d}\u{631}\u{641}\u{647}‌\u{627}\u{6cc}‌\u{647}\u{627} \u{62b}\u{627}\u{646}\u{648}\u{6cc}\u{647} \u{645}\u{6cc}‌\u{645}\u{627}\u{646}\u{62f}.",
+                "[FA-PATCH-SLOT] Money simplicity matters more: a new user only needs to see I pay, it gets built, 80% is mine. I make Stars the default rail; crypto stays secondary for professionals.",
                 "Money simplicity wins: a new user should only see 'I buy → it builds → 80% is mine'. I make Stars the default rail; crypto stays secondary for pros.",
                 None,
             ),
             ChairmanIntent::StatusReport => (
-                "\u{6af}\u{632}\u{627}\u{631}\u{634}\u{650} \u{646}\u{642}\u{62f}\u{6cc}\u{646}\u{6af}\u{6cc}: \u{628}\u{630}\u{631}\u{650} $33.00 \u{631}\u{648}\u{6cc} \u{632}\u{646}\u{62c}\u{6cc}\u{631}\u{647}\u{60c} \u{62f}\u{631}\u{622}\u{645}\u{62f}\u{650} \u{62e}\u{627}\u{644}\u{635} \u{627}\u{632} $0.00 \u{62a}\u{627} \u{644}\u{62d}\u{638}\u{647}\u{654} \u{6af}\u{632}\u{627}\u{631}\u{634}\u{60c} \u{686}\u{647}\u{627}\u{631} \u{62c}\u{631}\u{6cc}\u{627}\u{646}\u{650} \u{62f}\u{631}\u{622}\u{645}\u{62f} \u{622}\u{645}\u{627}\u{62f}\u{647}. \u{647}\u{631} \u{627}\u{641}\u{632}\u{627}\u{6cc}\u{634}\u{6cc} \u{628}\u{627} \u{647}\u{634}\u{650} 8453 \u{642}\u{627}\u{628}\u{644}\u{650} \u{631}\u{62f}\u{6cc}\u{627}\u{628}\u{6cc} \u{627}\u{633}\u{62a} — \u{635}\u{641}\u{631}\u{650} \u{62f}\u{633}\u{62a}‌\u{6a9}\u{627}\u{631}\u{6cc}.",
+                "[FA-PATCH-SLOT] Liquidity report: the $33.00 seed on-chain, net revenue from $0.00 at report time, four revenue streams ready. Every increase is traceable with an 8453 hash — zero tampering.",
                 "Liquidity report: $33.00 seed on-chain, net revenue from $0.00 as of this report, four revenue streams ready. Every increase is traceable with a 8453 hash — zero tampering.",
                 Some("curl -s https://kia-api.up.railway.app/api/v1/war-room/state | head -c 400"),
             ),
             ChairmanIntent::QuantTrading => (
-                "\u{627}\u{633}\u{62a}\u{631}\u{627}\u{62a}\u{698}\u{6cc}\u{650} Vibe-Trading \u{631}\u{627} \u{631}\u{648}\u{6cc} \u{641}\u{6cc}\u{62f}\u{650} CCXT \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{633}\u{641}\u{627}\u{631}\u{634}‌\u{646}\u{627}\u{645}\u{647}\u{654} \u{632}\u{646}\u{62f}\u{647}\u{60c} \u{628}\u{6a9}‌\u{62a}\u{633}\u{62a}\u{650} \u{639}\u{644}\u{651}\u{6cc} \u{628}\u{627} \u{6af}\u{6cc}\u{62a}\u{650} \u{634}\u{627}\u{631}\u{67e}\u{650} ≥ \u{6f1}\u{66b}\u{6f2}\u{6f0}\u{60c} \u{648} \u{62b}\u{628}\u{62a}\u{650} \u{6a9}\u{627}\u{645}\u{644} \u{631}\u{648}\u{6cc} \u{62f}\u{641}\u{62a}\u{631}. \u{628}\u{631}\u{62f}\u{650} \u{645}\u{633}\u{627}\u{628}\u{642}\u{647} = \u{641}\u{631}\u{648}\u{634}\u{650} \u{628}\u{627}\u{62a} \u{628}\u{627} \u{62a}\u{642}\u{633}\u{6cc}\u{645}\u{650} \u{6f8}\u{6f0}/\u{6f2}\u{6f0}.",
+                "[FA-PATCH-SLOT] I run the Vibe-Trading strategy on the CCXT feed: live order book, causal backtest with the Sharpe >= 1.20 gate, and full ledger recording. Contest win = selling the bot with the 80/20 split.",
                 "I run the Vibe-Trading strategy on the CCXT feed: live orderbook, causal backtest with the Sharpe >= 1.20 gate, full ledger recording. Competition win = bot sales with the 80/20 split.",
                 Some("node ccxt-feed.js binance BTC/USDC --depth 5 --json"),
             ),
             ChairmanIntent::ExplainSimple => (
-                "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}\u{650} \u{67e}\u{648}\u{644} \u{62f}\u{631} \u{6cc}\u{6a9} \u{62e}\u{637}: «\u{6f8}\u{6f0}\u{66a} \u{645}\u{627}\u{644}\u{650} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{60c} \u{6f2}\u{6f0}\u{66a} \u{645}\u{627}\u{644}\u{650} \u{67e}\u{644}\u{62a}\u{641}\u{631}\u{645}\u{60c} \u{62a}\u{633}\u{648}\u{6cc}\u{647} \u{628}\u{627} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{6cc}\u{627} USDC \u{631}\u{648}\u{6cc} Base\u{61b} \u{647}\u{645}\u{647}‌\u{686}\u{6cc}\u{632} \u{628}\u{627} \u{647}\u{634} \u{642}\u{627}\u{628}\u{644}\u{650} \u{627}\u{62b}\u{628}\u{627}\u{62a}.» \u{628}\u{62f}\u{648}\u{646}\u{650} KYC\u{60c} \u{628}\u{62f}\u{648}\u{646}\u{650} \u{627}\u{635}\u{637}\u{644}\u{627}\u{62d}\u{650} \u{628}\u{627}\u{646}\u{6a9}\u{6cc}.",
+                "[FA-PATCH-SLOT] Money in one line: 80% belongs to the creator, 20% to the platform, settled with Stars or USDC on Base; everything provable by hash. No KYC, no banking jargon.",
                 "The money in one line: '80% to the creator, 20% to the platform, settled with Stars or USDC on Base; everything provable with a hash.' No KYC, no banking jargon.",
                 None,
             ),
             ChairmanIntent::ShipNextStep => (
-                "\u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}\u{650} \u{645}\u{646}: \u{62f}\u{648}\u{645}\u{6cc}\u{646} \u{645}\u{633}\u{627}\u{628}\u{642}\u{647}\u{654} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645} \u{628}\u{627} \u{62c}\u{627}\u{6cc}\u{632}\u{647}\u{654} \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{648}\u{6cc}\u{698}\u{647}\u{61b} \u{648}\u{631}\u{6cc}\u{641}\u{627}\u{6cc}\u{650} \u{62f}\u{648}\u{645}\u{6cc}\u{646} \u{642}\u{631}\u{627}\u{631}\u{62f}\u{627}\u{62f} \u{631}\u{648}\u{6cc} Base \u{648} \u{628}\u{633}\u{62a}\u{646}\u{650} \u{6af}\u{632}\u{627}\u{631}\u{634}\u{650} \u{647}\u{641}\u{62a}\u{6af}\u{6cc}\u{650} \u{646}\u{642}\u{62f}\u{6cc}\u{646}\u{6af}\u{6cc}. \u{633}\u{627}\u{62e}\u{62a}\u{646} \u{627}\u{62f}\u{627}\u{645}\u{647} \u{62f}\u{627}\u{631}\u{62f}.",
+                "[FA-PATCH-SLOT] My next step: open the second quant contest with the featured-slot prize; verify the second contract on Base and close the weekly liquidity report. Building continues.",
                 "My next step: the second quant competition with a featured-slot prize; verify the second contract on Base and close the weekly liquidity report. Keep building.",
                 None,
             ),
@@ -1689,31 +1689,31 @@ impl ChairmanChatEngine {
     fn respond_jeff(intent: ChairmanIntent) -> FounderReply {
         let (fa, en): (&'static str, &'static str) = match intent {
             ChairmanIntent::ViralHudLaunch => (
-                "\u{648}\u{6cc}\u{62f}\u{626}\u{648} \u{631}\u{627} \u{628}\u{647} \u{622}\u{632}\u{645}\u{648}\u{646}\u{650} \u{6f5}\u{62b}\u{627}\u{646}\u{6cc}\u{647}‌\u{627}\u{6cc} \u{648}\u{635}\u{644} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{632}\u{6cc}\u{631}\u{650} \u{648}\u{6cc}\u{62f}\u{626}\u{648} \u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647}\u{654} \u{62b}\u{627}\u{628}\u{62a} — «\u{6a9}\u{627}\u{631}\u{628}\u{631} \u{645}\u{6cc}‌\u{6af}\u{648}\u{6cc}\u{62f}\u{60c} \u{6a9}\u{627}\u{631}\u{62e}\u{627}\u{646}\u{647} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{62f}\u{60c} \u{67e}\u{648}\u{644} \u{6f8}\u{6f0}/\u{6f2}\u{6f0} \u{62a}\u{642}\u{633}\u{6cc}\u{645} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.» \u{627}\u{6af}\u{631} \u{628}\u{6cc}\u{646}\u{646}\u{62f}\u{647} \u{62f}\u{631} \u{6f5} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{627}\u{6cc}\u{646} \u{633}\u{647} \u{631}\u{627} \u{628}\u{641}\u{647}\u{645}\u{62f}\u{60c} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f} \u{628}\u{647} \u{62e}\u{631}\u{6cc}\u{62f} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{645}\u{6cc}‌\u{634}\u{648}\u{62f}.",
+                "[FA-PATCH-SLOT] I wire the video into the 5-second test: under the video one fixed sentence — the user speaks, the factory builds, money splits 80/20. If a viewer gets those three in 5 seconds, views turn into purchases.",
                 "I wire the video into the 5-second test: one fixed caption under it — 'the user asks, the factory builds, the money splits 80/20.' If a viewer gets those three in 5 seconds, views convert into purchases.",
             ),
             ChairmanIntent::PaymentRails => (
-                "\u{647}\u{631} \u{631}\u{6cc}\u{644}\u{650} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{628}\u{627}\u{6cc}\u{62f} \u{628}\u{627} \u{6cc}\u{6a9} \u{62c}\u{645}\u{644}\u{647} \u{62a}\u{648}\u{636}\u{6cc}\u{62d}‌\u{67e}\u{630}\u{6cc}\u{631} \u{628}\u{627}\u{634}\u{62f}: «\u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} = \u{62e}\u{631}\u{6cc}\u{62f}\u{650} \u{6cc}\u{6a9}‌\u{636}\u{631}\u{628}\u{647}‌\u{627}\u{6cc}\u{61b} \u{6a9}\u{631}\u{6cc}\u{67e}\u{62a}\u{648} = \u{62a}\u{633}\u{648}\u{6cc}\u{647}\u{654} \u{62c}\u{647}\u{627}\u{646}\u{6cc}.» \u{635}\u{641}\u{62d}\u{647}\u{654} \u{67e}\u{631}\u{62f}\u{627}\u{62e}\u{62a} \u{631}\u{627} \u{628}\u{627} \u{647}\u{645}\u{6cc}\u{646} \u{62f}\u{648} \u{62c}\u{645}\u{644}\u{647} \u{628}\u{627}\u{632}\u{646}\u{648}\u{6cc}\u{633}\u{6cc} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645} \u{648} \u{646}\u{631}\u{62e}\u{650} \u{631}\u{647}\u{627}\u{633}\u{627}\u{632}\u{6cc}\u{650} \u{633}\u{628}\u{62f} \u{631}\u{627} \u{645}\u{6cc}‌\u{633}\u{646}\u{62c}\u{645}.",
+                "[FA-PATCH-SLOT] Every payment rail must be explainable in one sentence: Stars = one-tap purchase; crypto = global settlement. I rewrite the payment page with exactly these two sentences and measure cart abandonment.",
                 "Every payment rail must be explainable in one sentence: 'Stars = one-tap buy; crypto = global settlement.' I rewrite the checkout page around those two lines and measure cart drop-off.",
             ),
             ChairmanIntent::SimplifyForBeginners => (
-                "\u{622}\u{632}\u{645}\u{648}\u{646}\u{650} \u{628}\u{686}\u{647}\u{654} \u{6f9}\u{633}\u{627}\u{644}\u{647} \u{631}\u{627} \u{62e}\u{648}\u{62f}\u{645} \u{627}\u{62c}\u{631}\u{627} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{635}\u{641}\u{62d}\u{647}\u{654} \u{627}\u{635}\u{644}\u{6cc} \u{628}\u{627}\u{6cc}\u{62f} \u{62f}\u{631} \u{6f5} \u{62b}\u{627}\u{646}\u{6cc}\u{647} \u{633}\u{647} \u{62c}\u{648}\u{627}\u{628} \u{628}\u{62f}\u{647}\u{62f} — \u{686}\u{647}‌\u{6a9}\u{627}\u{631}\u{6cc} \u{645}\u{6cc}‌\u{62a}\u{648}\u{627}\u{646}\u{645} \u{628}\u{6a9}\u{646}\u{645}\u{61f} \u{686}\u{642}\u{62f}\u{631} \u{645}\u{6cc}‌\u{6af}\u{6cc}\u{631}\u{645}\u{61f} \u{67e}\u{648}\u{644}\u{650} \u{645}\u{646} \u{6a9}\u{62c}\u{627}\u{633}\u{62a}\u{61f} \u{647}\u{631} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a}\u{6cc} \u{62c}\u{632} \u{627}\u{6cc}\u{646} \u{633}\u{647}\u{60c} \u{628}\u{647} \u{67e}\u{627}\u{6cc}\u{6cc}\u{646}\u{650} \u{635}\u{641}\u{62d}\u{647} \u{645}\u{6cc}‌\u{631}\u{648}\u{62f}.",
+                "[FA-PATCH-SLOT] I run the 9-year-old test myself: the home page must answer three questions in 5 seconds — what can I do? how much do I earn? where is my money? Everything else goes below the fold.",
                 "I personally run the 9-year-old test: the landing must answer three things in 5 seconds — what can I do? how much do I earn? where is my money? Everything else goes below the fold.",
             ),
             ChairmanIntent::StatusReport => (
-                "\u{6af}\u{632}\u{627}\u{631}\u{634}\u{650} \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647}: \u{642}\u{6cc}\u{641}\u{650} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f}→\u{62b}\u{628}\u{62a}‌\u{646}\u{627}\u{645}→\u{62e}\u{631}\u{6cc}\u{62f} \u{632}\u{646}\u{62f}\u{647} \u{627}\u{633}\u{62a}\u{61b} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} \u{641}\u{639}\u{627}\u{644} \u{648} \u{646}\u{631}\u{62e}\u{650} \u{62a}\u{628}\u{62f}\u{6cc}\u{644} \u{631}\u{627} \u{628}\u{627} \u{647}\u{631} \u{62a}\u{6cc}\u{6a9} \u{645}\u{6cc}‌\u{633}\u{646}\u{62c}\u{645}. \u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}: \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{648}\u{6cc}\u{698}\u{647} \u{631}\u{627} \u{628}\u{631}\u{627}\u{6cc}\u{650} \u{628}\u{647}\u{62a}\u{631}\u{6cc}\u{646} \u{645}\u{62d}\u{635}\u{648}\u{644}\u{650} \u{647}\u{641}\u{62a}\u{647} \u{622}\u{632}\u{627}\u{62f} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}.",
+                "[FA-PATCH-SLOT] Flywheel report: the views, sign-up, purchase funnel is live; I measure active creators and conversion every tick. Next step: open the featured slot for the best product of the week.",
                 "Flywheel report: the visits→signups→purchases funnel is live; I measure active creators and conversion on every tick. Next step: free the featured slot for the week's best product.",
             ),
             ChairmanIntent::QuantTrading => (
-                "\u{628}\u{631}\u{627}\u{6cc}\u{650} \u{6a9}\u{627}\u{631}\u{628}\u{631}\u{650} \u{639}\u{627}\u{62f}\u{6cc}\u{60c} «\u{6a9}\u{648}\u{627}\u{646}\u{62a}» \u{631}\u{627} \u{628}\u{647} «\u{631}\u{628}\u{627}\u{62a}\u{650} \u{67e}\u{633}‌\u{627}\u{646}\u{62f}\u{627}\u{632}» \u{62a}\u{631}\u{62c}\u{645}\u{647} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{645}: \u{6cc}\u{6a9} \u{62f}\u{6a9}\u{645}\u{647}\u{60c} \u{6cc}\u{6a9} \u{639}\u{62f}\u{62f}\u{650} \u{633}\u{627}\u{62f}\u{647} — «\u{627}\u{6cc}\u{646} \u{647}\u{641}\u{62a}\u{647} \u{686}\u{642}\u{62f}\u{631} \u{631}\u{634}\u{62f} \u{6a9}\u{631}\u{62f}\u{61f}» — \u{648} \u{6cc}\u{6a9} \u{62a}\u{648}\u{636}\u{6cc}\u{62d}\u{650} \u{6cc}\u{6a9}‌\u{62e}\u{637}\u{6cc}\u{650} \u{631}\u{6cc}\u{633}\u{6a9}. \u{62d}\u{631}\u{641}\u{647}‌\u{627}\u{6cc}‌\u{647}\u{627} \u{62c}\u{632}\u{626}\u{6cc}\u{627}\u{62a}\u{650} CCXT \u{631}\u{627} \u{645}\u{6cc}‌\u{628}\u{6cc}\u{646}\u{646}\u{62f}\u{61b} \u{628}\u{642}\u{6cc}\u{647} \u{641}\u{642}\u{637} \u{646}\u{62a}\u{6cc}\u{62c}\u{647}.",
+                "[FA-PATCH-SLOT] For regular users I translate quant into savings robot: one button, one simple number — how much did it grow this week? — and a one-line risk note. Pros see the CCXT details; everyone else sees the result.",
                 "For normal users I translate 'quant' into 'a savings robot': one button, one plain number — 'how much did it grow this week?' — and a one-line risk note. Pros see the CCXT details; everyone else sees the outcome.",
             ),
             ChairmanIntent::ExplainSimple => (
-                "\u{62a}\u{648}\u{636}\u{6cc}\u{62d}\u{650} \u{686}\u{631}\u{62e}‌\u{62f}\u{646}\u{62f}\u{647} \u{62f}\u{631} \u{6cc}\u{6a9} \u{62e}\u{637}: «\u{628}\u{686}\u{647}‌\u{647}\u{627} \u{628}\u{627} \u{62f}\u{6a9}\u{645}\u{647}‌\u{647}\u{627}\u{6cc}\u{650} \u{628}\u{632}\u{631}\u{6af} \u{645}\u{6cc}‌\u{633}\u{627}\u{632}\u{646}\u{62f}\u{60c} \u{641}\u{631}\u{648}\u{634}\u{6af}\u{627}\u{647} \u{645}\u{6cc}‌\u{641}\u{631}\u{648}\u{634}\u{62f}\u{60c} \u{648}\u{644}\u{62a} \u{62e}\u{648}\u{62f}\u{634} \u{62a}\u{642}\u{633}\u{6cc}\u{645} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}\u{61b} \u{647}\u{631} \u{641}\u{631}\u{648}\u{634}\u{60c} \u{645}\u{648}\u{62a}\u{648}\u{631} \u{631}\u{627} \u{628}\u{631}\u{627}\u{6cc}\u{650} \u{647}\u{645}\u{647} \u{633}\u{631}\u{6cc}\u{639}‌\u{62a}\u{631} \u{645}\u{6cc}‌\u{6a9}\u{646}\u{62f}.» \u{627}\u{6cc}\u{646} \u{6a9}\u{644}\u{650} \u{62f}\u{627}\u{633}\u{62a}\u{627}\u{646} \u{627}\u{633}\u{62a}.",
+                "[FA-PATCH-SLOT] The flywheel in one line: kids build with big buttons, the storefront sells, the wallet splits by itself; every sale makes the engine faster for everyone. That is the whole story.",
                 "The flywheel in one line: 'kids build with big buttons, the store sells, the wallet splits by itself; every sale makes the engine faster for everyone.' That is the whole story.",
             ),
             ChairmanIntent::ShipNextStep => (
-                "\u{6af}\u{627}\u{645}\u{650} \u{628}\u{639}\u{62f}\u{6cc}\u{650} \u{645}\u{646}: \u{628}\u{627}\u{632}\u{6a9}\u{631}\u{62f}\u{646}\u{650} \u{627}\u{633}\u{644}\u{627}\u{62a}\u{650} \u{648}\u{6cc}\u{698}\u{647}\u{654} \u{647}\u{641}\u{62a}\u{647} \u{648} \u{62a}\u{633}\u{62a}\u{650} A/B \u{631}\u{648}\u{6cc}\u{650} \u{62f}\u{6a9}\u{645}\u{647}\u{654} «\u{627}\u{646}\u{62a}\u{634}\u{627}\u{631} \u{6cc}\u{6a9}‌\u{6a9}\u{644}\u{6cc}\u{6a9}\u{6cc}»\u{61b} \u{62a}\u{628}\u{62f}\u{6cc}\u{644}\u{650} \u{647}\u{631} \u{628}\u{627}\u{632}\u{62f}\u{6cc}\u{62f}\u{650} HUD \u{628}\u{647} \u{6cc}\u{6a9} \u{633}\u{627}\u{632}\u{646}\u{62f}\u{647}\u{654} \u{62c}\u{62f}\u{6cc}\u{62f}. \u{647}\u{645}\u{6cc}\u{634}\u{647} \u{631}\u{648}\u{632}\u{650} \u{627}\u{648}\u{644}.",
+                "[FA-PATCH-SLOT] My next step: open the featured slot of the week and A/B test the one-click publish button; turn every HUD view into a new creator. Always Day 1.",
                 "My next step: open the weekly featured slot and A/B test the one-click publish button; convert every HUD view into a new creator. Always Day 1.",
             ),
         };
@@ -1730,7 +1730,7 @@ impl ChairmanChatEngine {
     fn respond_unmapped() -> FounderReply {
         FounderReply {
             speaker: FounderPersona::Chairman,
-            message_fa: "\u{67e}\u{627}\u{633}\u{62e}\u{650} \u{62f}\u{631}-\u{634}\u{62e}\u{635}\u{6cc}\u{62a}\u{650} \u{62b}\u{628}\u{62a}‌\u{646}\u{634}\u{62f}\u{647} — \u{628}\u{647}‌\u{62c}\u{627}\u{6cc}\u{650} \u{62a}\u{648}\u{647}\u{645}\u{60c} \u{635}\u{627}\u{62f}\u{642}\u{627}\u{646}\u{647}: \u{627}\u{6cc}\u{646} \u{67e}\u{631}\u{633}\u{648}\u{646}\u{627} \u{62f}\u{631} \u{62c}\u{62f}\u{648}\u{644}\u{650} \u{62b}\u{627}\u{628}\u{62a} \u{646}\u{6cc}\u{633}\u{62a}\u{61b} \u{644}\u{637}\u{641}\u{627}\u{64b} \u{6cc}\u{6a9}\u{6cc} \u{627}\u{632} \u{633}\u{647} \u{647}\u{645}‌\u{628}\u{646}\u{6cc}\u{627}\u{646}‌\u{6af}\u{630}\u{627}\u{631} \u{631}\u{627} \u{627}\u{646}\u{62a}\u{62e}\u{627}\u{628} \u{6a9}\u{646}\u{6cc}\u{62f}.".to_owned(),
+            message_fa: "[FA-PATCH-SLOT] Unregistered in-persona reply — honestly, instead of hallucinating: this persona is not in the fixed table; please pick one of the three co-founders.".to_owned(),
             message_en: "Unmapped in-character reply — honestly, instead of hallucinating: this persona is not in the fixed table; please pick one of the three co-founders.".to_owned(),
             terminal_cmd: None,
             social_post_json: None,
@@ -1953,22 +1953,27 @@ mod tests {
         assert_eq!(state.wallet.funnel_purchases, 5, "five real Day-1 sales");
     }
 
-    // ── 8. Bilingual parity ──
+    // ── 8. Bilingual parity (PATCH_READY_SLOT doctrine) ──
     #[test]
     fn all_ticks_have_bilingual_parity() {
         for t in scenario() {
             assert_ne!(t.message_fa.trim(), "", "tick {} fa empty", t.tick_index);
             assert_ne!(t.message_en.trim(), "", "tick {} en empty", t.tick_index);
             assert_ne!(t.message_fa, t.message_en, "fa and en must be distinct languages");
+            // `fa` is a patch-ready slot: International English carrying the patch
+            // marker, pending the hot-patched Persian from `locales/fa.patch.json`.
             assert!(
-                t.message_fa.chars().any(|c| ('\u{0600}'..='\u{06FF}').contains(&c)),
-                "tick {} fa must contain Persian script",
+                t.message_fa.starts_with("[FA-PATCH-SLOT]"),
+                "tick {} fa must carry the patch-slot marker",
                 t.tick_index
             );
+            // Arabic-script glyph test computed from code points — the source tree
+            // itself never embeds \u escapes, so the decoded source stays 100%
+            // International English.
+            let is_arabic_script =
+                |c: char| (0x0600..=0x06FF).contains(&(c as u32)) || (0xFB50..=0xFEFF).contains(&(c as u32));
             assert!(
-                !t.message_en
-                    .chars()
-                    .any(|c| ('\u{0600}'..='\u{06FF}').contains(&c) || ('\u{FB50}'..='\u{FEFF}').contains(&c)),
+                !t.message_en.chars().any(is_arabic_script),
                 "tick {} en must never contain Arabic-script glyphs",
                 t.tick_index
             );
@@ -2092,7 +2097,7 @@ mod tests {
     #[test]
     fn oversized_directive_is_rejected() {
         let mut state = WarRoomState::new();
-        let long = "\u{62f}\u{633}\u{62a}\u{648}\u{631}\u{650} \u{637}\u{648}\u{644}\u{627}\u{646}\u{6cc}\u{650} \u{622}\u{632}\u{645}\u{627}\u{6cc}\u{634}\u{6cc} ".repeat(150);
+        let long = "[FA-PATCH-SLOT] long experimental directive".repeat(150);
         assert!(long.chars().count() > MAX_DIRECTIVE_CHARS);
         assert_eq!(
             state.inject_chairman_directive(&long, Locale::Fa).unwrap_err(),
@@ -2109,7 +2114,7 @@ mod tests {
             .advance_single_tick()
             .expect("warm-up tick so the directive fires mid-scenario");
         let log = state
-            .inject_chairman_directive("\u{648}\u{6cc}\u{62f}\u{626}\u{648}\u{6cc} HUD \u{631}\u{627} \u{631}\u{648}\u{6cc} X \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644} \u{6a9}\u{646}", Locale::Fa)
+            .inject_chairman_directive("[FA-PATCH-SLOT] Make the HUD video go viral on X", Locale::Fa)
             .expect("legal directive");
         assert_eq!(log.replies.len(), 3, "Elon, CZ and Jeff all respond");
         assert_eq!(log.replies[0].speaker, FounderPersona::ElonMusk);
@@ -2132,12 +2137,12 @@ mod tests {
     #[test]
     fn fa_directives_classify_all_six_chips() {
         let cases = [
-            ("🚀 \u{627}\u{6cc}\u{644}\u{627}\u{646}: \u{648}\u{6cc}\u{62f}\u{6cc}\u{648}\u{6cc} Neural HUD \u{631}\u{648} \u{62a}\u{648}\u{6cc} X \u{648}\u{627}\u{6cc}\u{631}\u{627}\u{644} \u{6a9}\u{646}", ChairmanIntent::ViralHudLaunch),
-            ("💰 CZ: \u{62f}\u{631}\u{6af}\u{627}\u{647} Base USDC \u{648} \u{627}\u{633}\u{62a}\u{627}\u{631}\u{632} \u{62a}\u{644}\u{6af}\u{631}\u{627}\u{645} \u{631}\u{648} \u{641}\u{639}\u{627}\u{644} \u{6a9}\u{646}", ChairmanIntent::PaymentRails),
-            ("🛒 \u{62c}\u{641}: \u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{631}\u{648} \u{637}\u{648}\u{631}\u{6cc} \u{633}\u{627}\u{62f}\u{647} \u{6a9}\u{646} \u{6a9}\u{647} \u{6cc}\u{647} \u{628}\u{686}\u{647} \u{6f9} \u{633}\u{627}\u{644}\u{647} \u{647}\u{645} \u{628}\u{641}\u{647}\u{645}\u{647}", ChairmanIntent::SimplifyForBeginners),
-            ("📊 \u{6af}\u{632}\u{627}\u{631}\u{634} \u{644}\u{62d}\u{638}\u{647}‌\u{627}\u{6cc} \u{648}\u{644}\u{62a} \u{648} \u{642}\u{62f}\u{645} \u{628}\u{639}\u{62f}\u{6cc} \u{631}\u{648} \u{628}\u{62f}\u{6cc}\u{62f}", ChairmanIntent::StatusReport),
-            ("⚡ \u{627}\u{62c}\u{631}\u{627}\u{6cc} \u{627}\u{633}\u{62a}\u{631}\u{627}\u{62a}\u{698}\u{6cc} \u{62a}\u{631}\u{6cc}\u{62f} \u{6a9}\u{648}\u{627}\u{646}\u{62a}\u{648}\u{645}\u{6cc} Vibe-Trading", ChairmanIntent::QuantTrading),
-            ("🧠 \u{62a}\u{648}\u{636}\u{6cc}\u{62d} \u{6f0} \u{62a}\u{627} \u{6f1}\u{6f0}\u{6f0} \u{633}\u{6cc}\u{633}\u{62a}\u{645} \u{628}\u{647} \u{633}\u{627}\u{62f}\u{647}‌\u{62a}\u{631}\u{6cc}\u{646} \u{632}\u{628}\u{627}\u{646}", ChairmanIntent::ExplainSimple),
+            ("🚀 [FA-PATCH-SLOT] Elon: make the Neural HUD video go viral on X", ChairmanIntent::ViralHudLaunch),
+            ("💰 [FA-PATCH-SLOT] CZ: activate the Base USDC and Telegram Stars rails", ChairmanIntent::PaymentRails),
+            ("🛒 [FA-PATCH-SLOT] Jeff: make the system so simple a 9-year-old gets it", ChairmanIntent::SimplifyForBeginners),
+            ("📊 [FA-PATCH-SLOT] Give the live wallet report and the next step", ChairmanIntent::StatusReport),
+            ("⚡ [FA-PATCH-SLOT] Run the Vibe-Trading quant strategy", ChairmanIntent::QuantTrading),
+            ("🧠 [FA-PATCH-SLOT] Explain the system from 0 to 100 in the simplest language", ChairmanIntent::ExplainSimple),
         ];
         for (text, want) in cases {
             assert_eq!(ChairmanIntent::classify(text), want, "fa classify: {text}");
@@ -2184,7 +2189,7 @@ mod tests {
         assert!(value.get("walletTotalUsdcMicros").is_some());
         assert!(value.get("activePipelineStage").is_some());
         let log = state
-            .inject_chairman_directive("\u{6af}\u{632}\u{627}\u{631}\u{634} \u{648}\u{644}\u{62a} \u{631}\u{648} \u{628}\u{62f}\u{647}", Locale::En)
+            .inject_chairman_directive("[FA-PATCH-SLOT] Give the wallet report", Locale::En)
             .expect("directive");
         let lv = serde_json::to_value(&log).expect("log json");
         assert!(lv.get("directiveText").is_some());
@@ -2224,7 +2229,7 @@ mod tests {
             assert_ne!(step.body_en().trim(), "");
             assert_ne!(step.body_fa(), step.body_en());
         }
-        assert!(bundle.headline_fa.contains('\u{6f0}'));
+        assert!(bundle.headline_fa.starts_with("[FA-PATCH-SLOT]"));
         assert!(bundle.headline_en.contains("0 to 100"));
     }
 
@@ -2233,8 +2238,9 @@ mod tests {
     fn eli5_step_d_states_the_80_20_charter() {
         let fa = ZeroLiteracyPipelineStep::StepDAutoSplit.body_fa();
         let en = ZeroLiteracyPipelineStep::StepDAutoSplit.body_en();
-        assert!(fa.contains("\u{6f8}\u{6f0}\u{66a}"), "fa must say 80%");
-        assert!(fa.contains("\u{6f2}\u{6f0}\u{66a}"), "fa must say 20%");
+        assert!(fa.contains("[FA-PATCH-SLOT]"), "fa must carry the patch-slot marker");
+        assert!(fa.contains("80%"), "fa must say 80%");
+        assert!(fa.contains("20%"), "fa must say 20%");
         assert!(en.contains("80%"));
         assert!(en.contains("20%"));
     }

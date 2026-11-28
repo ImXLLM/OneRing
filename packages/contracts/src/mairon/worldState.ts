@@ -31,6 +31,28 @@ export const MAIRON_PERSPECTIVE_LABELS: Record<MaironPerspectiveT, string> = {
   "war-room": "Founder War-Room Command Bridge",
 };
 
+/** Strict recursive JSON wire value — mirrors the kernel's JSON envelope. */
+export type JsonT = string | number | boolean | null | JsonT[] | { [key: string]: JsonT };
+
+/**
+ * Strict JSON schema — accepts only real JSON values (strings, finite numbers,
+ * booleans, null, arrays, plain objects). JavaScript functions, `undefined`,
+ * class instances and other non-JSON payloads are rejected.
+ */
+export const JsonValue: z.ZodType<JsonT> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(JsonValue),
+    z.record(z.string(), JsonValue),
+  ]),
+);
+
+/** Strict JSON object — the concrete payload shape of a subsystem snapshot. */
+export const JsonObject = z.record(z.string(), JsonValue);
+
 /** Sync posture of one subsystem inside the world snapshot. */
 export const SubsystemSyncPosture = z.object({
   subsystem: z.enum([
@@ -75,15 +97,15 @@ export const MaironWorldState = z.object({
   postures: z.array(SubsystemSyncPosture),
   jobs: z.array(WorldJob),
   /** Last known war-room snapshot (nullable until first sync). */
-  warRoom: z.unknown().nullable(),
+  warRoom: JsonObject.nullable(),
   /** Last known treasury charter snapshot (nullable until first sync). */
-  treasury: z.unknown().nullable(),
+  treasury: JsonObject.nullable(),
   /** Last known genome matrix snapshot (nullable until first sync). */
-  genome: z.unknown().nullable(),
+  genome: JsonObject.nullable(),
   /** Last known quant venue matrix snapshot (nullable until first sync). */
-  quant: z.unknown().nullable(),
+  quant: JsonObject.nullable(),
   /** Last known HUD preset catalog snapshot (nullable until first sync). */
-  neuralHud: z.unknown().nullable(),
+  neuralHud: JsonObject.nullable(),
 });
 export type MaironWorldStateT = z.infer<typeof MaironWorldState>;
 

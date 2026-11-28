@@ -1,7 +1,7 @@
 "use client";
 
-import { badgeVariants } from "@/components/badge";
-import { cn } from "@/lib/utils";
+import { badgeVariants } from "../components/badge";
+import { cn } from "../lib/utils";
 
 /**
  * MaironSealBadge — the sovereign verification seal.

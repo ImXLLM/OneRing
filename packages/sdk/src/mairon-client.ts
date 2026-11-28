@@ -672,13 +672,23 @@ export class MaironSdkClient {
       perspective,
       postures,
       jobs: [],
-      warRoom: payloads["war-room"] ?? null,
-      treasury: payloads["treasury"] ?? null,
-      genome,
-      quant: payloads["quant-desk"] ?? null,
-      neuralHud: payloads["neural-hud"] ?? null,
+      warRoom: asJsonObject(payloads["war-room"] ?? null),
+      treasury: asJsonObject(payloads["treasury"] ?? null),
+      genome: asJsonObject(genome),
+      quant: asJsonObject(payloads["quant-desk"] ?? null),
+      neuralHud: asJsonObject(payloads["neural-hud"] ?? null),
     };
   }
+}
+
+/**
+ * Strict-JSON record coercion for world-state payloads: a subsystem payload
+ * is accepted only when it is a plain JSON object (the wire shape
+ * `JsonObject` from `@kian/contracts`); anything else degrades to `null`.
+ */
+function asJsonObject(value: JsonValue | null): Record<string, JsonValue> | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, JsonValue>;
 }
 
 /** SHA-256 hex of a UTF-8 string via WebCrypto (browser and Node 18+). */

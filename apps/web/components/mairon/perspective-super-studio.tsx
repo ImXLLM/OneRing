@@ -11,7 +11,11 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { STUDIO_MODALITIES, TRINITY_AVATAR_LADDER } from "@kian/contracts";
+import {
+  STUDIO_MODALITIES,
+  TRINITY_AVATAR_LADDER,
+  type StudioModalityIdT,
+} from "@kian/contracts";
 import type { UxMorphModeT } from "@kian/contracts";
 import { useMaironWorld } from "@/lib/mairon/world-state";
 
@@ -87,7 +91,7 @@ export function PerspectiveSuperStudio() {
     try {
       const response = await sdk.superStudio.executeModality({
         prompt: studio.draftPrompt.length > 0 ? studio.draftPrompt : "Sovereign demo artifact",
-        modality: studio.selectedModality,
+        modality: studio.selectedModality as StudioModalityIdT,
         cognitiveTier: studio.morphMode,
       });
       dispatch({ type: "SET_STUDIO_GENERATION", generation: response as Record<string, unknown> });

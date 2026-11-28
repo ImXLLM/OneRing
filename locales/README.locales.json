@@ -10,7 +10,7 @@
       "dir": "rtl",
       "status": "PATCH_READY_SLOT",
       "patchFile": "locales/fa.patch.json",
-      "dayOneBps": 10000
+      "dayOneBps": 0
     }
   ],
   "removedDevelopmentalEditions": [

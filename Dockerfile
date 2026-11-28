@@ -22,6 +22,9 @@ COPY start-railway.sh /app/start-railway.sh
 # inside the image so GET /war-room and GET /neural-hud work live on Railway.
 COPY tools/war-room/war_room.html /app/tools/war-room/war_room.html
 COPY tools/neural-hud/neural_hud.html /app/tools/neural-hud/neural_hud.html
+# Isolated locale patches ship with the image so GET /locales/fa.patch.json
+# serves the live PATCH_READY_SLOT Persian patch from the kernel itself.
+COPY locales /app/locales
 COPY OMNI-MODEL-GENOME /app/OMNI-MODEL-GENOME
 COPY KIA-BRAIN-OS /app/KIA-BRAIN-OS
 RUN chmod +x /app/start-railway.sh && mkdir -p /data && chown -R kian:kian /app /data

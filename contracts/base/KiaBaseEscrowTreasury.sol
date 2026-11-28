@@ -59,6 +59,15 @@ contract KiaBaseEscrowTreasury {
 
     enum AssetKind { NativeEth, Usdc, KiaToken }
 
+    /// Atomic split legs of one marketplace settlement — a single `memory`
+    /// struct keeps the settlement frame inside the default EVM stack limit.
+    struct DayOneLegs {
+        uint256 treasury;
+        uint256 affiliate;
+        uint256 creator;
+        address affiliateRecipient;
+    }
+
     // ── Ledger state ────────────────────────────────────────────────────────
     /// Spendable balance per (asset, account) — creators withdraw from here.
     mapping(AssetKind => mapping(address => uint256)) public escrowBalance;
@@ -99,6 +108,9 @@ contract KiaBaseEscrowTreasury {
     );
 
     constructor(address _kiaTreasury, address _usdcToken, address _kiaToken) {
+        // Deployment guard — the day-one sovereign settlement layer is bound to
+        // Base Mainnet; a wrong-chain deployment must revert at construction.
+        require(block.chainid == 8453, "MAIRON: Base Mainnet 8453 required");
         require(_kiaTreasury != address(0), "KIA: treasury is zero");
         require(_usdcToken != address(0), "KIA: usdc is zero");
         require(_kiaToken != address(0), "KIA: token is zero");
@@ -129,32 +141,18 @@ contract KiaBaseEscrowTreasury {
         // ── Pull the whole gross from the buyer first (interactions last). ──
         _pullFrom(buyer, asset, gross);
 
-        // ── Effects: compute the atomic legs. ──────────────────────────────
-        uint256 treasuryLeg = (gross * CHARTER_TAX_BPS) / BPS_DENOMINATOR; // Stream 1
-        uint256 affiliateLeg;
-        address affiliateRecipient;
-        if (referrer == address(0)) {
-            // Unreferred direct-sale rule: the default 1000 bps affiliate leg
-            // routes directly to kiaTreasury — platform total = 2000 bps.
-            affiliateLeg = (gross * UNREFERRED_AFFILIATE_BPS) / BPS_DENOMINATOR;
-            affiliateRecipient = kiaTreasury;
-        } else {
-            affiliateLeg = (gross * affiliateBps) / BPS_DENOMINATOR;
-            affiliateRecipient = referrer;
-        }
-        uint256 creatorLeg = gross - treasuryLeg - affiliateLeg; // atomic remainder, zero loss
-        require(creatorLeg > 0, "KIA: creator leg is zero");
+        // ── Effects: compute the atomic legs (one memory struct = one frame slot).
+        DayOneLegs memory legs = _dayOneLegs(gross, affiliateBps, referrer);
+        require(legs.creator > 0, "KIA: creator leg is zero");
 
-        escrowBalance[asset][affiliateRecipient] += affiliateLeg;
-        escrowBalance[asset][creator] += creatorLeg;
-        escrowBalance[asset][kiaTreasury] += treasuryLeg;
-
-        uint256 platformTotal = treasuryLeg + affiliateLeg;
-        uint256 effectivePlatformBps = (platformTotal * BPS_DENOMINATOR) / gross;
+        escrowBalance[asset][legs.affiliateRecipient] += legs.affiliate;
+        escrowBalance[asset][creator] += legs.creator;
+        escrowBalance[asset][kiaTreasury] += legs.treasury;
 
         emit MarketplaceSaleSettled(
             saleId, buyer, creator, referrer, asset, gross,
-            treasuryLeg, affiliateLeg, creatorLeg, effectivePlatformBps
+            legs.treasury, legs.affiliate, legs.creator,
+            ((legs.treasury + legs.affiliate) * BPS_DENOMINATOR) / gross
         );
     }
 
@@ -170,9 +168,34 @@ contract KiaBaseEscrowTreasury {
         emit InstantBoostPurchased(msg.sender, tier, asset, price, kiaTreasury);
     }
 
+    /// The atomic Day-1 leg computation — pure, no state access.
+    ///
+    /// Stream 1: charter tax; Stream 2: declared (or default, unreferred)
+    /// affiliate share; the creator receives the exact remainder — the leg
+    /// sum equals the gross with zero rounding loss, by construction.
+    function _dayOneLegs(uint256 gross, uint256 affiliateBps, address referrer)
+        private
+        view
+        returns (DayOneLegs memory)
+    {
+        DayOneLegs memory legs;
+        legs.treasury = (gross * CHARTER_TAX_BPS) / BPS_DENOMINATOR; // Stream 1
+        if (referrer == address(0)) {
+            // Unreferred direct-sale rule: the default 1000 bps affiliate leg
+            // routes directly to kiaTreasury — platform total = 2000 bps.
+            legs.affiliate = (gross * UNREFERRED_AFFILIATE_BPS) / BPS_DENOMINATOR;
+            legs.affiliateRecipient = kiaTreasury;
+        } else {
+            legs.affiliate = (gross * affiliateBps) / BPS_DENOMINATOR;
+            legs.affiliateRecipient = referrer;
+        }
+        legs.creator = gross - legs.treasury - legs.affiliate; // atomic remainder
+        return legs;
+    }
+
     function _boostPrice(BoostTier tier) private pure returns (uint256) {
-        if (tier == BoostTier::FeaturedSlot24h) return 5_000_000;
-        if (tier == BoostTier::MaironFastTrackAudit) return 2_000_000;
+        if (tier == BoostTier.FeaturedSlot24h) return 5_000_000;
+        if (tier == BoostTier.MaironFastTrackAudit) return 2_000_000;
         return 10_000_000; // ViralSwarmAmplifier
     }
 
@@ -196,10 +219,10 @@ contract KiaBaseEscrowTreasury {
 
     // ── Asset plumbing (closed whitelist) ───────────────────────────────────
     function _pullFrom(address from, AssetKind asset, uint256 amount) private {
-        if (asset == AssetKind::NativeEth) {
+        if (asset == AssetKind.NativeEth) {
             require(msg.value == amount, "KIA: exact msg.value required");
         } else {
-            address token = asset == AssetKind::Usdc ? usdcToken : kiaToken;
+            address token = asset == AssetKind.Usdc ? usdcToken : kiaToken;
             // interactions happen AFTER the caller has been validated; the
             // external call is the last thing this branch does per leg.
             require(IERC20Minimal(token).transferFrom(from, address(this), amount), "KIA: token pull failed");
@@ -208,11 +231,11 @@ contract KiaBaseEscrowTreasury {
 
     function _pushTo(address to, AssetKind asset, uint256 amount) private {
         require(to != address(0), "KIA: push to zero");
-        if (asset == AssetKind::NativeEth) {
+        if (asset == AssetKind.NativeEth) {
             (bool ok, ) = to.call{value: amount}("");
             require(ok, "KIA: eth push failed");
         } else {
-            address token = asset == AssetKind::Usdc ? usdcToken : kiaToken;
+            address token = asset == AssetKind.Usdc ? usdcToken : kiaToken;
             require(IERC20Minimal(token).transfer(to, amount), "KIA: token push failed");
         }
     }

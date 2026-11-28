@@ -26,7 +26,7 @@ use kian_contracts::wave10::{
     WarRoomStateResponse, WarRoomStepRequest, WarRoomStepResponse, WarRoomTickView,
 };
 use kian_db::now_iso;
-use kian_db::wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow};
+use kian_db::wave10::{ChairmanDirectiveLogRow, FounderWarRoomTickRow, WarRoomStateRow, WarRoomTickEventRow};
 use kian_hermes::war_room_simulation_engine::{
     canonical_day0_scenario, explain_zero_to_hundred_elif5, ChairmanIntent, FounderPersona, Locale,
     OrganizationWalletLedger, PipelineStage, RevenueStream, WarRoomError, WarRoomState,
@@ -140,12 +140,38 @@ pub fn founder_views() -> Vec<FounderView> {
 ///
 /// # Errors
 /// 500 db.
-pub async fn war_room_state() -> ApiResult<Json<WarRoomStateResponse>> {
+pub async fn war_room_state(
+    State(state): State<Arc<AppState>>,
+) -> ApiResult<Json<WarRoomStateResponse>> {
     let scenario = canonical_day0_scenario();
     let ticks: Vec<WarRoomTickView> = scenario
         .iter()
         .map(tick_view)
         .collect();
+    // Gate 5 wiring — when the named `WarRoomState` singleton is present
+    // (written by `POST /war-room/step`), the public read reflects the live
+    // persisted cursor/elapsed/wallet aggregates; otherwise pure day zero.
+    let live = state
+        .store
+        .read_war_room_state("warroom:live")
+        .await
+        .map_err(ApiFailure::from)?;
+    let mut ledger = OrganizationWalletLedger::seed();
+    if let Some(row) = &live {
+        ledger.earned_revenue_micros = row.earned_revenue_micros;
+        ledger.creator_payouts_micros = row.creator_payouts_micros;
+        ledger.affiliate_payouts_micros = row.affiliate_payouts_micros;
+    }
+    let (cursor, elapsed, progress) = live.as_ref().map_or(
+        (0, 0, 0),
+        |row| {
+            (
+                row.tick_cursor,
+                row.elapsed_seconds,
+                (row.tick_cursor * 100) / i64::from(u32::try_from(CANONICAL_TICK_COUNT).unwrap_or(24)),
+            )
+        },
+    );
     Ok(Json(WarRoomStateResponse {
         signature: WAR_ROOM_SIGNATURE.to_owned(),
         github_repo: GITHUB_REPO.to_owned(),
@@ -153,12 +179,12 @@ pub async fn war_room_state() -> ApiResult<Json<WarRoomStateResponse>> {
         base_chain_id: i64::try_from(BASE_CHAIN_ID).unwrap_or(8453),
         base_usdc_contract: BASE_USDC_CONTRACT.to_owned(),
         telegram_stars_currency: TELEGRAM_STARS_CURRENCY.to_owned(),
-        elapsed_seconds: 0,
-        tick_cursor: 0,
-        progress_percent: 0,
+        elapsed_seconds: elapsed,
+        tick_cursor: cursor,
+        progress_percent: progress,
         playing: false,
         speed_multiplier: 1,
-        wallet: wallet_view(&OrganizationWalletLedger::seed()),
+        wallet: wallet_view(&ledger),
         founders: founder_views(),
         scenario: ticks,
         charter_unreferred_take_bps: PLATFORM_TAKE_BPS_UNREFERRED,
@@ -217,6 +243,43 @@ pub async fn war_room_step(
         created_at: now_iso(),
     };
     state.store.insert_war_room_tick(&row).await.map_err(ApiFailure::from)?;
+    // Gate 5 wiring — the named live state singleton plus the append-only
+    // causal tick-event ledger are touched on every step (when present).
+    let live = WarRoomStateRow {
+        id: "warroom:live".to_owned(),
+        tick_index: i64::from(event.tick_index),
+        elapsed_seconds: room.elapsed_seconds,
+        // schema guard: tick_cursor CHECK keeps 0..=23 even after exhaustion
+        tick_cursor: i64::try_from(room.tick_cursor).unwrap_or(23).min(23),
+        wallet_total_usdc_micros: event.wallet_total_usdc_micros,
+        earned_revenue_micros: room.wallet.earned_revenue_micros,
+        creator_payouts_micros: room.wallet.creator_payouts_micros,
+        affiliate_payouts_micros: room.wallet.affiliate_payouts_micros,
+        active_users: i64::try_from(room.wallet.active_users).unwrap_or(i64::MAX),
+        locale: "en".to_owned(),
+        updated_at: now_iso(),
+    };
+    state
+        .store
+        .upsert_war_room_state(&live)
+        .await
+        .map_err(ApiFailure::from)?;
+    let tick_event = WarRoomTickEventRow {
+        id: format!("warroom-event:{:04}", event.tick_index),
+        tick_index: i64::from(event.tick_index),
+        simulation_second: event.simulation_second,
+        speaker_id: event.speaker.wire_id().to_owned(),
+        revenue_stream: stream_id(event.revenue_stream).to_owned(),
+        wallet_delta_usdc_micros: event.wallet_delta_usdc_micros,
+        wallet_total_usdc_micros: event.wallet_total_usdc_micros,
+        message_en: event.message_en.clone(),
+        created_at: now_iso(),
+    };
+    state
+        .store
+        .record_war_room_tick_event(&tick_event)
+        .await
+        .map_err(ApiFailure::from)?;
     let exhausted = room.tick_cursor >= CANONICAL_TICK_COUNT;
     Ok(Json(WarRoomStepResponse {
         executed: tick_view(&event),
@@ -544,4 +607,73 @@ mod tests {
         let json = json_of(res).await;
         assert_eq!(json["executed"]["tickIndex"], 0, "fresh drive starts at tick 0");
     }
-}
+
+    /// Gate 5 — `POST /war-room/step` touches the named `WarRoomState` singleton
+    /// and the append-only `WarRoomTickEvent` ledger; `GET /war-room/state`
+    /// reflects the persisted cursor while it exists; `POST /war-room/reset`
+    /// clears both back to pure day zero.
+    #[tokio::test]
+    async fn war_room_step_persists_named_state_and_tick_event_ledger() {
+        let app = hardened_app().await;
+        let token = chairman_session(&app).await;
+
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/state")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let json = json_of(res).await;
+        assert_eq!(json["tickCursor"], 0, "pure day zero before any step");
+        assert_eq!(json["elapsedSeconds"], 0);
+
+        // One causal step with the chairman session.
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/step")
+            .header("content-type", "application/json")
+            .header("authorization", format!("Bearer {token}"))
+            .body(Body::from(r#"{"tickCursor":0,"speedMultiplier":1}"#))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "step must execute");
+        let step_json = json_of(res).await;
+        let step_earned = step_json["wallet"]["earnedRevenueMicros"].as_i64().expect("earned");
+
+        // The public state read now reflects the persisted singleton.
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/state")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let json = json_of(res).await;
+        assert_eq!(json["tickCursor"], 1, "state read must touch WarRoomState");
+        assert_eq!(json["progressPercent"], 4, "1 tick of the canonical 24");
+        assert_eq!(
+            json["wallet"]["earnedRevenueMicros"].as_i64(),
+            Some(step_earned),
+            "state read must reflect the persisted wallet aggregates"
+        );
+
+        // Reset — back to pure day zero (the named tables clear with the rest).
+        let req = axum::http::Request::builder()
+            .method("POST")
+            .uri("/api/v1/war-room/reset")
+            .header("authorization", format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        assert_eq!(res.status().as_u16(), 200, "reset must execute");
+        let req = axum::http::Request::builder()
+            .method("GET")
+            .uri("/api/v1/war-room/state")
+            .body(Body::empty())
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let json = json_of(res).await;
+        assert_eq!(json["tickCursor"], 0, "reset must clear the WarRoomState singleton");
+        assert_eq!(json["elapsedSeconds"], 0, "reset must restore day zero");
+        assert_eq!(json["wallet"]["earnedRevenueMicros"], 0);
+    }
+

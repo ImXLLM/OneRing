@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 /**
  * TrinityIqMeter — the 3-avatar calibration meter.
